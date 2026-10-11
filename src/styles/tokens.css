@@ -1,0 +1,52 @@
+:root {
+  --color-brand-primary: #ff9900;
+  --color-brand-secondary: #000026;
+  --color-brand-accent: #ef765e;
+
+  --color-page-background: #f1f2ee;
+  --color-surface: #ffffff;
+  --color-surface-muted: #eef1ed;
+
+  --color-text-primary: #09092b;
+  --color-text-secondary: #596a61;
+  --color-border: #d7e0d9;
+  --color-border-input: #c7d1ca;
+  --color-link: #a84b00;
+
+  --color-success: #17683d;
+  --color-success-surface: #dcf1e5;
+  --color-warning: #86500b;
+  --color-warning-surface: #fff0d0;
+  --color-danger: #a62323;
+  --color-danger-surface: #fbe1df;
+  --color-info: #244d9c;
+  --color-info-surface: #e0eaff;
+
+  --color-on-primary: #080823;
+  --color-on-secondary: #ffffff;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+
+  --shadow-card: 0 3px 8px rgb(23 37 31 / 0.08);
+
+  --spacing-page-mobile: 1rem;
+  --spacing-page-desktop: 2rem;
+
+  --font-body: "Poppins", Arial, sans-serif;
+  --font-heading: "Poppins", Arial, sans-serif;
+}
+
+@theme inline {
+  --color-brand: var(--color-brand-primary);
+  --color-ink: var(--color-text-primary);
+  --color-muted-ink: var(--color-text-secondary);
+  --color-page: var(--color-page-background);
+  --color-panel: var(--color-surface);
+  --color-panel-muted: var(--color-surface-muted);
+  --color-line: var(--color-border);
+  --color-state-success: var(--color-success);
+  --color-state-danger: var(--color-danger);
+  --radius-card: var(--radius-lg);
+}
