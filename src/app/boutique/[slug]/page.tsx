@@ -29,9 +29,7 @@ export default async function PublicStorePage({
     <main className={`storefront-content theme-${store.theme.toLowerCase().replaceAll("_", "-")}`}>
       {store.description && <p className="storefront-description">{store.description}</p>}
       <form className="storefront-search" method="get">
-        <label className="visually-hidden" htmlFor="storefront-search">
-          Rechercher un produit
-        </label>
+        
         <input defaultValue={search} id="storefront-search" maxLength={100} name="q" placeholder="Rechercher un produit" type="search" />
         <SubmitButton className="secondary-button" pendingLabel="Recherche…">
           Rechercher
