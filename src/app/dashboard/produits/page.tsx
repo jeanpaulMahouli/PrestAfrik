@@ -187,4 +187,3 @@ function queryString(values: Record<string, string | undefined>) {
   return `/dashboard/produits?${params.toString()}`;
 }
 
-export { formatXaf };
