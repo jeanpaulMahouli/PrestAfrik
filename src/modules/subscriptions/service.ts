@@ -1,6 +1,7 @@
 import "server-only";
 
 import { Prisma } from "@prisma/client";
+import { billingEnabled, freePlan } from "@/config/billing";
 import { prisma } from "@/lib/prisma";
 import { daysSince, daysUntil, startOfUtcMonth } from "@/modules/subscriptions/dates";
 export { isStoreSubscriptionPaused } from "@/modules/subscriptions/dates";
@@ -77,10 +78,28 @@ export async function getStoreSubscriptionAccess(storeId: string, now = new Date
   ]);
   const usedMessages = orderMessages + campaignMessages;
 
+  const plan = freePlan(subscription.plan);
+  if (!billingEnabled) {
+    // Gratuité du lancement : jamais d'expiration, de restriction ni de rappel.
+    return {
+      subscription,
+      plan,
+      phase: "FREE" as const,
+      expiresAt,
+      active: true,
+      remainingDays: 0,
+      expiredDays: 0,
+      featureRestricted: false,
+      storefrontPaused: false,
+      reminderDays: null,
+      usedMessages,
+      remainingMessages: Math.max(0, plan.monthlyMessageQuota - usedMessages),
+    } as const;
+  }
   return {
     subscription,
-    plan: subscription.plan,
-    phase: active ? (trial ? "TRIAL" : "ACTIVE") : "EXPIRED",
+    plan,
+    phase: active ? (trial ? ("TRIAL" as const) : ("ACTIVE" as const)) : ("EXPIRED" as const),
     expiresAt,
     active,
     remainingDays,
@@ -89,7 +108,7 @@ export async function getStoreSubscriptionAccess(storeId: string, now = new Date
     storefrontPaused: !active && expiredDays >= 14,
     reminderDays: active && [1, 3, 7].includes(remainingDays) ? remainingDays : null,
     usedMessages,
-    remainingMessages: Math.max(0, subscription.plan.monthlyMessageQuota - usedMessages),
+    remainingMessages: Math.max(0, plan.monthlyMessageQuota - usedMessages),
   } as const;
 }
 
@@ -157,6 +176,7 @@ export async function getSubscriptionAccessForTransaction(
       subscription.currentPeriodEnd > now);
   const expiresAt = subscription.currentPeriodEnd ?? subscription.trialEndsAt;
   const expiredDays = active ? 0 : daysSince(expiresAt, now);
+  if (!billingEnabled) return { ...subscription, plan: freePlan(subscription.plan), active: true, expiredDays: 0, featureRestricted: false };
   return {
     ...subscription,
     active,

@@ -17,6 +17,10 @@ Référence : `PrestAfrik maquettes UX UI/PRESTAFRIK-BRIEF-CLAUDE-CODE.md`. Inve
 - Clients, fiche client, Marketing (simulation affichée, confirmation explicite), Livraisons (zones à frais fixes), Argent reçu (commandes validées, annulations déduites).
 - Assistant de création en 8 étapes (`/boutiques/nouvelle`) : boutique créée en brouillon dès l’étape 1 avec l’essai d’un mois, progression enregistrée (`Store.onboardingStep`), reprise depuis l’accueil, « Enregistrer et quitter », retour aux étapes validées, aperçu en direct. Adresse vérifiée en direct (anti-rebond 400 ms, limite 60/min, noms réservés, suggestions disponibles). Activités et villes dans une liste avec recherche accessible (clavier, feuille basse sur mobile, « pas dans la liste »). Cameroun : 10 régions et leurs villes (`src/config/geo/CM.json`), autres pays en saisie libre. Téléphone et WhatsApp séparés. Premier produit facultatif avec 5 photos. Publication via les conditions de publication, puis écran « Félicitations » (lien, copie, WhatsApp, QR code, réseaux sociaux). Parcours vérifié à 1280 et 390 px : `node scripts/design/wizard-walk.mjs <dossier> <largeur>`.
 - Boutique publique, mobile d’abord : accueil (recherche, catégories, bandeau livraison calculé depuis les zones, grille), fiche produit (galerie à glisser, options en pastilles, quantité), panier, formulaire de commande (progression des champs, zone de livraison choisie dans la liste avec frais affichés, retrait, total exact avant de commander, « Commander » et « Commander sur WhatsApp » actifs seulement quand tout est rempli), résultat et suivi (`/boutique/[slug]/suivi/[token]`, anciens liens redirigés), assistant à réponses guidées avec transfert WhatsApp, pages éditoriales en blocs, 3 thèmes réels (Catalogue express, Mode et beauté, Boutique de marque). Le serveur recalcule le total ; si le prix a changé, la commande est refusée avec le nouveau total. Parcours testé : `node scripts/design/storefront-walk.mjs <dossier> 390`.
+- Landing page publique (`/`) : héros, CRM avec démo d’audience, commande en 4 gestes, onglets de l’espace vendeur, téléphones côté client, WhatsApp, fonctionnalités, gratuité du lancement, à propos, FAQ, contact (WhatsApp ou e-mail), pied de page. Illustrée par de vraies captures (`node scripts/design/landing-shots.mjs`, données de démonstration).
+- E-mails : 25 modèles vouvoyés (ADR-015), aperçu `/dev/emails`, envois branchés pour l’inscription, la bienvenue, le mot de passe, l’équipe, la publication et les nouvelles commandes.
+- Connexion et inscription : panneau de présentation retiré, boutons désactivés tant que le formulaire est incomplet ; mot de passe oublié : le compte est vérifié avant l’envoi du lien.
+- Abonnement désactivé pendant le lancement gratuit (ADR-014) ; page « Accès refusé » au lieu d’une erreur serveur quand un rôle n’a pas le droit d’ouvrir une page.
 - Photos produit : correction du bug d’affichage (fichiers hors `public/`, servis par `/media`, remplacement au lieu d’ajout masqué, limite de 1 Mo des Server Actions relevée).
 
 ### Codé, à vérifier visuellement (la base locale a été arrêtée faute de mémoire)
@@ -25,7 +29,7 @@ Référence : `PrestAfrik maquettes UX UI/PRESTAFRIK-BRIEF-CLAUDE-CODE.md`. Inve
 
 ### Reste à faire
 
-- Équipe, Abonnement, Administration, landing page, 25 modèles d’e-mails, en-têtes de sécurité/CSP, worker et webhooks WhatsApp, tests Playwright de la matrice de viewports, CI.
+- Équipe, Administration, stockage cloud des photos (S3 ou Supabase Storage) pour la production, en-têtes de sécurité/CSP, worker et webhooks WhatsApp, tests Playwright de la matrice de viewports, CI.
 
 ## Étape 1 — initialisation, base, authentification et boutiques
 

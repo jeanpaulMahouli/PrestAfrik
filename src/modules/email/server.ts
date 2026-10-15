@@ -1,42 +1,49 @@
 import "server-only";
 
 import nodemailer, { type Transporter } from "nodemailer";
-import { getSmtpConfig } from "@/modules/email/config";
+import { billingEnabled } from "@/config/billing";
+import { site } from "@/config/site";
+import type { EmailId } from "@/config/texts/emails";
+import { getSmtpConfig, hasSmtpConfig } from "@/modules/email/config";
+import { emailRequiresBilling, renderEmail, type EmailVariables } from "@/modules/email/templates";
 
 let transporter: Transporter | undefined;
 
-type TransactionalEmail = {
-  to: string;
-  subject: string;
-  heading: string;
-  message: string;
-  actionLabel: string;
-  actionUrl: string;
-};
+function applicationOrigin() {
+  return (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/$/, "");
+}
 
-export async function sendTransactionalEmail({
-  to,
-  subject,
-  heading,
-  message,
-  actionLabel,
-  actionUrl,
-}: TransactionalEmail) {
-  const config = getSmtpConfig();
-  const link = new URL(actionUrl);
-  if (!["http:", "https:"].includes(link.protocol)) {
-    throw new Error("Le lien du courriel doit utiliser HTTP ou HTTPS.");
-  }
-  if (process.env.NODE_ENV === "production" && link.protocol !== "https:") {
-    throw new Error("Les liens des courriels de production doivent utiliser HTTPS.");
-  }
+function assertSafeLink(url: string) {
+  const link = new URL(url);
+  if (!["http:", "https:"].includes(link.protocol)) throw new Error("Le lien du courriel doit utiliser HTTP ou HTTPS.");
   if (process.env.NODE_ENV === "production") {
-    const applicationUrl = process.env.BETTER_AUTH_URL;
-    if (!applicationUrl || new URL(applicationUrl).origin !== link.origin) {
-      throw new Error("Le lien du courriel ne correspond pas au domaine public PrestAfrik.");
-    }
+    if (link.protocol !== "https:") throw new Error("Les liens des courriels de production doivent utiliser HTTPS.");
+    if (new URL(applicationOrigin()).origin !== link.origin) throw new Error("Le lien du courriel ne correspond pas au domaine public PrestAfrik.");
+  }
+}
+
+export type SendResult = { sent: true } | { sent: false; reason: "billing-disabled" | "test-address" | "no-smtp" };
+
+/**
+ * Envoie un e-mail du catalogue (E01 à E25). Garde-fous : e-mails d'abonnement bloqués pendant la
+ * gratuité, aucun envoi réel vers les adresses de test (.test), lien vérifié, version texte jointe.
+ */
+export async function sendEmail(id: EmailId, to: string, variables: EmailVariables, actionUrl?: string): Promise<SendResult> {
+  if (emailRequiresBilling(id) && !billingEnabled) return { sent: false, reason: "billing-disabled" };
+  if (actionUrl) assertSafeLink(actionUrl);
+  const email = renderEmail(id, variables, { baseUrl: applicationOrigin(), actionUrl, contactEmail: site.email });
+
+  // Données de démonstration et tests : jamais d'envoi réel (document des modèles, §3).
+  if (/\.test$/i.test(to.trim())) {
+    if (process.env.NODE_ENV !== "production") console.info(`[e-mail ${id} non envoyé : adresse de test] ${email.subject}`);
+    return { sent: false, reason: "test-address" };
+  }
+  if (process.env.NODE_ENV !== "production" && !hasSmtpConfig()) {
+    console.info(`[e-mail ${id} non envoyé : SMTP non configuré] ${email.subject}`);
+    return { sent: false, reason: "no-smtp" };
   }
 
+  const config = getSmtpConfig();
   transporter ??= nodemailer.createTransport({
     host: config.host,
     port: config.port,
@@ -49,39 +56,26 @@ export async function sendTransactionalEmail({
     tls: { minVersion: "TLSv1.2" },
   });
 
-  const safeHeading = escapeHtml(heading);
-  const safeMessage = escapeHtml(message);
-  const safeActionLabel = escapeHtml(actionLabel);
-  const safeUrl = escapeHtml(link.toString());
-  const safeSubject = subject.replace(/[\r\n]+/g, " ").trim();
   const result = await transporter.sendMail({
     from: config.from,
+    replyTo: site.email,
     to,
-    subject: safeSubject,
-    text: `${heading}\n\n${message}\n\n${actionLabel}: ${link.toString()}\n\nSi tu n’es pas à l’origine de cette demande, ignore ce message.`,
-    html: `<!doctype html><html lang="fr"><body style="margin:0;background:#f1f2ee;font-family:Arial,sans-serif;color:#000026"><main style="max-width:560px;margin:32px auto;padding:32px;background:#fff;border:1px solid #dce5de;border-radius:12px"><p style="font-weight:700;color:#000026">Prest<span style="color:#a85400">Afrik</span></p><h1 style="font-size:22px">${safeHeading}</h1><p style="line-height:1.6">${safeMessage}</p><p style="margin:28px 0"><a href="${safeUrl}" style="display:inline-block;padding:14px 22px;border-radius:8px;background:#ff9900;color:#000026;font-weight:700;text-decoration:none">${safeActionLabel}</a></p><p style="font-size:13px;line-height:1.5;color:#53645b">Si tu n’es pas à l’origine de cette demande, ignore ce message.</p></main></body></html>`,
+    subject: email.subject,
+    text: email.text,
+    html: email.html,
   });
-
   if (!result.accepted?.length || (result.rejected?.length ?? 0) > 0) {
     throw new Error("Le serveur SMTP n’a pas accepté le destinataire du courriel.");
   }
+  return { sent: true };
 }
 
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => {
-    switch (character) {
-      case "&":
-        return "&amp;";
-      case "<":
-        return "&lt;";
-      case ">":
-        return "&gt;";
-      case '"':
-        return "&quot;";
-      case "'":
-        return "&#39;";
-      default:
-        return character;
-    }
-  });
+/** Envoi « au mieux » des notifications : une panne d'e-mail ne bloque jamais l'action du vendeur. */
+export async function sendEmailQuietly(id: EmailId, to: string, variables: EmailVariables, actionUrl?: string) {
+  try {
+    return await sendEmail(id, to, variables, actionUrl);
+  } catch (error) {
+    console.error(`Échec de l’envoi de l’e-mail ${id}.`, error instanceof Error ? error.message : error);
+    return null;
+  }
 }

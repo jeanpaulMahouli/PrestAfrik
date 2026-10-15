@@ -23,7 +23,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
         : null;
 
   return (
-    <AuthShell storyText={t.storyText} storyTitle={t.storyTitle}>
+    <AuthShell>
       <AuthHeading subtitle={t.subtitle} title={t.title} />
       {notice && <p className="auth-notice" role="status">{notice}</p>}
       {error && <p className="auth-alert" role="alert">{error}</p>}

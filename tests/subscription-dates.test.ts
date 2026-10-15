@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   addCalendarPeriod,
   daysSince,
@@ -24,7 +24,8 @@ describe("subscription calendar dates", () => {
       .toEqual(new Date("2026-10-01T00:00:00.000Z"));
   });
 
-  it("pauses an expired storefront at 14 full days, but not before", () => {
+  it("pauses an expired storefront at 14 full days, but not before (abonnements actifs)", () => {
+    vi.stubEnv("NEXT_PUBLIC_BILLING_ENABLED", "true");
     const expiry = new Date("2026-10-01T12:00:00.000Z");
     const subscription = {
       status: "EXPIRED",
@@ -35,6 +36,14 @@ describe("subscription calendar dates", () => {
     expect(daysSince(expiry, new Date("2026-10-15T11:59:59.999Z"))).toBe(13);
     expect(isStoreSubscriptionPaused(subscription, new Date("2026-10-15T11:59:59.999Z"))).toBe(false);
     expect(isStoreSubscriptionPaused(subscription, new Date("2026-10-15T12:00:00.000Z"))).toBe(true);
+    vi.unstubAllEnvs();
+  });
+
+  it("ne met jamais une boutique en pause pendant le lancement gratuit (ADR-014)", () => {
+    vi.stubEnv("NEXT_PUBLIC_BILLING_ENABLED", "false");
+    const subscription = { status: "EXPIRED", trialEndsAt: new Date("2026-01-01T00:00:00.000Z"), currentPeriodEnd: null };
+    expect(isStoreSubscriptionPaused(subscription, new Date("2026-10-15T12:00:00.000Z"))).toBe(false);
+    vi.unstubAllEnvs();
   });
 
   it("does not pause an active or canceled paid subscription before its period ends", () => {

@@ -1,6 +1,8 @@
 import "server-only";
 
+import { billingEnabled } from "@/config/billing";
 import { prisma } from "@/lib/prisma";
+import { notifyStorePublished } from "@/modules/email/notifications";
 import { isStoreSubscriptionPaused } from "@/modules/subscriptions/service";
 
 // Conditions de publication d'une boutique (brief §6.3). La liste de ce qui manque est affichée au
@@ -18,7 +20,7 @@ export async function getPublicationChecklist(storeId: string, emailVerified: bo
     prisma.deliveryZone.count({ where: { storeId, isActive: true, feeXaf: { not: null } } }),
     prisma.subscription.findUnique({ where: { storeId }, select: { status: true, trialEndsAt: true, currentPeriodEnd: true } }),
   ]);
-  return [
+  const items: PublicationItem[] = [
     { key: "name", label: "Nom et adresse de la boutique", done: Boolean(store.name && store.slug), href: "/dashboard/boutique#informations" },
     { key: "activity", label: "Activité principale", done: Boolean(store.activityId || store.activityOther || store.businessCategory), href: "/dashboard/boutique#informations" },
     { key: "location", label: "Ville de la boutique", done: Boolean(store.city), href: "/dashboard/boutique#informations" },
@@ -29,6 +31,8 @@ export async function getPublicationChecklist(storeId: string, emailVerified: bo
     { key: "product", label: "Au moins un produit actif", done: activeProducts > 0, href: "/dashboard/produits/nouveau" },
     { key: "delivery", label: "Une zone de livraison avec ses frais, ou le retrait en boutique", done: activeZones > 0 || store.pickupEnabled, href: "/dashboard/livraisons" },
   ];
+  // Lancement gratuit (ADR-014) : l'abonnement n'est pas une condition de publication.
+  return billingEnabled ? items : items.filter((item) => item.key !== "subscription");
 }
 
 /** Publie la boutique si toutes les conditions sont remplies (dont une zone à frais fixes ou le retrait). */
@@ -36,6 +40,9 @@ export async function publishStoreIfReady(storeId: string, emailVerified: boolea
   const checklist = await getPublicationChecklist(storeId, emailVerified);
   const missing = checklist.filter((item) => !item.done);
   if (missing.length) return { ok: false as const, missing };
+  const before = await prisma.store.findUniqueOrThrow({ where: { id: storeId }, select: { publishedAt: true } });
   await prisma.store.update({ where: { id: storeId }, data: { isPublished: true, publishedAt: new Date(), onboardingStep: null } });
+  // E13 : une seule fois par boutique (première publication).
+  if (!before.publishedAt) notifyStorePublished(storeId);
   return { ok: true as const };
 }

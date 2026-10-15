@@ -57,10 +57,16 @@ export function NavigationLoadingIndicator() {
       const form = event.target;
       if (!(form instanceof HTMLFormElement)) return;
       // getAttribute : un champ nommé « method » ou « action » masquerait les propriétés du formulaire.
-      const action = new URL(form.getAttribute("action") ?? "", window.location.href);
+      const rawAction = form.getAttribute("action");
+      // Formulaire géré en JavaScript (pas d'action réelle) : aucune navigation, pas de voile.
+      if (!rawAction || rawAction.startsWith("javascript:")) return;
+      const action = new URL(rawAction, window.location.href);
       if (action.origin !== window.location.origin) return;
       if ((form.getAttribute("method") ?? "get").toLowerCase() === "get" || action.pathname.startsWith("/api/")) {
-        showAfterDelay();
+        // Le gestionnaire React s'exécute après cet écouteur : on vérifie ensuite s'il a annulé l'envoi.
+        window.setTimeout(() => {
+          if (!event.defaultPrevented) showAfterDelay();
+        }, 0);
       }
     }
 
@@ -79,7 +85,7 @@ export function NavigationLoadingIndicator() {
   return (
     <div aria-busy="true" aria-live="polite" className="app-loading" role="status">
       <span aria-hidden="true" className="loading-spinner loading-spinner-page" />
-      <p>Chargement de PrestAfrik…</p>
+      <p>Chargement en cours...</p>
     </div>
   );
 }

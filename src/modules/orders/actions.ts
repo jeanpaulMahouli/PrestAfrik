@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { parsePhone } from "@/lib/phone";
 import { clientIpFrom } from "@/lib/request-ip";
+import { notifyNewOrder } from "@/modules/email/notifications";
 import { checkoutOrder, CheckoutProblem, type CartLine } from "@/modules/orders/checkout";
 
 const checkoutSchema = z.object({
@@ -69,7 +70,7 @@ export async function checkoutOrderAction(_previousState: CheckoutActionState, f
   }
 
   try {
-    return await checkoutOrder({
+    const order = await checkoutOrder({
       storeSlug: input.storeSlug,
       customer: { name: input.name, whatsapp: phone.e164, email: null, followUpConsent: true, marketingConsent: input.marketingConsent },
       deliveryMethod: input.deliveryMethod,
@@ -81,6 +82,8 @@ export async function checkoutOrderAction(_previousState: CheckoutActionState, f
       expectedTotalXaf: input.expectedTotalXaf,
       clientIp: clientIpFrom(await headers()),
     });
+    if (order.created) notifyNewOrder(order.reference, order.storeId);
+    return { reference: order.reference, trackingToken: order.trackingToken };
   } catch (error) {
     if (error instanceof CheckoutProblem) return { error: error.message };
     console.error("Échec inattendu lors de l’enregistrement d’une commande.", error);

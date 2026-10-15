@@ -7,7 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { texts } from "@/config/texts";
 import { checkPassword, passwordMaxLength, passwordMinLength } from "@/modules/auth/password-policy";
 import { getSmtpConfig } from "@/modules/email/config";
-import { sendTransactionalEmail } from "@/modules/email/server";
+import { sendEmail, sendEmailQuietly } from "@/modules/email/server";
+import { formatDate, formatTime } from "@/lib/format";
 
 const isProduction = process.env.NODE_ENV === "production";
 const isProductionBuild = process.env.NEXT_PHASE === "phase-production-build";
@@ -123,29 +124,28 @@ export const auth = betterAuth({
     autoSignIn: true,
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true,
+    // E04 — lien de réinitialisation (60 minutes).
     sendResetPassword: async ({ user, url }) => {
-      await sendTransactionalEmail({
-        to: user.email,
-        subject: "Réinitialise ton mot de passe PrestAfrik",
-        heading: "Réinitialise ton mot de passe",
-        message: "Nous avons reçu une demande de réinitialisation du mot de passe de ton compte PrestAfrik.",
-        actionLabel: "Choisir un nouveau mot de passe",
-        actionUrl: url,
-      });
+      await sendEmail("E04", user.email, { email: user.email }, url);
+    },
+    // E05 — alerte de sécurité après le changement (les sessions sont déjà révoquées).
+    onPasswordReset: async ({ user }) => {
+      const now = new Date();
+      await sendEmailQuietly("E05", user.email, { date: formatDate(now), heure: formatTime(now) }, `${authBaseUrl || "http://localhost:3000"}/connexion`);
     },
   },
   emailVerification: {
     sendOnSignUp: true,
     autoSignInAfterVerification: true,
+    // E01 — confirmation de l'adresse (le premier prénom sert de salutation).
     sendVerificationEmail: async ({ user, url }) => {
-      await sendTransactionalEmail({
-        to: user.email,
-        subject: "Confirme ton adresse e-mail PrestAfrik",
-        heading: `Bienvenue sur PrestAfrik${user.name ? `, ${user.name}` : ""} !`,
-        message: "Confirme ton adresse e-mail pour terminer la création de ton compte PrestAfrik.",
-        actionLabel: "Confirmer mon adresse e-mail",
-        actionUrl: url,
-      });
+      const firstName = user.name?.trim().split(/\s+/)[0] || user.email.split("@")[0];
+      await sendEmail("E01", user.email, { prenom: firstName }, url);
+    },
+    // E02 — bienvenue, une fois l'adresse confirmée.
+    afterEmailVerification: async (user) => {
+      const firstName = user.name?.trim().split(/\s+/)[0] || user.email.split("@")[0];
+      await sendEmailQuietly("E02", user.email, { prenom: firstName }, `${authBaseUrl || "http://localhost:3000"}/boutiques/nouvelle`);
     },
   },
 });

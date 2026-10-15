@@ -32,6 +32,8 @@ export function isStoreSubscriptionPaused(
   } | null,
   now = new Date(),
 ) {
+  // Gratuité du lancement (ADR-014) : aucune boutique n'est mise en pause.
+  if (process.env.NEXT_PUBLIC_BILLING_ENABLED !== "true") return false;
   if (!subscription) {
     throw new Error("La boutique publiée n’a pas d’abonnement configuré.");
   }

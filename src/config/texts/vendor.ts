@@ -22,6 +22,12 @@ export const vendorTexts = {
     emailBannerAction: "Renvoyer le lien",
     emailBannerSent: "Lien envoyé. Consultez votre boîte de réception.",
     roles: { OWNER: "Propriétaire", MANAGER: "Gestionnaire", ORDER_PREPARER: "Préparateur de commandes" },
+    /** Phrases des e-mails d'équipe (E09, E12), cohérentes avec la matrice de permissions. */
+    roleDescriptions: {
+      OWNER: "Vous pouvez tout gérer : la boutique, les produits, les commandes, l’argent reçu et l’équipe.",
+      MANAGER: "Vous pourrez gérer les produits, les commandes, les clients, les livraisons et l’argent reçu.",
+      ORDER_PREPARER: "Vous pourrez voir les commandes et les produits, et écrire aux clients sur WhatsApp.",
+    },
   },
   nav: {
     home: "Accueil",

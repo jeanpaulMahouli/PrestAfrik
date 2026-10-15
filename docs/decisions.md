@@ -59,3 +59,16 @@ Décision du porteur de projet (15/10/2026) : les vendeurs apprennent seuls, l'a
 - Les frais de livraison sont fixés par zone et connus du client avant la commande. Plus de frais « à confirmer » : sans zone correspondante, la livraison est refusée (le client choisit une zone ou le retrait).
 - Chaque commande propose « Continuer sur WhatsApp » (message prérempli au client), « Valider » et « Voir ». Valider enregistre automatiquement le montant total dans « Argent reçu » et sort le stock. Annuler une commande validée crée une écriture inverse et remet les articles en stock.
 - Schéma inchangé (aucune migration) : `processingStatus` porte l'état (TO_REVIEW = nouvelle, COMPLETED = validée, CANCELLED = annulée) ; les autres colonnes de statut restent en base pour l'historique. Les anciennes commandes « acceptées » ou « en préparation » apparaissent comme nouvelles.
+
+## ADR-014 — Lancement gratuit : abonnements désactivés
+
+Décision du porteur de projet (15/10/2026) : pendant le lancement, PrestAfrik est gratuit. Un seul interrupteur, `NEXT_PUBLIC_BILLING_ENABLED` (absent = gratuit), lu côté serveur et par le menu.
+
+- Gratuit : aucune limite de produits, plafonds techniques larges pour les membres (50) et les messages (100 000 par mois), aucune expiration, restriction, rappel ni mise en pause de boutique ; l'abonnement n'est plus une condition de publication.
+- Le menu « Abonnement » est grisé (« Gratuit ») et la page présente les offres à venir, désactivées.
+- Les e-mails d'abonnement (E14 à E19, E23) restent écrits mais ne partent pas tant que l'interrupteur est désactivé.
+- Pour activer les offres payantes plus tard : `NEXT_PUBLIC_BILLING_ENABLED=true`, sans migration.
+
+## ADR-015 — E-mails : gabarits maison plutôt que react-email
+
+Le document des modèles autorise `@react-email/components` ou MJML. Pour ne pas ajouter de dépendance, les 25 modèles utilisent une mise en page unique en tableaux HTML et styles en ligne (`src/modules/email/templates.ts`), avec une version texte générée à partir du même contenu. Les textes sont centralisés dans `src/config/texts/emails.ts`. Toute variable manquante fait échouer le rendu ; les adresses `.test` ne reçoivent jamais d'envoi réel ; aperçu en développement sur `/dev/emails`. Branchés : E01, E02, E04, E05, E09 à E13, E21. En attente de leur fonctionnalité : E03, E06 à E08, E20, E22, E24, E25 (et les e-mails d'abonnement).

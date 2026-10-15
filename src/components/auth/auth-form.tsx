@@ -44,6 +44,11 @@ export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
   const passwordIssue = checkPassword(password, isSignUp ? { email, name } : {});
   const strength = passwordStrength(password);
   const strengthLabel = t.fields.strength[strength];
+  // Le bouton reste désactivé tant que les conditions ne sont pas remplies.
+  const missing = isSignUp
+    ? [!nameValid && "votre nom", !emailValid && "une adresse e-mail valide", passwordIssue && "un mot de passe de 8 caractères minimum", !acceptedTerms && "l’acceptation des conditions"].filter(Boolean)
+    : [!emailValid && "une adresse e-mail valide", !password && "votre mot de passe"].filter(Boolean);
+  const canSubmit = missing.length === 0;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -205,9 +210,14 @@ export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
 
       {error && <p className="auth-alert" role="alert">{error}</p>}
 
-      <SubmitButton className="auth-submit" loading={pending} pendingLabel={isSignUp ? t.signUp.pending : t.signIn.pending}>
+      <SubmitButton aria-describedby={canSubmit ? undefined : `${ids.help}-missing`} className="auth-submit" disabled={!canSubmit} loading={pending} pendingLabel={isSignUp ? t.signUp.pending : t.signIn.pending}>
         {isSignUp ? t.signUp.submit : t.signIn.submit} <span aria-hidden="true">→</span>
       </SubmitButton>
+      {!canSubmit && (
+        <p aria-live="polite" className="auth-submit-hint" id={`${ids.help}-missing`}>
+          Pour continuer : {missing.join(", ")}.
+        </p>
+      )}
       {!isSignUp && <p className="auth-secure-note">{t.signIn.secureNote}</p>}
 
       <p className="auth-switch">

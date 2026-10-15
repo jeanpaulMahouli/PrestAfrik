@@ -2,6 +2,7 @@
 // comme un téléphone) : copie du lien, « Commander maintenant », ajout de photo, assistant.
 // Usage : node scripts/design/lan-check.mjs <http://IP:3000> <dossier-captures>
 import { chromium } from "@playwright/test";
+import sharp from "sharp";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -49,7 +50,7 @@ const errors = [];
   await page.getByRole("button", { name: "Copier", exact: true }).click();
   results.copy = await page.locator(".share-link-row button").innerText();
 
-  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+  const png = await sharp({ create: { width: 600, height: 600, channels: 3, background: "#ff9900" } }).png().toBuffer();
   const file = join(out, "photo-test.png");
   writeFileSync(file, png);
   await page.goto(`${origin}/dashboard/produits/nouveau`, { waitUntil: "networkidle" });

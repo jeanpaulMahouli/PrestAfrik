@@ -4,7 +4,7 @@ Généré depuis `docs/design/reference/inventaire.json` (extraction : `node scr
 
 | Page | Écran | Taille | Capture | Route | État |
 |---|---|---|---|---|---|
-| Site PrestAfrik | Landing page | 1440×8000 | [capture](reference/site-prestafrik/01-landing-page/capture.png) | `/` | À faire |
+| Site PrestAfrik | Landing page | 1440×8000 | [capture](reference/site-prestafrik/01-landing-page/capture.png) | `/` | Codé (ADR-013/014), vérifié 1440/390 |
 | Site PrestAfrik | Connexion | 1280×830 | [capture](reference/site-prestafrik/02-connexion/capture.png) | `/connexion` | Fait, comparé |
 | Site PrestAfrik | Inscription | 1280×830 | [capture](reference/site-prestafrik/03-inscription/capture.png) | `/inscription` | Fait, comparé |
 | Assistant de création | Assistant · 1. Nom | 1280×900 | [capture](reference/assistant-de-creation/01-assistant-1-nom/capture.png) | `/boutiques/nouvelle (assistant)` | Codé, vérifié 1280/390 |
@@ -49,11 +49,11 @@ Généré depuis `docs/design/reference/inventaire.json` (extraction : `node scr
 | Administration | Administration · Messages échoués | 1280×900 | [capture](reference/administration/03-administration-messages-echoues/capture.png) | `/admin…` | À faire |
 | Administration | Administration · Alertes | 1280×900 | [capture](reference/administration/04-administration-alertes/capture.png) | `/admin…` | À faire |
 | Administration | Administration · Utilisateurs | 1280×900 | [capture](reference/administration/05-administration-utilisateurs/capture.png) | `/admin…` | À faire |
-| E-mails | E-mail E01 · Confirmation de l’adresse e-mail (inscription) | 720×780 | [capture](reference/e-mails/01-e-mail-e01-confirmation-de-l-adresse-e-mail-inscription/capture.png) | `gabarit d’e-mail` | À faire |
-| E-mails | E-mail E02 · Bienvenue (adresse confirmée) | 720×840 | [capture](reference/e-mails/02-e-mail-e02-bienvenue-adresse-confirmee/capture.png) | `gabarit d’e-mail` | À faire |
-| E-mails | E-mail E04 · Réinitialisation du mot de passe | 720×784 | [capture](reference/e-mails/03-e-mail-e04-reinitialisation-du-mot-de-passe/capture.png) | `gabarit d’e-mail` | À faire |
-| E-mails | E-mail E05 · Mot de passe modifié (alerte de sécurité) | 720×780 | [capture](reference/e-mails/04-e-mail-e05-mot-de-passe-modifie-alerte-de-securite/capture.png) | `gabarit d’e-mail` | À faire |
-| E-mails | E-mail E09 · Invitation à rejoindre une boutique | 720×754 | [capture](reference/e-mails/05-e-mail-e09-invitation-a-rejoindre-une-boutique/capture.png) | `gabarit d’e-mail` | À faire |
-| E-mails | E-mail E13 · Boutique publiée | 720×807 | [capture](reference/e-mails/06-e-mail-e13-boutique-publiee/capture.png) | `gabarit d’e-mail` | À faire |
-| E-mails | E-mail E14 · Votre essai se termine bientôt | 720×855 | [capture](reference/e-mails/07-e-mail-e14-votre-essai-se-termine-bientot/capture.png) | `gabarit d’e-mail` | À faire |
-| E-mails | E-mail E16 · Paiement confirmé | 720×818 | [capture](reference/e-mails/08-e-mail-e16-paiement-confirme/capture.png) | `gabarit d’e-mail` | À faire |
+| E-mails | E-mail E01 · Confirmation de l’adresse e-mail (inscription) | 720×780 | [capture](reference/e-mails/01-e-mail-e01-confirmation-de-l-adresse-e-mail-inscription/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |
+| E-mails | E-mail E02 · Bienvenue (adresse confirmée) | 720×840 | [capture](reference/e-mails/02-e-mail-e02-bienvenue-adresse-confirmee/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |
+| E-mails | E-mail E04 · Réinitialisation du mot de passe | 720×784 | [capture](reference/e-mails/03-e-mail-e04-reinitialisation-du-mot-de-passe/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |
+| E-mails | E-mail E05 · Mot de passe modifié (alerte de sécurité) | 720×780 | [capture](reference/e-mails/04-e-mail-e05-mot-de-passe-modifie-alerte-de-securite/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |
+| E-mails | E-mail E09 · Invitation à rejoindre une boutique | 720×754 | [capture](reference/e-mails/05-e-mail-e09-invitation-a-rejoindre-une-boutique/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |
+| E-mails | E-mail E13 · Boutique publiée | 720×807 | [capture](reference/e-mails/06-e-mail-e13-boutique-publiee/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |
+| E-mails | E-mail E14 · Votre essai se termine bientôt | 720×855 | [capture](reference/e-mails/07-e-mail-e14-votre-essai-se-termine-bientot/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |
+| E-mails | E-mail E16 · Paiement confirmé | 720×818 | [capture](reference/e-mails/08-e-mail-e16-paiement-confirme/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |

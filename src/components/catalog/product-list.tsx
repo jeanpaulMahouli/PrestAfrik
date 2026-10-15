@@ -178,7 +178,7 @@ export function ProductList({ rows, tab, storeSlug, storePublished, canManage, a
                   {row.thumbnail ? <StoreImage alt="" height={96} sizes="48px" src={row.thumbnail} width={96} /> : null}
                 </span>
                 <span>
-                  <Link className="product-name" href={`/dashboard/produits/${row.id}`}>{row.name}</Link>
+                  {canManage ? <Link className="product-name" href={`/dashboard/produits/${row.id}`}>{row.name}</Link> : <span className="product-name">{row.name}</span>}
                   <small>
                     {row.sku} · {row.photoCount} photo{row.photoCount > 1 ? "s" : ""}
                   </small>
@@ -191,7 +191,7 @@ export function ProductList({ rows, tab, storeSlug, storePublished, canManage, a
               <td data-label="Prix">{formatFcfa(row.priceXaf)}</td>
               <td data-label="Prix promo">{row.promotionalPriceXaf === null ? "—" : formatFcfa(row.promotionalPriceXaf)}</td>
               <td className="product-actions">
-                <Link className="v-link" href={`/dashboard/produits/${row.id}`}>Modifier</Link>
+                {canManage && <Link className="v-link" href={`/dashboard/produits/${row.id}`}>Modifier</Link>}
                 {canManage && (
                   <RowMenu actions={actions} onDelete={() => setDeleting([row])} row={row} storePublished={storePublished} storeSlug={storeSlug} tab={tab} />
                 )}

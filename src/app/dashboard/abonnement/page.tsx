@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { SubscriptionPeriod } from "@prisma/client";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { VendorShell } from "@/components/layout/vendor-shell";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { billingEnabled } from "@/config/billing";
+import { formatFcfa } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { simulateSubscriptionPayment } from "@/modules/subscriptions/actions";
 import { getStoreSubscriptionAccess } from "@/modules/subscriptions/service";
@@ -24,6 +27,7 @@ export default async function SubscriptionPage({
   const { session, store, memberships, membership } =
     await requireStorePermission("subscription.manage");
   const params = await searchParams;
+  if (!billingEnabled) return <FreeLaunchPage />;
   const period =
     params.periode === SubscriptionPeriod.YEARLY
       ? SubscriptionPeriod.YEARLY
@@ -263,4 +267,35 @@ function formatLongDate(date: Date) {
     dateStyle: "long",
     timeZone: "Africa/Douala",
   }).format(date);
+}
+
+
+/** Lancement gratuit (ADR-014) : les offres sont présentées grisées et désactivées. */
+async function FreeLaunchPage() {
+  const plans = await prisma.plan.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } });
+  return (
+    <VendorShell>
+      <div className="v-page-header">
+        <div>
+          <h1 className="v-page-title">Abonnement</h1>
+          <p className="v-page-subtitle">PrestAfrik est entièrement gratuit pendant son lancement.</p>
+        </div>
+      </div>
+      <p className="v-banner v-banner-success" role="status">
+        Profitez de toutes les fonctions sans limite et sans rien payer. Nous vous préviendrons bien à l’avance avant l’arrivée des offres payantes.
+      </p>
+      <section aria-label="Offres à venir (non disponibles)" className="billing-disabled">
+        <div aria-hidden="true" className="billing-disabled-content subscription-plans" inert>
+          {plans.map((plan) => (
+            <article className="v-card" key={plan.id}>
+              <h2 className="v-card-title">{plan.name}</h2>
+              <p><strong>{formatFcfa(plan.monthlyPriceXaf)}</strong> / mois</p>
+              <p className="v-muted v-small">{plan.productQuota === null ? "Produits illimités" : `${plan.productQuota} produits actifs`} · {plan.memberQuota} membres</p>
+              <button className="btn btn-secondary" disabled type="button">Bientôt disponible</button>
+            </article>
+          ))}
+        </div>
+      </section>
+    </VendorShell>
+  );
 }

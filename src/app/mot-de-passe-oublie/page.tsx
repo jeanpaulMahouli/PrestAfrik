@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: t.reset.requestTitle };
 
 export default function ForgotPasswordPage() {
   return (
-    <AuthShell storyText={t.signIn.storyText} storyTitle={t.signIn.storyTitle}>
+    <AuthShell>
       <AuthHeading subtitle={t.reset.requestSubtitle} title={t.reset.requestTitle} />
       <PasswordResetRequestForm />
       <p className="auth-switch">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { StoreRole } from "@prisma/client";
+import { billingEnabled } from "@/config/billing";
 import { texts } from "@/config/texts";
 import { hasPermission, type Permission } from "@/modules/auth/permissions";
 
@@ -30,6 +31,15 @@ function NavLinks({ role, onNavigate }: { role: StoreRole; onNavigate?: () => vo
         .filter((link) => !link.permission || hasPermission(role, link.permission))
         .map((link) => {
           const active = link.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(link.href);
+          // Abonnement désactivé pendant le lancement gratuit (ADR-014) : entrée grisée, non cliquable.
+          if (link.href === "/dashboard/abonnement" && !billingEnabled) {
+            return (
+              <span aria-disabled="true" className="nav-link-disabled" key={link.href} title="Bientôt disponible">
+                {link.title}
+                <small>Gratuit</small>
+              </span>
+            );
+          }
           return (
             <Link aria-current={active ? "page" : undefined} href={link.href} key={link.href} onClick={onNavigate}>
               {link.title}

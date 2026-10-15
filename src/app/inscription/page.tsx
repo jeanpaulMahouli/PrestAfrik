@@ -12,7 +12,7 @@ export default async function SignUpPage({ searchParams }: PageProps<"/inscripti
   const invitationToken = typeof params.invitation === "string" ? params.invitation : undefined;
 
   return (
-    <AuthShell benefits={t.benefits} storyText={t.storyText} storyTitle={t.storyTitle}>
+    <AuthShell>
       <AuthHeading subtitle={t.subtitle} title={t.title} />
       <AuthForm invitationToken={invitationToken} mode="sign-up" />
     </AuthShell>

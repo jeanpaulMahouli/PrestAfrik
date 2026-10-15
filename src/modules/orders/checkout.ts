@@ -200,7 +200,8 @@ export async function checkoutOrder({
     where: { storeId_idempotencyKey: { storeId: store.id, idempotencyKey } },
     select: { reference: true, trackingToken: true },
   });
-  if (previousOrder) return previousOrder;
+  // Double envoi (même clé) : la commande existante est renvoyée, sans nouvelle notification.
+  if (previousOrder) return { ...previousOrder, storeId: store.id, created: false };
   const subscription = await prisma.subscription.findUnique({
     where: { storeId: store.id },
     select: { status: true, trialEndsAt: true, currentPeriodEnd: true },
@@ -406,7 +407,7 @@ export async function checkoutOrder({
         data: { orderId: order.id, type: "CREATED", toValue: "TO_REVIEW", note: "Commande reçue sur la boutique." },
       });
 
-      return { reference: order.reference, trackingToken: order.trackingToken };
+      return { reference: order.reference, trackingToken: order.trackingToken, storeId: store.id, created: true };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -414,7 +415,7 @@ export async function checkoutOrder({
         where: { storeId_idempotencyKey: { storeId: store.id, idempotencyKey } },
         select: { reference: true, trackingToken: true },
       });
-      if (racedOrder) return racedOrder;
+      if (racedOrder) return { ...racedOrder, storeId: store.id, created: false };
     }
     throw error;
   }

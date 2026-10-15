@@ -16,6 +16,7 @@ export function PasswordResetForm({ token }: { token: string }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const valid = !checkPassword(password);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,7 +63,7 @@ export function PasswordResetForm({ token }: { token: string }) {
         <p className="auth-field-help" id={`${id}-help`}>{t.signUp.passwordHelp}</p>
       </div>
       {error && <p className="auth-alert" role="alert">{error}</p>}
-      <SubmitButton className="auth-submit" loading={pending} pendingLabel={texts.common.saving}>
+      <SubmitButton className="auth-submit" disabled={!valid} loading={pending} pendingLabel={texts.common.saving}>
         {t.reset.newSubmit} <span aria-hidden="true">→</span>
       </SubmitButton>
     </form>

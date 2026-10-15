@@ -13,7 +13,7 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<"/re
   const token = typeof params.token === "string" ? params.token : null;
 
   return (
-    <AuthShell storyText={t.signIn.storyText} storyTitle={t.signIn.storyTitle}>
+    <AuthShell>
       <AuthHeading subtitle={t.reset.newSubtitle} title={t.reset.newTitle} />
       {!token || params.error === "INVALID_TOKEN" ? (
         <>

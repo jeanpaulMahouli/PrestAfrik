@@ -6,6 +6,7 @@
 @import "../styles/store.css";
 @import "../styles/wizard.css";
 @import "../styles/storefront.css";
+@import "../styles/landing.css";
 
 * {
   box-sizing: border-box;
@@ -775,7 +776,6 @@ a {
   
 
   
-
 
   
 

@@ -8,7 +8,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/modules/auth/server";
 import { getSmtpConfig } from "@/modules/email/config";
-import { sendTransactionalEmail } from "@/modules/email/server";
+import { texts } from "@/config/texts";
+import { sendEmail, sendEmailQuietly } from "@/modules/email/server";
 import {
   invitationIdSchema,
   invitationTokenSchema,
@@ -40,16 +41,14 @@ function invitationUrl(token: string) {
   ).toString();
 }
 
-async function sendInvitationEmail(email: string, storeName: string, token: string) {
+const appUrl = (path: string) => new URL(path, process.env.BETTER_AUTH_URL ?? "http://localhost:3000").toString();
+const roleLabel = (role: StoreRole) => texts.vendor.shell.roles[role];
+const roleDescription = (role: StoreRole) => texts.vendor.shell.roleDescriptions[role];
+
+/** E09 — invitation (lien valable 7 jours, réservé à l'adresse invitée). */
+async function sendInvitationEmail(email: string, storeName: string, token: string, inviterName: string, role: StoreRole) {
   getSmtpConfig();
-  await sendTransactionalEmail({
-    to: email,
-    subject: `Invitation à rejoindre ${storeName} sur PrestAfrik`,
-    heading: `Tu es invité(e) à rejoindre ${storeName}`,
-    message: `Le propriétaire de la boutique ${storeName} t’invite à rejoindre son équipe sur PrestAfrik. Ce lien expire dans 7 jours et ne peut être utilisé qu’une seule fois.`,
-    actionLabel: "Accepter l’invitation",
-    actionUrl: invitationUrl(token),
-  });
+  await sendEmail("E09", email, { inviteur: inviterName, boutique: storeName, role: roleLabel(role), descriptionRole: roleDescription(role), email }, invitationUrl(token));
 }
 
 export async function inviteTeamMember(formData: FormData) {
@@ -57,7 +56,7 @@ export async function inviteTeamMember(formData: FormData) {
     email: formData.get("email"),
     role: formData.get("role"),
   });
-  if (!parsed.success) reportError("Saisis une adresse e-mail valide et choisis un rôle.");
+  if (!parsed.success) reportError("Saisissez une adresse e-mail valide et choisissez un rôle.");
   try {
     getSmtpConfig();
   } catch {
@@ -75,7 +74,7 @@ export async function inviteTeamMember(formData: FormData) {
       where: { storeId_userId: { storeId: store.id, userId: account.id } },
       select: { id: true },
     });
-    if (existingMembership) reportError("Cette personne est déjà membre de ta boutique.");
+    if (existingMembership) reportError("Cette personne est déjà membre de votre boutique.");
   }
 
   const token = randomBytes(32).toString("base64url");
@@ -115,7 +114,7 @@ export async function inviteTeamMember(formData: FormData) {
     throw error;
   }
   try {
-    await sendInvitationEmail(email, store.name, token);
+    await sendInvitationEmail(email, store.name, token, session.user.name, parsed.data.role);
   } catch (error) {
     console.error("PrestAfrik could not send a team invitation email.", {
       name: error instanceof Error ? error.name : "UnknownError",
@@ -138,7 +137,7 @@ export async function resendTeamInvitation(formData: FormData) {
   const { session, store } = await requireStorePermission("team.manage");
   const invitation = await prisma.storeInvitation.findFirst({
     where: { id: parsed.data, storeId: store.id, acceptedAt: null },
-    select: { id: true, email: true },
+    select: { id: true, email: true, role: true },
   });
   if (!invitation) reportError("Cette invitation n’est plus disponible.");
 
@@ -152,7 +151,7 @@ export async function resendTeamInvitation(formData: FormData) {
     },
   });
   try {
-    await sendInvitationEmail(invitation.email, store.name, token);
+    await sendInvitationEmail(invitation.email, store.name, token, session.user.name, invitation.role);
   } catch (error) {
     console.error("PrestAfrik could not resend a team invitation email.", {
       name: error instanceof Error ? error.name : "UnknownError",
@@ -181,7 +180,7 @@ export async function updateTeamMemberRole(formData: FormData) {
     membershipId: formData.get("membershipId"),
     role: formData.get("role"),
   });
-  if (!parsed.success) reportError("Choisis un rôle valide.");
+  if (!parsed.success) reportError("Choisissez un rôle valide.");
 
   const { store } = await requireStorePermission("team.manage");
   const updated = await prisma.storeMembership.updateMany({
@@ -193,6 +192,10 @@ export async function updateTeamMemberRole(formData: FormData) {
     data: { role: parsed.data.role },
   });
   if (updated.count !== 1) reportError("Membre introuvable ou rôle non modifiable.");
+  const member = await prisma.storeMembership.findUnique({ where: { id: parsed.data.membershipId }, select: { user: { select: { email: true } } } });
+  if (member) {
+    await sendEmailQuietly("E12", member.user.email, { boutique: store.name, role: roleLabel(parsed.data.role), descriptionRole: roleDescription(parsed.data.role) }, appUrl("/dashboard"));
+  }
   revalidatePath(teamPath);
   redirect(`${teamPath}?succes=role`);
 }
@@ -202,6 +205,7 @@ export async function removeTeamMember(formData: FormData) {
   if (!parsed.success) reportError("Membre invalide.");
 
   const { store } = await requireStorePermission("team.manage");
+  const leaving = await prisma.storeMembership.findFirst({ where: { id: parsed.data, storeId: store.id }, select: { user: { select: { email: true } } } });
   const removed = await prisma.storeMembership.deleteMany({
     where: {
       id: parsed.data,
@@ -210,6 +214,7 @@ export async function removeTeamMember(formData: FormData) {
     },
   });
   if (removed.count !== 1) reportError("Membre introuvable ou impossible à retirer.");
+  if (leaving) await sendEmailQuietly("E11", leaving.user.email, { boutique: store.name });
   revalidatePath(teamPath);
   redirect(`${teamPath}?succes=retrait`);
 }
@@ -224,7 +229,7 @@ export async function acceptTeamInvitation(formData: FormData) {
   const now = new Date();
   const invitation = await prisma.storeInvitation.findFirst({
     where: { token: tokenHash, acceptedAt: null, expiresAt: { gt: now } },
-    include: { store: { select: { id: true } } },
+    include: { store: { select: { id: true, name: true, memberships: { where: { role: StoreRole.OWNER }, select: { user: { select: { email: true } } } } } } },
   });
   if (!invitation) redirect("/connexion?erreur=invitation-expiree");
   if (invitation.email.toLowerCase() !== session.user.email.toLowerCase()) {
@@ -259,6 +264,9 @@ export async function acceptTeamInvitation(formData: FormData) {
     throw error;
   }
 
+  for (const owner of invitation.store.memberships) {
+    await sendEmailQuietly("E10", owner.user.email, { membre: session.user.name, boutique: invitation.store.name, role: roleLabel(invitation.role) }, appUrl("/dashboard/equipe"));
+  }
   (await cookies()).set("prestafrik-store", invitation.storeId, {
     httpOnly: true,
     sameSite: "lax",

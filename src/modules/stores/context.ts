@@ -47,7 +47,8 @@ export const getStoreContext = cache(async function getStoreContext() {
 export async function requireStorePermission(permission: Permission) {
   const context = await getStoreContext();
   if (!hasPermission(context.membership.role, permission)) {
-    throw new Error("Tu n’as pas l’autorisation d’effectuer cette action.");
+    // Page explicative plutôt qu'une erreur serveur (ex. un membre invité qui ouvre « Modifier un produit »).
+    redirect(`/dashboard/acces-refuse?droit=${encodeURIComponent(permission)}`);
   }
   return context;
 }
