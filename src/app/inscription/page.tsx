@@ -1,19 +1,20 @@
+import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth/auth-form";
-import { AuthShell } from "@/components/auth/auth-shell";
+import { AuthHeading, AuthShell } from "@/components/auth/auth-shell";
+import { texts } from "@/config/texts";
 
-export default async function SignUpPage({
-  searchParams,
-}: PageProps<"/inscription">) {
+const t = texts.auth.signUp;
+
+export const metadata: Metadata = { title: t.metaTitle };
+
+export default async function SignUpPage({ searchParams }: PageProps<"/inscription">) {
   const params = await searchParams;
-  const invitationToken =
-    typeof params.invitation === "string" ? params.invitation : undefined;
+  const invitationToken = typeof params.invitation === "string" ? params.invitation : undefined;
 
   return (
-    <AuthShell
-      heading="Crée ton compte"
-      message="Un mois d’essai gratuit, sans engagement."
-    >
-      <AuthForm mode="sign-up" invitationToken={invitationToken} />
+    <AuthShell benefits={t.benefits} storyText={t.storyText} storyTitle={t.storyTitle}>
+      <AuthHeading subtitle={t.subtitle} title={t.title} />
+      <AuthForm invitationToken={invitationToken} mode="sign-up" />
     </AuthShell>
   );
 }

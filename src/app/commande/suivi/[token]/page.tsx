@@ -1,32 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { PrintReceiptButton } from "@/components/orders/print-receipt-button";
 import { formatXaf } from "@/modules/catalog/format";
 import { prisma } from "@/lib/prisma";
+import { orderStage } from "@/modules/orders/state-machine";
 
-const confirmationLabels = {
-  PENDING: "En attente de ta confirmation",
-  CONFIRMED: "Confirmée",
-  CHANGE_REQUESTED: "Modification demandée",
-  DECLINED: "Annulée",
-  EXPIRED: "Expirée",
-} as const;
-
-const processingLabels = {
-  TO_REVIEW: "À vérifier par la boutique",
-  ACCEPTED: "Acceptée",
-  PREPARING: "En préparation",
-  COMPLETED: "Terminée",
+const stageLabels = {
+  NEW: "Reçue par la boutique",
+  VALIDATED: "Validée",
   CANCELLED: "Annulée",
-} as const;
-
-const deliveryLabels = {
-  TO_ORGANIZE: "Livraison à organiser",
-  IN_TRANSIT: "En cours de livraison",
-  DELIVERED: "Livrée",
-  FAILED: "Livraison échouée",
-  RETURNED: "Retournée",
-  PICKUP: "Retrait en boutique",
 } as const;
 
 export async function generateMetadata({ params }: PageProps<"/commande/suivi/[token]">) {
@@ -56,29 +37,25 @@ export default async function OrderTrackingPage({
       deliveryFeeXaf: true,
       subtotalXaf: true,
       totalXaf: true,
-      confirmationStatus: true,
       processingStatus: true,
-      deliveryStatus: true,
       createdAt: true,
-      store: { select: { name: true, slug: true } },
+      store: { select: { id: true, name: true, slug: true } },
       items: {
         select: { productName: true, variantName: true, quantity: true, unitPriceXaf: true, lineTotalXaf: true },
       },
     },
   });
   if (!order) notFound();
-
   return (
     <main className="order-tracking-page">
       <section className="surface-card order-receipt">
         <p className="dashboard-copy">Commande enregistrée · {order.store.name}</p>
-        <h1>Merci, {order.customerName.split(" ")[0]}.</h1>
-        <p>Ta commande a bien été enregistrée. Tu peux revenir ici pour la suivre.</p>
+        <h1>Merci, {order.customerName.split(" ")[0]} !</h1>
+        <p>Votre commande a bien été reçue. La boutique vous contacte sur WhatsApp. Gardez ce lien pour suivre votre commande.</p>
         <dl className="order-tracking-status">
           <div><dt>Référence</dt><dd>{order.reference}</dd></div>
-          <div><dt>Confirmation</dt><dd>{confirmationLabels[order.confirmationStatus]}</dd></div>
-          <div><dt>Préparation</dt><dd>{processingLabels[order.processingStatus]}</dd></div>
-          <div><dt>Livraison</dt><dd>{deliveryLabels[order.deliveryStatus]}</dd></div>
+          <div><dt>Statut</dt><dd>{stageLabels[orderStage(order.processingStatus)]}</dd></div>
+          <div><dt>Mode</dt><dd>{order.deliveryMethod === "PICKUP" ? "Retrait en boutique" : "Livraison"}</dd></div>
           <div><dt>Ville</dt><dd>{order.deliveryCity}</dd></div>
           <div><dt>Quartier</dt><dd>{order.neighborhood ?? "—"}</dd></div>
           {order.landmark && <div><dt>Repère</dt><dd>{order.landmark}</dd></div>}
@@ -95,18 +72,17 @@ export default async function OrderTrackingPage({
           <div className="receipt-line"><span>Sous-total</span><strong>{formatXaf(order.subtotalXaf)}</strong></div>
           <div className="receipt-line">
             <span>Livraison</span>
-            <strong>{order.deliveryFeeXaf === null ? "Frais à confirmer" : formatXaf(order.deliveryFeeXaf)}</strong>
+            <strong>{order.deliveryFeeXaf ? formatXaf(order.deliveryFeeXaf) : "Gratuit"}</strong>
           </div>
           <div className="receipt-line receipt-total">
-            <span>À payer à la livraison</span>
-            <strong>{order.totalXaf === null ? "Montant à confirmer" : formatXaf(order.totalXaf)}</strong>
+            <span>Total</span>
+            <strong>{formatXaf(order.totalXaf ?? order.subtotalXaf)}</strong>
           </div>
         </div>
         <p className="notice">
-          Le numéro de cette page est privé. Garde le lien pour suivre ta commande.
+          Ce lien est personnel : ne le partagez pas.
         </p>
         <div className="page-actions no-print">
-          <PrintReceiptButton />
           <Link className="primary-button" href={`/boutique/${order.store.slug}`}>Retour à la boutique</Link>
         </div>
       </section>

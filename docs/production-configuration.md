@@ -23,16 +23,28 @@ placeholder empêche le démarrage en production et bloque explicitement les env
 environnements. IMAP n’est pas lu par l’application et ne doit pas être configuré sauf besoin
 futur distinct.
 
-## WhatsApp Business Cloud API
+## WhatsApp
 
-Prépare un compte Meta Business vérifié, un compte WhatsApp Business, un numéro enregistré et
-l’accès à l’API Cloud. Copie l’identifiant du numéro et du compte, la version Graph API et les
-jetons dans le gestionnaire de secrets. Configure une URL de webhook publique HTTPS, son jeton de
-vérification et le secret de signature d’application. N’utilise pas un jeton temporaire pour le
-service en production ; limite et renouvelle les accès conformément aux règles Meta.
+Chaque boutique choisit son mode dans **Ma boutique → Connexion WhatsApp** (`/dashboard/boutique/whatsapp`) :
 
-**État du code :** PrestAfrik journalise actuellement les messages en simulation. Les variables
-documentées ne connectent pas un compte Meta et ne déclenchent aucun envoi.
+- **Lien WhatsApp (wa.me), par défaut** : aucun compte Meta ni secret. Le vendeur renseigne son
+  numéro ; la fiche produit affiche « Commander via WhatsApp », la page de suivi propose au client
+  « Confirmer sur WhatsApp » et le vendeur envoie la demande de confirmation en un clic. Les messages
+  sont préparés par PrestAfrik puis envoyés manuellement depuis WhatsApp : PrestAfrik ne sait pas
+  s’ils ont été envoyés ni lus, et le vendeur confirme la commande lui-même.
+- **API WhatsApp Business (Cloud API)** : le vendeur saisit l’identifiant du numéro, le jeton
+  d’accès, le modèle approuvé et le secret du webhook. Le jeton et le secret sont chiffrés
+  (AES-256-GCM, clé `SECRETS_ENCRYPTION_KEY` ou, à défaut, dérivée de `BETTER_AUTH_SECRET`) et ne
+  sont jamais réaffichés. L’activation n’est possible qu’après une vérification réussie auprès de
+  Meta (lecture du numéro via la Graph API, version `WHATSAPP_GRAPH_API_VERSION`, `v23.0` par défaut).
+
+Prépare un compte Meta Business vérifié, un numéro enregistré et un jeton système permanent (pas un
+jeton temporaire). Définis `SECRETS_ENCRYPTION_KEY` avant d’enregistrer des jetons : la changer
+ensuite rend les secrets enregistrés illisibles et impose de les ressaisir.
+
+**État du code :** le mode wa.me est fonctionnel. Pour l’API, seule la vérification des
+identifiants est branchée ; l’envoi automatique des modèles, le worker et le webhook de réception
+ne sont pas encore implémentés.
 
 ## Paiement d’abonnement
 

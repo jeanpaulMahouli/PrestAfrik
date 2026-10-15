@@ -1,0 +1,79 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Assistant WhatsApp de la boutique
+Voir sur ma boutique
+Enregistrer
+
+Aidez vos visiteurs à vous joindre en un geste : ils posent une question et poursuivent avec vous sur WhatsApp.
+
+Activation
+Afficher l’assistant WhatsApp sur ma boutique
+
+Un bouton « Une question ? » apparaît sur votre boutique. Vos visiteurs choisissent une question, puis continuent la discussion avec vous sur WhatsApp. Aucune intelligence artificielle : les réponses sont celles que vous rédigez.
+
+Message d’accueil
+Premier message affiché (200 caractères maximum)
+Bonjour et bienvenue chez {boutique} ! Comment puis-je vous aider ?
+Variable disponible : {boutique}.
+Questions rapides (6 au maximum)
+Question rapide 1
+Activée
+Supprimer
+Texte du bouton (30 caractères maximum)
+Livraison et délais
+Réponse affichée au client
+Nous livrons à Douala sous 24 h pour 1 000 FCFA, et dans les autres villes sous 2 à 3 jours.
+Question rapide 2
+Activée
+Supprimer
+Texte du bouton (30 caractères maximum)
+Moyens de paiement
+Réponse affichée au client
+Le paiement se fait à la livraison, en espèces ou par mobile money.
+Question rapide 3
+Désactivée
+Supprimer
+Texte du bouton (30 caractères maximum)
+Retrait en boutique
+Réponse affichée au client
+Retrait possible du lundi au samedi à Akwa, face à la pharmacie.
++ Ajouter une question rapide
+Transfert vers WhatsApp
+Message prérempli envoyé au vendeur
+Bonjour {boutique}, {question}. Merci !
+Variables : {boutique}, {question}, {produit} (nom du produit consulté), {page}.
+
+Le visiteur voit toujours le message avant l’envoi et appuie lui-même sur « Envoyer » dans WhatsApp. Le numéro utilisé est celui de votre boutique (page « Confirmation WhatsApp »).
+
+Où l’afficher ?
+Page d’accueil de la boutique
+Fiches produit
+Panier
+Formulaire de commande
+Message hors des heures d’ouverture (facultatif)
+Nous sommes fermés pour le moment. Laissez-nous votre message, nous vous répondons dès demain matin !
+Affiché en dehors de vos horaires, s’ils sont renseignés dans votre boutique.
+Aperçu en direct
+Mboa Style · Assistant
+Bonjour et bienvenue chez Mboa Style ! Comment puis-je vous aider ?
+Livraison et délais
+Moyens de paiement
+
+L’aperçu se met à jour pendant que vous écrivez.
+
+Bon à savoir
+Aucun message n’est envoyé sans l’accord du visiteur.
+Les conversations se poursuivent sur votre WhatsApp, pas dans PrestAfrik.
+Cette fonction est incluse dans toutes les offres.

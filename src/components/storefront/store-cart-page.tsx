@@ -335,7 +335,7 @@ export function StoreCartPage({
                 </>
               )}
             </span>
-            <span>{quote?.deliveryFeeXaf === null || quote?.deliveryFeeXaf === undefined ? "Frais à confirmer" : formatXaf(quote.deliveryFeeXaf)}</span>
+            <span>{quote?.deliveryFeeXaf === null || quote?.deliveryFeeXaf === undefined ? "—" : formatXaf(quote.deliveryFeeXaf)}</span>
           </p>
           {quote?.error && <p className="form-error">{quote.error}</p>}
           {quote?.totalXaf !== null && quote?.totalXaf !== undefined && (

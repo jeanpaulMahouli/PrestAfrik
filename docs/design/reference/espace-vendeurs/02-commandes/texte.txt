@@ -1,0 +1,41 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Commandes
+
+Retrouvez toutes vos commandes et suivez leur avancement, de la confirmation du client jusqu’à l’encaissement.
+
+Exporter
+Toutes
+À confirmer
+À accepter
+À livrer
+Livrées
+Annulées
+Commande	Client	Confirmation client	Traitement	Livraison	Paiement	Total
+#MB-1042	Estelle Nkoa
+Douala · Akwa
+	En attente	À vérifier	À organiser	En attente	28 500 FCFA
+#MB-1041	Brice Tamo
+Douala · Bonapriso
+	Confirmée	Acceptée	En cours	En attente	15 000 FCFA
+#MB-1040	Sandra Mvondo
+Yaoundé · Bastos
+	Modification demandée	À vérifier	À organiser	En attente	Frais à confirmer FCFA
+#MB-1039	Idriss Abega
+Douala · Deido
+	Confirmée	Terminée	Livrée	Partiel	42 000 FCFA
+#MB-1038	Flore Ngassa
+Bafoussam · Tamdja
+	Refusée	Annulée	—	—	9 500 FCFA

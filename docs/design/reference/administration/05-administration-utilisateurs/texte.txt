@@ -1,0 +1,18 @@
+Administration
+Admin PrestAfrik
+Boutiques
+Abonnements
+Messages échoués
+Alertes
+Utilisateurs
+Utilisateurs
+
+Retrouvez les comptes de la plateforme, leurs boutiques et leurs rôles.
+
+Exporter
+Accès limité par conception. Vous voyez les comptes et les rôles, jamais les mots de passe ni les données clients des boutiques.
+Nom	E-mail	Boutiques et rôles	Dernière connexion	Statut	Actions
+Awa Ngono	awa@exemple.com	Mboa Style (Propriétaire)	Aujourd’hui, 14:02	Actif	Envoyer un lien de réinitialisation
+Samuel Nkoulou	samuel@exemple.com	Mboa Style, Douala Maison (Gestionnaire)	Hier, 18:40	Actif	Envoyer un lien de réinitialisation
+Junior Kamga	junior@exemple.com	Mboa Style (Préparateur)	11/10/2026	Actif	Suspendre l’accès
+Thierry Tchoua	thierry@exemple.com	Bafoussam Créations (Propriétaire)	02/10/2026	Suspendu	Rétablir l’accès

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { StoreImage } from "@/components/ui/store-image";
 import { formatXaf } from "@/modules/catalog/format";
 
 type StoreProduct = {
@@ -25,7 +25,7 @@ export function StorefrontProductGrid({
           <article className="storefront-product-card" key={product.id}>
             <Link aria-label={`Voir ${product.name}`} className="storefront-product-link" href={`/boutique/${storeSlug}/${product.slug}`}>
               {product.images[0] ? (
-                <Image
+                <StoreImage
                   alt={product.images[0].altText ?? product.name}
                   className="storefront-product-image"
                   height={640}

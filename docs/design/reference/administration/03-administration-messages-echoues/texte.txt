@@ -1,0 +1,23 @@
+Administration
+Admin PrestAfrik
+Boutiques
+Abonnements
+Messages échoués
+Alertes
+Utilisateurs
+Messages échoués
+
+Repérez les messages WhatsApp qui n’ont pas pu partir, pour aider les vendeurs à les corriger.
+
+Dernières 24 h ▾
+Vie privée respectée. Pour protéger les clients, le contenu des messages et les numéros complets ne sont jamais affichés ici.
+Tous (4)
+Jeton expiré
+Modèle non approuvé
+Numéro invalide
+Autre
+Boutique	Mode	Raison	Tentatives	Heure	Action
+Mboa Style	Mode API	Modèle non approuvé	3 sur 3	13:02	Aider le vendeur
+Mboa Style	Mode API	Numéro invalide	1 sur 3	12:40	Aider le vendeur
+Kribi Accessoires	Mode API	Jeton expiré	3 sur 3	10:15	Prévenir le vendeur
+Douala Maison	Mode API	Autre erreur	2 sur 3	09:30	Voir le détail

@@ -10,6 +10,7 @@ const eslintConfig = tseslint.config(
       "test-results/**",
       "src/generated/prisma/**",
       "next-env.d.ts",
+      "PrestAfrik maquettes UX UI/**",
     ],
   },
   ...tseslint.configs.recommended,

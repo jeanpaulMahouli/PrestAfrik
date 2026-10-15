@@ -1,387 +1,358 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
-import { randomUUID } from "node:crypto";
-import { mkdir, rename, unlink } from "node:fs/promises";
-import { join } from "node:path";
-import sharp from "sharp";
+import { Prisma, ProductAvailability } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { invalidateStorefrontCache } from "@/modules/catalog/cache";
-import { parseCsvRows, parseVariants, productSchema, type ProductInput } from "@/modules/catalog/validation";
-import { requireStorePermission } from "@/modules/stores/context";
 import {
-  assertCanCreateProduct,
-  SubscriptionLimitError,
-} from "@/modules/subscriptions/service";
+  PhotoError,
+  attachTemporaryPhoto,
+  deleteProductPhoto,
+  deleteProductPhotoFolder,
+  maxProductPhotos,
+} from "@/lib/product-photos";
+import { hasPermission } from "@/modules/auth/permissions";
+import { invalidateStorefrontCache } from "@/modules/catalog/cache";
+import {
+  parseJsonField,
+  photosSchema,
+  productFormSchema,
+  variantsSchema,
+  type ProductVariantInput,
+} from "@/modules/catalog/validation";
+import { getStoreContext } from "@/modules/stores/context";
+import { assertCanCreateProduct, SubscriptionLimitError } from "@/modules/subscriptions/service";
 
-const maxImageBytes = 2 * 1024 * 1024;
-const maxCsvBytes = 5 * 1024 * 1024;
-const formNumber = (value: FormDataEntryValue | null) =>
-  value === null || value === "" ? null : Number(value);
+export type ActionError = { code: string; message: string; fields?: Record<string, string> };
+export type ActionResult = { ok: true; message?: string } | { ok: false; error: ActionError } | null;
+
+class CatalogProblem extends Error {
+  constructor(message: string, readonly code = "INVALID", readonly fields?: Record<string, string>) {
+    super(message);
+  }
+}
+
+const fail = (message: string, code = "INVALID", fields?: Record<string, string>): ActionResult => ({
+  ok: false,
+  error: { code, message, fields },
+});
+
+async function catalogContext() {
+  const context = await getStoreContext();
+  if (!hasPermission(context.membership.role, "products.manage")) {
+    throw new CatalogProblem("Vous n’avez pas l’autorisation de modifier le catalogue.", "FORBIDDEN");
+  }
+  return context;
+}
 
 function slugify(value: string) {
   return value
     .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLocaleLowerCase("fr-FR")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
-    .slice(0, 150);
+    .slice(0, 120);
 }
 
-function readProductForm(formData: FormData) {
-  const trackInventory = formData.get("trackInventory") === "on";
-  const product = productSchema.safeParse({
-    name: formData.get("name"),
-    sku: formData.get("sku"),
-    description: formData.get("description") || undefined,
-    categoryId: formData.get("categoryId") || undefined,
-    priceXaf: Number(formData.get("priceXaf")),
-    promotionalPriceXaf: formNumber(formData.get("promotionalPriceXaf")),
-    availability: formData.get("availability"),
-    trackInventory,
-    stockQuantity: trackInventory ? formNumber(formData.get("stockQuantity")) : null,
+function refreshCatalog(store: { id: string; slug: string }) {
+  revalidatePath("/dashboard/produits");
+  revalidatePath("/dashboard");
+  revalidatePath(`/boutique/${store.slug}`);
+  invalidateStorefrontCache(store.id, store.slug);
+}
+
+const text = (formData: FormData, key: string) => {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+};
+
+async function uniqueSlug(transaction: Prisma.TransactionClient, storeId: string, name: string, excludeId?: string) {
+  const base = slugify(name) || "produit";
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const slug = attempt === 0 ? base : `${base}-${attempt + 1}`;
+    const taken = await transaction.product.findFirst({ where: { storeId, slug, ...(excludeId ? { id: { not: excludeId } } : {}) }, select: { id: true } });
+    if (!taken) return slug;
+  }
+  return `${base}-${Date.now().toString(36)}`;
+}
+
+async function generateSku(transaction: Prisma.TransactionClient, storeId: string, storeName: string) {
+  const prefix = storeName.normalize("NFKD").replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase() || "PRD";
+  const count = await transaction.product.count({ where: { storeId } });
+  for (let next = count + 1; next < count + 200; next += 1) {
+    const sku = `${prefix}-${String(next).padStart(3, "0")}`;
+    if (!(await transaction.product.findUnique({ where: { storeId_sku: { storeId, sku } }, select: { id: true } }))) return sku;
+  }
+  return `${prefix}-${Date.now().toString(36).toUpperCase()}`;
+}
+
+async function syncVariants(transaction: Prisma.TransactionClient, productId: string, productSku: string, variants: ProductVariantInput[]) {
+  const existing = await transaction.productVariant.findMany({ where: { productId } });
+  const keep = new Set<string>();
+  for (const [index, variant] of variants.entries()) {
+    const match = existing.find((item) => item.optionName === variant.optionName && item.optionValue === variant.optionValue);
+    const sku = variant.sku || match?.sku || `${productSku}-${index + 1}`.slice(0, 48);
+    const data = { sku, optionName: variant.optionName, optionValue: variant.optionValue, priceXaf: variant.priceXaf, stockQuantity: variant.stockQuantity, isArchived: false };
+    if (match) {
+      keep.add(match.id);
+      await transaction.productVariant.update({ where: { id: match.id }, data });
+    } else {
+      await transaction.productVariant.create({ data: { ...data, productId } });
+    }
+  }
+  const removed = existing.filter((item) => !keep.has(item.id) && !item.isArchived).map((item) => item.id);
+  if (removed.length) {
+    // Une variante retirée est archivée : l'historique des commandes qui la mentionnent reste intact.
+    await transaction.productVariant.updateMany({ where: { id: { in: removed } }, data: { isArchived: true } });
+  }
+}
+
+/** Création et modification d'un produit (formulaires « Ajouter un produit » et « Formulaire produit »). */
+export async function saveProduct(_previous: ActionResult, formData: FormData): Promise<ActionResult> {
+  let context: Awaited<ReturnType<typeof catalogContext>>;
+  try {
+    context = await catalogContext();
+  } catch (error) {
+    if (error instanceof CatalogProblem) return fail(error.message, error.code);
+    throw error;
+  }
+  const { store } = context;
+  const productId = text(formData, "productId") || null;
+
+  const parsed = productFormSchema.safeParse({
+    name: text(formData, "name"),
+    description: text(formData, "description"),
+    categoryId: text(formData, "categoryId"),
+    newCategory: text(formData, "newCategory"),
+    priceXaf: text(formData, "priceXaf"),
+    promotionalPriceXaf: text(formData, "promotionalPriceXaf"),
+    sku: text(formData, "sku"),
+    availability: text(formData, "availability"),
+    trackInventory: formData.get("trackInventory") === "on",
+    stockQuantity: formData.get("trackInventory") === "on" ? text(formData, "stockQuantity") : "",
+    status: text(formData, "status"),
     isFeatured: formData.get("isFeatured") === "on",
   });
-
-  if (!product.success) {
-    throw new Error(product.error.issues[0]?.message ?? "Vérifie les informations du produit.");
+  const variants = parseJsonField(formData.get("variants"), variantsSchema, []);
+  const photos = parseJsonField(formData.get("photos"), photosSchema, []);
+  if (!parsed.success || !variants.success || !photos.success) {
+    const fields: Record<string, string> = {};
+    for (const issue of parsed.success ? [] : parsed.error.issues) fields[String(issue.path[0])] ??= issue.message;
+    if (!variants.success) fields.variants = variants.error.issues[0]?.message ?? "Vérifiez les variantes.";
+    if (!photos.success) fields.photos = photos.error.issues[0]?.message ?? "Vérifiez les photos.";
+    return fail("Certaines informations sont à corriger. Vos saisies sont conservées.", "VALIDATION", fields);
   }
-  return { product: product.data, variants: parseVariants(formData.get("variants")) };
-}
+  const input = parsed.data;
+  if (photos.data.length > maxProductPhotos) return fail("Vous avez atteint la limite de 5 photos par produit.", "PHOTO_LIMIT", { photos: "5 photos au maximum." });
+  const variantKeys = variants.data.map((variant) => `${variant.optionName.toLowerCase()}=${variant.optionValue.toLowerCase()}`);
+  if (new Set(variantKeys).size !== variantKeys.length) return fail("Deux variantes portent la même valeur.", "VALIDATION", { variants: "Chaque valeur de variante doit être unique." });
 
-async function saveProductImage(file: FormDataEntryValue | null, storeId: string) {
-  if (file === null || (file instanceof File && file.size === 0)) return null;
-  if (!(file instanceof File)) throw new Error("Le fichier image est invalide.");
-  if (file.size > maxImageBytes) throw new Error("La photo ne peut pas dépasser 2 Mo.");
-
-  const input = Buffer.from(await file.arrayBuffer());
-  const image = sharp(input, { failOn: "error", limitInputPixels: 25_000_000 });
-  const metadata = await image.metadata();
-  if (!metadata.format || !["jpeg", "png", "webp"].includes(metadata.format)) {
-    throw new Error("Choisis une image PNG, JPG ou WebP.");
-  }
-  if (!metadata.width || !metadata.height || metadata.width > 5000 || metadata.height > 5000) {
-    throw new Error("L’image ne peut pas dépasser 5 000 pixels de côté.");
-  }
-
-  const imageId = randomUUID();
-  const directory = join(process.cwd(), "public", "uploads", storeId);
-  const filename = `${imageId}.webp`;
-  const temporaryFile = join(directory, `${imageId}.tmp`);
-  const finalFile = join(directory, filename);
-  await mkdir(directory, { recursive: true });
-  await image.rotate().webp({ quality: 82, effort: 4 }).toFile(temporaryFile);
-  await rename(temporaryFile, finalFile);
-  return { path: finalFile, url: `/uploads/${storeId}/${filename}` };
-}
-
-function categoryError(error: unknown) {
-  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-    return "Un produit utilise déjà cette référence.";
-  }
-  return null;
-}
-
-export async function createCategory(formData: FormData) {
-  const { store } = await requireStorePermission("products.manage");
-  const parsed = z
-    .string()
-    .trim()
-    .min(2, "Le nom de la catégorie doit contenir au moins 2 caractères.")
-    .max(80)
-    .safeParse(formData.get("name"));
-  if (!parsed.success) redirect(`/dashboard/produits?erreur=${encodeURIComponent(parsed.error.issues[0]?.message ?? "")}`);
-
-  const slug = slugify(parsed.data);
-  if (!slug) redirect("/dashboard/produits?erreur=Choisis%20un%20nom%20de%20cat%C3%A9gorie%20valide.");
-
-  try {
-    await prisma.productCategory.create({ data: { storeId: store.id, name: parsed.data, slug } });
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      redirect(`/dashboard/produits?erreur=${encodeURIComponent("Cette catégorie existe déjà.")}`);
-    }
-    throw error;
-  }
-  revalidatePath("/dashboard/produits");
-  invalidateStorefrontCache(store.id, store.slug);
-}
-
-export async function createProduct(formData: FormData) {
-  const { store } = await requireStorePermission("products.manage");
-
-  let productInput: ProductInput;
-  let variants: ReturnType<typeof parseVariants>;
-  try {
-    ({ product: productInput, variants } = readProductForm(formData));
-  } catch (error) {
-    if (error instanceof Error) {
-      redirect(`/dashboard/produits/nouveau?erreur=${encodeURIComponent(error.message)}`);
-    }
-    throw error;
-  }
-
-  if (productInput.categoryId) {
-    const category = await prisma.productCategory.findFirst({
-      where: { id: productInput.categoryId, storeId: store.id },
-      select: { id: true },
-    });
-    if (!category) redirect("/dashboard/produits/nouveau?erreur=Cat%C3%A9gorie%20introuvable.");
-  }
-
-  const uniqueSkus = new Set([productInput.sku.toLowerCase(), ...variants.map(({ sku }) => sku.toLowerCase())]);
-  if (uniqueSkus.size !== variants.length + 1) {
-    redirect("/dashboard/produits/nouveau?erreur=Les%20r%C3%A9f%C3%A9rences%20des%20variantes%20doivent%20%C3%AAtre%20uniques.");
-  }
-
-  let image;
-  try {
-    image = await saveProductImage(formData.get("image"), store.id);
-  } catch (error) {
-    if (error instanceof Error) {
-      redirect(`/dashboard/produits/nouveau?erreur=${encodeURIComponent(error.message)}`);
-    }
-    throw error;
-  }
-  const slug = slugify(productInput.name);
-  if (!slug) {
-    if (image) await unlink(image.path);
-    redirect("/dashboard/produits/nouveau?erreur=Le%20nom%20du%20produit%20doit%20contenir%20des%20lettres%20ou%20des%20chiffres.");
-  }
+  const availability: ProductAvailability =
+    input.trackInventory && input.stockQuantity === 0 && input.availability !== "PREORDER" ? "SOLD_OUT" : input.availability;
+  const removedPhotoUrls: string[] = [];
+  let savedId = productId;
 
   try {
     await prisma.$transaction(async (transaction) => {
-      await assertCanCreateProduct(transaction, store.id);
-      await transaction.product.create({
-        data: {
-          ...productInput,
-          storeId: store.id,
-          slug,
-          stockQuantity: productInput.trackInventory ? productInput.stockQuantity : null,
-          variants: variants.length ? { create: variants } : undefined,
-          images: image ? { create: { url: image.url, altText: productInput.name } } : undefined,
-        },
-      });
-    });
-  } catch (error) {
-    if (image) await unlink(image.path);
-    if (error instanceof SubscriptionLimitError) {
-      redirect(`/dashboard/produits/nouveau?erreur=abonnement&raison=${encodeURIComponent(error.message)}`);
-    }
-    const message = categoryError(error);
-    if (message) redirect(`/dashboard/produits/nouveau?erreur=${encodeURIComponent(message)}`);
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
-      redirect("/dashboard/produits/nouveau?erreur=Cat%C3%A9gorie%20introuvable.");
-    }
-    throw error;
-  }
-
-  revalidatePath("/dashboard/produits");
-  invalidateStorefrontCache(store.id, store.slug);
-  redirect("/dashboard/produits?succes=produit");
-}
-
-export async function updateProduct(formData: FormData) {
-  const { store } = await requireStorePermission("products.manage");
-  const productId = z.cuid().safeParse(formData.get("productId"));
-  if (!productId.success) throw new Error("Produit introuvable.");
-
-  const existing = await prisma.product.findFirst({
-    where: { id: productId.data, storeId: store.id, isArchived: false },
-  });
-  if (!existing) throw new Error("Produit introuvable.");
-
-  let productInput: ProductInput;
-  let variants: ReturnType<typeof parseVariants>;
-  try {
-    ({ product: productInput, variants } = readProductForm(formData));
-  } catch (error) {
-    if (error instanceof Error) {
-      redirect(`/dashboard/produits/${existing.id}?erreur=${encodeURIComponent(error.message)}`);
-    }
-    throw error;
-  }
-
-  if (
-    existing.trackInventory &&
-    productInput.trackInventory &&
-    productInput.stockQuantity !== null &&
-    productInput.stockQuantity < existing.reservedQuantity
-  ) {
-    redirect(`/dashboard/produits/${existing.id}?erreur=Ce%20stock%20est%20d%C3%A9j%C3%A0%20r%C3%A9serv%C3%A9%20pour%20des%20commandes.`);
-  }
-
-  const category = productInput.categoryId
-    ? await prisma.productCategory.findFirst({
-        where: { id: productInput.categoryId, storeId: store.id },
-        select: { id: true },
-      })
-    : null;
-  if (productInput.categoryId && !category) {
-    redirect(`/dashboard/produits/${existing.id}?erreur=Cat%C3%A9gorie%20introuvable.`);
-  }
-
-  let image;
-  try {
-    image = await saveProductImage(formData.get("image"), store.id);
-  } catch (error) {
-    if (error instanceof Error) {
-      redirect(`/dashboard/produits/${existing.id}?erreur=${encodeURIComponent(error.message)}`);
-    }
-    throw error;
-  }
-  try {
-    await prisma.$transaction(async (transaction) => {
-      await transaction.product.update({
-        where: { id: existing.id },
-        data: {
-          ...productInput,
-          categoryId: category?.id ?? null,
-          slug: slugify(productInput.name),
-          stockQuantity: productInput.trackInventory ? productInput.stockQuantity : null,
-          images: image
-            ? { create: { url: image.url, altText: productInput.name } }
-            : undefined,
-        },
-      });
-      await transaction.productVariant.updateMany({
-        where: { productId: existing.id },
-        data: { isArchived: true },
-      });
-      if (variants.length) {
-        await transaction.productVariant.createMany({
-          data: variants.map((variant) => ({ ...variant, productId: existing.id })),
-        });
+      const existing = productId
+        ? await transaction.product.findFirst({
+            where: { id: productId, storeId: store.id },
+            select: { id: true, sku: true, updatedAt: true, status: true, images: { select: { id: true, url: true, altText: true, width: true, height: true } } },
+          })
+        : null;
+      if (productId && !existing) throw new CatalogProblem("Ce produit est introuvable.", "NOT_FOUND");
+      // Contrôle de concurrence optimiste : refuse d'écraser une modification faite entre-temps.
+      if (existing && text(formData, "expectedUpdatedAt") && existing.updatedAt.toISOString() !== text(formData, "expectedUpdatedAt")) {
+        throw new CatalogProblem("Ce produit a été modifié par quelqu’un d’autre pendant que vous le modifiiez. Rechargez la page pour voir la dernière version.", "CONFLICT");
       }
+
+      let categoryId: string | null = null;
+      if (input.newCategory) {
+        const category = await transaction.productCategory.upsert({
+          where: { storeId_name: { storeId: store.id, name: input.newCategory } },
+          update: {},
+          create: { storeId: store.id, name: input.newCategory, slug: slugify(input.newCategory) || `categorie-${Date.now()}`, sortOrder: await transaction.productCategory.count({ where: { storeId: store.id } }) },
+          select: { id: true },
+        });
+        categoryId = category.id;
+      } else if (input.categoryId) {
+        const category = await transaction.productCategory.findFirst({ where: { id: input.categoryId, storeId: store.id }, select: { id: true } });
+        if (!category) throw new CatalogProblem("Cette catégorie n’existe pas dans votre boutique.", "VALIDATION", { categoryId: "Choisissez une catégorie de la liste." });
+        categoryId = category.id;
+      }
+
+      if (!existing) await assertCanCreateProduct(transaction, store.id);
+      const sku = input.sku || existing?.sku || (await generateSku(transaction, store.id, store.name));
+      const data = {
+        name: input.name,
+        description: input.description || null,
+        categoryId,
+        priceXaf: input.priceXaf,
+        promotionalPriceXaf: input.promotionalPriceXaf,
+        sku,
+        availability,
+        trackInventory: input.trackInventory,
+        stockQuantity: input.trackInventory ? input.stockQuantity : null,
+        isFeatured: input.isFeatured,
+        slug: await uniqueSlug(transaction, store.id, input.name, existing?.id),
+        ...(existing?.status === "ARCHIVED" ? {} : { status: input.status }),
+      };
+      const product = existing
+        ? await transaction.product.update({ where: { id: existing.id }, data, select: { id: true } })
+        : await transaction.product.create({ data: { ...data, storeId: store.id }, select: { id: true } });
+      savedId = product.id;
+
+      await syncVariants(transaction, product.id, sku, variants.data);
+
+      // Photos : l'ordre envoyé fait foi (0 = principale). Les positions sont réécrites en bloc.
+      const kept = new Map((existing?.images ?? []).map((image) => [image.id, image]));
+      const rows: Prisma.ProductImageCreateManyInput[] = [];
+      for (const [position, photo] of photos.data.entries()) {
+        if (photo.id) {
+          const image = kept.get(photo.id);
+          if (!image) throw new CatalogProblem("Une photo ne correspond pas à ce produit. Rechargez la page.", "VALIDATION");
+          kept.delete(photo.id);
+          rows.push({ productId: product.id, url: image.url, altText: photo.alt || null, position, width: image.width, height: image.height });
+        } else if (photo.key) {
+          const url = await attachTemporaryPhoto(store.id, product.id, photo.key);
+          rows.push({ productId: product.id, url, altText: photo.alt || null, position });
+        }
+      }
+      removedPhotoUrls.push(...[...kept.values()].map((image) => image.url));
+      await transaction.productImage.deleteMany({ where: { productId: product.id } });
+      if (rows.length) await transaction.productImage.createMany({ data: rows });
     });
   } catch (error) {
-    if (image) await unlink(image.path);
-    const message = categoryError(error);
-    if (message) redirect(`/dashboard/produits/${existing.id}?erreur=${encodeURIComponent(message)}`);
-    throw error;
-  }
-
-  revalidatePath("/dashboard/produits");
-  revalidatePath(`/dashboard/produits/${existing.id}`);
-  revalidatePath(`/boutique/${store.slug}`);
-  invalidateStorefrontCache(store.id, store.slug);
-  redirect("/dashboard/produits?succes=produit");
-}
-
-export async function archiveProduct(formData: FormData) {
-  const { store } = await requireStorePermission("products.manage");
-  const productId = z.cuid().safeParse(formData.get("productId"));
-  if (!productId.success) throw new Error("Produit introuvable.");
-
-  const result = await prisma.product.updateMany({
-    where: {
-      id: productId.data,
-      storeId: store.id,
-      isArchived: false,
-      reservations: { none: { releasedAt: null, expiresAt: { gt: new Date() } } },
-    },
-    data: { isArchived: true },
-  });
-  if (result.count === 0) {
-    throw new Error("Ce produit a déjà été archivé ou est réservé dans une commande en cours.");
-  }
-
-  revalidatePath("/dashboard/produits");
-  revalidatePath(`/boutique/${store.slug}`);
-  invalidateStorefrontCache(store.id, store.slug);
-}
-
-export async function importProductsCsv(formData: FormData) {
-  const { store } = await requireStorePermission("products.manage");
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0 || file.size > maxCsvBytes) {
-    redirect("/dashboard/produits?erreur=Choisis%20un%20fichier%20CSV%20de%205%20Mo%20maximum.");
-  }
-
-  let parsedCsv: ReturnType<typeof parseCsvRows>;
-  try {
-    parsedCsv = parseCsvRows(await file.text());
-  } catch (error) {
-    redirect(`/dashboard/produits?erreur=${encodeURIComponent(error instanceof Error ? error.message : "Fichier CSV invalide.")}`);
-  }
-
-  const requiredHeaders = ["name", "sku", "pricexaf"];
-  if (requiredHeaders.some((header) => !parsedCsv.headers.includes(header))) {
-    redirect("/dashboard/produits?erreur=Le%20CSV%20doit%20contenir%20les%20colonnes%20name%2Csku%2CpriceXaf.");
-  }
-
-  const categories = await prisma.productCategory.findMany({
-    where: { storeId: store.id },
-    select: { id: true, name: true },
-  });
-  const categoryByName = new Map(categories.map((category) => [category.name.toLocaleLowerCase("fr-FR"), category.id]));
-  const errors: string[] = [];
-  const products: { storeId: string; name: string; slug: string; sku: string; description?: string; priceXaf: number; categoryId?: string }[] = [];
-
-  for (const [index, row] of parsedCsv.rows.entries()) {
-    const values = Object.fromEntries(parsedCsv.headers.map((header, column) => [header, row[column] ?? ""]));
-    const parsedProduct = productSchema.safeParse({
-      name: values.name,
-      sku: values.sku,
-      description: values.description || undefined,
-      priceXaf: Number(values.pricexaf),
-      promotionalPriceXaf: values.promotionalpricexaf ? Number(values.promotionalpricexaf) : null,
-      availability: values.availability || "AVAILABLE",
-      trackInventory: values.trackinventory === "true",
-      stockQuantity: values.trackinventory === "true" ? Number(values.stockquantity) : null,
-      isFeatured: false,
-    });
-
-    if (!parsedProduct.success) {
-      errors.push(`Ligne ${index + 2} : ${parsedProduct.error.issues[0]?.message ?? "données invalides"}`);
-      continue;
-    }
-    const categoryId = values.category
-      ? categoryByName.get(values.category.toLocaleLowerCase("fr-FR"))
-      : undefined;
-    if (values.category && !categoryId) {
-      errors.push(`Ligne ${index + 2} : catégorie « ${values.category} » inconnue.`);
-      continue;
-    }
-
-    products.push({
-      storeId: store.id,
-      name: parsedProduct.data.name,
-      slug: slugify(parsedProduct.data.name),
-      sku: parsedProduct.data.sku,
-      description: parsedProduct.data.description,
-      priceXaf: parsedProduct.data.priceXaf,
-      categoryId,
-    });
-  }
-
-  const duplicateSkus = products.filter(
-    (product, index) =>
-      products.findIndex(({ sku }) => sku.toLocaleLowerCase("fr-FR") === product.sku.toLocaleLowerCase("fr-FR")) !== index,
-  );
-  for (const duplicate of duplicateSkus) errors.push(`Référence répétée : ${duplicate.sku}.`);
-  const rejectedSkus = new Set(duplicateSkus.map(({ sku }) => sku.toLocaleLowerCase("fr-FR")));
-  const importable = products.filter(({ sku }) => !rejectedSkus.has(sku.toLocaleLowerCase("fr-FR")));
-  if (errors.length) {
-    redirect(`/dashboard/produits?erreur=${encodeURIComponent(`Import interrompu : ${errors.slice(0, 3).join(" ")}`)}`);
-  }
-  if (importable.length === 0) redirect("/dashboard/produits?erreur=Aucun%20produit%20%C3%A0%20importer.");
-
-  try {
-    await prisma.product.createMany({ data: importable });
-  } catch (error) {
+    if (error instanceof CatalogProblem) return fail(error.message, error.code, error.fields);
+    if (error instanceof PhotoError) return fail(error.message, "PHOTO", { photos: error.message });
+    if (error instanceof SubscriptionLimitError) return fail(`${error.message} Vous pouvez enregistrer ce produit plus tard ou changer d’offre.`, "QUOTA");
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      redirect("/dashboard/produits?erreur=Le%20CSV%20contient%20une%20r%C3%A9f%C3%A9rence%20ou%20un%20nom%20d%C3%A9j%C3%A0%20utilis%C3%A9.");
+      return fail("Cette référence est déjà utilisée par un autre produit de votre boutique.", "VALIDATION", { sku: "Référence déjà utilisée." });
     }
     throw error;
   }
 
-  revalidatePath("/dashboard/produits");
-  revalidatePath(`/boutique/${store.slug}`);
-  invalidateStorefrontCache(store.id, store.slug);
-  redirect(`/dashboard/produits?succes=import-${importable.length}`);
+  await Promise.all(removedPhotoUrls.map((url) => deleteProductPhoto(url)));
+  refreshCatalog(store);
+  redirect(`/dashboard/produits?succes=${productId ? "modifie" : "ajoute"}&produit=${savedId}`);
+}
+
+function selectedIds(formData: FormData) {
+  return formData
+    .getAll("productIds")
+    .filter((value): value is string => typeof value === "string" && /^c[a-z0-9]{20,}$/.test(value))
+    .slice(0, 200);
+}
+
+function backToList(formData: FormData, query: string): never {
+  const tab = text(formData, "onglet");
+  redirect(`/dashboard/produits?${tab ? `onglet=${encodeURIComponent(tab)}&` : ""}${query}`);
+}
+
+export async function archiveProducts(formData: FormData) {
+  const { store } = await catalogContext().catch(() => redirect("/dashboard/produits?erreur=non-autorise"));
+  const ids = selectedIds(formData);
+  if (!ids.length) backToList(formData, "erreur=selection-vide");
+  const result = await prisma.product.updateMany({
+    where: { id: { in: ids }, storeId: store.id, status: { not: "ARCHIVED" } },
+    data: { status: "ARCHIVED", archivedAt: new Date(), isFeatured: false },
+  });
+  refreshCatalog(store);
+  backToList(formData, `succes=archive&n=${result.count}`);
+}
+
+export async function restoreProducts(formData: FormData) {
+  const { store } = await catalogContext().catch(() => redirect("/dashboard/produits?erreur=non-autorise"));
+  const ids = selectedIds(formData);
+  const result = await prisma.product.updateMany({
+    where: { id: { in: ids }, storeId: store.id, status: "ARCHIVED" },
+    data: { status: "DRAFT", archivedAt: null },
+  });
+  refreshCatalog(store);
+  backToList(formData, `succes=restaure&n=${result.count}`);
+}
+
+/**
+ * Suppression définitive réservée aux produits jamais commandés ; les autres sont archivés à la place
+ * pour que l'historique reste exact (brief §6.4, maquette « Supprimer ou archiver un produit »).
+ */
+export async function deleteProducts(formData: FormData) {
+  const { store } = await catalogContext().catch(() => redirect("/dashboard/produits?erreur=non-autorise"));
+  const ids = selectedIds(formData);
+  if (!ids.length) backToList(formData, "erreur=selection-vide");
+  const products = await prisma.product.findMany({
+    where: { id: { in: ids }, storeId: store.id },
+    select: { id: true, images: { select: { url: true } }, _count: { select: { orderItems: true } } },
+  });
+  const deletable = products.filter((product) => product._count.orderItems === 0);
+  const ordered = products.filter((product) => product._count.orderItems > 0);
+
+  await prisma.$transaction(async (transaction) => {
+    if (deletable.length) {
+      await transaction.product.deleteMany({ where: { id: { in: deletable.map(({ id }) => id) }, storeId: store.id } });
+    }
+    if (ordered.length) {
+      await transaction.product.updateMany({
+        where: { id: { in: ordered.map(({ id }) => id) }, storeId: store.id },
+        data: { status: "ARCHIVED", archivedAt: new Date(), isFeatured: false },
+      });
+    }
+  });
+  await Promise.all(deletable.map((product) => deleteProductPhotoFolder(store.id, product.id)));
+  await Promise.all(deletable.flatMap((product) => product.images.map((image) => deleteProductPhoto(image.url))));
+  refreshCatalog(store);
+  backToList(formData, `succes=supprime&n=${deletable.length}&archives=${ordered.length}`);
+}
+
+/** Copie en brouillon, sans photos ni stock (brief §6.4). */
+export async function duplicateProduct(formData: FormData) {
+  const { store } = await catalogContext().catch(() => redirect("/dashboard/produits?erreur=non-autorise"));
+  const productId = text(formData, "productId");
+  let copyId = "";
+  try {
+    copyId = await prisma.$transaction(async (transaction) => {
+      const source = await transaction.product.findFirst({
+        where: { id: productId, storeId: store.id },
+        include: { variants: { where: { isArchived: false } } },
+      });
+      if (!source) throw new CatalogProblem("Ce produit est introuvable.");
+      await assertCanCreateProduct(transaction, store.id);
+      const name = `Copie de ${source.name}`.slice(0, 120);
+      const sku = await generateSku(transaction, store.id, store.name);
+      const copy = await transaction.product.create({
+        data: {
+          storeId: store.id,
+          categoryId: source.categoryId,
+          name,
+          slug: await uniqueSlug(transaction, store.id, name),
+          sku,
+          description: source.description,
+          priceXaf: source.priceXaf,
+          promotionalPriceXaf: source.promotionalPriceXaf,
+          availability: source.availability === "SOLD_OUT" ? "AVAILABLE" : source.availability,
+          trackInventory: source.trackInventory,
+          stockQuantity: source.trackInventory ? 0 : null,
+          status: "DRAFT",
+          variants: {
+            create: source.variants.map((variant, index) => ({
+              sku: `${sku}-${index + 1}`,
+              optionName: variant.optionName,
+              optionValue: variant.optionValue,
+              priceXaf: variant.priceXaf,
+              stockQuantity: variant.stockQuantity === null ? null : 0,
+            })),
+          },
+        },
+        select: { id: true },
+      });
+      return copy.id;
+    });
+  } catch (error) {
+    if (error instanceof SubscriptionLimitError) redirect(`/dashboard/produits?erreur=${encodeURIComponent(error.message)}`);
+    if (error instanceof CatalogProblem) redirect(`/dashboard/produits?erreur=${encodeURIComponent(error.message)}`);
+    throw error;
+  }
+  refreshCatalog(store);
+  redirect(`/dashboard/produits/${copyId}?succes=copie`);
 }

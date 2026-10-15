@@ -54,6 +54,8 @@ export async function createMarketingCampaign(formData: FormData) {
 export async function simulateMarketingCampaign(formData: FormData) {
   const campaignId = campaignIdSchema.safeParse(formData.get("campaignId"));
   if (!campaignId.success) reportError("Campagne invalide.");
+  // Confirmation explicite obligatoire avant tout envoi (brief §6.11).
+  if (formData.get("confirm") !== "on") reportError("Cochez la case de confirmation avant d’envoyer la campagne.");
 
   const { store } = await requireStorePermission("marketing.manage");
   let result: number | null;

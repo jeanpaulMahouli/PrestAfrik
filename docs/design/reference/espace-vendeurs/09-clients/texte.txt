@@ -1,0 +1,31 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Mes clients
+
+Votre fichier clients se remplit automatiquement à chaque commande : historique, segments et consentements.
+
+Exporter
+Ajouter un client
+Tous
+Nouveaux clients
+Clients réguliers
+Commandes non confirmées
+Clients inactifs
+À recontacter
+Client	WhatsApp	Commandes	Montant commandé	Argent reçu	Segment	Consentement
+Estelle Nkoa	+237 6•• •• •• 12	3	64 500	64 500	Régulière	Marketing accepté
+Brice Tamo	+237 6•• •• •• 48	1	15 000	0	Nouveau	Suivi seulement
+Sandra Mvondo	+237 6•• •• •• 05	1	—	0	Non confirmée	Suivi seulement
+Idriss Abega	+237 6•• •• •• 77	5	182 000	160 000	Régulier	Marketing accepté

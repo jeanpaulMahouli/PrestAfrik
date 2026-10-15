@@ -1,137 +1,163 @@
 "use server";
 
 import { StoreTheme } from "@prisma/client";
-import { randomUUID } from "node:crypto";
-import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
-import sharp from "sharp";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { colorReadability } from "@/lib/contrast";
+import { parsePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
+import { deleteStoreImage, ImageUploadError, saveStoreImage } from "@/lib/uploads";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { hexColorSchema } from "@/modules/catalog/validation";
 import { requireStorePermission } from "@/modules/stores/context";
-import { cameroonCities, storeBusinessCategories } from "@/modules/stores/options";
+import { publishStoreIfReady } from "@/modules/stores/publication";
+
+const settingsPath = "/dashboard/boutique";
+
+const text = (formData: FormData, key: string) => {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+};
+
+function fail(message: string): never {
+  redirect(`${settingsPath}?erreur=${encodeURIComponent(message)}`);
+}
 
 const settingsSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  businessCategory: z.enum(storeBusinessCategories),
-  city: z.enum(cameroonCities),
-  description: z.string().trim().max(2000),
+  name: z.string().trim().min(2, "Le nom de la boutique doit contenir au moins 2 caractères.").max(60, "Le nom de la boutique ne peut pas dépasser 60 caractères."),
+  description: z.string().trim().max(2000, "La description ne peut pas dépasser 2 000 caractères.").refine((value) => !/<[a-z/!]/i.test(value), "La description est un texte simple, sans HTML."),
+  activityId: z.string().trim(),
+  activityOther: z.string().trim().max(80, "L’activité ne peut pas dépasser 80 caractères."),
+  city: z.string().trim().min(2, "Indiquez la ville de la boutique.").max(80),
+  neighborhood: z.string().trim().max(80),
+  contactEmail: z.union([z.literal(""), z.string().trim().toLowerCase().email("Vérifiez l’adresse e-mail de contact.").max(254)]),
+  address: z.string().trim().max(200),
+  pickupEnabled: z.boolean(),
+  pickupAddress: z.string().trim().max(200),
+  pickupHours: z.string().trim().max(120),
   theme: z.nativeEnum(StoreTheme),
   primaryColor: hexColorSchema,
   secondaryColor: hexColorSchema,
   accentColor: hexColorSchema,
 });
 
-function toColor(value: FormDataEntryValue | null) {
-  if (typeof value !== "string") return "";
-  return value.toUpperCase();
-}
-
-export async function updateStoreSettings(formData: FormData) {
-  const { store } = await requireStorePermission("store.manage");
-  const parsed = settingsSchema.safeParse({
-    name: formData.get("name"),
-    businessCategory: formData.get("businessCategory") ?? "",
-    city: formData.get("city"),
-    description: formData.get("description") ?? "",
-    theme: formData.get("theme"),
-    primaryColor: toColor(formData.get("primaryColor")),
-    secondaryColor: toColor(formData.get("secondaryColor")),
-    accentColor: toColor(formData.get("accentColor")),
-  });
-
-  if (!parsed.success) {
-    redirect(`/dashboard/boutique?erreur=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Vérifie tes informations.")}`);
-  }
-
-  const logoFile = formData.get("logo");
-  let logoUrl: string | undefined;
-  if (logoFile instanceof File && logoFile.size > 0) {
-    if (logoFile.size > 2 * 1024 * 1024) {
-      redirect("/dashboard/boutique?erreur=Le%20logo%20ne%20peut%20pas%20d%C3%A9passer%202%20Mo.");
-    }
-    const image = sharp(Buffer.from(await logoFile.arrayBuffer()), {
-      failOn: "error",
-      limitInputPixels: 25_000_000,
-    });
-    const metadata = await image.metadata();
-    if (!metadata.format || !["jpeg", "png", "webp"].includes(metadata.format)) {
-      redirect("/dashboard/boutique?erreur=Choisis%20un%20logo%20PNG%2C%20JPG%20ou%20WebP.");
-    }
-    if (!metadata.width || !metadata.height || metadata.width > 5000 || metadata.height > 5000) {
-      redirect("/dashboard/boutique?erreur=Le%20logo%20ne%20peut%20pas%20d%C3%A9passer%205%20000%20pixels%20de%20c%C3%B4t%C3%A9.");
-    }
-
-    const filename = `${randomUUID()}.webp`;
-    const directory = join(process.cwd(), "public", "uploads", store.id);
-    await mkdir(directory, { recursive: true });
-    await image.rotate().webp({ quality: 82, effort: 4 }).toFile(join(directory, filename));
-    logoUrl = `/uploads/${store.id}/${filename}`;
-  }
-
-  try {
-    await prisma.store.update({
-      where: { id: store.id },
-      data: {
-        ...parsed.data,
-        description: parsed.data.description || null,
-        ...(logoUrl ? { logoUrl } : {}),
-      },
-    });
-  } catch (error) {
-    if (
-      error instanceof Error &&
-      "code" in error &&
-      error.code === "P2002"
-    ) {
-      redirect("/dashboard/boutique?erreur=Cette%20adresse%20de%20boutique%20est%20d%C3%A9j%C3%A0%20utilis%C3%A9e.");
-    }
-    throw error;
-  }
-
-  revalidatePath("/dashboard/boutique");
+function revalidateStore(store: { id: string; slug: string }) {
+  revalidatePath(settingsPath);
+  revalidatePath("/dashboard");
   revalidatePath(`/boutique/${store.slug}`);
   invalidateStorefrontCache(store.id, store.slug);
-  redirect("/dashboard/boutique?succes=1");
+}
+
+export type StoreSettingsState =
+  | null
+  | { ok: true; message: string; logoUrl: string | null }
+  | { ok: false; message: string; field?: string };
+
+/** Enregistre « Ma boutique » sans rechargement : en cas d'erreur, la saisie (logo compris) est conservée. */
+export async function updateStoreSettings(_previous: StoreSettingsState, formData: FormData): Promise<StoreSettingsState> {
+  const { store } = await requireStorePermission("store.manage");
+  const parsed = settingsSchema.safeParse({
+    name: text(formData, "name"),
+    description: text(formData, "description"),
+    activityId: text(formData, "activityId"),
+    activityOther: text(formData, "activityOther"),
+    city: text(formData, "city"),
+    neighborhood: text(formData, "neighborhood"),
+    contactEmail: text(formData, "contactEmail"),
+    address: text(formData, "address"),
+    pickupEnabled: formData.get("pickupEnabled") === "on",
+    pickupAddress: text(formData, "pickupAddress"),
+    pickupHours: text(formData, "pickupHours"),
+    theme: text(formData, "theme"),
+    primaryColor: text(formData, "primaryColor").toUpperCase(),
+    secondaryColor: text(formData, "secondaryColor").toUpperCase(),
+    accentColor: text(formData, "accentColor").toUpperCase(),
+  });
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return { ok: false, message: issue?.message ?? "Vérifiez vos informations.", field: String(issue?.path[0] ?? "") };
+  }
+  const input = parsed.data;
+
+  for (const [field, label, color] of [["primaryColor", "principale", input.primaryColor], ["secondaryColor", "secondaire", input.secondaryColor]] as const) {
+    if (!colorReadability(color).readable) {
+      return { ok: false, field, message: `La couleur ${label} ${color} n’est pas assez contrastée pour rester lisible.` };
+    }
+  }
+  if (input.pickupEnabled && !input.pickupAddress && !input.address) {
+    return { ok: false, field: "pickupAddress", message: "Indiquez l’adresse de retrait en boutique, ou décochez le retrait." };
+  }
+  const phone = text(formData, "phoneNational") ? parsePhone(text(formData, "phoneCountry"), text(formData, "phoneNational")) : null;
+  if (phone && !phone.ok) return { ok: false, field: "phone", message: phone.message };
+  if (input.activityId && !(await prisma.activity.findUnique({ where: { id: input.activityId }, select: { id: true } }))) {
+    return { ok: false, field: "activityId", message: "Choisissez une activité de la liste." };
+  }
+
+  let logoUrl: string | undefined;
+  try {
+    logoUrl = (await saveStoreImage(formData.get("logo"), store.id, { maxSide: 512, square: true }))?.url;
+  } catch (error) {
+    if (error instanceof ImageUploadError) return { ok: false, field: "logo", message: error.message.replace("La photo", "Le logo") };
+    throw error;
+  }
+  const previousLogo = logoUrl ? store.logoUrl : null;
+
+  await prisma.store.update({
+    where: { id: store.id },
+    data: {
+      name: input.name,
+      description: input.description || null,
+      activityId: input.activityId || null,
+      activityOther: input.activityId ? null : input.activityOther || null,
+      city: input.city,
+      neighborhood: input.neighborhood || null,
+      contactEmail: input.contactEmail || null,
+      address: input.address || null,
+      pickupEnabled: input.pickupEnabled,
+      pickupAddress: input.pickupAddress || input.address || null,
+      pickupHours: input.pickupHours || null,
+      theme: input.theme,
+      primaryColor: input.primaryColor,
+      secondaryColor: input.secondaryColor,
+      accentColor: input.accentColor,
+      ...(phone?.ok ? { phoneCountry: phone.country, phoneNational: phone.national, phoneE164: phone.e164, contactPhone: phone.e164 } : {}),
+      ...(logoUrl ? { logoUrl } : {}),
+    },
+  });
+  if (previousLogo) await deleteStoreImage(previousLogo);
+  revalidateStore(store);
+  return { ok: true, message: "Modifications enregistrées. Votre boutique est à jour.", logoUrl: logoUrl ?? store.logoUrl };
+}
+
+export async function removeStoreLogo() {
+  const { store } = await requireStorePermission("store.manage");
+  if (store.logoUrl) {
+    await prisma.store.update({ where: { id: store.id }, data: { logoUrl: null } });
+    await deleteStoreImage(store.logoUrl);
+  }
+  revalidateStore(store);
+  redirect(`${settingsPath}?succes=logo-retire`);
 }
 
 export async function resetStoreColors() {
   const { store } = await requireStorePermission("store.manage");
-  await prisma.store.update({
-    where: { id: store.id },
-    data: {
-      primaryColor: "#FF9900",
-      secondaryColor: "#000026",
-      accentColor: "#EF765E",
-    },
-  });
-  revalidatePath("/dashboard/boutique");
-  revalidatePath(`/boutique/${store.slug}`);
-  invalidateStorefrontCache(store.id, store.slug);
-  redirect("/dashboard/boutique?succes=couleurs");
+  await prisma.store.update({ where: { id: store.id }, data: { primaryColor: "#FF9900", secondaryColor: "#000026", accentColor: "#EF765E" } });
+  revalidateStore(store);
+  redirect(`${settingsPath}?succes=couleurs`);
 }
 
 export async function publishStore() {
   const { session, store } = await requireStorePermission("store.manage");
-  if (!session.user.emailVerified) {
-    redirect("/dashboard/boutique?erreur=Confirme%20ton%20adresse%20e-mail%20avant%20de%20publier%20ta%20boutique.");
-  }
-
-  await prisma.store.update({ where: { id: store.id }, data: { isPublished: true } });
-  revalidatePath("/dashboard/boutique");
-  revalidatePath(`/boutique/${store.slug}`);
-  invalidateStorefrontCache(store.id, store.slug);
-  redirect("/dashboard/boutique?succes=publication");
+  const result = await publishStoreIfReady(store.id, session.user.emailVerified);
+  if (!result.ok) fail(`Avant de publier : ${result.missing.map((item) => item.label.toLowerCase()).join(", ")}.`);
+  revalidateStore(store);
+  redirect(`${settingsPath}?succes=publication`);
 }
 
 export async function unpublishStore() {
   const { store } = await requireStorePermission("store.manage");
   await prisma.store.update({ where: { id: store.id }, data: { isPublished: false } });
-  revalidatePath("/dashboard/boutique");
-  revalidatePath(`/boutique/${store.slug}`);
-  invalidateStorefrontCache(store.id, store.slug);
-  redirect("/dashboard/boutique?succes=brouillon");
+  revalidateStore(store);
+  redirect(`${settingsPath}?succes=brouillon`);
 }

@@ -1,13 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { RichText } from "@/components/ui/rich-text";
+import { StoreImage } from "@/components/ui/store-image";
 import { useState } from "react";
 import { formatXaf } from "@/modules/catalog/format";
 import { useStoreCart } from "@/components/storefront/store-cart-provider";
+import { buildProductWhatsappOrderMessage, buildWaMeUrl } from "@/modules/whatsapp/wa-me";
 
 type ProductDetailProps = {
   storeSlug: string;
+  storeName: string;
+  productUrl: string;
+  whatsappNumber: string | null;
+  canOrder?: boolean;
   product: {
     id: string;
     name: string;
@@ -27,13 +33,34 @@ type ProductDetailProps = {
   };
 };
 
-export function ProductDetail({ product, storeSlug, canOrder = true }: ProductDetailProps & { canOrder?: boolean }) {
+export function ProductDetail({
+  product,
+  storeSlug,
+  storeName,
+  productUrl,
+  whatsappNumber,
+  canOrder = true,
+}: ProductDetailProps) {
   const cart = useStoreCart();
   const [variantId, setVariantId] = useState(product.variants[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
   const [message, setMessage] = useState("");
   const variant = product.variants.find((item) => item.id === variantId);
   const price = variant?.priceXaf ?? product.promotionalPriceXaf ?? product.priceXaf;
+  const validQuantity = Number.isSafeInteger(quantity) && quantity >= 1 ? Math.min(quantity, 25) : 1;
+  const whatsappOrderUrl = whatsappNumber
+    ? buildWaMeUrl(
+        whatsappNumber,
+        buildProductWhatsappOrderMessage({
+          storeName,
+          productName: product.name,
+          variantLabel: variant ? `${variant.optionName} : ${variant.optionValue}` : null,
+          quantity: validQuantity,
+          unitPriceXaf: price,
+          productUrl,
+        }),
+      )
+    : null;
 
   function addToCart() {
     const added = cart.add({
@@ -50,7 +77,7 @@ export function ProductDetail({ product, storeSlug, canOrder = true }: ProductDe
       <Link className="text-link" href={`/boutique/${storeSlug}`}>Retour à la boutique</Link>
       <article className="storefront-product-detail">
         {product.images[0] ? (
-          <Image
+          <StoreImage
             alt={product.images[0].altText ?? product.name}
             className="product-detail-image"
             height={1000}
@@ -64,7 +91,11 @@ export function ProductDetail({ product, storeSlug, canOrder = true }: ProductDe
         <div className="product-detail-copy">
           <h1>{product.name}</h1>
           <p className="product-detail-price">{formatXaf(price)}</p>
-          <p>{product.description || "Contacte la boutique si tu souhaites plus d’informations."}</p>
+          {product.description ? (
+            <RichText className="rich-text product-description" source={product.description} />
+          ) : (
+            <p>Contactez la boutique si vous souhaitez plus d’informations.</p>
+          )}
           {canOrder && product.variants.length > 0 && (
             <label className="form-field">
               {product.variants[0]?.optionName}
@@ -92,12 +123,9 @@ export function ProductDetail({ product, storeSlug, canOrder = true }: ProductDe
               {cart.error && <p className="form-error" role="alert">{cart.error}</p>}
               {message && <p aria-live="polite" className="notice" role="status">{message}</p>}
               <div className="page-actions">
-                <button className="primary-button" disabled={!cart.ready} onClick={addToCart} type="button">
-                  Ajouter au panier
-                </button>
                 <Link
                   aria-disabled={!cart.ready}
-                  className="secondary-button"
+                  className="primary-button"
                   href={`/boutique/${storeSlug}/panier`}
                   onClick={(event) => {
                     if (!cart.ready) {
@@ -109,7 +137,25 @@ export function ProductDetail({ product, storeSlug, canOrder = true }: ProductDe
                 >
                   Commander maintenant
                 </Link>
+                {whatsappOrderUrl && (
+                  <a
+                    className="secondary-button whatsapp-order-button"
+                    href={whatsappOrderUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Commander via WhatsApp
+                  </a>
+                )}
               </div>
+              <button
+                className="text-link product-detail-cart-link"
+                disabled={!cart.ready}
+                onClick={addToCart}
+                type="button"
+              >
+                Ajouter au panier et continuer mes achats
+              </button>
               <p className="dashboard-copy">Paiement à la livraison. Sans création de compte.</p>
             </>
           ) : (

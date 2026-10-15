@@ -1,0 +1,77 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Confirmation WhatsApp
+
+Choisissez comment vos clients confirment leurs commandes : par un simple lien, ou automatiquement par l’API.
+
+Aide
+Par défaut · actif
+Lien WhatsApp (wa.me)
+
+Votre client ouvre WhatsApp avec un message prêt à envoyer. Aucun compte technique, gratuit, prêt tout de suite.
+
+Pas d’envoi automatique : le client appuie sur Envoyer
+Pas de statut « livré » ou « lu »
+Vous validez vous-même la confirmation du client
+Avancé
+API WhatsApp Business
+
+Envoi automatique de la confirmation, avec les statuts envoyé, livré et lu.
+
+Compte Meta, numéro et modèle approuvé requis
+Messages limités par votre offre
+Configurer l’API
+Configuration du lien wa.me (par défaut)
+Numéro WhatsApp de la boutique
+
+Les clients qui commandent vous écrivent sur ce numéro. Format international, +237 par défaut.
+
+Message du client à la boutique
+{prenom}
+{reference}
+{articles}
+{montant}
+{livraison}
+Message de la boutique au client
+Afficher « Confirmer sur WhatsApp » après la commande
+Me proposer « Écrire au client » depuis chaque commande
+Tester le lien
+Enregistrer
+Aperçu du lien
+Bonjour Mboa Style, je confirme ma commande #MB-1042 : Robe wax Akwa. Montant : 28 500 FCFA. Livraison : Douala, Akwa.
+
+https://wa.me/2376XXXXXXXX?text=Bonjour%20Mboa%20Style…
+
+Comment ça marche
+1
+Le client termine sa commande sur le site
+2
+Il touche « Confirmer sur WhatsApp »
+3
+WhatsApp s’ouvre, il appuie sur Envoyer
+4
+Vous lisez sa réponse et validez la commande
+Bon à savoir
+
+Un clic sur le lien ne prouve pas que le message est parti. La commande ne passe à « Confirmée par le client » que lorsque vous la validez ou que le client confirme sur le lien de secours du site.
+
+Passer à l’API plus tard
+
+Votre configuration wa.me reste en place : vous pouvez revenir au lien à tout moment. Les commandes en cours gardent leur statut.
+
+1. wa.me configuré ✓
+2. Identifiants API
+3. Modèle approuvé
+4. Test de connexion

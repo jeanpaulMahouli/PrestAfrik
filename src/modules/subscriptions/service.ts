@@ -191,7 +191,7 @@ export async function assertCanCreateProduct(
     );
   }
   const activeProducts = await transaction.product.count({
-    where: { storeId, isArchived: false },
+    where: { storeId, status: { not: "ARCHIVED" } },
   });
   if (
     access.plan.productQuota !== null &&

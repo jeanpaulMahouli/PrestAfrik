@@ -1,9 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+import { VendorShell } from "@/components/layout/vendor-shell";
+import { ActionDialog } from "@/components/ui/action-dialog";
+import { Badge, StatusBadge } from "@/components/ui/badge";
+import { StatCard } from "@/components/ui/stat-card";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { prisma } from "@/lib/prisma";
+import { orderStageDisplay } from "@/config/statuses";
+import { orderStage } from "@/modules/orders/state-machine";
+import { formatDate, formatFcfa, formatPhone, formatReference, formatTime } from "@/lib/format";
+import { hasPermission } from "@/modules/auth/permissions";
 import {
   addCustomerNote,
   addCustomerTag,
@@ -13,394 +18,264 @@ import {
   revokeCustomerMarketingConsent,
   scheduleCustomerReminder,
 } from "@/modules/customers/actions";
+import { getCustomerDetail } from "@/modules/customers/queries";
 import { customerNameIsMateriallyDifferent } from "@/modules/customers/validation";
+import { orderEventLabel } from "@/modules/orders/queries";
 import { requireStorePermission } from "@/modules/stores/context";
+import { buildWaMeUrl } from "@/modules/whatsapp/wa-me";
 
-export default async function CustomerDetailPage({
-  params,
-  searchParams,
-}: PageProps<"/dashboard/clients/[customerId]">) {
+export const metadata = { title: "Fiche client" };
+
+const sourceLabels: Record<string, string> = { storefront: "Boutique en ligne", manuel: "Ajout manuel", manual: "Ajout manuel", import: "Import" };
+const consentSourceLabels: Record<string, string> = { checkout: "le formulaire de commande", manual: "un ajout manuel", manuel: "un ajout manuel" };
+
+export default async function CustomerDetailPage({ params, searchParams }: PageProps<"/dashboard/clients/[customerId]">) {
   const [{ customerId }, query] = await Promise.all([params, searchParams]);
-  const { session, store, memberships, membership } = await requireStorePermission("customers.read");
-  const customerPromise = prisma.customer.findFirst({
-    where: { id: customerId, storeId: store.id },
-    select: {
-      id: true,
-      name: true,
-      whatsapp: true,
-      email: true,
-      firstOrderAt: true,
-      lastOrderAt: true,
-      orderCount: true,
-      source: true,
-      nameConflict: true,
-      addresses: {
-        orderBy: { lastUsedAt: "desc" },
-        take: 50,
-        select: { id: true, city: true, neighborhood: true, landmark: true, lastUsedAt: true },
-      },
-      tags: { orderBy: { name: "asc" }, select: { id: true, name: true } },
-      notes: {
-        where: { storeId: store.id },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-        select: {
-          id: true,
-          content: true,
-          createdAt: true,
-          author: { select: { name: true } },
-        },
-      },
-      reminders: {
-        where: { storeId: store.id },
-        orderBy: { remindAt: "asc" },
-        take: 50,
-        select: {
-          id: true,
-          remindAt: true,
-          reason: true,
-          completedAt: true,
-          author: { select: { name: true } },
-        },
-      },
-      consents: {
-        where: { storeId: store.id },
-        orderBy: [{ recordedAt: "desc" }, { id: "desc" }],
-        take: 100,
-        select: { type: true, granted: true, source: true, recordedAt: true, revokedAt: true },
-      },
-      orders: {
-        where: { storeId: store.id },
-        orderBy: { createdAt: "desc" },
-        take: 100,
-        select: {
-          id: true,
-          reference: true,
-          customerName: true,
-          createdAt: true,
-          totalXaf: true,
-          confirmationStatus: true,
-          processingStatus: true,
-          payments: {
-            select: {
-              type: true,
-              amountXaf: true,
-              reverses: { select: { type: true, amountXaf: true } },
-            },
-          },
-        },
-      },
-    },
-  });
-  const statsPromise = prisma.$queryRaw<{ orderCount: bigint; orderedXaf: bigint; receivedXaf: bigint }[]>`
-    SELECT
-      COUNT(order_row."id")::bigint AS "orderCount",
-      COALESCE(
-        SUM(order_row."totalXaf") FILTER (
-          WHERE order_row."processingStatus" <> 'CANCELLED' AND order_row."totalXaf" IS NOT NULL
-        ),
-        0
-      )::bigint AS "orderedXaf",
-      COALESCE((
-        SELECT SUM(
-          CASE
-            WHEN payment."type"::text IN ('PAYMENT_RECEIVED', 'PARTIAL_PAYMENT', 'COURIER_COLLECTION')
-              THEN payment."amountXaf"::bigint
-            WHEN payment."type"::text = 'REFUND'
-              THEN -payment."amountXaf"::bigint
-            WHEN payment."type"::text = 'REVERSAL'
-              AND reversed."type"::text IN ('PAYMENT_RECEIVED', 'PARTIAL_PAYMENT', 'COURIER_COLLECTION')
-              THEN -reversed."amountXaf"::bigint
-            WHEN payment."type"::text = 'REVERSAL' AND reversed."type"::text = 'REFUND'
-              THEN reversed."amountXaf"::bigint
-            ELSE 0::bigint
-          END
-        )
-        FROM "Payment" payment
-        JOIN "Order" payment_order ON payment_order."id" = payment."orderId"
-        LEFT JOIN "Payment" reversed ON reversed."id" = payment."reversesId"
-        WHERE payment_order."customerId" = ${customerId}
-          AND payment_order."storeId" = ${store.id}
-          AND payment."storeId" = ${store.id}
-      ), 0)::bigint AS "receivedXaf"
-    FROM "Order" order_row
-    WHERE order_row."customerId" = ${customerId}
-      AND order_row."storeId" = ${store.id}
-  `;
-  const [customer, [stats]] = await Promise.all([customerPromise, statsPromise]);
-  if (!customer) notFound();
-
-  const latestConsent = new Map<string, (typeof customer.consents)[number]>();
-  for (const consent of customer.consents) {
-    if (!latestConsent.has(consent.type)) latestConsent.set(consent.type, consent);
-  }
-  const marketingConsent = latestConsent.get("MARKETING");
-  const followUpConsent = latestConsent.get("ORDER_FOLLOW_UP");
-  const hasMarketingConsent = Boolean(marketingConsent?.granted && !marketingConsent.revokedAt);
-  const hasFollowUpConsent = Boolean(followUpConsent?.granted && !followUpConsent.revokedAt);
-  const error = typeof query.erreur === "string" ? query.erreur : "";
-  const nameConflicts = customer.orders.filter((order) =>
-    customerNameIsMateriallyDifferent(customer.name, order.customerName),
-  );
+  const { store, membership } = await requireStorePermission("customers.read");
+  const detail = await getCustomerDetail(store.id, customerId);
+  if (!detail) notFound();
+  const { customer, stats, marketingConsent, followUpConsent, interactions } = detail;
+  const canManage = hasPermission(membership.role, "customers.manage");
+  const hasMarketing = Boolean(marketingConsent?.granted && !marketingConsent.revokedAt);
+  const hasFollowUp = Boolean(followUpConsent?.granted && !followUpConsent.revokedAt);
+  const remaining = Math.max(0, stats.orderedXaf - stats.receivedXaf);
+  const nameConflicts = customer.orders.filter((order) => customerNameIsMateriallyDifferent(customer.name, order.customerName));
+  const openReminders = customer.reminders.filter((reminder) => !reminder.completedAt);
+  const error = typeof query.erreur === "string" ? query.erreur : null;
+  const today = new Date(Date.now() + 3600_000).toISOString().slice(0, 10);
 
   return (
-    <DashboardShell
-      memberships={memberships}
-      role={membership.role}
-      store={store}
-      userEmail={session.user.email}
-      userName={session.user.name}
-    >
-      <div className="page-heading customer-detail-heading">
+    <VendorShell>
+      <Link className="v-back-link" href="/dashboard/clients">← Tous les clients</Link>
+      <div className="v-page-header">
         <div>
-          <Link className="text-link customer-back-link" href="/dashboard/clients">← Clients</Link>
-          <h1 className="dashboard-heading">{customer.name}</h1>
-          <p className="dashboard-copy">
-            {customer.whatsapp} · Fiche créée par {sourceLabel(customer.source)}
-          </p>
+          <h1 className="v-page-title">{customer.name}</h1>
+          <p className="v-page-subtitle">Toute l’histoire de ce client avec votre boutique : commandes, échanges, notes et rappels.</p>
         </div>
-        <div className="page-actions">
-          <a
-            className="secondary-button"
-            href={`https://wa.me/${customer.whatsapp.replace(/\D/g, "")}`}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Ouvrir WhatsApp
-          </a>
+        <div className="v-page-actions">
+          {canManage && (
+            <ActionDialog
+              action={scheduleCustomerReminder}
+              hiddenFields={{ customerId: customer.id }}
+              submitLabel="Programmer le rappel"
+              title="Ajouter un rappel"
+              triggerLabel="Ajouter un rappel"
+            >
+              <label className="v-field">
+                Date du rappel
+                <input defaultValue={today} min={today} name="remindAt" required type="date" />
+              </label>
+              <label className="v-field">
+                Pourquoi recontacter ce client ?
+                <input maxLength={250} name="reason" placeholder="Ex. Proposer la nouvelle collection" required />
+              </label>
+            </ActionDialog>
+          )}
+          <a className="btn btn-primary" href={buildWaMeUrl(customer.whatsapp)} rel="noopener noreferrer" target="_blank">Ouvrir WhatsApp</a>
         </div>
       </div>
 
-      {error && <p className="form-error customer-form-error" role="alert">{error}</p>}
+      {error && <p className="v-banner v-banner-danger" role="alert">{error}</p>}
 
-      {customer.nameConflict && (
-        <section aria-labelledby="customer-conflict-title" className="notice customer-conflict-notice">
-          <h2 id="customer-conflict-title">Vérifie le nom du client</h2>
-          <p>Une commande récente utilise un nom très différent pour ce même numéro. Choisis le nom à conserver sur la fiche ; l’historique des commandes reste inchangé.</p>
-          {nameConflicts.map((order) => (
-            <div className="customer-conflict-choice" key={order.id}>
-              <span>{order.customerName} · {order.reference}</span>
-              <form action={resolveCustomerNameConflict}>
+      {customer.nameConflict && canManage && (
+        <section aria-labelledby="conflict-title" className="v-banner">
+          <h2 className="v-card-title" id="conflict-title">Vérifiez le nom de ce client</h2>
+          <p className="v-small">Une commande récente utilise un nom très différent pour ce même numéro. Choisissez le nom à conserver ; l’historique des commandes reste inchangé.</p>
+          <div className="v-button-row">
+            {nameConflicts.map((order) => (
+              <form action={resolveCustomerNameConflict} key={order.id}>
                 <input name="customerId" type="hidden" value={customer.id} />
                 <input name="orderId" type="hidden" value={order.id} />
-                <SubmitButton className="secondary-button" pendingLabel="Mise à jour…">Conserver ce nom</SubmitButton>
+                <SubmitButton className="btn btn-secondary btn-sm" pendingLabel="Mise à jour…">Garder « {order.customerName} »</SubmitButton>
               </form>
-            </div>
-          ))}
+            ))}
+          </div>
         </section>
       )}
 
-      <section aria-label="Résumé du client" className="customer-detail-metrics">
-        <article className="surface-card customer-detail-metric">
-          <span>Commandes</span>
-          <strong>{formatAmount(safeNumber(stats.orderCount))}</strong>
-        </article>
-        <article className="surface-card customer-detail-metric">
-          <span>Montant commandé</span>
-          <strong>{formatAmount(safeNumber(stats.orderedXaf))} FCFA</strong>
-        </article>
-        <article className="surface-card customer-detail-metric">
-          <span>Argent reçu</span>
-          <strong>{formatAmount(Math.max(0, safeNumber(stats.receivedXaf)))} FCFA</strong>
-        </article>
+      <section aria-label="Chiffres du client" className="stat-grid customer-stats">
+        <StatCard hint={`dont ${stats.cancelledCount} annulée${stats.cancelledCount > 1 ? "s" : ""}`} label="Commandes" value={String(stats.orderCount)} />
+        <StatCard hint={customer.firstOrderAt ? `depuis le ${formatDate(customer.firstOrderAt)}` : "aucune commande"} label="Montant commandé" value={formatFcfa(stats.orderedXaf)} />
+        <StatCard hint={remaining ? `reste ${formatFcfa(remaining)} à recevoir` : stats.orderedXaf ? "tout est encaissé" : "—"} label="Argent reçu" value={formatFcfa(stats.receivedXaf)} />
       </section>
 
-      <div className="customer-detail-grid">
-        <div className="customer-detail-main">
-          <section className="surface-card customer-detail-card">
-            <h2>Coordonnées et consentements</h2>
-            <dl className="customer-contact-list">
-              <div><dt>Nom</dt><dd>{customer.name}</dd></div>
-              <div><dt>WhatsApp</dt><dd>{customer.whatsapp}</dd></div>
-              <div><dt>E-mail</dt><dd>{customer.email ?? "Non renseigné"}</dd></div>
-              <div><dt>Source</dt><dd>{sourceLabel(customer.source)}</dd></div>
-              <div><dt>Première commande</dt><dd>{customer.firstOrderAt ? formatDate(customer.firstOrderAt) : "Aucune commande"}</dd></div>
-              <div><dt>Dernière commande</dt><dd>{customer.lastOrderAt ? formatDate(customer.lastOrderAt) : "Aucune commande"}</dd></div>
-              <div>
-                <dt>Suivi de commande</dt>
-                <dd>{hasFollowUpConsent ? "Accepté" : "Non actif"}</dd>
-              </div>
-              <div>
-                <dt>Marketing</dt>
-                <dd>
-                  {hasMarketingConsent ? "Accepté" : "Non actif"}
-                  {marketingConsent && <small> · {sourceLabel(marketingConsent.source)} · {formatDate(marketingConsent.recordedAt)}</small>}
-                  {hasMarketingConsent && (
-                    <form action={revokeCustomerMarketingConsent}>
-                      <input name="customerId" type="hidden" value={customer.id} />
-                      <SubmitButton className="text-button customer-revoke-button" pendingLabel="Retrait…">
-                        Retirer le consentement
-                      </SubmitButton>
-                    </form>
-                  )}
-                </dd>
-              </div>
-            </dl>
+      <div className="v-split">
+        <div className="v-stack">
+          <section aria-labelledby="customer-orders" className="v-card">
+            <h2 className="v-card-title" id="customer-orders">Historique des commandes</h2>
+            {customer.orders.length ? (
+              <table className="v-table compact-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Commande</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Statut</th>
+                    <th className="v-num" scope="col">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customer.orders.map((order) => {
+                    return (
+                      <tr key={order.id}>
+                        <td className="v-cell-primary"><Link className="v-ref v-ref-dark" href={`/dashboard/commandes/${order.id}`}>{formatReference(order.reference)}</Link></td>
+                        <td data-label="Date">{formatDate(order.createdAt)}</td>
+                        <td data-label="Statut"><StatusBadge status={orderStageDisplay[orderStage(order.processingStatus)]} /></td>
+                        <td className="v-num" data-label="Total">{formatFcfa(order.totalXaf ?? order.subtotalXaf)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <p className="v-muted v-small">Ce client n’a pas encore commandé.</p>
+            )}
           </section>
 
-          <section className="surface-card customer-detail-card">
-            <h2>Adresses utilisées</h2>
-            {customer.addresses.length ? (
-              <ul className="customer-address-list">
-                {customer.addresses.map((address) => (
-                  <li key={address.id}>
-                    <strong>{address.city}{address.neighborhood ? ` · ${address.neighborhood}` : ""}</strong>
-                    {address.landmark && <span>{address.landmark}</span>}
-                    <small>Utilisée le {formatDate(address.lastUsedAt)}</small>
+          <section aria-labelledby="customer-notes" className="v-card">
+            <h2 className="v-card-title" id="customer-notes">Notes</h2>
+            {customer.notes.length > 0 && (
+              <ul className="order-rows">
+                {customer.notes.map((note) => (
+                  <li key={note.id}>
+                    <span className="v-muted">{note.author.name.split(" ")[0]} · {formatDate(note.createdAt).slice(0, 5)}</span>
+                    <span>{note.content}</span>
                   </li>
                 ))}
               </ul>
-            ) : <p className="dashboard-copy">Aucune adresse enregistrée.</p>}
+            )}
+            {canManage && (
+              <form action={addCustomerNote} className="inline-form">
+                <input name="customerId" type="hidden" value={customer.id} />
+                <label className="visually-hidden" htmlFor="note-content">Nouvelle note</label>
+                <input id="note-content" maxLength={1000} name="content" placeholder="Ajouter une note" required />
+                <SubmitButton className="btn btn-primary" pendingLabel="Ajout…">Ajouter</SubmitButton>
+              </form>
+            )}
           </section>
 
-          <section className="surface-card customer-detail-card">
-            <h2>Historique des commandes</h2>
-            {customer.orders.length ? (
-              <div className="responsive-table-wrap">
-                <table className="data-table customer-order-table">
-                  <thead>
-                    <tr><th scope="col">Commande</th><th scope="col">Nom saisi</th><th scope="col">Statut</th><th scope="col">Total</th><th scope="col">Date</th></tr>
-                  </thead>
-                  <tbody>
-                    {customer.orders.map((order) => (
-                      <tr key={order.id}>
-                        <td><Link className="order-reference" href={`/dashboard/commandes/${order.id}`}>{order.reference}</Link></td>
-                        <td>{order.customerName}</td>
-                        <td><OrderStatusBadge confirmationStatus={order.confirmationStatus} processingStatus={order.processingStatus} /></td>
-                        <td>{order.totalXaf === null ? "À confirmer" : `${formatAmount(order.totalXaf)} FCFA`}</td>
-                        <td>{formatDate(order.createdAt)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : <p className="dashboard-copy">Aucune commande pour le moment.</p>}
-            {customer.orderCount > customer.orders.length && (
-              <p className="dashboard-copy">Affichage des {customer.orders.length} commandes les plus récentes.</p>
+          <section aria-labelledby="customer-interactions" className="v-card">
+            <h2 className="v-card-title" id="customer-interactions">Interactions</h2>
+            {interactions.length ? (
+              <ul className="order-rows">
+                {interactions.map((event) => (
+                  <li key={event.id}>
+                    <span className="v-muted">{formatDate(event.createdAt).slice(0, 5)} {formatTime(event.createdAt)}</span>
+                    <span>
+                      {orderEventLabel(event.type)} <small className="v-muted">{formatReference(event.order.reference)}</small>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="v-muted v-small">Aucune interaction enregistrée pour l’instant.</p>
             )}
           </section>
         </div>
 
-        <aside className="customer-detail-aside">
-          <section className="surface-card customer-detail-card">
-            <h2>Tags</h2>
-            <div className="customer-tag-list customer-detail-tags">
-              {customer.tags.map((tag) => (
-                <span className="customer-tag" key={tag.id}>
-                  {tag.name}
-                  <form action={removeCustomerTag}>
-                    <input name="customerId" type="hidden" value={customer.id} />
-                    <input name="tagId" type="hidden" value={tag.id} />
-                    <button aria-label={`Retirer le tag ${tag.name}`} className="customer-tag-remove" type="submit">×</button>
-                  </form>
-                </span>
-              ))}
-              {!customer.tags.length && <p className="dashboard-copy">Aucun tag pour ce client.</p>}
-            </div>
-            <form action={addCustomerTag} className="customer-inline-form">
-              <input name="customerId" type="hidden" value={customer.id} />
-              <label className="visually-hidden" htmlFor="customer-add-tag">Ajouter un tag</label>
-              <input id="customer-add-tag" maxLength={40} minLength={2} name="tag" placeholder="Ajouter un tag" required />
-              <SubmitButton className="secondary-button" pendingLabel="Ajout…">Ajouter</SubmitButton>
-            </form>
+        <div className="v-stack">
+          <section aria-labelledby="customer-contact" className="v-card">
+            <h2 className="v-card-title" id="customer-contact">Coordonnées</h2>
+            <dl className="order-facts">
+              <div><dt>WhatsApp</dt><dd>{formatPhone(customer.whatsapp)}</dd></div>
+              <div><dt>E-mail</dt><dd className="break-anywhere">{customer.email ?? "—"}</dd></div>
+              <div><dt>Source</dt><dd>{sourceLabels[customer.source] ?? customer.source}</dd></div>
+              <div><dt>Première commande</dt><dd>{customer.firstOrderAt ? formatDate(customer.firstOrderAt) : "—"}</dd></div>
+              <div><dt>Dernière commande</dt><dd>{customer.lastOrderAt ? formatDate(customer.lastOrderAt) : "—"}</dd></div>
+            </dl>
           </section>
 
-          <section className="surface-card customer-detail-card">
-            <h2>À recontacter</h2>
-            <form action={scheduleCustomerReminder} className="customer-reminder-form">
-              <input name="customerId" type="hidden" value={customer.id} />
-              <label className="form-field">
-                Date
-                <input defaultValue={new Date(Date.now() + 86400000).toISOString().slice(0, 10)} name="remindAt" required type="date" />
-              </label>
-              <label className="form-field">
-                Motif
-                <input maxLength={250} minLength={2} name="reason" placeholder="Ex. rappeler pour la nouvelle collection" required />
-              </label>
-              <SubmitButton className="secondary-button" pendingLabel="Programmation…">Programmer</SubmitButton>
-            </form>
-            <ul className="customer-reminder-list">
-              {customer.reminders.map((reminder) => (
-                <li className={reminder.completedAt ? "completed" : ""} key={reminder.id}>
-                  <span><strong>{formatDate(reminder.remindAt)}</strong>{reminder.reason}</span>
-                  {reminder.completedAt ? (
-                    <small>Terminé le {formatDate(reminder.completedAt)}</small>
-                  ) : (
-                    <form action={completeCustomerReminder}>
+          <section aria-labelledby="customer-addresses" className="v-card">
+            <h2 className="v-card-title" id="customer-addresses">Adresses</h2>
+            {customer.addresses.length ? (
+              <ul className="address-list">
+                {customer.addresses.map((address) => (
+                  <li key={address.id}>
+                    <span>{[address.city, address.neighborhood].filter(Boolean).join(" · ")}</span>
+                    {address.landmark && <small>{address.landmark}</small>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="v-muted v-small">Aucune adresse enregistrée.</p>
+            )}
+          </section>
+
+          <section aria-labelledby="customer-consents" className="v-card">
+            <h2 className="v-card-title" id="customer-consents">Consentements</h2>
+            <ul className="order-rows">
+              <li>
+                <span className="v-muted">Suivi WhatsApp</span>
+                <span><Badge tone={hasFollowUp ? "success" : "neutral"}>{hasFollowUp ? "Accepté" : "Non donné"}</Badge></span>
+              </li>
+              <li>
+                <span className="v-muted">Marketing</span>
+                <span><Badge tone={hasMarketing ? "success" : "neutral"}>{hasMarketing ? "Accepté" : marketingConsent?.revokedAt ? "Retiré" : "Non donné"}</Badge></span>
+              </li>
+            </ul>
+            {marketingConsent && (
+              <p className="v-small v-muted">
+                {hasMarketing
+                  ? `Accepté le ${formatDate(marketingConsent.recordedAt)} via ${consentSourceLabels[marketingConsent.source] ?? marketingConsent.source}.`
+                  : marketingConsent.revokedAt
+                    ? `Retiré le ${formatDate(marketingConsent.revokedAt)}. Ce client ne recevra plus aucune campagne.`
+                    : null}
+              </p>
+            )}
+            {hasMarketing && canManage && (
+              <ActionDialog
+                action={revokeCustomerMarketingConsent}
+                description="Le client sera retiré immédiatement de toutes les audiences marketing. Le suivi de ses commandes n’est pas concerné."
+                hiddenFields={{ customerId: customer.id }}
+                submitClassName="btn btn-danger"
+                submitLabel="Retirer le consentement"
+                title="Retirer le consentement marketing ?"
+                triggerLabel="Retirer le consentement marketing"
+              />
+            )}
+          </section>
+
+          <section aria-labelledby="customer-tags" className="v-card">
+            <h2 className="v-card-title" id="customer-tags">Tags et rappel</h2>
+            <ul className="tag-list">
+              {customer.tags.map((tag) => (
+                <li key={tag.id}>
+                  {tag.name}
+                  {canManage && (
+                    <form action={removeCustomerTag}>
                       <input name="customerId" type="hidden" value={customer.id} />
-                      <input name="reminderId" type="hidden" value={reminder.id} />
-                      <SubmitButton className="text-button" pendingLabel="…">Terminé</SubmitButton>
+                      <input name="tagId" type="hidden" value={tag.id} />
+                      <button aria-label={`Retirer le tag ${tag.name}`} type="submit">✕</button>
                     </form>
                   )}
                 </li>
               ))}
             </ul>
+            {canManage && (
+              <form action={addCustomerTag} className="inline-form">
+                <input name="customerId" type="hidden" value={customer.id} />
+                <label className="visually-hidden" htmlFor="new-tag">Nouveau tag</label>
+                <input id="new-tag" maxLength={40} name="tag" placeholder="Ex. Fidèle" required />
+                <SubmitButton className="btn btn-secondary" pendingLabel="Ajout…">Ajouter</SubmitButton>
+              </form>
+            )}
+            {openReminders.map((reminder) => (
+              <div className="reminder" key={reminder.id}>
+                <div>
+                  <strong>Rappel le {formatDate(reminder.remindAt)}</strong>
+                  <p>{reminder.reason}</p>
+                </div>
+                {canManage && (
+                  <form action={completeCustomerReminder}>
+                    <input name="customerId" type="hidden" value={customer.id} />
+                    <input name="reminderId" type="hidden" value={reminder.id} />
+                    <SubmitButton className="btn btn-secondary btn-sm" pendingLabel="…">Fait</SubmitButton>
+                  </form>
+                )}
+              </div>
+            ))}
           </section>
-
-          <section className="surface-card customer-detail-card">
-            <h2>Notes internes</h2>
-            <form action={addCustomerNote} className="customer-note-form">
-              <input name="customerId" type="hidden" value={customer.id} />
-              <label className="visually-hidden" htmlFor="customer-note-content">Ajouter une note interne</label>
-              <textarea id="customer-note-content" maxLength={1000} minLength={2} name="content" placeholder="Ajouter une information utile à l’équipe…" required rows={3} />
-              <SubmitButton className="secondary-button" pendingLabel="Enregistrement…">Ajouter une note</SubmitButton>
-            </form>
-            <ul className="customer-note-list">
-              {customer.notes.map((note) => (
-                <li key={note.id}>
-                  <p>{note.content}</p>
-                  <small>{note.author.name} · {formatDate(note.createdAt)}</small>
-                </li>
-              ))}
-              {!customer.notes.length && <li className="dashboard-copy">Aucune note interne.</li>}
-            </ul>
-          </section>
-
-          <section className="surface-card customer-detail-card">
-            <h2>Historique des consentements</h2>
-            {customer.consents.length ? (
-              <ul className="customer-consent-history">
-                {customer.consents.map((consent, index) => (
-                  <li key={`${consent.type}-${consent.recordedAt.toISOString()}-${index}`}>
-                    <span>{consent.type === "MARKETING" ? "Marketing" : "Suivi WhatsApp"}</span>
-                    <strong className={consent.granted && !consent.revokedAt ? "customer-consent accepted" : "customer-consent"}>
-                      {consent.granted && !consent.revokedAt ? "Accepté" : "Non actif"}
-                    </strong>
-                    <small>{sourceLabel(consent.source)} · {formatDate(consent.recordedAt)}</small>
-                  </li>
-                ))}
-              </ul>
-            ) : <p className="dashboard-copy">Aucun consentement enregistré.</p>}
-          </section>
-        </aside>
+        </div>
       </div>
-    </DashboardShell>
+    </VendorShell>
   );
-}
-
-function sourceLabel(source: string) {
-  return {
-    storefront: "boutique",
-    manual: "saisie manuelle",
-    import: "import",
-    checkout: "commande en ligne",
-    "seller-revocation": "retrait par la boutique",
-  }[source] ?? source;
-}
-
-function formatAmount(amount: number) {
-  return new Intl.NumberFormat("fr-FR").format(amount);
-}
-
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium",
-    timeZone: "Africa/Douala",
-  }).format(date);
-}
-
-function safeNumber(value: bigint) {
-  const number = Number(value);
-  if (!Number.isSafeInteger(number)) throw new RangeError("Le total client dépasse la capacité d’affichage sécurisée.");
-  return number;
 }

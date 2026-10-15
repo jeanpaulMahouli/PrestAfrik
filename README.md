@@ -31,6 +31,22 @@ Pour tester sur un téléphone connecté au même Wi-Fi, arrête puis redémarre
 
 Pour une première création de schéma, après avoir configuré `.env`, utilise `npm run db:migrate -- --name initial`. Pour les migrations déjà générées, `npm run db:deploy` les applique.
 
+## Base locale pour les tests et la revue visuelle
+
+La base de `.env` peut contenir de vrais comptes : n’y chargez jamais les données de démonstration. Une base PostgreSQL 16 locale, sans Docker, est fournie :
+
+```powershell
+node scripts/local-db.mjs          # laisse tourner (port 54329)
+$env:DATABASE_URL = "postgresql://prestafrik:prestafrik@localhost:54329/prestafrik"
+$env:DIRECT_URL = $env:DATABASE_URL
+npx prisma migrate deploy
+$env:ALLOW_DEMO_SEED = "true"; $env:SEED_DEMO_PASSWORD = "Demo-PrestAfrik-2026"
+npm run db:seed                    # 5 boutiques, 60 produits, 100 clients, 180 commandes
+npx next dev                       # avec les mêmes variables
+```
+
+Connexion de démonstration : `vendeur1@example.test` (Mboa Style) avec `SEED_DEMO_PASSWORD`. Le seed refuse une base distante.
+
 ## Données de démonstration
 
 Le seed crée cinq boutiques et dix membres fictifs. Il ne crée aucun compte avec un mot de passe connu et n’envoie aucun message.

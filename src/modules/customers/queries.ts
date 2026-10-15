@@ -85,7 +85,7 @@ export async function listStoreCustomers(storeId: string, filters: CustomerListF
       SELECT 1 FROM "Order" pending_order
       WHERE pending_order."customerId" = customer."id"
         AND pending_order."storeId" = customer."storeId"
-        AND pending_order."confirmationStatus" IN ('PENDING', 'CHANGE_REQUESTED')
+        AND pending_order."processingStatus" IN ('TO_REVIEW', 'ACCEPTED', 'PREPARING')
     )`);
   } else if (filters.segment === "inactive") {
     conditions.push(
@@ -161,7 +161,7 @@ export async function listStoreCustomers(storeId: string, filters: CustomerListF
         SELECT 1 FROM "Order" pending_order
         WHERE pending_order."customerId" = customer."id"
           AND pending_order."storeId" = customer."storeId"
-          AND pending_order."confirmationStatus" IN ('PENDING', 'CHANGE_REQUESTED')
+          AND pending_order."processingStatus" IN ('TO_REVIEW', 'ACCEPTED', 'PREPARING')
       ) AS "hasUnconfirmedOrder",
       COALESCE(customer_tags.tags, ARRAY[]::text[]) AS tags,
       reminder."remindAt" AS "nextReminderAt",
@@ -274,3 +274,70 @@ function safeCount(value: bigint) {
   }
   return number;
 }
+
+type CustomerStatsRow = { orderCount: bigint; cancelledCount: bigint; orderedXaf: bigint; receivedXaf: bigint };
+
+/** Fiche client complète, limitée à la boutique (un client d'autrui renvoie null). */
+export async function getCustomerDetail(storeId: string, customerId: string) {
+  const [customer, [stats], events] = await Promise.all([
+    prisma.customer.findFirst({
+      where: { id: customerId, storeId },
+      include: {
+        addresses: { orderBy: { lastUsedAt: "desc" }, take: 20 },
+        tags: { orderBy: { name: "asc" } },
+        notes: { where: { storeId }, orderBy: { createdAt: "desc" }, take: 50, include: { author: { select: { name: true } } } },
+        reminders: { where: { storeId }, orderBy: { remindAt: "asc" }, take: 50, include: { author: { select: { name: true } } } },
+        consents: { where: { storeId }, orderBy: [{ recordedAt: "desc" }, { id: "desc" }], take: 100 },
+        orders: {
+          where: { storeId },
+          orderBy: { createdAt: "desc" },
+          take: 100,
+          select: { id: true, reference: true, customerName: true, createdAt: true, totalXaf: true, subtotalXaf: true, processingStatus: true },
+        },
+      },
+    }),
+    prisma.$queryRaw<CustomerStatsRow[]>`
+      SELECT
+        COUNT(o."id")::bigint AS "orderCount",
+        COUNT(o."id") FILTER (WHERE o."processingStatus" = 'CANCELLED')::bigint AS "cancelledCount",
+        COALESCE(SUM(o."totalXaf") FILTER (WHERE o."processingStatus" <> 'CANCELLED' AND o."totalXaf" IS NOT NULL), 0)::bigint AS "orderedXaf",
+        COALESCE((
+          SELECT SUM(CASE
+            WHEN p."type"::text IN ('PAYMENT_RECEIVED', 'PARTIAL_PAYMENT', 'COURIER_COLLECTION') THEN p."amountXaf"::bigint
+            WHEN p."type"::text = 'REFUND' THEN -p."amountXaf"::bigint
+            WHEN p."type"::text = 'REVERSAL' AND r."type"::text IN ('PAYMENT_RECEIVED', 'PARTIAL_PAYMENT', 'COURIER_COLLECTION') THEN -r."amountXaf"::bigint
+            WHEN p."type"::text = 'REVERSAL' AND r."type"::text = 'REFUND' THEN r."amountXaf"::bigint
+            ELSE 0::bigint END)
+          FROM "Payment" p
+          JOIN "Order" po ON po."id" = p."orderId"
+          LEFT JOIN "Payment" r ON r."id" = p."reversesId"
+          WHERE po."customerId" = ${customerId} AND po."storeId" = ${storeId} AND p."storeId" = ${storeId}
+        ), 0)::bigint AS "receivedXaf"
+      FROM "Order" o
+      WHERE o."customerId" = ${customerId} AND o."storeId" = ${storeId}
+    `,
+    prisma.orderEvent.findMany({
+      where: { order: { customerId, storeId }, type: { in: ["CREATED", "CONFIRMATION_CONFIRMED", "CONFIRMATION_CHANGE_REQUESTED", "CONFIRMATION_DECLINED", "CONFIRMATION_PENDING", "ADDRESS_CHANGED", "DELIVERY_DELIVERED", "DELIVERY_FAILED", "PAYMENT_RECORDED"] } },
+      orderBy: { createdAt: "desc" },
+      take: 15,
+      select: { id: true, type: true, createdAt: true, order: { select: { reference: true } } },
+    }),
+  ]);
+  if (!customer) return null;
+
+  const latest = (type: "MARKETING" | "ORDER_FOLLOW_UP") => customer.consents.find((consent) => consent.type === type) ?? null;
+  return {
+    customer,
+    stats: {
+      orderCount: safeCount(stats?.orderCount ?? BigInt(0)),
+      cancelledCount: safeCount(stats?.cancelledCount ?? BigInt(0)),
+      orderedXaf: safeCount(stats?.orderedXaf ?? BigInt(0)),
+      receivedXaf: safeCount(stats?.receivedXaf ?? BigInt(0)),
+    },
+    marketingConsent: latest("MARKETING"),
+    followUpConsent: latest("ORDER_FOLLOW_UP"),
+    interactions: events,
+  };
+}
+
+export type CustomerDetail = NonNullable<Awaited<ReturnType<typeof getCustomerDetail>>>;

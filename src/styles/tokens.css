@@ -1,38 +1,62 @@
 :root {
+  /* Marque (maquettes PrestAfrik, brief §10). Le texte posé sur l'orange est toujours bleu nuit. */
   --color-brand-primary: #ff9900;
+  --color-brand-primary-soft: #fff1d6;
   --color-brand-secondary: #000026;
   --color-brand-accent: #ef765e;
 
   --color-page-background: #f1f2ee;
+  --color-page-background-alt: #f7f8f4;
   --color-surface: #ffffff;
-  --color-surface-muted: #eef1ed;
+  --color-surface-muted: #e8ece9;
+  --color-surface-warm: #fff9ee;
 
-  --color-text-primary: #09092b;
-  --color-text-secondary: #596a61;
-  --color-border: #d7e0d9;
-  --color-border-input: #c7d1ca;
-  --color-link: #a84b00;
+  --color-text-primary: #000026;
+  --color-text-secondary: #53645b;
+  --color-text-muted: #7a8a80;
+  --color-border: #dce5de;
+  --color-border-input: #cbd6ce;
+  --color-divider: #e3eae5;
+  --color-link: #a85400;
 
-  --color-success: #17683d;
-  --color-success-surface: #dcf1e5;
-  --color-warning: #86500b;
-  --color-warning-surface: #fff0d0;
-  --color-danger: #a62323;
-  --color-danger-surface: #fbe1df;
-  --color-info: #244d9c;
-  --color-info-surface: #e0eaff;
+  /* États : la couleur « forte » sert au texte et aux bordures, la « surface » aux pastilles. */
+  --color-success: #207a49;
+  --color-success-strong: #14532d;
+  --color-success-surface: #ddf1e5;
+  --color-warning: #a86305;
+  --color-warning-strong: #6b3d00;
+  --color-warning-surface: #fcebc8;
+  --color-danger: #c93636;
+  --color-danger-strong: #8a1c1c;
+  --color-danger-surface: #fbe0de;
+  --color-info: #2563eb;
+  --color-info-strong: #1e3a8a;
+  --color-info-surface: #dce8fb;
+  --color-neutral-strong: #3b4a42;
+  --color-neutral-surface: #e8ece9;
 
-  --color-on-primary: #080823;
+  /* WhatsApp : vert foncé pour garder un contraste 4,5:1 avec le texte blanc. */
+  --color-whatsapp: #0b6e5a;
+  --color-on-whatsapp: #ffffff;
+
+  --color-on-primary: #000026;
   --color-on-secondary: #ffffff;
+  --color-on-dark-muted: #d6d6ea;
 
-  --radius-sm: 0.5rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.25rem;
+  --radius-xs: 0.5rem;   /* boutons (8 px) */
+  --radius-sm: 0.625rem; /* champs (10 px) */
+  --radius-md: 0.75rem;  /* cartes (12 px) */
+  --radius-lg: 0.875rem; /* panneaux (14 px) */
+  --radius-pill: 999px;
 
-  --shadow-card: 0 3px 8px rgb(23 37 31 / 0.08);
+  --shadow-card: 0 1px 3px rgb(23 37 31 / 0.1);
+  --shadow-raised: 0 2px 10px rgb(0 0 38 / 0.08);
+  --shadow-overlay: 0 16px 40px rgb(0 0 38 / 0.14);
 
   --spacing-page-mobile: 1rem;
   --spacing-page-desktop: 2rem;
+  --sidebar-width: 13.5rem;
+  --topbar-height: 3.5rem;
 
   --font-body: "Poppins", Arial, sans-serif;
   --font-heading: "Poppins", Arial, sans-serif;
@@ -40,13 +64,29 @@
 
 @theme inline {
   --color-brand: var(--color-brand-primary);
+  --color-brand-soft: var(--color-brand-primary-soft);
+  --color-navy: var(--color-brand-secondary);
+  --color-accent: var(--color-brand-accent);
   --color-ink: var(--color-text-primary);
   --color-muted-ink: var(--color-text-secondary);
+  --color-faint-ink: var(--color-text-muted);
+  --color-link: var(--color-link);
   --color-page: var(--color-page-background);
+  --color-page-alt: var(--color-page-background-alt);
   --color-panel: var(--color-surface);
   --color-panel-muted: var(--color-surface-muted);
+  --color-panel-warm: var(--color-surface-warm);
   --color-line: var(--color-border);
+  --color-line-input: var(--color-border-input);
+  --color-divider: var(--color-divider);
   --color-state-success: var(--color-success);
+  --color-state-warning: var(--color-warning);
   --color-state-danger: var(--color-danger);
-  --radius-card: var(--radius-lg);
+  --color-state-info: var(--color-info);
+  --color-whatsapp: var(--color-whatsapp);
+  --radius-button: var(--radius-xs);
+  --radius-field: var(--radius-sm);
+  --radius-card: var(--radius-md);
+  --shadow-card: var(--shadow-card);
+  --font-sans: var(--font-body);
 }

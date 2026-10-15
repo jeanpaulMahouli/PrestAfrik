@@ -1,0 +1,35 @@
+Administration
+Admin PrestAfrik
+Boutiques
+Abonnements
+Messages échoués
+Alertes
+Utilisateurs
+Abonnements
+
+Suivez les essais et les abonnements de toutes les boutiques, et repérez ceux qui arrivent à échéance.
+
+Exporter
+Abonnements actifs
+3
+Essentiel, Business et Pro
+Essais en cours
+1
+1 se termine dans 9 jours
+Essais expirés
+1
+boutique mise en pause
+Échéances sous 7 jours
+2
+à surveiller
+Tous
+Actifs
+Essais
+Expirés
+Annulés
+Boutique	Offre	Période	Statut	Échéance	Action
+Mboa Style	Business	Mensuel	Actif	01/11/2026	Voir
+Douala Maison	Essentiel	Annuel	Actif	12/08/2027	Voir
+Yaoundé Beauté	Essai gratuit	—	Essai	23/10/2026	Prolonger l’essai
+Bafoussam Créations	—	—	Essai expiré	02/10/2026	Contacter le vendeur
+Kribi Accessoires	Pro	Mensuel	Actif	15/11/2026	Voir

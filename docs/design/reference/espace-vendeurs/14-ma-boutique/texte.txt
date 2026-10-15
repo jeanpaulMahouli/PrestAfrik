@@ -1,0 +1,52 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Ma boutique
+
+Personnalisez l’apparence de votre boutique : logo, thème, couleurs et informations pratiques.
+
+Retour aux couleurs par défaut
+Publier
+Logo de la boutique
+
+Ajoutez votre propre logo. Sans logo, nous affichons les initiales de votre boutique.
+
+MS
+Glissez votre logo ici ou choisis un fichier
+PNG ou JPG, 2 Mo maximum
+Apparence
+Catalogue express
+Simple et rapide
+Mode et beauté
+Photos en grand
+Boutique de marque
+Votre identité
+Couleurs
+Couleur principale
+#FF9900 · Texte foncé
+Lisible
+Couleur secondaire
+#000026 · Texte blanc
+Lisible
+Couleur d’accent
+#EF765E · Texte foncé
+Lisible
+Informations
+Nom de la boutique
+Adresse de la boutique
+Aperçu avant publication
+Mboa Style
+Commander
+
+Tout est prêt : partagez votre boutique avec un lien ou un QR code.

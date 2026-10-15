@@ -1,8 +1,11 @@
 import "server-only";
 
 import { betterAuth } from "better-auth";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/prisma";
+import { texts } from "@/config/texts";
+import { checkPassword, passwordMaxLength, passwordMinLength } from "@/modules/auth/password-policy";
 import { getSmtpConfig } from "@/modules/email/config";
 import { sendTransactionalEmail } from "@/modules/email/server";
 
@@ -79,11 +82,47 @@ export const auth = betterAuth({
   ],
   secret: authSecret ?? "prestafrik-local-development-only-secret-0001",
   database: prismaAdapter(prisma, { provider: "postgresql" }),
+  session: {
+    // « Rester connecté 30 jours » ; sans la case, le cookie disparaît à la fermeture du navigateur.
+    expiresIn: 60 * 60 * 24 * 30,
+    updateAge: 60 * 60 * 24,
+  },
+  rateLimit: {
+    enabled: process.env.NODE_ENV !== "test",
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 15 * 60, max: 20 },
+      "/sign-up/email": { window: 15 * 60, max: 10 },
+      "/request-password-reset": { window: 15 * 60, max: 5 },
+      "/send-verification-email": { window: 15 * 60, max: 5 },
+    },
+  },
+  hooks: {
+    // La politique de mot de passe partagée fait foi côté serveur (brief §6.1).
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-up/email" && ctx.path !== "/reset-password") return;
+      const body = (ctx.body ?? {}) as { password?: unknown; newPassword?: unknown; email?: unknown; name?: unknown };
+      const password = typeof body.password === "string" ? body.password : body.newPassword;
+      if (typeof password !== "string") return;
+      const issue = checkPassword(password, {
+        email: typeof body.email === "string" ? body.email : undefined,
+        name: typeof body.name === "string" ? body.name : undefined,
+      });
+      if (issue === "tooCommon") {
+        throw new APIError("BAD_REQUEST", { message: texts.auth.fields.passwordTooCommon });
+      }
+    }),
+  },
   emailAndPassword: {
     enabled: true,
-    minPasswordLength: 10,
-    maxPasswordLength: 128,
-    requireEmailVerification: true,
+    minPasswordLength: passwordMinLength,
+    maxPasswordLength: passwordMaxLength,
+    // Le compte est utilisable avant la vérification ; la publication de boutique l'exige.
+    requireEmailVerification: false,
+    autoSignIn: true,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       await sendTransactionalEmail({
         to: user.email,

@@ -2,162 +2,217 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
+import { PasswordInput } from "@/components/ui/password-input";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { texts } from "@/config/texts";
 import { authClient } from "@/modules/auth/client";
+import { checkPassword, passwordStrength } from "@/modules/auth/password-policy";
 
 type AuthFormProps = {
   mode: "sign-in" | "sign-up";
   invitationToken?: string;
+  /** Chemin interne vers lequel revenir après la connexion. */
+  next?: string;
 };
 
-export function AuthForm({ mode, invitationToken }: AuthFormProps) {
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const t = texts.auth;
+
+function safeInternalPath(path: string | undefined) {
+  return path && path.startsWith("/") && !path.startsWith("//") && !path.includes("\\") ? path : null;
+}
+
+export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
   const router = useRouter();
+  const ids = { name: useId(), email: useId(), password: useId(), help: useId() };
+  const isSignUp = mode === "sign-up";
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState("");
-  const [requestTimedOut, setRequestTimedOut] = useState(false);
-  const isSignUp = mode === "sign-up";
+  const [resetSignal, setResetSignal] = useState(0);
+
+  const validInvitation = invitationToken && /^[A-Za-z0-9_-]{43}$/.test(invitationToken) ? invitationToken : null;
+  const emailValid = emailPattern.test(email.trim());
+  const nameValid = name.trim().length >= 2 && name.trim().length <= 80;
+  const passwordIssue = checkPassword(password, isSignUp ? { email, name } : {});
+  const strength = passwordStrength(password);
+  const strengthLabel = t.fields.strength[strength];
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setTouched({ name: true, email: true, password: true, terms: true });
     setError("");
-    setPending(true);
-    setRequestTimedOut(false);
-    const timeout = window.setTimeout(() => setRequestTimedOut(true), 12_000);
+    if (!emailValid || (isSignUp && (!nameValid || passwordIssue || !acceptedTerms))) return;
 
-    const values = new FormData(event.currentTarget);
-    const email = String(values.get("email")).trim().toLowerCase();
-    const password = String(values.get("password"));
-    const callbackURL =
-      invitationToken && /^[A-Za-z0-9_-]{43}$/.test(invitationToken)
-        ? `/invitations/accepter?token=${encodeURIComponent(invitationToken)}`
-        : "/dashboard";
+    setPending(true);
+    const callbackURL = validInvitation
+      ? `/invitations/accepter?token=${encodeURIComponent(validInvitation)}`
+      : safeInternalPath(next) ?? (isSignUp ? "/boutiques/nouvelle" : "/dashboard");
+    const normalizedEmail = email.trim().toLowerCase();
 
     try {
       const result = isSignUp
-        ? await authClient.signUp.email({
-            name: String(values.get("name")).trim(),
-            email,
-            password,
-            callbackURL,
-          })
-        : await authClient.signIn.email({ email, password, callbackURL });
+        ? await authClient.signUp.email({ name: name.trim(), email: normalizedEmail, password, callbackURL })
+        : await authClient.signIn.email({ email: normalizedEmail, password, rememberMe, callbackURL });
 
       if (result.error) {
+        const status = result.error.status;
+        const code = "code" in result.error ? result.error.code : undefined;
         setError(
-          result.error.status === 401
-            ? "Adresse e-mail ou mot de passe incorrect."
-            : result.error.message ??
-              (isSignUp ? "Impossible de créer ton compte." : "La connexion n’a pas abouti. Réessaie."),
+          status === 429
+            ? t.signIn.tooManyAttempts
+            : !isSignUp && (status === 401 || status === 403)
+              ? t.signIn.invalidCredentials
+              : isSignUp && (code === "USER_ALREADY_EXISTS" || status === 422)
+                ? t.signUp.emailTaken
+                : result.error.message ?? texts.common.genericError,
         );
         return;
       }
-
-      if (isSignUp) {
-        setVerificationEmail(email);
-        return;
-      }
-
       router.push(callbackURL);
       router.refresh();
     } catch {
-      setError("Impossible de joindre le serveur. Vérifie ta connexion et réessaie.");
+      setError(texts.common.networkError);
     } finally {
-      window.clearTimeout(timeout);
-      setRequestTimedOut(false);
       setPending(false);
+      setResetSignal((value) => value + 1);
     }
   }
 
-  if (verificationEmail) {
-    return (
-      <div>
-        <p aria-live="polite" className="notice" role="status">
-          Un e-mail de confirmation a été envoyé à <strong>{verificationEmail}</strong>. Ouvre le
-          lien reçu pour activer ton compte. Pense à vérifier tes courriers indésirables.
-        </p>
-        <p className="auth-footer">
-          <Link className="text-link" href="/connexion">Retour à la connexion</Link>
-        </p>
-      </div>
-    );
-  }
+  const showNameError = isSignUp && touched.name && !nameValid;
+  const showEmailError = touched.email && email.length > 0 && !emailValid;
+  const showPasswordError = isSignUp && touched.password && password.length > 0 && passwordIssue;
 
   return (
-    <form aria-busy={pending} className="auth-form" method="post" onSubmit={submit}>
+    <form aria-busy={pending} className="auth-form" noValidate onSubmit={submit}>
       {isSignUp && (
-        <label className="form-field">
-          Ton nom
+        <div className="auth-field">
+          <label htmlFor={ids.name}>{t.signUp.name}</label>
+          <div className={`auth-input ${nameValid ? "is-valid" : ""} ${showNameError ? "is-invalid" : ""}`}>
+            <input
+              aria-describedby={showNameError ? `${ids.name}-error` : undefined}
+              aria-invalid={showNameError || undefined}
+              autoComplete="name"
+              id={ids.name}
+              maxLength={80}
+              name="name"
+              onBlur={() => setTouched((value) => ({ ...value, name: true }))}
+              onChange={(event) => setName(event.target.value)}
+              placeholder={t.signUp.namePlaceholder}
+              required
+              value={name}
+            />
+            {nameValid && <span aria-hidden="true" className="auth-input-check">✓</span>}
+          </div>
+          {showNameError && <p className="auth-field-error" id={`${ids.name}-error`}>{t.signUp.nameInvalid}</p>}
+        </div>
+      )}
+
+      <div className="auth-field">
+        <label htmlFor={ids.email}>{t.fields.email}</label>
+        <div className={`auth-input ${emailValid ? "is-valid" : ""} ${showEmailError ? "is-invalid" : ""}`}>
           <input
-            autoComplete="name"
-            maxLength={100}
-            name="name"
-            placeholder="Awa Ngono"
+            aria-describedby={`${ids.email}-help`}
+            aria-invalid={showEmailError || undefined}
+            autoCapitalize="none"
+            autoComplete="email"
+            autoCorrect="off"
+            id={ids.email}
+            inputMode="email"
+            maxLength={254}
+            name="email"
+            onBlur={() => setTouched((value) => ({ ...value, email: true }))}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder={t.fields.emailPlaceholder}
             required
+            spellCheck={false}
+            type="email"
+            value={email}
           />
-        </label>
-      )}
-      <label className="form-field">
-        Adresse e-mail
-        <input
-          autoComplete="email"
-          autoCapitalize="none"
-          autoCorrect="off"
-          inputMode="email"
-          maxLength={254}
-          name="email"
-          placeholder="toi@exemple.com"
-          required
-          type="email"
-        />
-      </label>
-      <label className="form-field">
-        Mot de passe{isSignUp ? " (10 caractères minimum)" : ""}
-        <input
-          autoComplete={isSignUp ? "new-password" : "current-password"}
-          maxLength={128}
-          minLength={isSignUp ? 10 : undefined}
-          name="password"
-          required
-          type="password"
-        />
-      </label>
-      {error && (
-        <p aria-live="polite" className="form-error" role="alert">
-          {error}
-        </p>
-      )}
-      {requestTimedOut && pending && (
-        <p aria-live="polite" className="form-error" role="status">
-          La connexion prend plus de temps que prévu. Vérifie le réseau de ton téléphone ou réessaie.
-        </p>
-      )}
-      {!isSignUp && (
-        <p>
-          <Link className="text-link" href="/mot-de-passe-oublie">
-            Mot de passe oublié&nbsp;?
-          </Link>
-        </p>
-      )}
-      <SubmitButton
-        className="primary-button full-width auth-submit"
-        loading={pending}
-        pendingLabel="Un instant…"
-      >
-        {isSignUp ? "Créer mon compte" : "Me connecter"}
-      </SubmitButton>
-      <p className="auth-footer">
-        {isSignUp ? "Déjà un compte ?" : "Pas encore de boutique ?"}{" "}
-        <Link
-          className="text-link"
-          href={`${isSignUp ? "/connexion" : "/inscription"}${
-            invitationToken && /^[A-Za-z0-9_-]{43}$/.test(invitationToken)
-              ? `?invitation=${encodeURIComponent(invitationToken)}`
-              : ""
-          }`}
+          {emailValid && <span aria-hidden="true" className="auth-input-check">✓</span>}
+        </div>
+        <p
+          aria-live="polite"
+          className={showEmailError ? "auth-field-error" : emailValid ? "auth-field-success" : "auth-field-help"}
+          id={`${ids.email}-help`}
         >
-          {isSignUp ? "Me connecter" : "Créer mon compte"}
+          {showEmailError ? t.fields.emailInvalid : emailValid ? (isSignUp ? t.signUp.emailHelp : t.fields.emailValid) : ""}
+        </p>
+      </div>
+
+      <div className="auth-field">
+        <label htmlFor={ids.password}>{t.fields.password}</label>
+        <PasswordInput
+          aria-describedby={ids.help}
+          aria-invalid={Boolean(showPasswordError) || undefined}
+          autoComplete={isSignUp ? "new-password" : "current-password"}
+          className={showPasswordError ? "is-invalid" : ""}
+          id={ids.password}
+          maxLength={128}
+          name="password"
+          onBlur={() => setTouched((value) => ({ ...value, password: true }))}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+          resetSignal={resetSignal}
+          value={password}
+        />
+        {isSignUp && password.length > 0 && (
+          <>
+            <div aria-hidden="true" className="password-meter" data-score={strength}>
+              {[1, 2, 3, 4].map((step) => <span className={step <= strength ? "filled" : ""} key={step} />)}
+            </div>
+            <p className={`password-meter-label score-${strength}`} aria-live="polite">{strengthLabel}</p>
+          </>
+        )}
+        <p className={showPasswordError ? "auth-field-error" : "auth-field-help"} id={ids.help}>
+          {showPasswordError
+            ? passwordIssue === "tooShort"
+              ? t.fields.passwordTooShort
+              : passwordIssue === "tooLong"
+                ? t.fields.passwordTooLong
+                : t.fields.passwordTooCommon
+            : isSignUp
+              ? t.signUp.passwordHelp
+              : t.fields.passwordTip}
+        </p>
+      </div>
+
+      {isSignUp ? (
+        <label className={`auth-checkbox ${touched.terms && !acceptedTerms ? "is-invalid" : ""}`}>
+          <input checked={acceptedTerms} name="terms" onChange={(event) => setAcceptedTerms(event.target.checked)} required type="checkbox" />
+          <span>
+            {t.signUp.terms}{" "}
+            <Link href="/legal/conditions-generales" target="_blank">{t.signUp.termsLink}</Link>
+          </span>
+        </label>
+      ) : (
+        <div className="auth-row">
+          <label className="auth-checkbox">
+            <input checked={rememberMe} name="rememberMe" onChange={(event) => setRememberMe(event.target.checked)} type="checkbox" />
+            <span>{t.signIn.rememberMe}</span>
+          </label>
+          <Link href="/mot-de-passe-oublie">{t.signIn.forgotPassword}</Link>
+        </div>
+      )}
+      {isSignUp && touched.terms && !acceptedTerms && <p className="auth-field-error">{t.signUp.termsRequired}</p>}
+
+      {error && <p className="auth-alert" role="alert">{error}</p>}
+
+      <SubmitButton className="auth-submit" loading={pending} pendingLabel={isSignUp ? t.signUp.pending : t.signIn.pending}>
+        {isSignUp ? t.signUp.submit : t.signIn.submit} <span aria-hidden="true">→</span>
+      </SubmitButton>
+      {!isSignUp && <p className="auth-secure-note">{t.signIn.secureNote}</p>}
+
+      <p className="auth-switch">
+        {isSignUp ? t.signUp.footerQuestion : t.signIn.footerQuestion}{" "}
+        <Link href={`${isSignUp ? "/connexion" : "/inscription"}${validInvitation ? `?invitation=${encodeURIComponent(validInvitation)}` : ""}`}>
+          {isSignUp ? t.signUp.footerLink : t.signIn.footerLink}
         </Link>
       </p>
     </form>

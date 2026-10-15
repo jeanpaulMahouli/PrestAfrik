@@ -19,66 +19,57 @@ export default async function NewCustomerPage({
       userEmail={session.user.email}
       userName={session.user.name}
     >
-      <div className="page-heading">
+      <Link className="v-back-link" href="/dashboard/clients">← Tous les clients</Link>
+      <div className="v-page-header">
         <div>
-          <Link className="text-link customer-back-link" href="/dashboard/clients">← Clients</Link>
-          <h1 className="dashboard-heading">Ajouter un client</h1>
-          <p className="dashboard-copy">Une fiche manuelle n’est pas abonnée au suivi ou au marketing.</p>
+          <h1 className="v-page-title">Ajouter un client</h1>
+          <p className="v-page-subtitle">Ajoutez un client rencontré en dehors de la boutique. Une fiche ajoutée à la main n’autorise aucun envoi de message.</p>
         </div>
       </div>
 
-      {error && <p className="form-error customer-form-error" role="alert">{error}</p>}
+      {error && <p className="v-banner v-banner-danger" role="alert">{error}</p>}
 
-      <form action={createCustomer} className="surface-card customer-form">
-        <label className="form-field">
-          Nom
-          <input autoComplete="name" maxLength={80} minLength={2} name="name" required />
-        </label>
-        <label className="form-field">
-          WhatsApp
-          <input
-            autoComplete="tel"
-            defaultValue="+237 "
-            inputMode="tel"
-            maxLength={30}
-            name="whatsapp"
-            required
-            type="tel"
-          />
-        </label>
-        <label className="form-field">
-          E-mail <span className="customer-optional-label">Facultatif</span>
-          <input autoComplete="email" maxLength={254} name="email" type="email" />
-        </label>
-        <label className="form-field">
-          Ville <span className="customer-optional-label">Facultative</span>
-          <input autoComplete="address-level2" maxLength={100} name="city" />
-        </label>
-        <label className="form-field">
-          Quartier <span className="customer-optional-label">Facultatif</span>
-          <input maxLength={120} name="neighborhood" />
-        </label>
-        <label className="form-field customer-form-wide">
-          Repère <span className="customer-optional-label">Facultatif</span>
-          <input maxLength={250} name="landmark" />
-        </label>
-        <label className="form-field customer-form-wide">
-          Tags <span className="customer-optional-label">Sépare-les par des virgules, 10 maximum</span>
-          <input maxLength={500} name="tags" placeholder="Ex. fidèle, bijoux" />
-        </label>
-        <label className="form-field customer-form-wide">
-          Note interne <span className="customer-optional-label">Facultative</span>
-          <textarea maxLength={1000} name="note" rows={4} />
-        </label>
-        <div className="customer-consent-explanation">
-          Aucun consentement marketing ou suivi n’est coché par défaut. L’ajout manuel d’une fiche
-          n’autorise pas l’envoi de messages.
+      <form action={createCustomer} className="v-card customer-form">
+        <div className="v-grid-2">
+          <label className="v-field">
+            Nom
+            <input autoComplete="name" maxLength={80} minLength={2} name="name" required />
+          </label>
+          <label className="v-field">
+            Numéro WhatsApp
+            <input autoComplete="tel" defaultValue="+237 " inputMode="tel" maxLength={30} name="whatsapp" required type="tel" />
+          </label>
+          <label className="v-field">
+            E-mail (facultatif)
+            <input autoComplete="email" maxLength={254} name="email" type="email" />
+          </label>
+          <label className="v-field">
+            Ville (facultative)
+            <input autoComplete="address-level2" maxLength={100} name="city" />
+          </label>
+          <label className="v-field">
+            Quartier (facultatif)
+            <input maxLength={120} name="neighborhood" />
+          </label>
+          <label className="v-field">
+            Point de repère (facultatif)
+            <input maxLength={250} name="landmark" />
+          </label>
         </div>
-        <div className="customer-form-actions">
-          <Link className="secondary-button" href="/dashboard/clients">Annuler</Link>
-          <SubmitButton className="primary-button" pendingLabel="Enregistrement…">
-            Enregistrer le client
-          </SubmitButton>
+        <label className="v-field">
+          Tags (facultatifs, séparés par des virgules, 10 au maximum)
+          <input maxLength={500} name="tags" placeholder="Ex. Fidèle, Bijoux" />
+        </label>
+        <label className="v-field">
+          Note interne (facultative)
+          <textarea maxLength={1000} name="note" rows={3} />
+        </label>
+        <p className="v-banner v-banner-info">
+          Aucun consentement n’est coché par défaut : sans l’accord du client, il ne recevra ni suivi WhatsApp ni campagne marketing.
+        </p>
+        <div className="v-sticky-actions">
+          <Link className="btn btn-secondary" href="/dashboard/clients">Annuler</Link>
+          <SubmitButton className="btn btn-primary" pendingLabel="Enregistrement…">Enregistrer le client</SubmitButton>
         </div>
       </form>
     </DashboardShell>

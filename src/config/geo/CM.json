@@ -1,0 +1,15 @@
+{
+  "country": "CM",
+  "regions": [
+    { "code": "AD", "name": "Adamaoua", "cities": ["Ngaoundéré", "Banyo", "Meiganga", "Ngaoundal", "Tibati", "Tignère"] },
+    { "code": "CE", "name": "Centre", "cities": ["Yaoundé", "Akonolinga", "Bafia", "Eséka", "Mbalmayo", "Mfou", "Monatélé", "Nanga-Eboko", "Ntui", "Obala", "Soa"] },
+    { "code": "ES", "name": "Est", "cities": ["Bertoua", "Abong-Mbang", "Batouri", "Bélabo", "Garoua-Boulaï", "Yokadouma"] },
+    { "code": "EN", "name": "Extrême-Nord", "cities": ["Maroua", "Kaélé", "Kousséri", "Mokolo", "Mora", "Yagoua"] },
+    { "code": "LT", "name": "Littoral", "cities": ["Douala", "Edéa", "Loum", "Manjo", "Mbanga", "Nkongsamba", "Penja", "Yabassi"] },
+    { "code": "NO", "name": "Nord", "cities": ["Garoua", "Figuil", "Guider", "Pitoa", "Poli", "Tcholliré"] },
+    { "code": "NW", "name": "Nord-Ouest", "cities": ["Bamenda", "Kumbo", "Mbengwi", "Ndop", "Nkambé", "Wum"] },
+    { "code": "OU", "name": "Ouest", "cities": ["Bafoussam", "Bafang", "Bandjoun", "Bangangté", "Dschang", "Foumban", "Foumbot", "Mbouda"] },
+    { "code": "SU", "name": "Sud", "cities": ["Ebolowa", "Ambam", "Campo", "Kribi", "Lolodorf", "Sangmélima"] },
+    { "code": "SW", "name": "Sud-Ouest", "cities": ["Buea", "Idenau", "Kumba", "Limbe", "Mamfe", "Mutengene", "Tiko"] }
+  ]
+}

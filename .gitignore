@@ -11,3 +11,6 @@ test-results/
 *.log
 *.tsbuildinfo
 next-env.d.ts
+
+# Uploaded images (see src/lib/uploads.ts)
+storage/

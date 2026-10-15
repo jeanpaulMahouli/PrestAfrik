@@ -134,7 +134,7 @@ export async function getCurrentCheckoutLines(
   const products = await prisma.product.findMany({
     where: {
       storeId,
-      isArchived: false,
+      status: "ACTIVE",
       availability: { not: ProductAvailability.SOLD_OUT },
       id: { in: Array.from(consolidated.values(), ({ productId }) => productId) },
     },
@@ -233,6 +233,7 @@ export async function resolveDeliveryQuote({
       city: { equals: city, mode: "insensitive" },
       name: { equals: neighborhood, mode: "insensitive" },
       isActive: true,
+      feeXaf: { not: null },
     },
   });
   const cityWideZone = matchingZone
@@ -243,11 +244,15 @@ export async function resolveDeliveryQuote({
           city: { equals: city, mode: "insensitive" },
           name: { in: ["Toute la ville", "*"] },
           isActive: true,
+          feeXaf: { not: null },
         },
       });
   const deliveryZone = matchingZone ?? cityWideZone;
-  const deliveryFeeXaf =
-    deliveryZone && !deliveryZone.requiresConfirmation ? deliveryZone.feeXaf : null;
+  // Frais fixes connus avant la commande (ADR-013) : sans zone, pas de livraison possible.
+  if (!deliveryZone || deliveryZone.feeXaf === null) {
+    throw new CheckoutProblem("La boutique ne livre pas encore ce quartier. Choisissez une zone de la liste ou le retrait en boutique.");
+  }
+  const deliveryFeeXaf = deliveryZone.feeXaf;
   const payload: QuotePayload = {
     storeId: store.id,
     deliveryMethod,
@@ -255,13 +260,13 @@ export async function resolveDeliveryQuote({
     neighborhood,
     subtotalXaf,
     deliveryFeeXaf,
-    deliveryZoneId: deliveryZone?.id ?? null,
+    deliveryZoneId: deliveryZone.id,
     expiresAt: Date.now() + quoteLifetimeMs,
   };
 
   return {
     ...payload,
-    totalXaf: deliveryFeeXaf === null ? null : subtotalXaf + deliveryFeeXaf,
+    totalXaf: subtotalXaf + deliveryFeeXaf,
     quoteToken: makeQuoteToken(payload),
   };
 }
@@ -432,7 +437,8 @@ export async function checkoutOrder({
           deliveryFeeXaf: quote.deliveryFeeXaf,
           subtotalXaf: quote.subtotalXaf,
           totalXaf: quote.totalXaf,
-          confirmationStatus: OrderConfirmationStatus.PENDING,
+          // Pas de confirmation demandée au client : la commande arrive « Nouvelle » chez le vendeur.
+          confirmationStatus: OrderConfirmationStatus.CONFIRMED,
           processingStatus: OrderProcessingStatus.TO_REVIEW,
           deliveryStatus: deliveryMethod === "PICKUP" ? DeliveryStatus.PICKUP : DeliveryStatus.TO_ORGANIZE,
           paymentStatus: PaymentStatus.PENDING,
@@ -476,7 +482,7 @@ export async function checkoutOrder({
               SET "reservedQuantity" = "reservedQuantity" + ${line.quantity}
               WHERE "id" = ${line.productId}
                 AND "storeId" = ${store.id}
-                AND "isArchived" = false
+                AND "status" = 'ACTIVE'
                 AND "availability" != 'SOLD_OUT'
                 AND "trackInventory" = true
                 AND "stockQuantity" >= "reservedQuantity" + ${line.quantity}
@@ -519,21 +525,7 @@ export async function checkoutOrder({
       });
 
       await transaction.orderEvent.create({
-        data: { orderId: order.id, type: "CREATED", toValue: "PENDING", note: "Commande créée sur la boutique." },
-      });
-      await transaction.outboxEvent.create({
-        data: {
-          storeId: store.id,
-          aggregateId: order.id,
-          type: "ORDER_CONFIRMATION_REQUESTED",
-          idempotencyKey: `order-confirmation:${order.id}`,
-          payload: {
-            orderId: order.id,
-            reference: order.reference,
-            storeSlug: store.slug,
-            followUpConsent: customer.followUpConsent,
-          } satisfies Prisma.InputJsonObject,
-        },
+        data: { orderId: order.id, type: "CREATED", toValue: "TO_REVIEW", note: "Commande reçue sur la boutique." },
       });
 
       return { reference: order.reference, trackingToken: order.trackingToken };

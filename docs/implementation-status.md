@@ -2,6 +2,31 @@
 
 Ce document distingue le code disponible des intégrations réelles. Une fonctionnalité non listée comme terminée ne doit pas être considérée comme prête pour la production.
 
+## Mise à jour globale selon le brief et les maquettes HTML (octobre 2026)
+
+Référence : `PrestAfrik maquettes UX UI/PRESTAFRIK-BRIEF-CLAUDE-CODE.md`. Inventaire écran par écran : `docs/design/INVENTAIRE.md`. Décisions : `docs/decisions.md`.
+
+### Terminé et vérifié (planche maquette / application, tests)
+
+- Étape 0 : 53 écrans extraits (captures, textes, structures) dans `docs/design/reference/`.
+- Authentification : connexion, inscription, mot de passe oublié et réinitialisation selon les maquettes ; mot de passe de 8 caractères minimum, icône œil seule, « Rester connecté 30 jours », mots de passe courants refusés, vouvoiement, limitation de débit.
+- Shell vendeur (barre du haut, recherche, sélecteur de boutique, menu du compte, tiroir sous 1024 px, bandeau de vérification d'e-mail).
+- Accueil vendeur : filtre de période (fuseau Africa/Douala), indicateurs calculés en SQL, « À faire aujourd’hui », checklist cochée automatiquement, fenêtre de partage (lien, QR code téléchargeable, WhatsApp).
+- Commandes simplifiées (ADR-013) : trois statuts seulement (Nouvelle, Validée, Annulée), sans confirmation du client ni étapes de traitement. Sur chaque commande : « Continuer sur WhatsApp » (message prérempli au client), « Valider » (montant compté automatiquement dans Argent reçu, stock sorti) et « Voir » ; annulation possible depuis la commande (écriture inverse si elle était validée). Livraisons = zones à frais fixes, connus du client avant sa commande ; plus de frais « à confirmer », de livreurs ni de paiements partiels. Parcours testé : `node scripts/design/orders-flow.mjs <dossier>`.
+- Catalogue : onglets Actifs/Brouillons/Archivés, actions groupées, dupliquer, archiver, suppression réservée aux produits jamais commandés, jusqu’à 5 photos (3 tailles, glisser-déposer, ordre, texte alternatif, limite en base), contrôle de concurrence, import CSV en 3 étapes avec rapport d’erreurs, export compatible.
+- Clients, fiche client, Marketing (simulation affichée, confirmation explicite), Livraisons (zones à frais fixes), Argent reçu (commandes validées, annulations déduites).
+- Assistant de création en 8 étapes (`/boutiques/nouvelle`) : boutique créée en brouillon dès l’étape 1 avec l’essai d’un mois, progression enregistrée (`Store.onboardingStep`), reprise depuis l’accueil, « Enregistrer et quitter », retour aux étapes validées, aperçu en direct. Adresse vérifiée en direct (anti-rebond 400 ms, limite 60/min, noms réservés, suggestions disponibles). Activités et villes dans une liste avec recherche accessible (clavier, feuille basse sur mobile, « pas dans la liste »). Cameroun : 10 régions et leurs villes (`src/config/geo/CM.json`), autres pays en saisie libre. Téléphone et WhatsApp séparés. Premier produit facultatif avec 5 photos. Publication via les conditions de publication, puis écran « Félicitations » (lien, copie, WhatsApp, QR code, réseaux sociaux). Parcours vérifié à 1280 et 390 px : `node scripts/design/wizard-walk.mjs <dossier> <largeur>`.
+- Photos produit : correction du bug d’affichage (fichiers hors `public/`, servis par `/media`, remplacement au lieu d’ajout masqué, limite de 1 Mo des Server Actions relevée).
+
+### Codé, à vérifier visuellement (la base locale a été arrêtée faute de mémoire)
+
+- Ma boutique (logo carré, thèmes, couleurs avec lisibilité, informations, retrait, conditions de publication), Pages éditoriales en blocs, Confirmation WhatsApp (modèles et interrupteurs), configuration de l’API, Assistant WhatsApp.
+
+### Reste à faire
+
+- Boutique publique (accueil, fiche produit, panier, formulaire avec bouton « Commander sur WhatsApp » activé à la validité, résultat, suivi, widget d’assistant WhatsApp, pages éditoriales).
+- Équipe, Abonnement, Administration, landing page, 25 modèles d’e-mails, en-têtes de sécurité/CSP, worker et webhooks WhatsApp, tests Playwright de la matrice de viewports, CI.
+
 ## Étape 1 — initialisation, base, authentification et boutiques
 
 ### Code disponible
@@ -85,6 +110,22 @@ Ce document distingue le code disponible des intégrations réelles. Une fonctio
 - La simulation Messages ne constitue pas un envoi WhatsApp ; aucun fournisseur réel, worker automatique ni webhook n’est connecté.
 - Aucun fournisseur réel de paiement, de livraison, d’abonnement ou de rappel par e-mail n’est configuré ; l’activation d’abonnement est une simulation locale interdite en production.
 - Les pages du tableau de bord dépendent de PostgreSQL distant ; les temps serveur observés en développement ont varié d’environ 4,7 à 13,3 secondes selon le chargement, le profilage et l’optimisation globale restent à faire.
+
+## WhatsApp — wa.me par défaut et API au choix
+
+### Code disponible
+
+- Page **Ma boutique → Connexion WhatsApp** (`/dashboard/boutique/whatsapp`), reprise de la maquette « Paramètres WhatsApp » sans le panneau de simulation : choix du mode, configuration wa.me, configuration API, quota du mois et confirmations récentes.
+- Mode **wa.me** actif par défaut avec le numéro saisi à la création de la boutique : bouton « Commander via WhatsApp » sur les fiches produits (désactivable), bouton « Confirmer sur WhatsApp » sur la page de suivi, lien « Envoyer sur WhatsApp » pour chaque commande à confirmer côté vendeur.
+- Fiche produit : « Commander maintenant » (panier puis formulaire) et « Commander via WhatsApp » ; l’ajout au panier reste disponible sous forme de lien.
+- Mode **API** : identifiants stockés par boutique, jeton et secret chiffrés, activation refusée tant que Meta ne valide pas le numéro et le jeton ; bouton « Tester la connexion » et retrait de la configuration.
+- Migration additive `20261014120000_whatsapp_settings` ; tests unitaires des numéros et messages wa.me.
+
+### Limites
+
+- Une commande passée via « Commander via WhatsApp » se poursuit dans la conversation : elle n’est pas enregistrée automatiquement dans PrestAfrik.
+- En mode wa.me, PrestAfrik ne peut pas savoir si un message a été envoyé, livré ou lu ; le vendeur confirme la commande manuellement.
+- En mode API, l’envoi automatique des confirmations, le worker et le webhook ne sont pas encore implémentés (étape 4).
 
 ## Étapes restantes
 

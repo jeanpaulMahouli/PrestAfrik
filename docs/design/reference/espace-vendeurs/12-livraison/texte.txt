@@ -1,0 +1,52 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Livraisons
+
+Organisez vos tournées : choisissez un livreur, suivez vos colis et notez les imprévus.
+
+Retraits en boutique
+Assigner un livreur
+À organiser (4)
+En cours (2)
+Livrées
+Échouées (1)
+Retournées
+Commande	Client	Statut	Livreur	À encaisser
+#MB-1041	Brice Tamo
+Douala · Bonapriso
+	En cours	Jean (livreur)	15 000 FCFA
+#MB-1042	Estelle Nkoa
+Douala · Akwa
+	À organiser	Non assigné	28 500 FCFA
+#MB-1037	Rita Essomba
+Douala · Makepe
+	Échouée	Jean (livreur)	11 000 FCFA
+#MB-1039	Idriss Abega
+Douala · Deido
+	Livrée	Paul (livreur)	42 000 FCFA
+Zones et frais
+
+Frais et délais indicatifs.
+
+Douala centre
+24 h
+1 000 FCFA
+Douala périphérie
+24 à 48 h
+1 500 FCFA
+Yaoundé
+2 à 3 jours
+À confirmer
+Ajouter une zone

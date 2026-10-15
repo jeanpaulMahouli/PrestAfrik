@@ -1,0 +1,30 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Marketing
+
+Préparez des messages ciblés, uniquement pour les clients qui ont accepté de recevoir vos offres.
+
+Nouvelle campagne
+Mode simulation. WhatsApp n’est pas encore connecté : aucun message n’est envoyé aux clients.
+Campagnes
+Campagne	Audience	Statut
+Nouvelle collection	38 clients avec consentement	Brouillon
+Rappel panier	12 clients	Aperçu prêt
+Offre de fin de mois	54 clients	Simulée
+Quota du mois
+
+60 messages sur 200 utilisés
+
+Seuls les clients qui ont accepté les offres reçoivent une campagne. Chacun peut se désinscrire.

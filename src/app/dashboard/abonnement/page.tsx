@@ -156,7 +156,7 @@ export default async function SubscriptionPage({
                     </small>
                   </li>
                   <li>
-                    Confirmation WhatsApp
+                    Messages WhatsApp
                     <small>{formatAmount(plan.monthlyMessageQuota)} messages par mois</small>
                   </li>
                   <li>

@@ -1,0 +1,45 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Argent reçu
+
+Voyez ce que vous avez encaissé, ce qu’il reste à recevoir et ce que vos livreurs doivent encore vous reverser.
+
+7 derniers jours ▾
+Enregistrer un paiement
+Argent reçu
+184 500 FCFA
+sur la période
+Reste à recevoir
+92 000 FCFA
+commandes confirmées
+Collecté non reversé
+41 000 FCFA
+chez les livreurs
+Date	Commande	Type	Méthode	Montant (FCFA)	Auteur	Référence ou note
+11/10	#MB-1039	Paiement partiel	Espèces	20 000	Awa	—
+11/10	#MB-1041	Collecte par livreur	Espèces	15 000	Samuel	Jean
+10/10	—	Reversement	Mobile money	41 000	Awa	OM-88213
+09/10	#MB-1033	Remboursement	Mobile money	−9 500	Awa	Retour produit
+09/10	#MB-1030	Paiement reçu	Espèces	32 000	Samuel	—
+Enregistrer un paiement
+Commande
+Type
+Méthode
+Montant (FCFA)
+Date
+Référence (facultatif)
+Note (facultative)
+Annuler
+Enregistrer

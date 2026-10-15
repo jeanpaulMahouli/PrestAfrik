@@ -1,0 +1,35 @@
+Administration
+Admin PrestAfrik
+Boutiques
+Abonnements
+Messages échoués
+Alertes
+Utilisateurs
+Alertes
+
+Les situations qui demandent l’attention de l’équipe PrestAfrik, classées par importance.
+
+Tout marquer comme lu
+Ouvertes (4)
+Résolues
+Ignorées
+Urgent
+Webhook WhatsApp silencieux depuis 6 h
+Kribi Accessoires n’a reçu aucun événement. Les confirmations clients risquent de ne pas être enregistrées.
+Ignorer
+Vérifier la boutique
+Important
+4 messages échoués en 24 h
+Mboa Style : le modèle de message n’est plus approuvé par WhatsApp.
+Ignorer
+Aider le vendeur
+Important
+Essai qui se termine demain
+Yaoundé Beauté : un rappel a été envoyé. Aucune offre choisie pour le moment.
+Ignorer
+Contacter le vendeur
+Information
+Quota de messages à 90 %
+Douala Maison a utilisé 180 messages sur 200 ce mois-ci.
+Ignorer
+Voir l’abonnement

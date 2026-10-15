@@ -1,0 +1,49 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Importer des produits
+
+Ajoutez plusieurs produits d’un coup à partir d’un fichier CSV. Nous vérifions tout avant d’importer.
+
+Retour
+Importer 48 produits
+✓
+Fichier
+2
+Aperçu
+3
+Confirmation
+Fichier
+produits.csv
+51 lignes · 38 Ko
+Lignes valides
+48
+seront importées
+Lignes en erreur
+3
+seront ignorées
+Aperçu des premières lignes
+Réf.	Nom	Catégorie	Prix	Stock	Contrôle
+Robe-001	Robe wax Akwa	Robes	18 000	12	Valide
+Ens-014	Ensemble pagne	Ensembles	32 000	6	Valide
+Sac-007	Sac en raphia	Sacs	9 500	0	Valide
+Che-021	Chemise brodée	Chemises	abc	3	Erreur
+Rapport d’erreurs
+Ligne 5
+Prix « abc » : entier attendu
+Ligne 17
+Prix promo supérieur au prix
+Ligne 33
+Nom manquant
+Télécharger le rapport

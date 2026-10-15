@@ -1,0 +1,73 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Ajouter un produit
+
+Renseignez les informations de votre produit et ajoutez jusqu’à 5 photos. Vous pourrez tout modifier plus tard.
+
+Annuler
+Enregistrer le produit
+Informations
+Nom du produit
+Ex. Robe wax Akwa
+Description (facultative)
+Décrivez votre produit en quelques mots
+Texte simple, 2000 caractères au maximum.
+Catégorie
+Choisir ou créer une catégorie
+▾
+Photos · 2 sur 5 · 5 photos au maximum
+⬆
+Glissez vos photos ici
+ou parcourez vos fichiers
+Principale
+✕
+✕
+Envoi en cours…
+62 %
++
++
+
+JPG, PNG ou WebP, 5 Mo maximum par photo. La première photo est la photo principale : glissez pour changer l’ordre. Quand vous atteignez 5 photos, la zone d’ajout disparaît.
+
+Prix
+Prix (FCFA)
+0
+Nombre entier, sans espace.
+Prix promotionnel (facultatif)
+Doit être inférieur au prix
+Référence (facultative)
+Ex. Robe-001
+Variantes (facultatif)
+
+Votre produit existe en plusieurs tailles ou couleurs ? Ajoutez des variantes, chacune avec son stock.
+
++ Ajouter des variantes
+Disponibilité
+Disponible
+Épuisé
+Sur commande
+Stock
+Suivre le stock
+Quantité en stock
+0
+À 0, le produit passe automatiquement en « Épuisé ».
+Publication
+État
+Brouillon
+Mettre en avant dans la boutique
+Conseils pour de belles photos
+Photographiez à la lumière du jour
+Montrez le produit de face, puis de près
+Un fond simple met le produit en valeur

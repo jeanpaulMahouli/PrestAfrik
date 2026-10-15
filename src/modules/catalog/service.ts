@@ -27,7 +27,7 @@ export async function getPublishedStore(slug: string) {
           secondaryColor: true,
           accentColor: true,
           categories: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, slug: true } },
-          _count: { select: { products: { where: { isArchived: false } } } },
+          _count: { select: { products: { where: { status: "ACTIVE" } } } },
         },
       }),
     ["published-store", slug],
@@ -75,7 +75,7 @@ async function resolveStorefrontStore(slug: string) {
       secondaryColor: true,
       accentColor: true,
       categories: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, slug: true } },
-      _count: { select: { products: { where: { isArchived: false } } } },
+      _count: { select: { products: { where: { status: "ACTIVE" } } } },
     },
   });
   return draftStore ? { ...draftStore, isPreview: true, subscriptionPaused: false } : null;
@@ -91,7 +91,7 @@ export async function getPublishedProducts(
     () => {
       const where: Prisma.ProductWhereInput = {
         storeId,
-        isArchived: false,
+        status: "ACTIVE",
         availability: { not: ProductAvailability.SOLD_OUT },
         ...(category ? { category: { slug: category } } : {}),
         ...(query
@@ -117,7 +117,7 @@ export async function getPublishedProducts(
           availability: true,
           trackInventory: true,
           stockQuantity: true,
-          images: { take: 1, orderBy: { sortOrder: "asc" }, select: { url: true, altText: true } },
+          images: { take: 1, orderBy: { position: "asc" }, select: { url: true, altText: true } },
         },
         orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
         take: 100,
@@ -135,7 +135,7 @@ export async function getPublishedProduct(storeId: string, slug: string) {
         where: {
           storeId,
           slug,
-          isArchived: false,
+          status: "ACTIVE",
           availability: { not: ProductAvailability.SOLD_OUT },
         },
         select: {
@@ -155,7 +155,7 @@ export async function getPublishedProduct(storeId: string, slug: string) {
             orderBy: { optionValue: "asc" },
             select: { id: true, sku: true, optionName: true, optionValue: true, priceXaf: true, stockQuantity: true },
           },
-          images: { orderBy: { sortOrder: "asc" }, select: { url: true, altText: true } },
+          images: { orderBy: { position: "asc" }, select: { url: true, altText: true } },
         },
       }),
     ["published-product", storeId, slug],

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -10,7 +11,8 @@ import {
   type Permission,
 } from "@/modules/auth/permissions";
 
-export async function getStoreContext() {
+/** Contexte vendeur de la requête (mémoïsé : le shell et la page partagent la même lecture). */
+export const getStoreContext = cache(async function getStoreContext() {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session) redirect("/connexion");
@@ -40,7 +42,7 @@ export async function getStoreContext() {
     store: selected.store,
     memberships,
   };
-}
+});
 
 export async function requireStorePermission(permission: Permission) {
   const context = await getStoreContext();

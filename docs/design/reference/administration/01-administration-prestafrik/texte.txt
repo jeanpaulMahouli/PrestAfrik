@@ -1,0 +1,30 @@
+Administration
+Admin PrestAfrik
+Boutiques
+Abonnements
+Messages échoués
+Alertes
+Utilisateurs
+Boutiques
+
+Supervisez toutes les boutiques de la plateforme : abonnement, activité et état de publication.
+
+Exporter
+Boutiques
+5
+dont 4 publiées
+Essais en cours
+1
+1 expiré
+Abonnements actifs
+3
+Essentiel, Business, Pro
+Messages échoués
+4
+sur 24 h
+Boutique	Propriétaire	Offre	Abonnement	Boutique	Commandes (30 j)	
+Mboa Style	Awa Ngono	Business	Actif	Publiée	42	Suspendre
+Douala Maison	Paul Fotso	Essentiel	Actif	Publiée	31	Suspendre
+Yaoundé Beauté	Carine Mballa	Essai (9 j)	Essai	Publiée	12	Suspendre
+Bafoussam Créations	Thierry Tchoua	—	Essai expiré	Mise en pause	0	Suspendre
+Kribi Accessoires	Lydie Ekani	Pro	Actif	Publiée	18	Suspendre

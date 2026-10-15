@@ -8,6 +8,18 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum WhatsappMode {
+  WA_ME
+  CLOUD_API
+}
+
+enum WhatsappApiStatus {
+  NOT_CONFIGURED
+  PENDING_TEST
+  CONNECTED
+  FAILED
+}
+
 enum PlatformRole {
   USER
   ADMIN
@@ -23,6 +35,12 @@ enum StoreTheme {
   CATALOGUE_EXPRESS
   MODE_BEAUTE
   BOUTIQUE_MARQUE
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
 }
 
 enum ProductAvailability {
@@ -179,8 +197,26 @@ model Store {
   name              String
   slug              String                 @unique
   businessCategory  String?
+  activityId        String?
+  activityOther     String?                @db.VarChar(80)
+  country           String                 @default("CM") @db.VarChar(2)
+  region            String?                @db.VarChar(80)
   city              String?
+  neighborhood      String?                @db.VarChar(80)
   contactPhone      String?
+  phoneCountry      String?                @db.VarChar(2)
+  phoneNational     String?                @db.VarChar(20)
+  phoneE164         String?                @db.VarChar(20)
+  contactEmail      String?                @db.VarChar(254)
+  address           String?                @db.VarChar(200)
+  pickupEnabled     Boolean                @default(true)
+  pickupAddress     String?                @db.VarChar(200)
+  pickupHours       String?                @db.VarChar(120)
+  /// Étape en cours de l'assistant de création (1 à 8) ; null quand l'assistant est terminé.
+  onboardingStep    Int?
+  publishedAt       DateTime?
+  suspendedAt       DateTime?
+  suspensionReason  String?                @db.VarChar(300)
   theme             StoreTheme             @default(CATALOGUE_EXPRESS)
   isPublished       Boolean                @default(false)
   description       String?                @db.VarChar(2000)
@@ -208,6 +244,11 @@ model Store {
   payments          Payment[]
   marketingCampaigns MarketingCampaign[]
   subscription       Subscription?
+  whatsappSettings   WhatsappSettings?
+  activity           Activity?               @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  chatConfig         StoreChatConfig?
+  chatQuickReplies   StoreChatQuickReply[]
+  pages              StorePage[]
 }
 
 model StoreMembership {
@@ -283,7 +324,8 @@ model Product {
   stockQuantity       Int?
   reservedQuantity    Int                 @default(0)
   isFeatured          Boolean             @default(false)
-  isArchived          Boolean             @default(false)
+  status              ProductStatus       @default(ACTIVE)
+  archivedAt          DateTime?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   store               Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
@@ -295,7 +337,7 @@ model Product {
 
   @@unique([storeId, sku])
   @@unique([storeId, slug])
-  @@index([storeId, isArchived, availability, createdAt])
+  @@index([storeId, status, availability, createdAt])
   @@index([storeId, categoryId])
 }
 
@@ -304,11 +346,14 @@ model ProductImage {
   productId String
   url       String
   altText   String?  @db.VarChar(200)
-  sortOrder Int      @default(0)
+  /// 0 = photo principale ; 5 photos au maximum (contrainte CHECK en base).
+  position  Int      @db.SmallInt
+  width     Int?
+  height    Int?
   createdAt DateTime @default(now())
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@index([productId, sortOrder])
+  @@unique([productId, position])
 }
 
 model ProductVariant {
@@ -590,6 +635,8 @@ model Payment {
   reference  String?       @db.VarChar(120)
   note       String?       @db.VarChar(500)
   reversesId String?       @unique
+  /// Date réelle de l'encaissement (jamais future) ; createdAt reste la date de saisie.
+  receivedAt DateTime      @default(now())
   createdAt  DateTime      @default(now())
   store      Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
   order      Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
@@ -601,6 +648,8 @@ model Payment {
   @@index([storeId, createdAt])
   @@index([storeId, orderId, createdAt])
   @@index([courierId, createdAt])
+
+  @@index([storeId, receivedAt])
 }
 
 model Order {
@@ -727,4 +776,97 @@ model StoreRateLimitBucket {
 
   @@unique([storeId, keyHash, windowStart])
   @@index([windowStart])
+}
+
+model WhatsappSettings {
+  storeId                   String            @id
+  mode                      WhatsappMode      @default(WA_ME)
+  businessNumber            String?           @db.VarChar(20)
+  businessCountry           String?           @db.VarChar(2)
+  productOrderButtonEnabled Boolean           @default(true)
+  /// Modèle « du client à la boutique » ; variables : {prenom} {reference} {articles} {montant} {livraison}.
+  customerTemplate          String?           @db.VarChar(600)
+  /// Modèle « de la boutique au client » ; mêmes variables.
+  storeTemplate             String?           @db.VarChar(600)
+  showConfirmAfterOrder     Boolean           @default(true)
+  offerWriteToCustomer      Boolean           @default(true)
+  apiPhoneNumberId          String?           @db.VarChar(40)
+  apiBusinessAccountId      String?           @db.VarChar(40)
+  apiAccessTokenEncrypted   String?
+  apiTemplateName           String?           @db.VarChar(512)
+  apiTemplateLanguage       String            @default("fr") @db.VarChar(10)
+  apiWebhookSecretEncrypted String?
+  apiStatus                 WhatsappApiStatus @default(NOT_CONFIGURED)
+  apiDisplayPhoneNumber     String?           @db.VarChar(40)
+  apiVerifiedName           String?           @db.VarChar(120)
+  apiLastCheckedAt          DateTime?
+  apiLastError              String?           @db.VarChar(500)
+  createdAt                 DateTime          @default(now())
+  updatedAt                 DateTime          @updatedAt
+  store                     Store             @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+enum StorePageKind {
+  ABOUT
+  CONTACT
+  FAQ
+  PROMO
+}
+
+enum StorePageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Activity {
+  id       String  @id @default(cuid())
+  slug     String  @unique @db.VarChar(60)
+  label    String  @db.VarChar(80)
+  position Int     @default(0)
+  popular  Boolean @default(false)
+  stores   Store[]
+}
+
+/// Assistant WhatsApp de la boutique : réponses guidées rédigées par le vendeur, sans IA (brief §6.15).
+model StoreChatConfig {
+  storeId          String   @id
+  enabled          Boolean  @default(false)
+  welcomeMessage   String   @db.VarChar(200)
+  transferTemplate String   @db.VarChar(300)
+  offHoursMessage  String?  @db.VarChar(300)
+  showOnHome       Boolean  @default(true)
+  showOnProduct    Boolean  @default(true)
+  showOnCart       Boolean  @default(true)
+  showOnCheckout   Boolean  @default(false)
+  updatedAt        DateTime @updatedAt
+  store            Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+model StoreChatQuickReply {
+  id       String  @id @default(cuid())
+  storeId  String
+  label    String  @db.VarChar(30)
+  answer   String  @db.VarChar(500)
+  position Int     @db.SmallInt
+  enabled  Boolean @default(true)
+  store    Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, position])
+}
+
+/// Pages éditoriales en blocs structurés : aucun HTML ni JavaScript n'est stocké (brief §6.5).
+model StorePage {
+  id        String          @id @default(cuid())
+  storeId   String
+  kind      StorePageKind
+  title     String          @db.VarChar(80)
+  slug      String          @db.VarChar(60)
+  status    StorePageStatus @default(DRAFT)
+  blocks    Json
+  updatedAt DateTime        @updatedAt
+  createdAt DateTime        @default(now())
+  store     Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, kind])
+  @@unique([storeId, slug])
 }

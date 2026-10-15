@@ -1,0 +1,479 @@
+[
+  {
+    "page": "Site PrestAfrik",
+    "title": "Landing page",
+    "slug": "site-prestafrik/01-landing-page",
+    "size": {
+      "w": 1440,
+      "h": 8000
+    }
+  },
+  {
+    "page": "Site PrestAfrik",
+    "title": "Connexion",
+    "slug": "site-prestafrik/02-connexion",
+    "size": {
+      "w": 1280,
+      "h": 830
+    }
+  },
+  {
+    "page": "Site PrestAfrik",
+    "title": "Inscription",
+    "slug": "site-prestafrik/03-inscription",
+    "size": {
+      "w": 1280,
+      "h": 830
+    }
+  },
+  {
+    "page": "Assistant de création",
+    "title": "Assistant · 1. Nom",
+    "slug": "assistant-de-creation/01-assistant-1-nom",
+    "size": {
+      "w": 1280,
+      "h": 900
+    }
+  },
+  {
+    "page": "Assistant de création",
+    "title": "Assistant · 2. Activité",
+    "slug": "assistant-de-creation/02-assistant-2-activite",
+    "size": {
+      "w": 1280,
+      "h": 980
+    }
+  },
+  {
+    "page": "Assistant de création",
+    "title": "Assistant · 3. Localisation",
+    "slug": "assistant-de-creation/03-assistant-3-localisation",
+    "size": {
+      "w": 1280,
+      "h": 1206
+    }
+  },
+  {
+    "page": "Assistant de création",
+    "title": "Assistant · 4. Coordonnées",
+    "slug": "assistant-de-creation/04-assistant-4-coordonnees",
+    "size": {
+      "w": 1280,
+      "h": 1340
+    }
+  },
+  {
+    "page": "Assistant de création",
+    "title": "Assistant · 5. Thème",
+    "slug": "assistant-de-creation/05-assistant-5-theme",
+    "size": {
+      "w": 1280,
+      "h": 820
+    }
+  },
+  {
+    "page": "Assistant de création",
+    "title": "Assistant · 6. Logo et couleurs",
+    "slug": "assistant-de-creation/06-assistant-6-logo-et-couleurs",
+    "size": {
+      "w": 1280,
+      "h": 980
+    }
+  },
+  {
+    "page": "Assistant de création",
+    "title": "Assistant · 7. Premier produit",
+    "slug": "assistant-de-creation/07-assistant-7-premier-produit",
+    "size": {
+      "w": 1280,
+      "h": 920
+    }
+  },
+  {
+    "page": "Assistant de création",
+    "title": "Assistant · 8. Publication",
+    "slug": "assistant-de-creation/08-assistant-8-publication",
+    "size": {
+      "w": 1280,
+      "h": 1020
+    }
+  },
+  {
+    "page": "Assistant de création",
+    "title": "Assistant · Boutique publiée",
+    "slug": "assistant-de-creation/09-assistant-boutique-publiee",
+    "size": {
+      "w": 1280,
+      "h": 1020
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Accueil vendeur",
+    "slug": "espace-vendeurs/01-accueil-vendeur",
+    "size": {
+      "w": 1280,
+      "h": 760
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Commandes",
+    "slug": "espace-vendeurs/02-commandes",
+    "size": {
+      "w": 1280,
+      "h": 760
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Détail d’une commande",
+    "slug": "espace-vendeurs/03-detail-d-une-commande",
+    "size": {
+      "w": 1280,
+      "h": 1200
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Produits",
+    "slug": "espace-vendeurs/04-produits",
+    "size": {
+      "w": 1280,
+      "h": 900
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Ajouter un produit",
+    "slug": "espace-vendeurs/05-ajouter-un-produit",
+    "size": {
+      "w": 1280,
+      "h": 1430
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Formulaire produit",
+    "slug": "espace-vendeurs/06-formulaire-produit",
+    "size": {
+      "w": 1280,
+      "h": 1280
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Supprimer ou archiver un produit",
+    "slug": "espace-vendeurs/07-supprimer-ou-archiver-un-produit",
+    "size": {
+      "w": 1280,
+      "h": 900
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Import CSV",
+    "slug": "espace-vendeurs/08-import-csv",
+    "size": {
+      "w": 1280,
+      "h": 780
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Clients",
+    "slug": "espace-vendeurs/09-clients",
+    "size": {
+      "w": 1280,
+      "h": 760
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Fiche client",
+    "slug": "espace-vendeurs/10-fiche-client",
+    "size": {
+      "w": 1280,
+      "h": 1260
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Marketing",
+    "slug": "espace-vendeurs/11-marketing",
+    "size": {
+      "w": 1280,
+      "h": 760
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Livraison",
+    "slug": "espace-vendeurs/12-livraison",
+    "size": {
+      "w": 1280,
+      "h": 760
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Argent reçu",
+    "slug": "espace-vendeurs/13-argent-recu",
+    "size": {
+      "w": 1280,
+      "h": 820
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Ma boutique",
+    "slug": "espace-vendeurs/14-ma-boutique",
+    "size": {
+      "w": 1280,
+      "h": 760
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Pages éditoriales : gestion autre pas des pages de la boutique",
+    "slug": "espace-vendeurs/15-pages-editoriales-gestion-autre-pas-des-pages-de-la-boutique",
+    "size": {
+      "w": 1280,
+      "h": 820
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Confirmation WhatsApp (lien wa.me, par défaut)",
+    "slug": "espace-vendeurs/16-confirmation-whatsapp-lien-wa-me-par-defaut",
+    "size": {
+      "w": 1280,
+      "h": 1540
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Assistant WhatsApp de la boutique",
+    "slug": "espace-vendeurs/17-assistant-whatsapp-de-la-boutique",
+    "size": {
+      "w": 1280,
+      "h": 2060
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Équipe",
+    "slug": "espace-vendeurs/18-equipe",
+    "size": {
+      "w": 1280,
+      "h": 760
+    }
+  },
+  {
+    "page": "Espace vendeurs",
+    "title": "Abonnement",
+    "slug": "espace-vendeurs/19-abonnement",
+    "size": {
+      "w": 1280,
+      "h": 860
+    }
+  },
+  {
+    "page": "Boutique publique (client)",
+    "title": "Boutique publique",
+    "slug": "boutique-publique-client/01-boutique-publique",
+    "size": {
+      "w": 390,
+      "h": 844
+    }
+  },
+  {
+    "page": "Boutique publique (client)",
+    "title": "Boutique : assistant WhatsApp",
+    "slug": "boutique-publique-client/02-boutique-assistant-whatsapp",
+    "size": {
+      "w": 390,
+      "h": 980
+    }
+  },
+  {
+    "page": "Boutique publique (client)",
+    "title": "Fiche produit",
+    "slug": "boutique-publique-client/03-fiche-produit",
+    "size": {
+      "w": 390,
+      "h": 844
+    }
+  },
+  {
+    "page": "Boutique publique (client)",
+    "title": "Panier",
+    "slug": "boutique-publique-client/04-panier",
+    "size": {
+      "w": 390,
+      "h": 844
+    }
+  },
+  {
+    "page": "Boutique publique (client)",
+    "title": "Commande : formulaire incomplet",
+    "slug": "boutique-publique-client/05-commande-formulaire-incomplet",
+    "size": {
+      "w": 390,
+      "h": 1040
+    }
+  },
+  {
+    "page": "Boutique publique (client)",
+    "title": "Commande : formulaire complet",
+    "slug": "boutique-publique-client/06-commande-formulaire-complet",
+    "size": {
+      "w": 390,
+      "h": 1040
+    }
+  },
+  {
+    "page": "Boutique publique (client)",
+    "title": "Résultat de commande (lien wa.me)",
+    "slug": "boutique-publique-client/07-resultat-de-commande-lien-wa-me",
+    "size": {
+      "w": 390,
+      "h": 844
+    }
+  },
+  {
+    "page": "Boutique publique (client)",
+    "title": "Résultat de commande",
+    "slug": "boutique-publique-client/08-resultat-de-commande",
+    "size": {
+      "w": 390,
+      "h": 844
+    }
+  },
+  {
+    "page": "Boutique publique (client)",
+    "title": "Suivi de commande",
+    "slug": "boutique-publique-client/09-suivi-de-commande",
+    "size": {
+      "w": 390,
+      "h": 844
+    }
+  },
+  {
+    "page": "Administration",
+    "title": "Administration PrestAfrik",
+    "slug": "administration/01-administration-prestafrik",
+    "size": {
+      "w": 1280,
+      "h": 900
+    }
+  },
+  {
+    "page": "Administration",
+    "title": "Administration · Abonnements",
+    "slug": "administration/02-administration-abonnements",
+    "size": {
+      "w": 1280,
+      "h": 900
+    }
+  },
+  {
+    "page": "Administration",
+    "title": "Administration · Messages échoués",
+    "slug": "administration/03-administration-messages-echoues",
+    "size": {
+      "w": 1280,
+      "h": 900
+    }
+  },
+  {
+    "page": "Administration",
+    "title": "Administration · Alertes",
+    "slug": "administration/04-administration-alertes",
+    "size": {
+      "w": 1280,
+      "h": 900
+    }
+  },
+  {
+    "page": "Administration",
+    "title": "Administration · Utilisateurs",
+    "slug": "administration/05-administration-utilisateurs",
+    "size": {
+      "w": 1280,
+      "h": 900
+    }
+  },
+  {
+    "page": "E-mails",
+    "title": "E-mail E01 · Confirmation de l’adresse e-mail (inscription)",
+    "slug": "e-mails/01-e-mail-e01-confirmation-de-l-adresse-e-mail-inscription",
+    "size": {
+      "w": 720,
+      "h": 780
+    }
+  },
+  {
+    "page": "E-mails",
+    "title": "E-mail E02 · Bienvenue (adresse confirmée)",
+    "slug": "e-mails/02-e-mail-e02-bienvenue-adresse-confirmee",
+    "size": {
+      "w": 720,
+      "h": 840
+    }
+  },
+  {
+    "page": "E-mails",
+    "title": "E-mail E04 · Réinitialisation du mot de passe",
+    "slug": "e-mails/03-e-mail-e04-reinitialisation-du-mot-de-passe",
+    "size": {
+      "w": 720,
+      "h": 784
+    }
+  },
+  {
+    "page": "E-mails",
+    "title": "E-mail E05 · Mot de passe modifié (alerte de sécurité)",
+    "slug": "e-mails/04-e-mail-e05-mot-de-passe-modifie-alerte-de-securite",
+    "size": {
+      "w": 720,
+      "h": 780
+    }
+  },
+  {
+    "page": "E-mails",
+    "title": "E-mail E09 · Invitation à rejoindre une boutique",
+    "slug": "e-mails/05-e-mail-e09-invitation-a-rejoindre-une-boutique",
+    "size": {
+      "w": 720,
+      "h": 754
+    }
+  },
+  {
+    "page": "E-mails",
+    "title": "E-mail E13 · Boutique publiée",
+    "slug": "e-mails/06-e-mail-e13-boutique-publiee",
+    "size": {
+      "w": 720,
+      "h": 807
+    }
+  },
+  {
+    "page": "E-mails",
+    "title": "E-mail E14 · Votre essai se termine bientôt",
+    "slug": "e-mails/07-e-mail-e14-votre-essai-se-termine-bientot",
+    "size": {
+      "w": 720,
+      "h": 855
+    }
+  },
+  {
+    "page": "E-mails",
+    "title": "E-mail E16 · Paiement confirmé",
+    "slug": "e-mails/08-e-mail-e16-paiement-confirme",
+    "size": {
+      "w": 720,
+      "h": 818
+    }
+  }
+]

@@ -2,120 +2,120 @@
 
 import { useState } from "react";
 
-type Variant = {
-  sku: string;
-  optionName: string;
-  optionValue: string;
-  priceXaf: string;
-  stockQuantity: string;
-};
+export type VariantDraft = { optionValue: string; sku: string; priceXaf: string; stockQuantity: string };
 
-const emptyVariant: Variant = {
-  sku: "",
-  optionName: "",
-  optionValue: "",
-  priceXaf: "",
-  stockQuantity: "",
-};
+type Props = { initialOptionName?: string; initialVariants?: VariantDraft[]; error?: string };
 
-export function ProductVariantsEditor({ initialVariants = [] }: { initialVariants?: Variant[] }) {
-  const [variants, setVariants] = useState(initialVariants);
-  const value = JSON.stringify(
-    variants
-      .filter((variant) => variant.sku || variant.optionName || variant.optionValue)
-      .map((variant) => ({
-        sku: variant.sku.trim(),
-        optionName: variant.optionName.trim(),
-        optionValue: variant.optionValue.trim(),
-        priceXaf: variant.priceXaf ? Number(variant.priceXaf) : null,
-        stockQuantity: variant.stockQuantity ? Number(variant.stockQuantity) : null,
-      })),
-  );
+/** Variantes du produit : une option (ex. Taille) et ses valeurs, chacune avec référence, prix et stock. */
+export function ProductVariantsEditor({ initialOptionName = "", initialVariants = [], error }: Props) {
+  const [enabled, setEnabled] = useState(initialVariants.length > 0);
+  const [optionName, setOptionName] = useState(initialOptionName || "Taille");
+  const [variants, setVariants] = useState<VariantDraft[]>(initialVariants);
+  const [newValue, setNewValue] = useState("");
 
-  function updateVariant(index: number, key: keyof Variant, nextValue: string) {
-    setVariants((current) =>
-      current.map((variant, variantIndex) =>
-        variantIndex === index ? { ...variant, [key]: nextValue } : variant,
-      ),
-    );
+  const toNumber = (value: string) => (/^\d+$/.test(value.trim()) ? Number(value.trim()) : null);
+  const serialized = enabled
+    ? JSON.stringify(
+        variants.map((variant) => ({
+          optionName: optionName.trim(),
+          optionValue: variant.optionValue.trim(),
+          sku: variant.sku.trim(),
+          priceXaf: toNumber(variant.priceXaf),
+          stockQuantity: toNumber(variant.stockQuantity),
+        })),
+      )
+    : "[]";
+
+  function addValue() {
+    const values = newValue
+      .split(/[,;]/)
+      .map((value) => value.trim())
+      .filter((value) => value && !variants.some((variant) => variant.optionValue.toLowerCase() === value.toLowerCase()));
+    if (!values.length) return;
+    setVariants((current) => [...current, ...values.map((value) => ({ optionValue: value, sku: "", priceXaf: "", stockQuantity: "" }))].slice(0, 100));
+    setNewValue("");
   }
 
+  const update = (index: number, key: keyof VariantDraft, value: string) =>
+    setVariants((current) => current.map((variant, position) => (position === index ? { ...variant, [key]: value } : variant)));
+
   return (
-    <section aria-label="Variantes du produit" className="variant-editor">
-      <input name="variants" type="hidden" value={value} />
-      <div className="variant-editor-heading">
-        <div>
-          <h2>Variantes</h2>
-          <p>Facultatif : tailles, couleurs ou formats.</p>
-        </div>
-        <button
-          className="secondary-button"
-          onClick={() => setVariants((current) => [...current, { ...emptyVariant }])}
-          type="button"
-        >
-          Ajouter une variante
-        </button>
-      </div>
-      {variants.length === 0 && <p>Aucune variante pour le moment.</p>}
-      {variants.map((variant, index) => (
-        <fieldset className="variant-row" key={index}>
-          <legend>Variante {index + 1}</legend>
-          <label className="form-field">
-            Type
-            <input
-              maxLength={60}
-              onChange={(event) => updateVariant(index, "optionName", event.target.value)}
-              placeholder="Taille"
-              value={variant.optionName}
-            />
-          </label>
-          <label className="form-field">
-            Valeur
-            <input
-              maxLength={80}
-              onChange={(event) => updateVariant(index, "optionValue", event.target.value)}
-              placeholder="M"
-              value={variant.optionValue}
-            />
-          </label>
-          <label className="form-field">
-            Référence
-            <input
-              maxLength={48}
-              onChange={(event) => updateVariant(index, "sku", event.target.value)}
-              placeholder="TEE-M"
-              value={variant.sku}
-            />
-          </label>
-          <label className="form-field">
-            Prix spécifique (facultatif)
-            <input
-              inputMode="numeric"
-              onChange={(event) => updateVariant(index, "priceXaf", event.target.value)}
-              placeholder="Même prix que le produit"
-              value={variant.priceXaf}
-            />
-          </label>
-          <label className="form-field">
-            Quantité en stock (facultative)
-            <input
-              inputMode="numeric"
-              onChange={(event) => updateVariant(index, "stockQuantity", event.target.value)}
-              placeholder="Même stock que le produit"
-              value={variant.stockQuantity}
-            />
-          </label>
+    <div className="variants-editor">
+      <input name="variants" type="hidden" value={serialized} />
+      <h2 className="v-card-title">{enabled ? "Variantes" : "Variantes (facultatif)"}</h2>
+      {!enabled ? (
+        <>
+          <p className="v-muted v-small">
+            Votre produit existe en plusieurs tailles ou couleurs ? Ajoutez des variantes, chacune avec son stock.
+          </p>
+          <button className="btn btn-secondary" onClick={() => setEnabled(true)} type="button">
+            + Ajouter des variantes
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="v-muted v-small">Chaque variante peut avoir sa référence, son prix et son stock. Sans prix, celui du produit s’applique.</p>
+          <div className="variants-option">
+            <label className="v-field">
+              Option
+              <input maxLength={60} onChange={(event) => setOptionName(event.target.value)} placeholder="Taille, Couleur…" value={optionName} />
+            </label>
+            <label className="v-field">
+              Ajouter des valeurs
+              <span className="variants-add-row">
+                <input
+                  maxLength={160}
+                  onChange={(event) => setNewValue(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      addValue();
+                    }
+                  }}
+                  placeholder="Ex. S, M, L"
+                  value={newValue}
+                />
+                <button className="btn btn-secondary" onClick={addValue} type="button">
+                  Ajouter
+                </button>
+              </span>
+            </label>
+          </div>
+          {variants.length > 0 && (
+            <div className="variants-table" role="table" aria-label="Variantes">
+              <div className="variants-row variants-head" role="row">
+                <span role="columnheader">{optionName || "Valeur"}</span>
+                <span role="columnheader">Référence</span>
+                <span role="columnheader">Prix (FCFA)</span>
+                <span role="columnheader">Stock</span>
+                <span role="columnheader"><span className="visually-hidden">Retirer</span></span>
+              </div>
+              {variants.map((variant, index) => (
+                <div className="variants-row" key={`${variant.optionValue}-${index}`} role="row">
+                  <span className="variants-chip" role="cell">{variant.optionValue}</span>
+                  <input aria-label={`Référence ${variant.optionValue}`} maxLength={40} onChange={(event) => update(index, "sku", event.target.value)} placeholder="Automatique" role="cell" value={variant.sku} />
+                  <input aria-label={`Prix ${variant.optionValue}`} inputMode="numeric" onChange={(event) => update(index, "priceXaf", event.target.value)} placeholder="Prix du produit" role="cell" value={variant.priceXaf} />
+                  <input aria-label={`Stock ${variant.optionValue}`} inputMode="numeric" onChange={(event) => update(index, "stockQuantity", event.target.value)} placeholder="—" role="cell" value={variant.stockQuantity} />
+                  <button aria-label={`Retirer la variante ${variant.optionValue}`} className="variants-remove" onClick={() => setVariants((current) => current.filter((_, position) => position !== index))} role="cell" type="button">
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <button
-            className="text-link variant-remove"
-            onClick={() =>
-              setVariants((current) => current.filter((_, variantIndex) => variantIndex !== index))
-            }
+            className="v-link-button"
+            onClick={() => {
+              setEnabled(false);
+              setVariants([]);
+            }}
             type="button"
           >
-            Retirer cette variante
+            Retirer toutes les variantes
           </button>
-        </fieldset>
-      ))}
-    </section>
+        </>
+      )}
+      {error && <p className="v-field-error" role="alert">{error}</p>}
+    </div>
   );
 }

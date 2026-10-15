@@ -1,0 +1,65 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Pages de la boutique
+
+Créez les pages de présentation de votre boutique (À propos, Contact, FAQ) avec des blocs simples à assembler.
+
+Aperçu
+Publier la page
+Mes pages
+Boutique
+Page principale · non supprimable
+Publiée
+À propos
+Publiée
+Contact
+Publiée
+FAQ
+Brouillon
+Page promotionnelle
+Pas encore créée
+—
+Ajouter une page
+Modifier : À propos
+⋮⋮
+Titre
+Notre histoire
+Supprimer
+⋮⋮
+Paragraphe
+Mboa Style habille les femmes de Douala depuis 2022 avec des tenues en pagne wax.
+Supprimer
+⋮⋮
+Image
+atelier.jpg · texte alternatif : l’atelier
+Supprimer
+⋮⋮
+Liste
+Fabrication locale · Retouches offertes · Livraison à Douala
+Supprimer
+⋮⋮
+Bouton
+« Voir les produits » → page Boutique
+Supprimer
+Ajouter un bloc
+Titre
+Paragraphe
+Image
+Liste
+Bouton
+Question-réponse
+Coordonnées
+
+Pas de code HTML ni de JavaScript : seuls ces blocs sont acceptés.

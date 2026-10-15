@@ -1,313 +1,81 @@
 "use server";
 
-import {
-  DeliveryStatus,
-  OrderProcessingStatus,
-  Prisma,
-} from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { requireStorePermission } from "@/modules/stores/context";
-import {
-  deliveryStatusTransition,
-} from "@/modules/orders/delivery-status";
 
-const courierSchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  phone: z.string().trim().min(8).max(20),
-});
+// Zones de livraison : chaque zone a des frais fixes, connus du client avant sa commande
+// (ADR-013). Plus de frais « à confirmer » ni de négociation.
 
-const deliveryZoneSchema = z.object({
-  name: z.string().trim().min(2).max(120),
-  city: z.string().trim().min(2).max(100),
-  fee: z.string().trim().regex(/^\d*$/),
+const zoneSchema = z.object({
+  name: z.string().trim().min(2, "Donnez un nom à la zone (ex. Akwa).").max(120),
+  city: z.string().trim().min(2, "Indiquez la ville.").max(100),
+  fee: z.string().regex(/^\d{1,7}$/, "Indiquez les frais en FCFA (0 si la livraison est gratuite)."),
   estimatedDelay: z.string().trim().max(100),
-  requiresConfirmation: z.enum(["on"]).optional(),
 });
 
-const assignSchema = z.object({
-  orderId: z.cuid(),
-  courierId: z.cuid(),
-});
+const page = "/dashboard/livraisons";
+const fail = (message: string): never => redirect(`${page}?erreur=${encodeURIComponent(message)}`);
 
-const deliveryUpdateSchema = z.object({
-  orderId: z.cuid(),
-  intent: z.enum(["start", "delivered", "failed", "reschedule", "returned"]),
-  failureReason: z.string().trim().max(500),
-});
-
-class DeliveryProblem extends Error {}
-
-function normalizeCameroonPhone(phone: string) {
-  const compact = phone.replace(/[\s().-]/g, "");
-  if (/^6\d{8}$/.test(compact)) return `+237${compact}`;
-  if (/^\+2376\d{8}$/.test(compact)) return compact;
-  return null;
-}
-
-export async function createCourier(formData: FormData) {
-  const parsed = courierSchema.safeParse({
-    name: formData.get("name"),
-    phone: formData.get("phone"),
-  });
-  if (!parsed.success) redirect("/dashboard/livraisons?erreur=livreur-invalide");
-
-  const phone = normalizeCameroonPhone(parsed.data.phone);
-  if (!phone) redirect("/dashboard/livraisons?erreur=telephone-invalide");
-  const { store } = await requireStorePermission("delivery.manage");
-
-  try {
-    await prisma.courier.create({
-      data: { storeId: store.id, name: parsed.data.name, phone },
-    });
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      redirect("/dashboard/livraisons?erreur=livreur-existant");
-    }
-    throw error;
-  }
-
-  revalidatePath("/dashboard/livraisons");
-  redirect("/dashboard/livraisons?succes=livreur");
-}
-
-export async function createDeliveryZone(formData: FormData) {
-  const parsed = deliveryZoneSchema.safeParse({
+function read(formData: FormData) {
+  const parsed = zoneSchema.safeParse({
     name: formData.get("name"),
     city: formData.get("city"),
-    fee: formData.get("fee"),
-    estimatedDelay: formData.get("estimatedDelay"),
-    requiresConfirmation: formData.get("requiresConfirmation") ?? undefined,
+    fee: String(formData.get("fee") ?? "").replace(/[\s\u00a0\u202f]/g, ""),
+    estimatedDelay: formData.get("estimatedDelay") ?? "",
   });
-  if (!parsed.success) redirect("/dashboard/livraisons?erreur=zone-invalide");
+  if (!parsed.success) fail(parsed.error.issues[0]?.message ?? "Vérifiez la zone.");
+  return parsed.data!;
+}
 
-  const { store } = await requireStorePermission("store.manage");
-  const requiresConfirmation = parsed.data.requiresConfirmation === "on";
-  if (!requiresConfirmation && parsed.data.fee === "") {
-    redirect("/dashboard/livraisons?erreur=zone-invalide");
-  }
-  const feeXaf = requiresConfirmation ? null : Number(parsed.data.fee);
-  if (
-    !requiresConfirmation &&
-    (feeXaf === null || !Number.isSafeInteger(feeXaf) || feeXaf < 0)
-  ) {
-    redirect("/dashboard/livraisons?erreur=zone-invalide");
-  }
+function done(store: { id: string; slug: string }, success: string): never {
+  revalidatePath(page);
+  invalidateStorefrontCache(store.id, store.slug);
+  redirect(`${page}?succes=${success}`);
+}
 
+const duplicate = (error: unknown) => error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+
+export async function createDeliveryZone(formData: FormData) {
+  const input = read(formData);
+  const { store } = await requireStorePermission("delivery.manage");
   try {
     await prisma.deliveryZone.create({
+      data: { storeId: store.id, name: input.name, city: input.city, feeXaf: Number(input.fee), requiresConfirmation: false, estimatedDelay: input.estimatedDelay || null },
+    });
+  } catch (error) {
+    if (duplicate(error)) fail("Une zone porte déjà ce nom dans cette ville.");
+    throw error;
+  }
+  done(store, "zone");
+}
+
+/** Modification d'une zone : les commandes déjà passées gardent leurs frais. */
+export async function updateDeliveryZone(formData: FormData) {
+  const zoneId = z.cuid().safeParse(formData.get("zoneId"));
+  if (!zoneId.success) redirect(page);
+  const input = read(formData);
+  const { store } = await requireStorePermission("delivery.manage");
+  try {
+    const updated = await prisma.deliveryZone.updateMany({
+      where: { id: zoneId.data, storeId: store.id },
       data: {
-        storeId: store.id,
-        name: parsed.data.name,
-        city: parsed.data.city,
-        feeXaf,
-        requiresConfirmation,
-        estimatedDelay: parsed.data.estimatedDelay || null,
+        name: input.name,
+        city: input.city,
+        feeXaf: Number(input.fee),
+        requiresConfirmation: false,
+        estimatedDelay: input.estimatedDelay || null,
+        isActive: formData.get("isActive") === "on",
       },
     });
+    if (updated.count !== 1) fail("Cette zone est introuvable.");
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      redirect("/dashboard/livraisons?erreur=zone-existante");
-    }
+    if (duplicate(error)) fail("Une zone porte déjà ce nom dans cette ville.");
     throw error;
   }
-
-  revalidatePath("/dashboard/livraisons");
-  revalidatePath(`/boutique/${store.slug}`);
-  redirect("/dashboard/livraisons?succes=zone");
-}
-
-export async function assignCourier(formData: FormData) {
-  const parsed = assignSchema.safeParse({
-    orderId: formData.get("orderId"),
-    courierId: formData.get("courierId"),
-  });
-  if (!parsed.success) redirect("/dashboard/livraisons?erreur=affectation-invalide");
-
-  const { session, store } = await requireStorePermission("delivery.manage");
-  try {
-    await prisma.$transaction(async (transaction) => {
-      const order = await transaction.order.findFirst({
-        where: { id: parsed.data.orderId, storeId: store.id },
-        select: {
-          id: true,
-          deliveryStatus: true,
-          deliveryMethod: true,
-          processingStatus: true,
-        },
-      });
-      if (
-        !order ||
-        order.processingStatus !== OrderProcessingStatus.COMPLETED ||
-        order.deliveryMethod === "PICKUP" ||
-        order.deliveryStatus !== DeliveryStatus.TO_ORGANIZE
-      ) {
-        throw new DeliveryProblem("Cette commande ne peut pas être affectée.");
-      }
-
-      const courier = await transaction.courier.findFirst({
-        where: {
-          id: parsed.data.courierId,
-          storeId: store.id,
-          isActive: true,
-        },
-        select: { id: true, name: true },
-      });
-      if (!courier) throw new DeliveryProblem("Livreur indisponible.");
-
-      const updated = await transaction.order.updateMany({
-        where: {
-          id: order.id,
-          storeId: store.id,
-          deliveryStatus: DeliveryStatus.TO_ORGANIZE,
-          processingStatus: OrderProcessingStatus.COMPLETED,
-        },
-        data: { deliveryStatus: DeliveryStatus.IN_TRANSIT },
-      });
-      if (updated.count !== 1) throw new DeliveryProblem("La livraison a changé.");
-
-      await transaction.delivery.upsert({
-        where: { orderId: order.id },
-        create: {
-          storeId: store.id,
-          orderId: order.id,
-          courierId: courier.id,
-          status: DeliveryStatus.IN_TRANSIT,
-          assignedAt: new Date(),
-          pickedUpAt: new Date(),
-        },
-        update: {
-          courierId: courier.id,
-          status: DeliveryStatus.IN_TRANSIT,
-          failureReason: null,
-          assignedAt: new Date(),
-          pickedUpAt: new Date(),
-        },
-      });
-
-      await transaction.orderEvent.create({
-        data: {
-          orderId: order.id,
-          type: "DELIVERY_ASSIGNED",
-          fromValue: DeliveryStatus.TO_ORGANIZE,
-          toValue: DeliveryStatus.IN_TRANSIT,
-          note: `Livreur ${courier.name} affecté.`,
-          actorId: session.user.id,
-        },
-      });
-    });
-  } catch (error) {
-    if (error instanceof DeliveryProblem) {
-      redirect(`/dashboard/livraisons?erreur=affectation-echouee`);
-    }
-    throw error;
-  }
-
-  refreshDeliveryViews(parsed.data.orderId);
-  redirect("/dashboard/livraisons?succes=affectation");
-}
-
-export async function updateDeliveryStatus(formData: FormData) {
-  const parsed = deliveryUpdateSchema.safeParse({
-    orderId: formData.get("orderId"),
-    intent: formData.get("intent"),
-    failureReason: formData.get("failureReason") ?? "",
-  });
-  if (!parsed.success) redirect("/dashboard/livraisons?erreur=action-invalide");
-  if (parsed.data.intent === "failed" && parsed.data.failureReason.length < 3) {
-    redirect("/dashboard/livraisons?erreur=motif-requis");
-  }
-
-  const { session, store } = await requireStorePermission("delivery.manage");
-  try {
-    await prisma.$transaction(async (transaction) => {
-      const order = await transaction.order.findFirst({
-        where: {
-          id: parsed.data.orderId,
-          storeId: store.id,
-          processingStatus: OrderProcessingStatus.COMPLETED,
-        },
-        select: { id: true, deliveryStatus: true },
-      });
-      if (!order) throw new DeliveryProblem("Commande introuvable ou non préparée.");
-
-      const next = deliveryStatusTransition(
-        order.deliveryStatus,
-        parsed.data.intent,
-      );
-      if (!next) throw new DeliveryProblem("Transition de livraison impossible.");
-
-      const updated = await transaction.order.updateMany({
-        where: {
-          id: order.id,
-          storeId: store.id,
-          deliveryStatus: order.deliveryStatus,
-          processingStatus: OrderProcessingStatus.COMPLETED,
-        },
-        data: { deliveryStatus: next },
-      });
-      if (updated.count !== 1) throw new DeliveryProblem("La livraison a changé.");
-
-      const now = new Date();
-      await transaction.delivery.upsert({
-        where: { orderId: order.id },
-        create: {
-          storeId: store.id,
-          orderId: order.id,
-          status: next,
-          ...(next === DeliveryStatus.FAILED
-            ? { failureReason: parsed.data.failureReason }
-            : {}),
-          ...(next === DeliveryStatus.DELIVERED ? { deliveredAt: now } : {}),
-          ...(next === DeliveryStatus.RETURNED ? { returnedAt: now } : {}),
-        },
-        update: {
-          status: next,
-          failureReason:
-            next === DeliveryStatus.FAILED ? parsed.data.failureReason : null,
-          ...(next === DeliveryStatus.DELIVERED ? { deliveredAt: now } : {}),
-          ...(next === DeliveryStatus.RETURNED ? { returnedAt: now } : {}),
-        },
-      });
-
-      await transaction.orderEvent.create({
-        data: {
-          orderId: order.id,
-          type: `DELIVERY_${parsed.data.intent.toUpperCase()}`,
-          fromValue: order.deliveryStatus,
-          toValue: next,
-          note: parsed.data.failureReason || null,
-          actorId: session.user.id,
-        },
-      });
-    });
-  } catch (error) {
-    if (error instanceof DeliveryProblem) {
-      redirect("/dashboard/livraisons?erreur=transition-echouee");
-    }
-    throw error;
-  }
-
-  refreshDeliveryViews(parsed.data.orderId);
-  redirect(
-    parsed.data.intent === "delivered"
-      ? `/dashboard/livraisons?succes=livree&commande=${parsed.data.orderId}`
-      : "/dashboard/livraisons?succes=statut",
-  );
-}
-
-function refreshDeliveryViews(orderId: string) {
-  revalidatePath("/dashboard");
-  revalidatePath("/dashboard/livraisons");
-  revalidatePath("/dashboard/commandes");
-  revalidatePath(`/dashboard/commandes/${orderId}`);
-  revalidatePath("/dashboard/argent");
+  done(store, "zone-modifiee");
 }

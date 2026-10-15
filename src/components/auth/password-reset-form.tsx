@@ -1,74 +1,69 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
+import { PasswordInput } from "@/components/ui/password-input";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { texts } from "@/config/texts";
 import { authClient } from "@/modules/auth/client";
+import { checkPassword } from "@/modules/auth/password-policy";
+
+const t = texts.auth;
 
 export function PasswordResetForm({ token }: { token: string }) {
   const router = useRouter();
+  const id = useId();
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
-    setPending(true);
-
-    const values = new FormData(event.currentTarget);
-    const password = String(values.get("password"));
-    const confirmation = String(values.get("confirmation"));
-    if (password !== confirmation) {
-      setError("Les deux mots de passe ne sont pas identiques.");
-      setPending(false);
+    const issue = checkPassword(password);
+    if (issue) {
+      setError(
+        issue === "tooShort"
+          ? t.fields.passwordTooShort
+          : issue === "tooLong"
+            ? t.fields.passwordTooLong
+            : t.fields.passwordTooCommon,
+      );
       return;
     }
-
+    setError("");
+    setPending(true);
     try {
       const result = await authClient.resetPassword({ newPassword: password, token });
       if (result.error) {
-        setError(result.error.message ?? "Ce lien n’est plus valide.");
+        setError(result.error.message && !/token/i.test(result.error.message) ? result.error.message : t.reset.invalidLink);
         return;
       }
       router.push("/connexion?motDePasseModifie=1");
     } catch {
-      setError("La réinitialisation n’a pas pu aboutir. Demande un nouveau lien.");
+      setError(texts.common.networkError);
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <form onSubmit={submit}>
-      <label className="form-field">
-        Nouveau mot de passe
-        <input
+    <form className="auth-form" onSubmit={submit}>
+      <div className="auth-field">
+        <label htmlFor={id}>{t.fields.password}</label>
+        <PasswordInput
+          aria-describedby={`${id}-help`}
           autoComplete="new-password"
+          id={id}
           maxLength={128}
-          minLength={10}
-          name="password"
+          onChange={(event) => setPassword(event.target.value)}
           required
-          type="password"
+          value={password}
         />
-      </label>
-      <label className="form-field">
-        Confirme ton mot de passe
-        <input
-          autoComplete="new-password"
-          maxLength={128}
-          minLength={10}
-          name="confirmation"
-          required
-          type="password"
-        />
-      </label>
-      {error && (
-        <p aria-live="polite" className="form-error" role="alert">
-          {error}
-        </p>
-      )}
-      <SubmitButton className="primary-button full-width" loading={pending} pendingLabel="Enregistrement…">
-        Enregistrer le nouveau mot de passe
+        <p className="auth-field-help" id={`${id}-help`}>{t.signUp.passwordHelp}</p>
+      </div>
+      {error && <p className="auth-alert" role="alert">{error}</p>}
+      <SubmitButton className="auth-submit" loading={pending} pendingLabel={texts.common.saving}>
+        {t.reset.newSubmit} <span aria-hidden="true">→</span>
       </SubmitButton>
     </form>
   );

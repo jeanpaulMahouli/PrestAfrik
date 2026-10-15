@@ -1,0 +1,31 @@
+Rechercher
+MS
+Mboa Style
+A
+Accueil
+Commandes
+Livraisons
+Produits
+Clients
+Argent reçu
+Marketing
+Mon équipe
+Ma boutique
+Abonnement
+Mon équipe
+
+Invitez vos collaborateurs et choisissez précisément ce que chacun a le droit de faire.
+
+Inviter une personne
+Personne	E-mail	Rôle	État
+Awa Ngono	awa@exemple.com	Propriétaire	Active
+Samuel Nkoulou	samuel@exemple.com	Gestionnaire	Active
+Junior Kamga	junior@exemple.com	Préparateur de commandes	Active
+nadine@exemple.com	—	Préparateur de commandes	Invitation envoyée
+Ce que chacun peut faire
+	Propriétaire	Gestionnaire	Préparateur
+Produits	✓	✓	Voir
+Commandes	✓	✓	Préparer
+Clients et exports	✓	✓	—
+Argent reçu	✓	✓	—
+Équipe et abonnement	✓	—	—

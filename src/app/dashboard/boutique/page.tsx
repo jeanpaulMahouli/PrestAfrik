@@ -1,99 +1,110 @@
-import { StoreTheme } from "@prisma/client";
 import Link from "next/link";
+import { VendorShell } from "@/components/layout/vendor-shell";
+import { ShareStoreButton } from "@/components/shared/share-store-button";
 import { StoreAppearanceForm } from "@/components/stores/store-appearance-form";
-import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { StoreSectionNav } from "@/components/stores/store-section-nav";
 import { SubmitButton } from "@/components/ui/submit-button";
-import {
-  publishStore,
-  resetStoreColors,
-  unpublishStore,
-} from "@/modules/stores/settings-actions";
+import { splitE164 } from "@/lib/phone";
+import { prisma } from "@/lib/prisma";
+import { storePublicUrl } from "@/lib/urls";
 import { requireStorePermission } from "@/modules/stores/context";
-import { cameroonCities, storeBusinessCategories } from "@/modules/stores/options";
+import { cameroonCities } from "@/modules/stores/options";
+import { getPublicationChecklist } from "@/modules/stores/publication";
+import { publishStore, resetStoreColors, unpublishStore } from "@/modules/stores/settings-actions";
 
-export default async function StoreSettingsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ erreur?: string; succes?: string }>;
-}) {
-  const { session, store, memberships, membership } = await requireStorePermission("store.manage");
-  const { erreur, succes } = await searchParams;
+export const metadata = { title: "Ma boutique" };
+
+const successMessages: Record<string, string> = {
+  enregistre: "Modifications enregistrées. Votre boutique est à jour.",
+  publication: "Votre boutique prend vie ! Tout est prêt : partagez-la.",
+  brouillon: "Votre boutique est en brouillon : elle n’est plus visible par vos clients.",
+  couleurs: "Les couleurs PrestAfrik sont rétablies.",
+  "logo-retire": "Logo retiré : les initiales de votre boutique sont affichées.",
+};
+
+export default async function StoreSettingsPage({ searchParams }: PageProps<"/dashboard/boutique">) {
+  const { session, store } = await requireStorePermission("store.manage");
+  const params = await searchParams;
+  const [activities, checklist] = await Promise.all([
+    prisma.activity.findMany({ orderBy: { position: "asc" }, select: { id: true, label: true } }),
+    getPublicationChecklist(store.id, session.user.emailVerified),
+  ]);
+  const missing = checklist.filter((item) => !item.done && item.key !== "delivery");
+  const phone = splitE164(store.phoneE164 ?? store.contactPhone);
+  const error = typeof params.erreur === "string" ? params.erreur : null;
+  const success = typeof params.succes === "string" ? successMessages[params.succes] : null;
+  const publicUrl = storePublicUrl(store.slug);
 
   return (
-    <DashboardShell memberships={memberships} role={membership.role} store={store} userEmail={session.user.email} userName={session.user.name}>
-      <div className="page-heading">
+    <VendorShell>
+      <StoreSectionNav current="/dashboard/boutique" />
+      <div className="v-page-header">
         <div>
-          <h1 className="dashboard-heading">Ma boutique</h1>
-          <p className="dashboard-copy">{store.isPublished ? "Ta boutique est en ligne." : "Ta boutique est en brouillon."}</p>
+          <h1 className="v-page-title">Ma boutique</h1>
+          <p className="v-page-subtitle">Personnalisez l’apparence de votre boutique : logo, thème, couleurs et informations pratiques.</p>
         </div>
-        <div className="page-actions">
+        <div className="v-page-actions">
           <form action={resetStoreColors}>
-            <SubmitButton className="secondary-button" pendingLabel="Rétablissement…">
-              Retour aux couleurs par défaut
-            </SubmitButton>
+            <SubmitButton className="btn btn-secondary" pendingLabel="…">Retour aux couleurs par défaut</SubmitButton>
           </form>
           {store.isPublished ? (
-            <Link className="primary-button" href={`/boutique/${store.slug}`} target="_blank">
-              Voir ma boutique
-            </Link>
+            <>
+              <ShareStoreButton className="btn btn-secondary" published storeName={store.name} storeUrl={publicUrl} />
+              <form action={unpublishStore}>
+                <SubmitButton className="btn btn-secondary" pendingLabel="…">Mettre en brouillon</SubmitButton>
+              </form>
+            </>
           ) : (
             <>
-              <Link className="secondary-button" href={`/boutique/${store.slug}`} target="_blank">
-                Prévisualiser
-              </Link>
+              <Link className="btn btn-secondary" href={`/boutique/${store.slug}`} target="_blank">Prévisualiser</Link>
               <form action={publishStore}>
-                <SubmitButton className="primary-button" pendingLabel="Publication…">
-                  Publier
-                </SubmitButton>
+                <SubmitButton className="btn btn-primary" disabled={missing.length > 0} pendingLabel="Publication…">Publier</SubmitButton>
               </form>
             </>
           )}
         </div>
       </div>
-      {succes && <p className="notice" role="status">{statusMessage(succes)}</p>}
+
+      {error && <p className="v-banner v-banner-danger" role="alert">{error}</p>}
+      {success && <p className="v-banner v-banner-success" role="status">{success}</p>}
+      {!store.isPublished && missing.length > 0 && (
+        <section aria-labelledby="publish-missing" className="v-banner">
+          <strong id="publish-missing">Encore {missing.length} étape{missing.length > 1 ? "s" : ""} avant de publier :</strong>
+          <ul className="publish-missing-list">
+            {missing.map((item) => (
+              <li key={item.key}><Link href={item.href}>{item.label}</Link></li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <StoreAppearanceForm
-        error={erreur}
+        activities={activities}
+        cities={cameroonCities}
         initialValues={{
           name: store.name,
-          businessCategory: storeBusinessCategories.find(
-            (category) => category === store.businessCategory,
-          ) ?? (store.businessCategory === "Mode" ? "Vêtements" : ""),
-          city: cameroonCities.find((city) => city === store.city) ?? "",
+          slug: store.slug,
           description: store.description ?? "",
+          activityId: store.activityId ?? "",
+          activityOther: store.activityOther ?? "",
+          city: store.city ?? "",
+          neighborhood: store.neighborhood ?? "",
+          phoneCountry: phone.country,
+          phoneNational: phone.national,
+          contactEmail: store.contactEmail ?? "",
+          address: store.address ?? "",
+          pickupEnabled: store.pickupEnabled,
+          pickupAddress: store.pickupAddress ?? "",
+          pickupHours: store.pickupHours ?? "",
           logoUrl: store.logoUrl,
-          theme: store.theme ?? StoreTheme.CATALOGUE_EXPRESS,
+          theme: store.theme,
           primaryColor: store.primaryColor,
           secondaryColor: store.secondaryColor,
           accentColor: store.accentColor,
         }}
+        publicUrl={publicUrl}
+        published={store.isPublished}
       />
-      <section className="surface-card publication-status">
-        <div>
-          <h2>Publication de ta boutique</h2>
-          <p className="dashboard-copy">
-            Adresse publique : <strong>prestafrik.com/boutique/{store.slug}</strong>
-          </p>
-          {!session.user.emailVerified && (
-            <p className="notice notice-warning">
-              Confirme ton adresse e-mail avant de publier ta boutique.
-            </p>
-          )}
-        </div>
-        {store.isPublished && (
-          <form action={unpublishStore}>
-            <SubmitButton className="secondary-button" pendingLabel="Mise en brouillon…">
-              Mettre en brouillon
-            </SubmitButton>
-          </form>
-        )}
-      </section>
-    </DashboardShell>
+    </VendorShell>
   );
-}
-
-function statusMessage(status: string) {
-  if (status === "publication") return "Tout est prêt : ta boutique est publiée !";
-  if (status === "brouillon") return "Ta boutique est maintenant en brouillon.";
-  if (status === "couleurs") return "Les couleurs de PrestAfrik sont rétablies.";
-  return "Modifications enregistrées.";
 }

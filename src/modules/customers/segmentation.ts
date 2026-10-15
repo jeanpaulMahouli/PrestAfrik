@@ -8,7 +8,7 @@ export type CustomerSegmentFacts = {
 
 export function customerSegmentLabel(customer: CustomerSegmentFacts, now = new Date()) {
   if (customer.nextReminderAt && customer.nextReminderAt <= now) return "À recontacter";
-  if (customer.hasUnconfirmedOrder) return "Commande non confirmée";
+  if (customer.hasUnconfirmedOrder) return "Commande à valider";
   if (customer.nonCancelledOrderCount >= 3) return "Client régulier";
   if (
     customer.firstOrderAt &&
