@@ -10,6 +10,7 @@ import { requireStorePermission } from "@/modules/stores/context";
 import { getStoreSubscriptionAccess } from "@/modules/subscriptions/service";
 import { removeWhatsappApiAction, saveWhatsappApiAction, testWhatsappConnectionAction } from "@/modules/whatsapp/actions";
 import { getWhatsappSettings } from "@/modules/whatsapp/settings";
+import { BackIcon } from "@/components/ui/icons";
 
 export const metadata = { title: "API WhatsApp Business" };
 
@@ -38,7 +39,7 @@ export default async function WhatsappApiPage({ searchParams }: PageProps<"/dash
   return (
     <VendorShell>
       <StoreSectionNav current="/dashboard/boutique/whatsapp" />
-      <Link className="v-back-link" href="/dashboard/boutique/whatsapp">← Messages WhatsApp</Link>
+      <Link className="v-back-link" href="/dashboard/boutique/whatsapp"><BackIcon /> Messages WhatsApp</Link>
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">API WhatsApp Business</h1>

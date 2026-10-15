@@ -376,6 +376,25 @@ async function main() {
       await prisma.deliveryZone.create({ data: { storeId: store.id, city: demo.city, name: "Toute la ville", feeXaf: 2500, estimatedDelay: "24 à 72 h" } }),
     ];
 
+    // Assistant de la boutique activé sur la première boutique (démonstration du widget).
+    if (storeIndex === 0) {
+      await prisma.storeChatConfig.create({
+        data: {
+          storeId: store.id,
+          enabled: true,
+          welcomeMessage: "Bonjour et bienvenue chez {boutique} ! Je suis l’assistant de la boutique. Comment puis-je vous aider ?",
+          transferTemplate: "Bonjour {boutique}, {question}. Merci !",
+        },
+      });
+      await prisma.storeChatQuickReply.createMany({
+        data: [
+          { storeId: store.id, position: 0, label: "Livraison et délais", answer: `Nous livrons à ${demo.city} dès 1 000 FCFA, sous 24 h dans le centre. Le prix exact s’affiche avant de commander.` },
+          { storeId: store.id, position: 1, label: "Moyens de paiement", answer: "Vous payez à la livraison, en espèces ou par mobile money." },
+          { storeId: store.id, position: 2, label: "Échanges", answer: "Un article ne vous va pas ? Écrivez-nous sous 48 h, nous trouvons une solution." },
+        ],
+      });
+    }
+
     // Clients.
     const customers = [];
     for (let customerIndex = 0; customerIndex < 20; customerIndex += 1) {

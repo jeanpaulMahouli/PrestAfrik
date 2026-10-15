@@ -1,105 +1,90 @@
 import Link from "next/link";
-import Image from "next/image";
-import { StoreTheme } from "@prisma/client";
-import type { CSSProperties } from "react";
-import { StorefrontCartLink } from "@/components/storefront/storefront-cart-link";
+import type { StoreTheme } from "@prisma/client";
+import type { CSSProperties, ReactNode } from "react";
+import { StoreChatWidget, type ChatWidgetConfig } from "@/components/storefront/store-chat-widget";
+import { StorefrontCartBar, StorefrontCartLink } from "@/components/storefront/storefront-cart-link";
 import { StoreCartProvider } from "@/components/storefront/store-cart-provider";
-
-type StorefrontStyle = CSSProperties & {
-  "--store-primary": string;
-  "--store-secondary": string;
-  "--store-accent": string;
-  "--store-on-primary": string;
-  "--store-on-secondary": string;
-};
+import { StoreImage } from "@/components/ui/store-image";
 
 type StorefrontShellProps = {
-  children: React.ReactNode;
-  storeId: string;
-  storeName: string;
-  storeLogoUrl: string | null;
-  storeCity: string | null;
-  storeSlug: string;
-  storeTheme: StoreTheme;
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-  primaryTextColor: string;
-  secondaryTextColor: string;
+  children: ReactNode;
+  store: {
+    id: string;
+    name: string;
+    slug: string;
+    city: string | null;
+    logoUrl: string | null;
+    theme: StoreTheme;
+    colors: { primary: string; onPrimary: string; secondary: string; onSecondary: string; accent: string };
+  };
+  pages: { title: string; slug: string }[];
+  chat: ChatWidgetConfig | null;
   isPreview?: boolean;
   isPaused?: boolean;
 };
 
-export function StorefrontShell({
-  children,
-  storeId,
-  storeName,
-  storeLogoUrl,
-  storeCity,
-  storeSlug,
-  storeTheme,
-  primaryColor,
-  secondaryColor,
-  accentColor,
-  primaryTextColor,
-  secondaryTextColor,
-  isPreview = false,
-  isPaused = false,
-}: StorefrontShellProps) {
-  const initials = storeName
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toLocaleUpperCase("fr-FR"))
-    .join("");
+export function storeInitials(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr-FR")).join("") || "B";
+}
+
+/** Cadre commun de la vitrine : en-tête, contenu, pied de page, panier et assistant. Thème réel appliqué par classe. */
+export function StorefrontShell({ children, store, pages, chat, isPreview = false, isPaused = false }: StorefrontShellProps) {
+  const style = {
+    "--store-primary": store.colors.primary,
+    "--store-on-primary": store.colors.onPrimary,
+    "--store-secondary": store.colors.secondary,
+    "--store-on-secondary": store.colors.onSecondary,
+    "--store-accent": store.colors.accent,
+  } as CSSProperties;
+  const home = `/boutique/${store.slug}`;
 
   return (
-    <StoreCartProvider storeId={storeId}>
-      <div
-        className={`storefront-page theme-${storeTheme.toLowerCase().replaceAll("_", "-")}`}
-        style={{
-          "--store-primary": primaryColor,
-          "--store-secondary": secondaryColor,
-          "--store-accent": accentColor,
-          "--store-on-primary": primaryTextColor,
-          "--store-on-secondary": secondaryTextColor,
-        } as StorefrontStyle}
-      >
-        <header className="storefront-header">
-          <Link className="storefront-brand" href={`/boutique/${storeSlug}`}>
-            <span aria-hidden="true" className="storefront-logo">
-              {storeLogoUrl ? (
-                <Image alt="" height={48} src={storeLogoUrl} width={48} />
-              ) : (
-                initials || "B"
-              )}
+    <StoreCartProvider storeId={store.id}>
+      <div className={`sf sf-theme-${store.theme.toLowerCase().replaceAll("_", "-")}`} style={style}>
+        <a className="sf-skip" href="#contenu">Aller au contenu</a>
+        <header className="sf-header">
+          <Link className="sf-brand" href={home}>
+            <span aria-hidden="true" className="sf-logo">
+              {store.logoUrl ? <StoreImage alt="" height={88} src={store.logoUrl} width={88} /> : storeInitials(store.name)}
             </span>
-            <span>{storeName}</span>
+            <span className="sf-brand-text">
+              <strong>{store.name}</strong>
+              {store.city && <small>{store.city}</small>}
+            </span>
           </Link>
-          <span className="storefront-city">{storeCity}</span>
-          {!isPreview && !isPaused && <StorefrontCartLink storeSlug={storeSlug} />}
+          {!isPreview && !isPaused && <StorefrontCartLink storeSlug={store.slug} />}
         </header>
         {isPreview && (
-          <div className="storefront-preview-notice" role="status">
-            Aperçu privé : ta boutique n’est pas encore publiée et seul un membre connecté peut la voir.
-          </div>
+          <p className="sf-notice sf-notice-preview" role="status">
+            Aperçu privé : votre boutique n’est pas encore publiée. Vous seul la voyez.
+          </p>
         )}
-        {isPaused ? (
-          <main className="storefront-content">
-            <section aria-labelledby="store-paused-title" className="store-paused-notice notice" role="status">
+        <div className="sf-main" id="contenu">
+          {isPaused ? (
+            <section aria-labelledby="store-paused-title" className="sf-empty">
               <h1 id="store-paused-title">Cette boutique est temporairement indisponible</h1>
-              <p>Le propriétaire doit renouveler son abonnement pour rétablir l’accès à sa vitrine.</p>
+              <p>Revenez un peu plus tard : elle sera bientôt de nouveau ouverte.</p>
             </section>
-          </main>
-        ) : children}
-        <footer className="storefront-footer">
-          <p>Tu commandes directement auprès de {storeName}.</p>
-          <Link href={`/boutique/${storeSlug}`}>Retour à la boutique</Link>
-          <nav aria-label="Informations légales" className="storefront-legal-links">
+          ) : (
+            children
+          )}
+        </div>
+        <footer className="sf-footer">
+          {pages.length > 0 && (
+            <nav aria-label="Informations de la boutique" className="sf-footer-pages">
+              {pages.map((page) => (
+                <Link href={`${home}/page/${page.slug}`} key={page.slug}>{page.title}</Link>
+              ))}
+            </nav>
+          )}
+          <nav aria-label="Informations légales" className="sf-footer-legal">
             <Link href="/legal/conditions-de-vente">Conditions de vente</Link>
             <Link href="/legal/politique-de-confidentialite">Confidentialité</Link>
           </nav>
-          <small>Propulsé par PrestAfrik</small>
+          <small>Vous commandez directement auprès de {store.name}. Propulsé par PrestAfrik.</small>
         </footer>
+        {!isPreview && !isPaused && <StorefrontCartBar storeSlug={store.slug} />}
+        {!isPaused && chat && <StoreChatWidget config={chat} logoUrl={store.logoUrl} storeInitials={storeInitials(store.name)} storeName={store.name} storeSlug={store.slug} />}
       </div>
     </StoreCartProvider>
   );

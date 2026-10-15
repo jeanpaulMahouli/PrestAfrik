@@ -7,6 +7,7 @@ import { SocialShare } from "@/components/shared/social-share";
 import { CopyButton } from "@/components/ui/copy-button";
 import { WizardStepForm } from "@/components/wizard/wizard-step-form";
 import { publishFromWizard } from "@/modules/stores/wizard-actions";
+import { CheckIcon } from "@/components/ui/icons";
 
 type RecapItem = { label: string; value: string; step: number; done: boolean };
 
@@ -25,7 +26,7 @@ export function PublishStep({ storeId, recap, missing, askDeliveryFee, city }: {
           <ul className="wizard-recap">
             {recap.map((item) => (
               <li className={item.done ? "is-done" : ""} key={item.label}>
-                <span aria-hidden="true" className="wizard-recap-dot">{item.done ? "✓" : "!"}</span>
+                <span aria-hidden="true" className="wizard-recap-dot">{item.done ? <CheckIcon size={11} /> : "!"}</span>
                 <span>
                   <strong>{item.label}</strong>
                   <small>{item.value}</small>
@@ -73,7 +74,7 @@ export function PublishedScreen({ storeName, storeUrl }: { storeName: string; st
 
   return (
     <section aria-labelledby="published-title" className="wizard-card wizard-published">
-      <span aria-hidden="true" className="wizard-published-icon">✓</span>
+      <span aria-hidden="true" className="wizard-published-icon"><CheckIcon size={24} /></span>
       <h1 id="published-title">Félicitations, votre boutique prend vie !</h1>
       <p className="wizard-subtitle">
         Elle est maintenant visible par vos clients. Partagez-la sans attendre : le premier client est peut-être déjà en train de la chercher.

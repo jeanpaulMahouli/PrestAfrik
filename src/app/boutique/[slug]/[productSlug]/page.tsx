@@ -30,7 +30,7 @@ export default async function PublicProductPage({
 
   return (
     <ProductDetail
-      canOrder={!store.isPreview}
+      canOrder={!store.isPreview && !store.subscriptionPaused}
       product={product}
       productUrl={productUrl}
       storeName={store.name}

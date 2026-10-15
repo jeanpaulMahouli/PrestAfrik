@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState } from "react";
 import { dialOptionFor, parsePhone, phoneDialOptions } from "@/lib/phone";
+import { CheckIcon } from "@/components/ui/icons";
 
 type PhoneInputProps = {
   label: string;
@@ -71,7 +72,7 @@ export function PhoneInput({ label, name, defaultCountry = "CM", defaultNational
           type="tel"
           value={national}
         />
-        {result.ok && <span aria-hidden="true" className="phone-check">✓</span>}
+        {result.ok && <span aria-hidden="true" className="phone-check"><CheckIcon /></span>}
       </div>
       <span className={showError ? "v-field-error" : "v-field-help"} id={`${id}-message`} role={showError ? "alert" : undefined}>
         {showError ? message : help}

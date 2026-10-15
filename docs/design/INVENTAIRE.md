@@ -35,15 +35,15 @@ Généré depuis `docs/design/reference/inventaire.json` (extraction : `node scr
 | Espace vendeurs | Assistant WhatsApp de la boutique | 1280×2060 | [capture](reference/espace-vendeurs/17-assistant-whatsapp-de-la-boutique/capture.png) | `/dashboard/boutique/assistant` | Codé, à comparer |
 | Espace vendeurs | Équipe | 1280×760 | [capture](reference/espace-vendeurs/18-equipe/capture.png) | `/dashboard/equipe` | À refaire |
 | Espace vendeurs | Abonnement | 1280×860 | [capture](reference/espace-vendeurs/19-abonnement/capture.png) | `/dashboard/abonnement` | À refaire |
-| Boutique publique (client) | Boutique publique | 390×844 | [capture](reference/boutique-publique-client/01-boutique-publique/capture.png) | `/boutique/[slug]…` | À faire |
-| Boutique publique (client) | Boutique : assistant WhatsApp | 390×980 | [capture](reference/boutique-publique-client/02-boutique-assistant-whatsapp/capture.png) | `/boutique/[slug]…` | À faire |
-| Boutique publique (client) | Fiche produit | 390×844 | [capture](reference/boutique-publique-client/03-fiche-produit/capture.png) | `/boutique/[slug]…` | À faire |
-| Boutique publique (client) | Panier | 390×844 | [capture](reference/boutique-publique-client/04-panier/capture.png) | `/boutique/[slug]…` | À faire |
-| Boutique publique (client) | Commande : formulaire incomplet | 390×1040 | [capture](reference/boutique-publique-client/05-commande-formulaire-incomplet/capture.png) | `/boutique/[slug]…` | À faire |
-| Boutique publique (client) | Commande : formulaire complet | 390×1040 | [capture](reference/boutique-publique-client/06-commande-formulaire-complet/capture.png) | `/boutique/[slug]…` | À faire |
-| Boutique publique (client) | Résultat de commande (lien wa.me) | 390×844 | [capture](reference/boutique-publique-client/07-resultat-de-commande-lien-wa-me/capture.png) | `/boutique/[slug]…` | À faire |
-| Boutique publique (client) | Résultat de commande | 390×844 | [capture](reference/boutique-publique-client/08-resultat-de-commande/capture.png) | `/boutique/[slug]…` | À faire |
-| Boutique publique (client) | Suivi de commande | 390×844 | [capture](reference/boutique-publique-client/09-suivi-de-commande/capture.png) | `/boutique/[slug]…` | À faire |
+| Boutique publique (client) | Boutique publique | 390×844 | [capture](reference/boutique-publique-client/01-boutique-publique/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
+| Boutique publique (client) | Boutique : assistant WhatsApp | 390×980 | [capture](reference/boutique-publique-client/02-boutique-assistant-whatsapp/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
+| Boutique publique (client) | Fiche produit | 390×844 | [capture](reference/boutique-publique-client/03-fiche-produit/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
+| Boutique publique (client) | Panier | 390×844 | [capture](reference/boutique-publique-client/04-panier/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
+| Boutique publique (client) | Commande : formulaire incomplet | 390×1040 | [capture](reference/boutique-publique-client/05-commande-formulaire-incomplet/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
+| Boutique publique (client) | Commande : formulaire complet | 390×1040 | [capture](reference/boutique-publique-client/06-commande-formulaire-complet/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
+| Boutique publique (client) | Résultat de commande (lien wa.me) | 390×844 | [capture](reference/boutique-publique-client/07-resultat-de-commande-lien-wa-me/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
+| Boutique publique (client) | Résultat de commande | 390×844 | [capture](reference/boutique-publique-client/08-resultat-de-commande/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
+| Boutique publique (client) | Suivi de commande | 390×844 | [capture](reference/boutique-publique-client/09-suivi-de-commande/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
 | Administration | Administration PrestAfrik | 1280×900 | [capture](reference/administration/01-administration-prestafrik/capture.png) | `/admin…` | À faire |
 | Administration | Administration · Abonnements | 1280×900 | [capture](reference/administration/02-administration-abonnements/capture.png) | `/admin…` | À faire |
 | Administration | Administration · Messages échoués | 1280×900 | [capture](reference/administration/03-administration-messages-echoues/capture.png) | `/admin…` | À faire |

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createContext, useContext, useState, type CSSProperties, type ReactNode } from "react";
 import { textColorFor } from "@/lib/contrast";
+import { CheckIcon } from "@/components/ui/icons";
 
 export type PreviewDraft = {
   name: string;
@@ -80,7 +81,7 @@ export function WizardShell({ steps, current, reached, storeId, initialDraft, sh
                 const done = step < reached && step !== current;
                 const content = (
                   <>
-                    <span aria-hidden="true" className="wizard-step-dot">{done ? "✓" : step}</span>
+                    <span aria-hidden="true" className="wizard-step-dot">{done ? <CheckIcon size={11} /> : step}</span>
                     {label}
                     {done && <span className="visually-hidden"> (terminée)</span>}
                   </>

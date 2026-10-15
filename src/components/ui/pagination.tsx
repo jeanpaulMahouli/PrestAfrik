@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BackIcon } from "@/components/ui/icons";
 
 type PaginationProps = {
   page: number;
@@ -22,10 +23,10 @@ export function Pagination({ page, pageSize, total, href }: PaginationProps) {
       <div>
         {page > 1 ? (
           <Link className="btn btn-secondary btn-sm" href={href(page - 1)} rel="prev">
-            ← Précédent
+            <BackIcon size={12} /> Précédent
           </Link>
         ) : (
-          <span aria-disabled="true" className="btn btn-secondary btn-sm">← Précédent</span>
+          <span aria-disabled="true" className="btn btn-secondary btn-sm"><BackIcon size={12} /> Précédent</span>
         )}
         <span className="pagination-current">
           Page {page} sur {pages}

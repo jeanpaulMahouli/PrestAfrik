@@ -3,6 +3,7 @@
 import { startTransition, useActionState, useState } from "react";
 import { saveStorePage, type PageSaveState } from "@/modules/pages/actions";
 import { blockLabels, buttonTargets, emptyBlock, type PageBlock } from "@/modules/pages/blocks";
+import { uuid } from "@/lib/uuid";
 
 type EditorBlock = PageBlock & { uid: string; uploading?: boolean; error?: string };
 
@@ -38,7 +39,7 @@ function summary(block: PageBlock) {
 /** Éditeur de page en blocs (maquette « Pages éditoriales »). */
 export function PageEditor({ kind, initialTitle, initialBlocks, previewHref }: { kind: string; initialTitle: string; initialBlocks: PageBlock[]; previewHref: string | null }) {
   const [title, setTitle] = useState(initialTitle);
-  const [blocks, setBlocks] = useState<EditorBlock[]>(() => initialBlocks.map((block) => ({ ...block, uid: crypto.randomUUID() })));
+  const [blocks, setBlocks] = useState<EditorBlock[]>(() => initialBlocks.map((block) => ({ ...block, uid: uuid() })));
   const [editing, setEditing] = useState<string | null>(null);
   const [dragged, setDragged] = useState<number | null>(null);
   const [state, action, pending] = useActionState<PageSaveState, FormData>(saveStorePage, null);
@@ -198,7 +199,7 @@ export function PageEditor({ kind, initialTitle, initialBlocks, previewHref }: {
           <button
             key={type}
             onClick={() => {
-              const block = { ...emptyBlock(type), uid: crypto.randomUUID() } as EditorBlock;
+              const block = { ...emptyBlock(type), uid: uuid() } as EditorBlock;
               setBlocks((current) => [...current, block]);
               setEditing(block.uid);
             }}

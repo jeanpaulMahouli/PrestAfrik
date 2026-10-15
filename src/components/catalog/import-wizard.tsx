@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { startTransition, useActionState, useMemo, useRef, useState } from "react";
 import { importProducts, type ImportState } from "@/modules/catalog/import-actions";
+import { CheckIcon } from "@/components/ui/icons";
 
 const templateCsv =
   "reference;nom;description;categorie;prix;prix_promo;disponibilite;stock\r\nRobe-001;Robe wax Akwa;Robe en pagne wax, coupe droite;Robes;18000;;disponible;12\r\nSac-007;Sac en raphia;;Sacs;9500;8500;sur commande;\r\n";
@@ -78,7 +79,7 @@ export function ImportWizard() {
       <ol aria-label="Étapes de l’import" className="stepper">
         {["Fichier", "Aperçu", "Confirmation"].map((label, index) => (
           <li aria-current={step === index + 1 ? "step" : undefined} className={step > index + 1 ? "is-done" : step === index + 1 ? "is-current" : ""} key={label}>
-            <span aria-hidden="true">{step > index + 1 ? "✓" : index + 1}</span>
+            <span aria-hidden="true">{step > index + 1 ? <CheckIcon size={12} /> : index + 1}</span>
             {label}
           </li>
         ))}

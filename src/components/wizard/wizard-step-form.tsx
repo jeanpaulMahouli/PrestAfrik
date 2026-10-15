@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { startTransition, useActionState, type ReactNode } from "react";
 import type { WizardState } from "@/modules/stores/wizard-actions";
+import { BackIcon } from "@/components/ui/icons";
 
 type Action = (previous: WizardState, formData: FormData) => Promise<WizardState>;
 
@@ -42,9 +43,9 @@ export function WizardStepForm({ action, storeId, title, subtitle, backHref, sub
       {children(fieldError, pending)}
       <div className="wizard-actions">
         {backHref ? (
-          <Link className="btn btn-secondary" href={backHref}>← Retour</Link>
+          <Link className="btn btn-secondary" href={backHref}><BackIcon /> Retour</Link>
         ) : (
-          <Link className="btn btn-secondary" href="/dashboard">← Retour</Link>
+          <Link className="btn btn-secondary" href="/dashboard"><BackIcon /> Retour</Link>
         )}
         <span className="wizard-actions-end">
           {secondary}

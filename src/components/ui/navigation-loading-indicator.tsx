@@ -56,9 +56,10 @@ export function NavigationLoadingIndicator() {
     function handleSubmit(event: SubmitEvent) {
       const form = event.target;
       if (!(form instanceof HTMLFormElement)) return;
-      const action = new URL(form.action, window.location.href);
+      // getAttribute : un champ nommé « method » ou « action » masquerait les propriétés du formulaire.
+      const action = new URL(form.getAttribute("action") ?? "", window.location.href);
       if (action.origin !== window.location.origin) return;
-      if (form.method.toLowerCase() === "get" || action.pathname.startsWith("/api/")) {
+      if ((form.getAttribute("method") ?? "get").toLowerCase() === "get" || action.pathname.startsWith("/api/")) {
         showAfterDelay();
       }
     }

@@ -8,6 +8,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { texts } from "@/config/texts";
 import { authClient } from "@/modules/auth/client";
 import { checkPassword, passwordStrength } from "@/modules/auth/password-policy";
+import { CheckIcon } from "@/components/ui/icons";
 
 type AuthFormProps = {
   mode: "sign-in" | "sign-up";
@@ -108,7 +109,7 @@ export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
               required
               value={name}
             />
-            {nameValid && <span aria-hidden="true" className="auth-input-check">✓</span>}
+            {nameValid && <span aria-hidden="true" className="auth-input-check"><CheckIcon /></span>}
           </div>
           {showNameError && <p className="auth-field-error" id={`${ids.name}-error`}>{t.signUp.nameInvalid}</p>}
         </div>
@@ -135,7 +136,7 @@ export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
             type="email"
             value={email}
           />
-          {emailValid && <span aria-hidden="true" className="auth-input-check">✓</span>}
+          {emailValid && <span aria-hidden="true" className="auth-input-check"><CheckIcon /></span>}
         </div>
         <p
           aria-live="polite"

@@ -23,6 +23,7 @@ import { customerNameIsMateriallyDifferent } from "@/modules/customers/validatio
 import { orderEventLabel } from "@/modules/orders/queries";
 import { requireStorePermission } from "@/modules/stores/context";
 import { buildWaMeUrl } from "@/modules/whatsapp/wa-me";
+import { BackIcon } from "@/components/ui/icons";
 
 export const metadata = { title: "Fiche client" };
 
@@ -46,7 +47,7 @@ export default async function CustomerDetailPage({ params, searchParams }: PageP
 
   return (
     <VendorShell>
-      <Link className="v-back-link" href="/dashboard/clients">← Tous les clients</Link>
+      <Link className="v-back-link" href="/dashboard/clients"><BackIcon /> Tous les clients</Link>
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">{customer.name}</h1>

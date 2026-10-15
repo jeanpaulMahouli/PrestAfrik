@@ -9,6 +9,7 @@ import { getOrderDetail } from "@/modules/orders/queries";
 import { orderStage } from "@/modules/orders/state-machine";
 import { requireStorePermission } from "@/modules/stores/context";
 import { getWhatsappSettings } from "@/modules/whatsapp/settings";
+import { BackIcon } from "@/components/ui/icons";
 
 const successMessages: Record<string, string> = {
   validee: "Commande validée ! Son montant est compté dans l’argent reçu.",
@@ -29,7 +30,7 @@ export default async function OrderDetailPage({ params, searchParams }: PageProp
   return (
     <VendorShell>
       <Link className="v-back-link" href="/dashboard/commandes">
-        ← Toutes les commandes
+        <BackIcon /> Toutes les commandes
       </Link>
       <div className="v-page-header">
         <div>

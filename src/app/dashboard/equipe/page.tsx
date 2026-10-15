@@ -14,6 +14,7 @@ import { requireStorePermission } from "@/modules/stores/context";
 import Link from "next/link";
 import { getStoreSubscriptionAccess } from "@/modules/subscriptions/service";
 import { hasSmtpConfig } from "@/modules/email/config";
+import { CheckIcon } from "@/components/ui/icons";
 
 const roles = [
   StoreRole.OWNER,
@@ -308,7 +309,7 @@ export default async function TeamPage({
                     return (
                       <td key={role}>
                         {permissions.length
-                          ? <span aria-label={`${roleLabels[role]} : autorisé`} className="team-permission-yes">✓</span>
+                          ? <span aria-label={`${roleLabels[role]} : autorisé`} className="team-permission-yes"><CheckIcon /></span>
                           : <span aria-label={`${roleLabels[role]} : non autorisé`} className="team-permission-no">—</span>}
                       </td>
                     );

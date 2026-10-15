@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { texts } from "@/config/texts";
+import { CheckIcon } from "@/components/ui/icons";
 
 type AuthShellProps = {
   children: React.ReactNode;
@@ -32,7 +33,7 @@ export function AuthShell({ children, storyTitle, storyText, benefits }: AuthShe
             <ul className="auth-benefits">
               {benefits.map((benefit) => (
                 <li key={benefit}>
-                  <span aria-hidden="true">✓</span>
+                  <span aria-hidden="true"><CheckIcon size={12} /></span>
                   {benefit}
                 </li>
               ))}

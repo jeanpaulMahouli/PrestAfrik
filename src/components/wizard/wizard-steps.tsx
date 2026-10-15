@@ -17,6 +17,7 @@ import {
 } from "@/modules/stores/wizard-actions";
 import { useWizardPreview } from "@/components/wizard/wizard-shell";
 import { WizardStepForm } from "@/components/wizard/wizard-step-form";
+import { CheckIcon } from "@/components/ui/icons";
 
 const back = (storeId: string | null, step: number) => (storeId ? `/boutiques/nouvelle?boutique=${storeId}&etape=${step}` : undefined);
 
@@ -76,7 +77,7 @@ export function NameStep({ storeId, initialName, initialSlug, city }: { storeId:
                 value={name}
               />
               <small>{name.length} / 60</small>
-              {name.trim().length >= 2 && <span aria-hidden="true">✓</span>}
+              {name.trim().length >= 2 && <CheckIcon />}
             </span>
             {fieldError("name") && <span className="v-field-error">{fieldError("name")}</span>}
           </label>
@@ -97,7 +98,7 @@ export function NameStep({ storeId, initialName, initialSlug, city }: { storeId:
                 spellCheck={false}
                 value={slug}
               />
-              {status.state === "ok" && <span aria-hidden="true">✓</span>}
+              {status.state === "ok" && <CheckIcon />}
             </span>
             <span aria-live="polite" className={status.state === "error" || fieldError("slug") ? "v-field-error" : status.state === "ok" ? "wizard-success" : "v-field-help"} id="slug-status">
               {fieldError("slug") ??

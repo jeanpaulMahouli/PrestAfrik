@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 import {
   ConsentType,
   DeliveryStatus,
@@ -12,15 +12,12 @@ import {
   type Product,
   type ProductVariant,
 } from "@prisma/client";
-import type { Store } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { customerNameIsMateriallyDifferent } from "@/modules/customers/validation";
 import { isStoreSubscriptionPaused, lockSubscriptionForUpdate } from "@/modules/subscriptions/service";
 import type { CartLine } from "@/components/storefront/store-cart-provider";
 
 export type { CartLine } from "@/components/storefront/store-cart-provider";
-
-const quoteLifetimeMs = 5 * 60 * 1000;
 
 export type DeliveryMethod = "DELIVERY" | "PICKUP";
 
@@ -41,17 +38,6 @@ export type CurrentLine = {
   variantTracksInventory: boolean;
 };
 
-type QuotePayload = {
-  storeId: string;
-  deliveryMethod: DeliveryMethod;
-  city: string;
-  neighborhood: string;
-  subtotalXaf: number;
-  deliveryFeeXaf: number | null;
-  deliveryZoneId: string | null;
-  expiresAt: number;
-};
-
 function signingSecret() {
   const secret =
     process.env.BETTER_AUTH_SECRET ??
@@ -59,51 +45,9 @@ function signingSecret() {
       ? undefined
       : "prestafrik-local-development-only-secret-0001");
   if (!secret || secret.length < 32) {
-    throw new Error("Configure une clé serveur d’au moins 32 caractères pour les devis de commande.");
+    throw new Error("Configure une clé serveur d’au moins 32 caractères pour les commandes.");
   }
   return secret;
-}
-
-function sign(value: string) {
-  return createHmac("sha256", signingSecret()).update(value).digest();
-}
-
-function makeQuoteToken(payload: QuotePayload) {
-  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  return `${encoded}.${sign(encoded).toString("base64url")}`;
-}
-
-function verifyQuoteToken(token: string, expected: Omit<QuotePayload, "expiresAt">) {
-  const [encoded, signature, ...rest] = token.split(".");
-  if (!encoded || !signature || rest.length) return false;
-
-  const received = Buffer.from(signature, "base64url");
-  const expectedSignature = sign(encoded);
-  if (
-    received.length !== expectedSignature.length ||
-    !timingSafeEqual(received, expectedSignature)
-  ) {
-    return false;
-  }
-
-  let payload: QuotePayload;
-  try {
-    payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as QuotePayload;
-  } catch {
-    return false;
-  }
-
-  return (
-    payload.storeId === expected.storeId &&
-    payload.deliveryMethod === expected.deliveryMethod &&
-    payload.city === expected.city &&
-    payload.neighborhood === expected.neighborhood &&
-    payload.subtotalXaf === expected.subtotalXaf &&
-    payload.deliveryFeeXaf === expected.deliveryFeeXaf &&
-    payload.deliveryZoneId === expected.deliveryZoneId &&
-    Number.isSafeInteger(payload.expiresAt) &&
-    payload.expiresAt >= Date.now()
-  );
 }
 
 function linePrice(product: Product, variant: ProductVariant | undefined) {
@@ -116,13 +60,13 @@ export async function getCurrentCheckoutLines(
   requestedItems: CartLine[],
 ): Promise<CurrentLine[]> {
   if (requestedItems.length === 0 || requestedItems.length > 30) {
-    throw new CheckoutProblem("Ton panier ne contient aucun produit à commander.");
+    throw new CheckoutProblem("Votre panier ne contient aucun produit à commander.");
   }
 
   const consolidated = new Map<string, CartLine>();
   for (const item of requestedItems) {
     if (!Number.isSafeInteger(item.quantity) || item.quantity < 1 || item.quantity > 25) {
-      throw new CheckoutProblem("Vérifie les quantités de ton panier.");
+      throw new CheckoutProblem("Vérifiez les quantités de votre panier.");
     }
     const key = `${item.productId}:${item.variantId ?? ""}`;
     const existing = consolidated.get(key);
@@ -142,13 +86,13 @@ export async function getCurrentCheckoutLines(
   });
   const byId = new Map(products.map((product) => [product.id, product]));
   if (byId.size !== new Set(Array.from(consolidated.values(), ({ productId }) => productId)).size) {
-    throw new CheckoutProblem("Un produit de ton panier n’est plus disponible. Mets ton panier à jour.");
+    throw new CheckoutProblem("Un produit de votre panier n’est plus disponible. Mettez votre panier à jour.");
   }
 
   const lines: CurrentLine[] = [];
   for (const item of consolidated.values()) {
     const product = byId.get(item.productId);
-    if (!product) throw new CheckoutProblem("Un produit de ton panier n’est plus disponible.");
+    if (!product) throw new CheckoutProblem("Un produit de votre panier n’est plus disponible.");
     const variant = item.variantId
       ? product.variants.find(({ id }) => id === item.variantId)
       : undefined;
@@ -191,97 +135,41 @@ export async function getCurrentCheckoutLines(
   return lines;
 }
 
-export async function resolveDeliveryQuote({
-  store,
-  lines,
+/**
+ * Livraison choisie par le client : une zone active à frais fixes, ou le retrait (ADR-013).
+ * Les frais sont connus avant la commande ; aucune négociation.
+ */
+export async function resolveDelivery({
+  storeId,
   deliveryMethod,
-  city,
-  neighborhood,
+  zoneId,
 }: {
-  store: Pick<Store, "id">;
-  lines: CurrentLine[];
+  storeId: string;
   deliveryMethod: DeliveryMethod;
-  city: string;
-  neighborhood: string;
+  zoneId: string | null;
 }) {
-  const subtotalXaf = lines.reduce((total, { lineTotalXaf }) => total + lineTotalXaf, 0);
-  if (!Number.isSafeInteger(subtotalXaf)) {
-    throw new CheckoutProblem("Le montant de ta commande est trop élevé.");
-  }
-
+  const store = await prisma.store.findUniqueOrThrow({ where: { id: storeId }, select: { city: true, pickupEnabled: true } });
   if (deliveryMethod === "PICKUP") {
-    const payload: QuotePayload = {
-      storeId: store.id,
-      deliveryMethod,
-      city,
-      neighborhood,
-      subtotalXaf,
-      deliveryFeeXaf: 0,
-      deliveryZoneId: null,
-      expiresAt: Date.now() + quoteLifetimeMs,
-    };
-    return {
-      ...payload,
-      totalXaf: subtotalXaf,
-      quoteToken: makeQuoteToken(payload),
-    };
+    if (!store.pickupEnabled) throw new CheckoutProblem("Le retrait en boutique n’est pas proposé. Choisissez une zone de livraison.");
+    return { zoneId: null, city: store.city ?? "Retrait", neighborhood: null, feeXaf: 0 };
   }
-
-  const matchingZone = await prisma.deliveryZone.findFirst({
-    where: {
-      storeId: store.id,
-      city: { equals: city, mode: "insensitive" },
-      name: { equals: neighborhood, mode: "insensitive" },
-      isActive: true,
-      feeXaf: { not: null },
-    },
-  });
-  const cityWideZone = matchingZone
-    ? null
-    : await prisma.deliveryZone.findFirst({
-        where: {
-          storeId: store.id,
-          city: { equals: city, mode: "insensitive" },
-          name: { in: ["Toute la ville", "*"] },
-          isActive: true,
-          feeXaf: { not: null },
-        },
-      });
-  const deliveryZone = matchingZone ?? cityWideZone;
-  // Frais fixes connus avant la commande (ADR-013) : sans zone, pas de livraison possible.
-  if (!deliveryZone || deliveryZone.feeXaf === null) {
-    throw new CheckoutProblem("La boutique ne livre pas encore ce quartier. Choisissez une zone de la liste ou le retrait en boutique.");
-  }
-  const deliveryFeeXaf = deliveryZone.feeXaf;
-  const payload: QuotePayload = {
-    storeId: store.id,
-    deliveryMethod,
-    city,
-    neighborhood,
-    subtotalXaf,
-    deliveryFeeXaf,
-    deliveryZoneId: deliveryZone.id,
-    expiresAt: Date.now() + quoteLifetimeMs,
-  };
-
-  return {
-    ...payload,
-    totalXaf: subtotalXaf + deliveryFeeXaf,
-    quoteToken: makeQuoteToken(payload),
-  };
+  const zone = zoneId
+    ? await prisma.deliveryZone.findFirst({ where: { id: zoneId, storeId, isActive: true, feeXaf: { not: null } }, select: { id: true, name: true, city: true, feeXaf: true } })
+    : null;
+  if (!zone || zone.feeXaf === null) throw new CheckoutProblem("Choisissez votre zone de livraison dans la liste.");
+  return { zoneId: zone.id, city: zone.city, neighborhood: zone.name, feeXaf: zone.feeXaf };
 }
 
 export async function checkoutOrder({
   storeSlug,
   customer,
   deliveryMethod,
-  city,
-  neighborhood,
+  zoneId,
   landmark,
   comment,
   items,
   idempotencyKey,
-  quoteToken,
+  expectedTotalXaf,
   clientIp,
 }: {
   storeSlug: string;
@@ -293,13 +181,13 @@ export async function checkoutOrder({
     marketingConsent: boolean;
   };
   deliveryMethod: DeliveryMethod;
-  city: string;
-  neighborhood: string;
+  zoneId: string | null;
   landmark: string | null;
   comment: string | null;
   items: CartLine[];
   idempotencyKey: string;
-  quoteToken: string;
+  /** Total affiché au client : la commande est refusée si le prix a changé entre-temps. */
+  expectedTotalXaf: number;
   clientIp: string;
 }) {
   const store = await prisma.store.findFirst({
@@ -322,25 +210,15 @@ export async function checkoutOrder({
   }
 
   const lines = await getCurrentCheckoutLines(store.id, items);
-  const quote = await resolveDeliveryQuote({
-    store,
-    lines,
-    deliveryMethod,
-    city,
-    neighborhood,
-  });
-  const expectedQuote = {
-    storeId: store.id,
-    deliveryMethod,
-    city,
-    neighborhood,
-    subtotalXaf: quote.subtotalXaf,
-    deliveryFeeXaf: quote.deliveryFeeXaf,
-    deliveryZoneId: quote.deliveryZoneId,
-  };
-  if (!verifyQuoteToken(quoteToken, expectedQuote)) {
-    throw new CheckoutProblem("Le prix ou la livraison a changé. Vérifie ton panier avant de commander.");
+  const delivery = await resolveDelivery({ storeId: store.id, deliveryMethod, zoneId });
+  const subtotalXaf = lines.reduce((total, line) => total + line.lineTotalXaf, 0);
+  const totalXaf = subtotalXaf + delivery.feeXaf;
+  if (!Number.isSafeInteger(totalXaf)) throw new CheckoutProblem("Le montant de la commande est trop élevé.");
+  if (totalXaf !== expectedTotalXaf) {
+    throw new CheckoutProblem("Le prix a changé depuis l’affichage. Vérifiez le nouveau total avant de commander.");
   }
+  const city = delivery.city;
+  const neighborhood = delivery.neighborhood ?? "";
 
   const idempotencyHash = createHmac("sha256", signingSecret()).update(clientIp).digest("hex");
   const windowStart = new Date(Math.floor(Date.now() / 900_000) * 900_000);
@@ -367,7 +245,7 @@ export async function checkoutOrder({
         RETURNING "count"
       `;
       if (accepted.length === 0) {
-        throw new CheckoutProblem("Tu as déjà envoyé plusieurs commandes. Réessaie dans quelques minutes.");
+        throw new CheckoutProblem("Vous avez déjà envoyé plusieurs commandes. Réessayez dans quelques minutes.");
       }
 
           const existingCustomer = await transaction.customer.findUnique({
@@ -422,7 +300,7 @@ export async function checkoutOrder({
         data: {
           storeId: store.id,
           customerId: customerRecord.id,
-          deliveryZoneId: quote.deliveryZoneId,
+          deliveryZoneId: delivery.zoneId,
           reference,
           idempotencyKey,
           trackingToken,
@@ -434,9 +312,9 @@ export async function checkoutOrder({
           landmark,
           deliveryComment: comment,
           deliveryMethod,
-          deliveryFeeXaf: quote.deliveryFeeXaf,
-          subtotalXaf: quote.subtotalXaf,
-          totalXaf: quote.totalXaf,
+          deliveryFeeXaf: delivery.feeXaf,
+          subtotalXaf,
+          totalXaf,
           // Pas de confirmation demandée au client : la commande arrive « Nouvelle » chez le vendeur.
           confirmationStatus: OrderConfirmationStatus.CONFIRMED,
           processingStatus: OrderProcessingStatus.TO_REVIEW,
@@ -466,7 +344,7 @@ export async function checkoutOrder({
         const orderItem = order.items.find(
           (item) => item.productId === line.productId && item.variantId === line.variantId,
         );
-        if (!orderItem) throw new CheckoutProblem("Impossible de réserver un produit de ta commande.");
+        if (!orderItem) throw new CheckoutProblem("Impossible de réserver un produit de votre commande.");
 
         const reserved = line.variantId && line.variantTracksInventory
           ? await transaction.$executeRaw`
@@ -488,7 +366,7 @@ export async function checkoutOrder({
                 AND "stockQuantity" >= "reservedQuantity" + ${line.quantity}
             `;
         if (reserved !== 1) {
-          throw new CheckoutProblem(`Le stock de « ${line.productName} » vient de changer. Mets ton panier à jour.`);
+          throw new CheckoutProblem(`Le stock de « ${line.productName} » vient de changer. Mettez votre panier à jour.`);
         }
 
         await transaction.stockReservation.create({
@@ -540,11 +418,4 @@ export async function checkoutOrder({
     }
     throw error;
   }
-}
-
-export async function checkQuote(
-  quoteToken: string,
-  expected: Omit<QuotePayload, "expiresAt">,
-) {
-  return verifyQuoteToken(quoteToken, expected);
 }

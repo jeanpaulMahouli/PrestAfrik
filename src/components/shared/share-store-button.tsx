@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { SocialShare } from "@/components/shared/social-share";
 import { Dialog } from "@/components/ui/dialog";
+import { copyText } from "@/lib/clipboard";
 
 type ShareStoreButtonProps = {
   storeName: string;
@@ -18,6 +19,7 @@ export function ShareStoreButton({ storeName, storeUrl, published, className = "
   const [open, setOpen] = useState(false);
   const [qr, setQr] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
   const message = `Bonjour ! Découvrez ma boutique ${storeName} : ${storeUrl}\nCommandez en quelques clics, paiement à la livraison.`;
 
   useEffect(() => {
@@ -28,13 +30,10 @@ export function ShareStoreButton({ storeName, storeUrl, published, className = "
   }, [open, qr, storeUrl]);
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(storeUrl);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2500);
-    } catch {
-      setCopied(false);
-    }
+    const done = await copyText(storeUrl);
+    setCopied(done);
+    setCopyFailed(!done);
+    window.setTimeout(() => setCopied(false), 2500);
   }
 
   return (
@@ -52,11 +51,12 @@ export function ShareStoreButton({ storeName, storeUrl, published, className = "
           <label className="v-field">
             Lien de votre boutique
             <span className="share-link-row">
-              <input readOnly value={storeUrl} />
-              <button className="btn btn-secondary" onClick={copy} type="button">
+              <input onFocus={(event) => event.currentTarget.select()} readOnly value={storeUrl} />
+              <button aria-live="polite" className="btn btn-secondary" onClick={copy} type="button">
                 {copied ? "Lien copié !" : "Copier"}
               </button>
             </span>
+            {copyFailed && <span className="v-field-help" role="status">Copie automatique bloquée par le navigateur : le lien est sélectionné, faites un appui long puis « Copier ».</span>}
           </label>
           <div className="share-qr">
             {qr ? (

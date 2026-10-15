@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+import { uuid } from "@/lib/uuid";
 
 // Gestion des photos produit (brief §6.4) : 5 photos au maximum, envoi immédiat de chaque fichier
 // avec sa progression, réorganisation (glisser ou boutons), texte alternatif, suppression.
@@ -71,7 +72,7 @@ export function PhotoManager({ initialPhotos, error }: { initialPhotos: Existing
     }
     setNotice(list.length > slots ? `Seules ${slots} photo${slots > 1 ? "s ont" : " a"} été ajoutée${slots > 1 ? "s" : ""} : 5 photos au maximum par produit.` : "");
     for (const file of list.slice(0, slots)) {
-      const uid = crypto.randomUUID();
+      const uid = uuid();
       const item: PhotoItem = { uid, alt: "", status: "uploading", progress: 0, fileName: file.name };
       if (!acceptedTypes.includes(file.type)) {
         setPhotos((current) => [...current, { ...item, status: "error", error: "Format refusé : JPG, PNG ou WebP uniquement." }]);

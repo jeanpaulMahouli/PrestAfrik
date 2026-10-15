@@ -1,16 +1,12 @@
-import { StoreCartPage } from "@/components/storefront/store-cart-page";
-import { getPublishedStore } from "@/modules/catalog/service";
 import { notFound } from "next/navigation";
+import { StoreCartPage } from "@/components/storefront/store-cart-page";
+import { getStorefrontStore } from "@/modules/catalog/service";
 
-export default async function StoreCartRoute({
-  params,
-}: PageProps<"/boutique/[slug]/panier">) {
+export const metadata = { title: "Mon panier", robots: { index: false } };
+
+export default async function StoreCartRoute({ params }: PageProps<"/boutique/[slug]/panier">) {
   const { slug } = await params;
-  const store = await getPublishedStore(slug);
-  if (!store) notFound();
-  return (
-    <main className="storefront-content">
-      <StoreCartPage key={store.slug} storeCity={store.city ?? ""} storeSlug={store.slug} />
-    </main>
-  );
+  const store = await getStorefrontStore(slug);
+  if (!store || store.isPreview) notFound();
+  return <StoreCartPage key={store.slug} storeSlug={store.slug} />;
 }

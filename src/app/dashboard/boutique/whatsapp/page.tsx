@@ -7,6 +7,7 @@ import { splitE164 } from "@/lib/phone";
 import { requireStorePermission } from "@/modules/stores/context";
 import { switchToWhatsappLinkAction } from "@/modules/whatsapp/actions";
 import { getWhatsappSettings } from "@/modules/whatsapp/settings";
+import { CheckIcon } from "@/components/ui/icons";
 
 export const metadata = { title: "Messages WhatsApp" };
 
@@ -95,7 +96,7 @@ export default async function WhatsappPage({ searchParams }: PageProps<"/dashboa
               <h2 className="v-card-title" id="api-plus-tard">Passer à l’API plus tard</h2>
               <p className="v-small">Votre configuration wa.me reste en place : vous pouvez revenir au lien à tout moment.</p>
               <ol className="api-steps">
-                <li className={settings.businessNumber ? "is-done" : ""}>wa.me configuré{settings.businessNumber ? " ✓" : ""}</li>
+                <li className={settings.businessNumber ? "is-done" : ""}>wa.me configuré{settings.businessNumber ? <> <CheckIcon size={12} /></> : null}</li>
                 <li className={settings.apiPhoneNumberId && settings.hasAccessToken ? "is-done" : ""}>Identifiants API</li>
                 <li className={settings.apiTemplateName ? "is-done" : ""}>Modèle approuvé</li>
                 <li className={settings.apiStatus === "CONNECTED" ? "is-done" : ""}>Test de connexion</li>

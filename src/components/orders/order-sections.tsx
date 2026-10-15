@@ -10,6 +10,7 @@ import { orderEventLabel, type OrderDetail } from "@/modules/orders/queries";
 import { canCancel, canValidate, orderStage } from "@/modules/orders/state-machine";
 import { renderTemplate } from "@/modules/whatsapp/templates";
 import { buildWaMeUrl } from "@/modules/whatsapp/wa-me";
+import { CheckIcon } from "@/components/ui/icons";
 
 export type QuickOrder = {
   id: string;
@@ -90,7 +91,7 @@ export function OrderQuickActions({
           <input name="orderId" type="hidden" value={order.id} />
           <input name="returnTo" type="hidden" value={returnTo} />
           <SubmitButton aria-label={`Marquer la commande ${order.reference} validée`} className={`btn btn-primary${size}`} pendingLabel="Validation…">
-            ✓ Valider
+            <CheckIcon /> Valider
           </SubmitButton>
         </form>
       )}

@@ -2,110 +2,88 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
+import { parsePhone } from "@/lib/phone";
+import { clientIpFrom } from "@/lib/request-ip";
 import { checkoutOrder, CheckoutProblem, type CartLine } from "@/modules/orders/checkout";
 
 const checkoutSchema = z.object({
-  name: z.string().trim().min(2, "Indique ton nom.").max(120),
-  whatsapp: z.string().trim().min(9).max(30),
-  email: z.union([z.literal(""), z.string().trim().email().max(254)]),
-  city: z.string().trim().min(2, "Indique ta ville.").max(100),
-  neighborhood: z.string().trim().min(1, "Indique ton quartier.").max(120),
+  storeSlug: z.string().min(3).max(40),
+  name: z.string().trim().min(2, "Indiquez votre nom.").max(120),
+  whatsappCountry: z.string().max(2),
+  whatsappNational: z.string().max(30),
+  deliveryMethod: z.enum(["DELIVERY", "PICKUP"], { error: "Choisissez la livraison ou le retrait." }),
+  zoneId: z.string().max(40),
   landmark: z.string().trim().max(250),
-  deliveryMethod: z.enum(["DELIVERY", "PICKUP"]),
   comment: z.string().trim().max(500),
-  followUpConsent: z.literal("on", { error: "Accepte le suivi de ta commande sur WhatsApp." }),
+  followUpConsent: z.literal("on", { error: "Acceptez de recevoir le suivi de votre commande sur WhatsApp." }),
   marketingConsent: z.boolean(),
   items: z.string().max(20_000),
   idempotencyKey: z.uuid(),
-  quoteToken: z.string().min(10).max(2000),
+  expectedTotalXaf: z.coerce.number().int().min(0).max(1_000_000_000),
 });
 
 export type CheckoutActionState =
-  | { error: string; reference?: never; trackingToken?: never }
+  | { error: string; field?: string; reference?: never; trackingToken?: never }
   | { error?: never; reference: string; trackingToken: string }
   | null;
 
-function normalizeWhatsapp(phone: string) {
-  const digits = phone.replace(/[^\d]/g, "");
-  const normalized = digits.startsWith("237") ? digits : `237${digits}`;
-  if (!/^237[2-9]\d{8}$/.test(normalized)) {
-    throw new CheckoutProblem("Indique un numéro WhatsApp camerounais valide avec son indicatif +237.");
-  }
-  return `+${normalized}`;
-}
+const itemsSchema = z
+  .array(z.object({ productId: z.cuid(), variantId: z.cuid().nullable(), quantity: z.number().int().min(1).max(25) }))
+  .min(1)
+  .max(30);
 
-export async function checkoutOrderAction(
-  _previousState: CheckoutActionState,
-  formData: FormData,
-): Promise<CheckoutActionState> {
+/** Enregistre la commande du client (sans compte). Le vendeur la reçoit « Nouvelle ». */
+export async function checkoutOrderAction(_previousState: CheckoutActionState, formData: FormData): Promise<CheckoutActionState> {
+  const value = (key: string) => formData.get(key) ?? "";
   const parsed = checkoutSchema.safeParse({
-    name: formData.get("name"),
-    whatsapp: formData.get("whatsapp"),
-    email: formData.get("email") ?? "",
-    city: formData.get("city"),
-    neighborhood: formData.get("neighborhood"),
-    landmark: formData.get("landmark") ?? "",
-    deliveryMethod: formData.get("deliveryMethod"),
-    comment: formData.get("comment") ?? "",
+    storeSlug: value("storeSlug"),
+    name: value("name"),
+    whatsappCountry: value("whatsappCountry"),
+    whatsappNational: value("whatsappNational"),
+    deliveryMethod: value("deliveryMethod"),
+    zoneId: value("zoneId"),
+    landmark: value("landmark"),
+    comment: value("comment"),
     followUpConsent: formData.get("followUpConsent"),
     marketingConsent: formData.get("marketingConsent") === "on",
-    items: formData.get("items"),
-    idempotencyKey: formData.get("idempotencyKey"),
-    quoteToken: formData.get("quoteToken"),
+    items: value("items"),
+    idempotencyKey: value("idempotencyKey"),
+    expectedTotalXaf: value("expectedTotalXaf"),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Vérifie les informations de ta commande." };
+    const issue = parsed.error.issues[0];
+    return { error: issue?.message ?? "Vérifiez les informations de votre commande.", field: String(issue?.path[0] ?? "") };
+  }
+  const input = parsed.data;
+  const phone = parsePhone(input.whatsappCountry || "CM", input.whatsappNational);
+  if (!phone.ok) return { error: phone.message, field: "whatsapp" };
+  if (input.deliveryMethod === "DELIVERY" && input.landmark.length < 3) {
+    return { error: "Indiquez un point de repère pour aider le livreur.", field: "landmark" };
   }
 
   let items: CartLine[];
   try {
-    items = z
-      .array(
-        z.object({
-          productId: z.cuid(),
-          variantId: z.cuid().nullable(),
-          quantity: z.number().int().min(1).max(25),
-        }),
-      )
-      .min(1)
-      .max(30)
-      .parse(JSON.parse(parsed.data.items) as unknown);
+    items = itemsSchema.parse(JSON.parse(input.items) as unknown);
   } catch {
-    return { error: "Ton panier n’est plus à jour. Vérifie les produits avant de commander." };
+    return { error: "Votre panier n’est plus à jour. Vérifiez les produits avant de commander." };
   }
 
   try {
-    const whatsapp = normalizeWhatsapp(parsed.data.whatsapp);
-    const requestHeaders = await headers();
-    const clientIp =
-      requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      requestHeaders.get("x-real-ip") ||
-      "unknown";
-
     return await checkoutOrder({
-      storeSlug: String(formData.get("storeSlug") ?? ""),
-      customer: {
-        name: parsed.data.name,
-        whatsapp,
-        email: parsed.data.email || null,
-        followUpConsent: true,
-        marketingConsent: parsed.data.marketingConsent,
-      },
-      deliveryMethod: parsed.data.deliveryMethod,
-      city: parsed.data.city,
-      neighborhood: parsed.data.neighborhood,
-      landmark: parsed.data.landmark || null,
-      comment: parsed.data.comment || null,
+      storeSlug: input.storeSlug,
+      customer: { name: input.name, whatsapp: phone.e164, email: null, followUpConsent: true, marketingConsent: input.marketingConsent },
+      deliveryMethod: input.deliveryMethod,
+      zoneId: input.deliveryMethod === "DELIVERY" ? input.zoneId || null : null,
+      landmark: input.landmark || null,
+      comment: input.comment || null,
       items,
-      idempotencyKey: parsed.data.idempotencyKey,
-      quoteToken: parsed.data.quoteToken,
-      clientIp,
+      idempotencyKey: input.idempotencyKey,
+      expectedTotalXaf: input.expectedTotalXaf,
+      clientIp: clientIpFrom(await headers()),
     });
   } catch (error) {
     if (error instanceof CheckoutProblem) return { error: error.message };
-    console.error("Échec inattendu lors de la validation d’une commande.", error);
-    return {
-      error: "La commande n’a pas pu être enregistrée. Réessaie dans un instant ; si le problème persiste, contacte la boutique.",
-    };
+    console.error("Échec inattendu lors de l’enregistrement d’une commande.", error);
+    return { error: "La commande n’a pas pu être enregistrée. Réessayez dans un instant ; si le problème persiste, contactez la boutique." };
   }
 }

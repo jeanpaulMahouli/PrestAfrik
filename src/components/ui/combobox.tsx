@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { CheckIcon } from "@/components/ui/icons";
 
 export type ComboboxOption = { value: string; label: string; hint?: string };
 
@@ -149,7 +150,7 @@ export function Combobox({ label, options, value, onChange, placeholder = "Chois
                   {option.label}
                   {option.hint && <small>{option.hint}</small>}
                 </span>
-                {option.value === value && <span aria-hidden="true">✓</span>}
+                {option.value === value && <CheckIcon />}
               </li>
             ))}
             {filtered.length === 0 && <li aria-disabled="true" className="combobox-empty" role="option" aria-selected="false">Aucun résultat pour « {query} ».</li>}

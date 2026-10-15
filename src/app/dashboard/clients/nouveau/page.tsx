@@ -3,6 +3,7 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { createCustomer } from "@/modules/customers/actions";
 import { requireStorePermission } from "@/modules/stores/context";
+import { BackIcon } from "@/components/ui/icons";
 
 export default async function NewCustomerPage({
   searchParams,
@@ -19,7 +20,7 @@ export default async function NewCustomerPage({
       userEmail={session.user.email}
       userName={session.user.name}
     >
-      <Link className="v-back-link" href="/dashboard/clients">← Tous les clients</Link>
+      <Link className="v-back-link" href="/dashboard/clients"><BackIcon /> Tous les clients</Link>
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Ajouter un client</h1>
