@@ -6,10 +6,12 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import {
   PhotoError,
-  attachTemporaryPhoto,
+  attachedPhotoUrl,
+  checkTemporaryPhotos,
   deleteProductPhoto,
   deleteProductPhotoFolder,
   maxProductPhotos,
+  moveTemporaryPhotos,
 } from "@/lib/product-photos";
 import { hasPermission } from "@/modules/auth/permissions";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
@@ -152,8 +154,11 @@ export async function saveProduct(_previous: ActionResult, formData: FormData): 
     input.trackInventory && input.stockQuantity === 0 && input.availability !== "PREORDER" ? "SOLD_OUT" : input.availability;
   const removedPhotoUrls: string[] = [];
   let savedId = productId;
+  // Nouvelles photos : vérifiées avant la transaction, déplacées après (voir src/lib/product-photos.ts).
+  const newPhotoKeys = photos.data.flatMap((photo) => (!photo.id && photo.key ? [photo.key] : []));
 
   try {
+    await checkTemporaryPhotos(store.id, newPhotoKeys);
     await prisma.$transaction(async (transaction) => {
       const existing = productId
         ? await transaction.product.findFirst({
@@ -215,8 +220,7 @@ export async function saveProduct(_previous: ActionResult, formData: FormData): 
           kept.delete(photo.id);
           rows.push({ productId: product.id, url: image.url, altText: photo.alt || null, position, width: image.width, height: image.height });
         } else if (photo.key) {
-          const url = await attachTemporaryPhoto(store.id, product.id, photo.key);
-          rows.push({ productId: product.id, url, altText: photo.alt || null, position });
+          rows.push({ productId: product.id, url: attachedPhotoUrl(store.id, `products/${product.id}`, photo.key), altText: photo.alt || null, position });
         }
       }
       removedPhotoUrls.push(...[...kept.values()].map((image) => image.url));
@@ -233,6 +237,11 @@ export async function saveProduct(_previous: ActionResult, formData: FormData): 
     throw error;
   }
 
+  if (savedId && newPhotoKeys.length) {
+    const failed = await moveTemporaryPhotos(store.id, `products/${savedId}`, newPhotoKeys);
+    // Une photo qui n'a pas pu être déplacée est retirée du produit plutôt que d'afficher une image cassée.
+    if (failed.length) await prisma.productImage.deleteMany({ where: { productId: savedId, url: { in: failed } } });
+  }
   await Promise.all(removedPhotoUrls.map((url) => deleteProductPhoto(url)));
   refreshCatalog(store);
   redirect(`/dashboard/produits?succes=${productId ? "modifie" : "ajoute"}&produit=${savedId}`);

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { colorReadability } from "@/lib/contrast";
 import { parsePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
-import { PhotoError, attachTemporaryPhoto } from "@/lib/product-photos";
+import { PhotoError, attachedPhotoUrl, checkTemporaryPhotos, moveTemporaryPhotos } from "@/lib/product-photos";
 import { ImageUploadError, deleteStoreImage, saveStoreImage } from "@/lib/uploads";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { photosSchema, parseJsonField } from "@/modules/catalog/validation";
@@ -215,7 +215,11 @@ export async function saveProductStep(_previous: WizardState, formData: FormData
   const photos = parseJsonField(formData.get("photos"), photosSchema, []);
   if (!photos.success) return fail(photos.error.issues[0]?.message ?? "Vérifiez les photos.", "photos");
 
+  // Photos vérifiées avant la transaction et déplacées après : un stockage distant est trop lent pour la transaction.
+  const photoKeys = photos.data.flatMap((photo) => (photo.key ? [photo.key] : []));
+  let productId: string | null = null;
   try {
+    await checkTemporaryPhotos(store.id, photoKeys);
     await prisma.$transaction(async (transaction) => {
       await assertCanCreateProduct(transaction, store.id);
       const count = await transaction.product.count({ where: { storeId: store.id } });
@@ -233,9 +237,10 @@ export async function saveProductStep(_previous: WizardState, formData: FormData
         },
         select: { id: true },
       });
+      productId = product.id;
       const rows = [];
       for (const [position, photo] of photos.data.entries()) {
-        if (photo.key) rows.push({ productId: product.id, url: await attachTemporaryPhoto(store.id, product.id, photo.key), altText: photo.alt || name, position });
+        if (photo.key) rows.push({ productId: product.id, url: attachedPhotoUrl(store.id, `products/${product.id}`, photo.key), altText: photo.alt || name, position });
       }
       if (rows.length) await transaction.productImage.createMany({ data: rows });
     });
@@ -243,6 +248,10 @@ export async function saveProductStep(_previous: WizardState, formData: FormData
     if (error instanceof SubscriptionLimitError) return fail(error.message);
     if (error instanceof PhotoError) return fail(error.message, "photos");
     throw error;
+  }
+  if (productId && photoKeys.length) {
+    const failed = await moveTemporaryPhotos(store.id, `products/${productId}`, photoKeys);
+    if (failed.length) await prisma.productImage.deleteMany({ where: { productId, url: { in: failed } } });
   }
   invalidateStorefrontCache(store.id, store.slug);
   await advance(store.id, 7);

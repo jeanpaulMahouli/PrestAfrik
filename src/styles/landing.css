@@ -283,15 +283,23 @@
   font-weight: 600;
 }
 
-/* Survol : pastille pêche, sans soulignement. */
-.lp-nav__links a {
-  border-radius: 12px;
-  transition: background-color 0.2s ease;
+/* Survol : soulignement orange, comme la maquette. */
+.lp-nav__links a::after {
+  content: "";
+  position: absolute;
+  left: clamp(6px, 0.7vw, 14px);
+  right: clamp(6px, 0.7vw, 14px);
+  bottom: 0.1em;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--lp-orange);
+  transform: scaleX(0);
+  transition: transform 0.25s var(--lp-ease);
 }
 
-.lp-nav__links a:hover,
-.lp-nav__links a:focus-visible {
-  background: #fff1d6;
+.lp-nav__links a:hover::after,
+.lp-nav__links a:focus-visible::after {
+  transform: scaleX(1);
 }
 
 .lp-nav__actions {

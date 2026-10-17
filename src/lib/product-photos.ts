@@ -75,27 +75,57 @@ export async function saveTemporaryPhoto(storeId: string, file: File) {
   };
 }
 
-/** Rattache une photo provisoire au produit ; retourne son adresse définitive (1600 px). */
-export async function attachTemporaryPhoto(storeId: string, productId: string, key: string) {
-  return attachTemporaryPhotoTo(storeId, `products/${productId}`, key);
-}
+// Rattacher une photo = déplacer ses trois tailles de tmp/ vers son dossier définitif. Avec un stockage
+// distant (Cloudinary), cela prend 2 à 3 secondes par photo : ces opérations ne doivent JAMAIS se faire
+// dans une transaction de base de données (Prisma l'interrompt au bout de 5 s → erreur serveur).
+// D'où trois étapes : vérifier avant la transaction, écrire l'adresse pendant, déplacer après.
 
-/** Rattache une photo provisoire à une page éditoriale de la boutique. */
-export async function attachTemporaryPagePhoto(storeId: string, key: string) {
-  return attachTemporaryPhotoTo(storeId, "pages", key);
-}
-
-async function attachTemporaryPhotoTo(storeId: string, folder: string, key: string) {
+function temporaryPhotoId(key: string) {
   const match = tmpKeyPattern.exec(key);
   if (!match) throw new PhotoError("Photo invalide. Réessayez l’envoi.");
-  const id = match[1];
-  const source = `${storeDir(storeId)}/tmp`;
-  const target = `${storeDir(storeId)}/${folder}`;
-  if (!(await storage.exists(`${source}/${fileName(id, 1600)}`))) {
-    throw new PhotoError("Une photo envoyée a expiré. Ajoutez-la de nouveau.");
-  }
-  await Promise.all(photoSizes.map((size) => storage.move(`${source}/${fileName(id, size)}`, `${target}/${fileName(id, size)}`)));
-  return `/media/stores/${storeId}/${folder}/${fileName(id, 1600)}`;
+  return match[1];
+}
+
+/** Étape 1 (avant la transaction) : vérifie, en parallèle, que les photos envoyées n'ont pas expiré. */
+export async function checkTemporaryPhotos(storeId: string, keys: string[]) {
+  const results = await Promise.all(keys.map((key) => storage.exists(`${storeDir(storeId)}/tmp/${fileName(temporaryPhotoId(key), 1600)}`)));
+  if (results.includes(false)) throw new PhotoError("Une photo envoyée a expiré. Ajoutez-la de nouveau.");
+}
+
+/** Étape 2 (pendant la transaction) : adresse définitive d'une photo, sans accès au stockage. */
+export function attachedPhotoUrl(storeId: string, folder: string, key: string) {
+  return `/media/stores/${storeId}/${folder}/${fileName(temporaryPhotoId(key), 1600)}`;
+}
+
+/**
+ * Étape 3 (après la transaction) : déplace les photos vers leur dossier définitif, toutes en parallèle.
+ * Retourne les adresses des photos qui n'ont pas pu être déplacées (à retirer de la base).
+ */
+export async function moveTemporaryPhotos(storeId: string, folder: string, keys: string[]) {
+  const results = await Promise.allSettled(
+    keys.map(async (key) => {
+      const id = temporaryPhotoId(key);
+      await Promise.all(
+        photoSizes.map((size) => storage.move(`${storeDir(storeId)}/tmp/${fileName(id, size)}`, `${storeDir(storeId)}/${folder}/${fileName(id, size)}`)),
+      );
+    }),
+  );
+  const failed: string[] = [];
+  results.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.error("Photo non rattachée :", keys[index], result.reason);
+      failed.push(attachedPhotoUrl(storeId, folder, keys[index]));
+    }
+  });
+  return failed;
+}
+
+/** Rattache tout de suite des photos à une page éditoriale (hors transaction) ; retourne leurs adresses. */
+export async function attachTemporaryPagePhotos(storeId: string, keys: string[]) {
+  await checkTemporaryPhotos(storeId, keys);
+  const failed = await moveTemporaryPhotos(storeId, "pages", keys);
+  if (failed.length) throw new PhotoError("Une photo n’a pas pu être enregistrée. Ajoutez-la de nouveau.");
+  return keys.map((key) => attachedPhotoUrl(storeId, "pages", key));
 }
 
 /** Supprime toutes les tailles d'une photo (nouveau format) ou l'ancien fichier unique. */

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { PhotoError, attachTemporaryPagePhoto, deleteProductPhoto } from "@/lib/product-photos";
+import { PhotoError, attachTemporaryPagePhotos, deleteProductPhoto } from "@/lib/product-photos";
 import { hasPermission } from "@/modules/auth/permissions";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { blocksSchema, pageKinds, starterBlocks, type PageBlock } from "@/modules/pages/blocks";
@@ -77,11 +77,13 @@ export async function saveStorePage(_previous: PageSaveState, formData: FormData
   // Les images envoyées sont rattachées à la boutique ; les anciennes images retirées sont supprimées.
   const blocks: PageBlock[] = [];
   try {
+    // Toutes les nouvelles images sont rattachées en une fois, en parallèle (stockage distant : quelques secondes).
+    const newKeys = parsed.data.flatMap((block) => (block.type === "image" && block.key ? [block.key] : []));
+    const attached = new Map((await attachTemporaryPagePhotos(ctx.store.id, newKeys)).map((url, index) => [newKeys[index], url]));
     for (const block of parsed.data) {
       if (block.type === "image") {
         if (block.key) {
-          const url = await attachTemporaryPagePhoto(ctx.store.id, block.key);
-          blocks.push({ type: "image", url, alt: block.alt });
+          blocks.push({ type: "image", url: attached.get(block.key)!, alt: block.alt });
         } else if (block.url && block.url.includes(`/stores/${ctx.store.id}/`)) {
           blocks.push({ type: "image", url: block.url, alt: block.alt });
         } else if (status.data === "PUBLISHED") {
