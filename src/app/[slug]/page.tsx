@@ -4,7 +4,7 @@ import { StorefrontProductGrid } from "@/components/storefront/storefront-produc
 import { formatXaf, getPublishedProducts, getStorefrontStore } from "@/modules/catalog/service";
 import { deliverySummary, getStorefrontExtras } from "@/modules/storefront/data";
 
-export async function generateMetadata({ params }: PageProps<"/boutique/[slug]">) {
+export async function generateMetadata({ params }: PageProps<"/[slug]">) {
   const { slug } = await params;
   const store = await getStorefrontStore(slug);
   return {
@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: PageProps<"/boutique/[slug]">
   };
 }
 
-export default async function PublicStorePage({ params, searchParams }: PageProps<"/boutique/[slug]">) {
+export default async function PublicStorePage({ params, searchParams }: PageProps<"/[slug]">) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   const store = await getStorefrontStore(slug);
   if (!store) notFound();
@@ -22,18 +22,18 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
   const search = typeof query.q === "string" ? query.q.trim().slice(0, 100) : "";
   const category = typeof query.categorie === "string" ? query.categorie.slice(0, 90) : undefined;
   const [products, extras] = await Promise.all([getPublishedProducts(store.id, { category, query: search }), getStorefrontExtras(store.id)]);
-  const home = `/boutique/${store.slug}`;
+  const home = `/${store.slug}`;
 
   return (
     <main className="sf-home">
-      {store.theme === "BOUTIQUE_MARQUE" && (
-        <section className="sf-hero">
-          <h1>{store.name}</h1>
-          {store.description && <p>{store.description}</p>}
-        </section>
-      )}
-      {store.theme !== "BOUTIQUE_MARQUE" && <h1 className="visually-hidden">{store.name}</h1>}
-      {store.theme !== "BOUTIQUE_MARQUE" && store.description && <p className="sf-description">{store.description}</p>}
+      {/* Le bandeau n'apparaît qu'avec le thème « Boutique de marque » (storefront.css) ; il est toujours présent dans la page
+          pour que l'aperçu de « Ma boutique » puisse changer de thème en direct. */}
+      <h1 className="visually-hidden" data-store-name="">{store.name}</h1>
+      <section aria-hidden="true" className="sf-hero">
+        <p className="sf-hero-name" data-store-name="">{store.name}</p>
+        {store.description && <p>{store.description}</p>}
+      </section>
+      {store.description && <p className="sf-description sf-home-description">{store.description}</p>}
 
       <form action={home} className="sf-search" role="search">
         <label className="visually-hidden" htmlFor="sf-search">Rechercher un produit</label>

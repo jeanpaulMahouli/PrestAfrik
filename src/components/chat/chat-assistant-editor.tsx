@@ -30,7 +30,7 @@ export function ChatAssistantEditor({ initial, storeName, storeSlug }: { initial
           <p className="v-page-subtitle">Aidez vos visiteurs à vous joindre en un geste : ils posent une question et poursuivent avec vous sur WhatsApp.</p>
         </div>
         <div className="v-page-actions">
-          <Link className="btn btn-secondary" href={`/boutique/${storeSlug}`} target="_blank">Voir sur ma boutique</Link>
+          <Link className="btn btn-secondary" href={`/${storeSlug}`} target="_blank">Voir sur ma boutique</Link>
           <button className="btn btn-primary" disabled={pending} form={formId} type="submit">{pending ? "Enregistrement…" : "Enregistrer"}</button>
         </div>
       </div>

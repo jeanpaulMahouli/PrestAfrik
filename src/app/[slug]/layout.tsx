@@ -10,7 +10,7 @@ function safeColor(value: string, fallback: string) {
   return parsed.success ? parsed.data : fallback;
 }
 
-export default async function PublicStoreLayout({ children, params }: LayoutProps<"/boutique/[slug]">) {
+export default async function PublicStoreLayout({ children, params }: LayoutProps<"/[slug]">) {
   const { slug } = await params;
   const store = await getStorefrontStore(slug);
   if (!store) notFound();

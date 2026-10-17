@@ -60,7 +60,7 @@ function slugify(value: string) {
 function refreshCatalog(store: { id: string; slug: string }) {
   revalidatePath("/dashboard/produits");
   revalidatePath("/dashboard");
-  revalidatePath(`/boutique/${store.slug}`);
+  revalidatePath(`/${store.slug}`);
   invalidateStorefrontCache(store.id, store.slug);
 }
 

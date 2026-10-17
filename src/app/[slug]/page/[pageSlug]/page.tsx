@@ -19,14 +19,14 @@ async function loadPage(slug: string, pageSlug: string) {
   return page ? { store, page } : null;
 }
 
-export async function generateMetadata({ params }: PageProps<"/boutique/[slug]/page/[pageSlug]">) {
+export async function generateMetadata({ params }: PageProps<"/[slug]/page/[pageSlug]">) {
   const { slug, pageSlug } = await params;
   const loaded = await loadPage(slug, pageSlug);
   return { title: loaded ? `${loaded.page.title} · ${loaded.store.name}` : "Page introuvable" };
 }
 
 /** Page éditoriale publique : uniquement des blocs validés, jamais de HTML stocké (brief §6.5). */
-export default async function StoreEditorialPage({ params }: PageProps<"/boutique/[slug]/page/[pageSlug]">) {
+export default async function StoreEditorialPage({ params }: PageProps<"/[slug]/page/[pageSlug]">) {
   const { slug, pageSlug } = await params;
   const loaded = await loadPage(slug, pageSlug);
   if (!loaded) notFound();
@@ -37,7 +37,7 @@ export default async function StoreEditorialPage({ params }: PageProps<"/boutiqu
   return (
     <main className="sf-page sf-editorial">
       <div className="sf-page-head">
-        <Link aria-label="Retour au catalogue" className="sf-back" href={`/boutique/${store.slug}`}><BackIcon size={18} /></Link>
+        <Link aria-label="Retour au catalogue" className="sf-back" href={`/${store.slug}`}><BackIcon size={18} /></Link>
         <h1>{page.title}</h1>
       </div>
       {blocks.success ? (
@@ -80,7 +80,7 @@ function Block({ block, extras, storeSlug, storeName }: { block: PageBlock; extr
           <a className="sf-btn sf-btn-whatsapp" href={buildWaMeUrl(extras.whatsappNumber, `Bonjour ${storeName}, `)} rel="noopener noreferrer" target="_blank">{block.label}</a>
         ) : null;
       }
-      const href = block.target === "contact" ? `/boutique/${storeSlug}/page/${pageKinds.CONTACT.slug}` : `/boutique/${storeSlug}`;
+      const href = block.target === "contact" ? `/${storeSlug}/page/${pageKinds.CONTACT.slug}` : `/${storeSlug}`;
       return <Link className="sf-btn sf-btn-primary" href={href}>{block.label}</Link>;
     }
     case "contact": {

@@ -1,93 +1,137 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { PublishedScreen, PublishStep } from "@/components/wizard/wizard-publish";
-import { WizardShell } from "@/components/wizard/wizard-shell";
+import { CreatedScreen, PublishedScreen, PublishStep } from "@/components/wizard/wizard-publish";
+import { WizardShell, type PreviewDraft } from "@/components/wizard/wizard-shell";
 import { ActivityStep, BrandingStep, ContactStep, LocationStep, NameStep, ProductStep, ThemeStep } from "@/components/wizard/wizard-steps";
-import { phoneCountries, splitE164 } from "@/lib/phone";
+import { formatFcfa } from "@/lib/format";
+import { phoneCountries } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { storePublicUrl } from "@/lib/urls";
-import { formatFcfa } from "@/lib/format";
 import { geoDataset } from "@/modules/geo";
+import { draftMissing, findDraft, type DraftData } from "@/modules/stores/draft";
 import { getPublicationChecklist } from "@/modules/stores/publication";
-import { requireWizardSession, resolveWizardStore, wizardStepCount, wizardSteps } from "@/modules/stores/wizard";
+import { findOwnedStore, requireWizardSession, wizardStepCount, wizardSteps } from "@/modules/stores/wizard";
 
 export const metadata: Metadata = { title: "Créer ma boutique" };
 
 const themeNames = { CATALOGUE_EXPRESS: "Catalogue express", MODE_BEAUTE: "Mode et beauté", BOUTIQUE_MARQUE: "Boutique de marque" } as const;
+const defaultColors = { primaryColor: "#FF9900", secondaryColor: "#000026", accentColor: "#EF765E" };
 
-/** Assistant de création en 8 étapes (brief §6.3) : chaque étape est enregistrée, reprise possible. */
+/**
+ * Assistant de création en 8 étapes (brief §6.3). Les réponses sont gardées dans un brouillon :
+ * la boutique n'est créée qu'à la dernière étape (voir src/modules/stores/draft.ts).
+ *   ?brouillon=…&etape=N   reprise d'un brouillon
+ *   ?nouvelle=1            nouveau brouillon (même si un autre est en cours)
+ *   ?boutique=…&etape=publiee|creee   écran final, une fois la boutique créée
+ */
 export default async function NewStorePage({ searchParams }: PageProps<"/boutiques/nouvelle">) {
   const session = await requireWizardSession();
   const params = await searchParams;
   const value = (key: string) => (typeof params[key] === "string" ? (params[key] as string) : undefined);
-  const store = await resolveWizardStore(session.user.id, { boutique: value("boutique"), nouvelle: value("nouvelle") });
-  if (value("boutique") && !store) redirect("/boutiques/nouvelle");
-
-  const reached = store ? (store.onboardingStep ?? wizardStepCount + 1) : 1;
-  const published = store?.isPublished ?? false;
   const requested = value("etape");
-  if (requested === "publiee" && store && published) {
-    return (
-      <WizardShell current={wizardStepCount + 1} initialDraft={draftOf(store)} reached={wizardStepCount + 1} showThemeLabel steps={wizardSteps} storeId={store.id}>
-        <PublishedScreen storeName={store.name} storeUrl={storePublicUrl(store.slug)} />
-      </WizardShell>
-    );
-  }
-  // Une boutique déjà publiée se règle depuis « Ma boutique ».
-  if (store && store.onboardingStep === null && !requested) redirect("/dashboard/boutique");
 
+  // Écran final : la boutique existe.
+  if (value("boutique")) {
+    const store = await findOwnedStore(session.user.id, value("boutique")!);
+    if (!store) redirect("/dashboard");
+    const preview = previewOfStore(store);
+    if (requested === "publiee" && store.isPublished) {
+      return (
+        <WizardShell current={wizardStepCount + 1} draftId={null} initialDraft={preview} reached={wizardStepCount + 1} showThemeLabel steps={wizardSteps}>
+          <PublishedScreen storeName={store.name} storeUrl={storePublicUrl(store.slug)} />
+        </WizardShell>
+      );
+    }
+    if (requested === "creee" && !store.isPublished) {
+      const checklist = await getPublicationChecklist(store.id, session.user.emailVerified);
+      const missing = checklist.filter((item) => !item.done && item.key !== "email").map((item) => ({ label: item.label, href: item.href }));
+      return (
+        <WizardShell current={wizardStepCount + 1} draftId={null} initialDraft={preview} reached={wizardStepCount + 1} showThemeLabel steps={wizardSteps}>
+          <CreatedScreen email={session.user.email} emailVerified={session.user.emailVerified} missing={missing} storeName={store.name} storeUrl={storePublicUrl(store.slug)} />
+        </WizardShell>
+      );
+    }
+    redirect("/dashboard/boutique");
+  }
+
+  const draft = value("nouvelle") === "1" ? null : await findDraft(session.user.id, value("brouillon"));
+  if (value("brouillon") && !draft) redirect("/boutiques/nouvelle");
+  const data: DraftData = draft?.data ?? {};
+  const reached = draft ? Math.min(draft.step, wizardStepCount) : 1;
   const asked = Number(requested);
-  const step = store ? (Number.isInteger(asked) && asked >= 1 && asked <= Math.min(reached, wizardStepCount) ? asked : Math.min(reached, wizardStepCount)) : 1;
-  const draft = store ? draftOf(store) : { name: "", activity: "", location: "", theme: "CATALOGUE_EXPRESS" as const, primaryColor: "#FF9900", secondaryColor: "#000026", accentColor: "#EF765E", logoUrl: null };
+  const step = draft ? (Number.isInteger(asked) && asked >= 1 && asked <= reached ? asked : reached) : 1;
+  const draftId = draft?.id ?? null;
+  // Sans boutique, le tableau de bord renverrait ici : on quitte l'assistant vers l'accueil.
+  const hasStore = (await prisma.storeMembership.count({ where: { userId: session.user.id } })) > 0;
 
   let content: React.ReactNode = null;
-  if (!store || step === 1) {
-    content = <NameStep city={store?.city ?? null} initialName={store?.name ?? ""} initialSlug={store?.slug ?? ""} storeId={store?.id ?? null} />;
+  if (!draft || step === 1) {
+    content = <NameStep city={data.city ?? null} draftId={draftId} initialName={data.name ?? ""} initialSlug={data.slug ?? ""} />;
   } else if (step === 2) {
     const activities = await prisma.activity.findMany({ orderBy: { position: "asc" }, select: { id: true, label: true, popular: true } });
-    content = <ActivityStep activities={activities} initialId={store.activityId ?? ""} initialOther={store.activityOther ?? ""} storeId={store.id} />;
+    content = <ActivityStep activities={activities} draftId={draft.id} initialId={data.activityId ?? ""} initialOther={data.activityOther ?? ""} />;
   } else if (step === 3) {
     const countries = phoneCountries().map(({ iso, name }) => ({ iso: iso as string, name }));
     const geo = Object.fromEntries(["CM"].map((iso) => [iso, geoDataset(iso)?.regions ?? []]));
-    content = <LocationStep countries={countries} geo={geo} initial={{ country: store.country, region: store.region ?? "", city: store.city ?? "", neighborhood: store.neighborhood ?? "" }} storeId={store.id} />;
+    content = <LocationStep countries={countries} draftId={draft.id} geo={geo} initial={{ country: data.country ?? "CM", region: data.region ?? "", city: data.city ?? "", neighborhood: data.neighborhood ?? "" }} />;
   } else if (step === 4) {
-    const phone = splitE164(store.phoneE164 ?? store.contactPhone);
-    const whatsapp = store.whatsappSettings?.businessNumber ? splitE164(store.whatsappSettings.businessNumber) : null;
-    content = <ContactStep contactEmail={store.contactEmail ?? ""} phone={phone} storeId={store.id} whatsapp={whatsapp} />;
+    content = (
+      <ContactStep
+        contactEmail={data.contactEmail ?? ""}
+        draftId={draft.id}
+        phone={data.phone ? { country: data.phone.country, national: data.phone.national } : { country: data.country ?? "CM", national: "" }}
+        whatsapp={data.whatsapp ? { country: data.whatsapp.country, national: data.whatsapp.national } : null}
+      />
+    );
   } else if (step === 5) {
-    content = <ThemeStep initialTheme={store.theme} storeId={store.id} />;
+    content = <ThemeStep draftId={draft.id} initialTheme={data.theme ?? "CATALOGUE_EXPRESS"} />;
   } else if (step === 6) {
     content = (
       <BrandingStep
-        initial={{ primaryColor: store.primaryColor, secondaryColor: store.secondaryColor, accentColor: store.accentColor, logoUrl: store.logoUrl, initials: initialsOf(store.name) }}
-        storeId={store.id}
+        draftId={draft.id}
+        initial={{
+          primaryColor: data.primaryColor ?? defaultColors.primaryColor,
+          secondaryColor: data.secondaryColor ?? defaultColors.secondaryColor,
+          accentColor: data.accentColor ?? defaultColors.accentColor,
+          logoUrl: data.logoUrl ?? null,
+          initials: initialsOf(data.name ?? ""),
+        }}
       />
     );
   } else if (step === 7) {
-    const product = await prisma.product.findFirst({ where: { storeId: store.id }, orderBy: { createdAt: "asc" }, select: { name: true } });
-    content = <ProductStep existingProduct={product?.name ?? null} storeId={store.id} />;
+    const product = data.product
+      ? {
+          name: data.product.name,
+          priceXaf: data.product.priceXaf,
+          photos: data.product.photos.map((photo) => ({
+            key: photo.key,
+            alt: photo.alt ?? "",
+            previewUrl: `/media/stores/${draft.id}/${photo.key}-320.webp`,
+          })),
+        }
+      : null;
+    content = <ProductStep draftId={draft.id} product={product} />;
   } else {
-    const [product, checklist] = await Promise.all([
-      prisma.product.findFirst({ where: { storeId: store.id, status: "ACTIVE" }, orderBy: { createdAt: "asc" }, select: { name: true, priceXaf: true, _count: { select: { images: true } } } }),
-      getPublicationChecklist(store.id, session.user.emailVerified),
-    ]);
-    const phone = store.phoneE164 ?? store.contactPhone;
+    const phone = data.phone?.e164;
     const recap = [
-      { label: "Nom et adresse", value: `${store.name} · prestafrik.com/boutique/${store.slug}`, step: 1, done: true },
-      { label: "Activité", value: store.activity?.label ?? store.activityOther ?? "À préciser", step: 2, done: Boolean(store.activityId || store.activityOther) },
-      { label: "Localisation", value: [store.city, store.region].filter(Boolean).join(", ") || "À préciser", step: 3, done: Boolean(store.city) },
+      { label: "Nom et adresse", value: data.name ? `${data.name} · prestafrik.com/${data.slug}` : "À préciser", step: 1, done: Boolean(data.name && data.slug) },
+      { label: "Activité", value: data.activityLabel ?? data.activityOther ?? "À préciser", step: 2, done: Boolean(data.activityId || data.activityOther) },
+      { label: "Localisation", value: [data.city, data.region].filter(Boolean).join(", ") || "À préciser", step: 3, done: Boolean(data.city) },
       { label: "Coordonnées", value: phone ? phone.replace(/(\+\d{3})(\d)\d+(\d{2})$/, "$1 $2 •• •• •• $3") : "À préciser", step: 4, done: Boolean(phone) },
-      { label: "Thème", value: themeNames[store.theme], step: 5, done: true },
-      { label: "Logo et couleurs", value: `${store.logoUrl ? "Logo ajouté" : "Initiales affichées"} · ${store.primaryColor === "#FF9900" ? "couleurs PrestAfrik" : "couleurs personnalisées"}`, step: 6, done: true },
-      { label: "Premier produit", value: product ? `${product.name} · ${formatFcfa(product.priceXaf)} · ${product._count.images} photo${product._count.images > 1 ? "s" : ""}` : "Aucun produit pour l’instant", step: 7, done: Boolean(product) },
+      { label: "Thème", value: themeNames[data.theme ?? "CATALOGUE_EXPRESS"], step: 5, done: true },
+      { label: "Logo et couleurs", value: `${data.logoUrl ? "Logo ajouté" : "Initiales affichées"} · ${(data.primaryColor ?? defaultColors.primaryColor) === defaultColors.primaryColor ? "couleurs PrestAfrik" : "couleurs personnalisées"}`, step: 6, done: true },
+      {
+        label: "Premier produit",
+        value: data.product ? `${data.product.name} · ${formatFcfa(data.product.priceXaf)} · ${data.product.photos.length} photo${data.product.photos.length > 1 ? "s" : ""}` : "Aucun produit pour l’instant (vous pourrez en ajouter ensuite)",
+        step: 7,
+        done: Boolean(data.product),
+      },
     ];
-    const askDeliveryFee = checklist.some((item) => item.key === "delivery" && !item.done);
-    const missing = checklist.filter((item) => !item.done && item.key !== "delivery").map((item) => ({ label: item.label, href: item.href }));
-    content = <PublishStep askDeliveryFee={askDeliveryFee} city={store.city ?? "votre ville"} missing={missing} recap={recap} storeId={store.id} />;
+    content = <PublishStep draftId={draft.id} email={session.user.email} emailVerified={session.user.emailVerified} missing={draftMissing(data)} recap={recap} />;
   }
 
   return (
-    <WizardShell current={step} initialDraft={draft} reached={reached} showThemeLabel={step >= 5} steps={wizardSteps} storeId={store?.id ?? null}>
+    <WizardShell current={step} draftId={draftId} exitHref={hasStore ? "/dashboard" : "/"} initialDraft={previewOfDraft(data)} reached={reached} showThemeLabel={step >= 5} steps={wizardSteps}>
       {content}
     </WizardShell>
   );
@@ -97,10 +141,23 @@ function initialsOf(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr-FR")).join("") || "MB";
 }
 
-function draftOf(store: NonNullable<Awaited<ReturnType<typeof resolveWizardStore>>>) {
+function previewOfDraft(data: DraftData): PreviewDraft {
+  return {
+    name: data.name ?? "",
+    activity: data.activityLabel ?? data.activityOther ?? "",
+    location: data.city ? `${data.city}${(data.country ?? "CM") === "CM" ? ", Cameroun" : ""}` : "",
+    theme: data.theme ?? "CATALOGUE_EXPRESS",
+    primaryColor: data.primaryColor ?? defaultColors.primaryColor,
+    secondaryColor: data.secondaryColor ?? defaultColors.secondaryColor,
+    accentColor: data.accentColor ?? defaultColors.accentColor,
+    logoUrl: data.logoUrl ?? null,
+  };
+}
+
+function previewOfStore(store: NonNullable<Awaited<ReturnType<typeof findOwnedStore>>>): PreviewDraft {
   return {
     name: store.name,
-    activity: store.activity?.label ?? store.activityOther ?? "",
+    activity: "",
     location: store.city ? `${store.city}${store.country === "CM" ? ", Cameroun" : ""}` : "",
     theme: store.theme,
     primaryColor: store.primaryColor,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useRestorableValue } from "@/components/ui/use-form-persistence";
 import { CheckIcon } from "@/components/ui/icons";
 
 export type ComboboxOption = { value: string; label: string; hint?: string };
@@ -30,6 +31,11 @@ const normalize = (value: string) => value.normalize("NFD").replace(/[̀-ͯ]/g, 
  */
 export function Combobox({ label, options, value, onChange, placeholder = "Choisir…", searchPlaceholder = "Tapez pour filtrer…", help, error, notListedLabel, onNotListed, disabled, name }: ComboboxProps) {
   const id = useId();
+  // Champ caché restaurable : la saisie gardée après une actualisation (useFormPersistence) revient ici.
+  const hiddenRef = useRef<HTMLInputElement>(null);
+  useRestorableValue(hiddenRef, (restored) => {
+    if (options.some((option) => option.value === restored)) onChange(restored);
+  });
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -94,7 +100,7 @@ export function Combobox({ label, options, value, onChange, placeholder = "Chois
   return (
     <div className="v-field combobox" ref={rootRef}>
       <span className="combobox-label" id={`${id}-label`}>{label}</span>
-      {name && <input name={name} type="hidden" value={value} />}
+      {name && <input data-restorable="" name={name} ref={hiddenRef} type="hidden" value={value} />}
       <button
         aria-describedby={help || error ? `${id}-help` : undefined}
         aria-expanded={open}

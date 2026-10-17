@@ -22,7 +22,8 @@
   height: 2.125rem;
 }
 
-.wizard-header p {
+.wizard-header p,
+.wizard-header-info {
   margin: 0;
   color: var(--color-text-secondary);
   font-size: 0.875rem;
@@ -183,6 +184,23 @@
   padding-right: 0.875rem;
   color: var(--color-success);
   font-weight: 700;
+}
+
+/* Coche de validation : même retrait que le texte du champ, jamais collée au bord. */
+.wizard-input > svg,
+.wizard-slug > svg {
+  flex: none;
+  margin: 0 0.875rem 0 0.375rem;
+  color: var(--color-success);
+}
+
+.wizard-input small {
+  margin-left: 0.5rem;
+}
+
+/* Compteur seul en fin de champ (pas encore de coche) : même retrait que la coche. */
+.wizard-input small:last-child {
+  padding-right: 0.875rem;
 }
 
 .wizard-slug-prefix {
@@ -742,5 +760,74 @@
 @media (prefers-reduced-motion: reduce) {
   .wizard-progress span {
     transition: none;
+  }
+}
+
+/* « Abandonner » dans l'en-tête de l'assistant : bouton présenté comme un lien. */
+.wizard-discard {
+  padding: 0;
+  border: 0;
+  color: var(--color-danger);
+  background: none;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.wizard-discard:hover {
+  color: var(--color-danger-strong);
+}
+
+/* Confirmation de l'adresse e-mail (dernière étape et écran « Boutique créée »). */
+.email-confirm {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1rem 0;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  background: linear-gradient(98.7deg, #ffdeae, rgb(255 174 73 / 0.16));
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.email-confirm ol {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.email-confirm p {
+  margin: 0;
+}
+
+.email-confirm .btn {
+  justify-self: start;
+}
+
+/* Dans l'écran « Boutique créée » (texte centré), les consignes restent alignées à gauche. */
+.wizard-published .email-confirm {
+  text-align: left;
+}
+
+/* Fenêtre « Suspendre la création » : trois choix, empilés sur téléphone. */
+.wizard-pause-buttons {
+  flex-wrap: wrap;
+}
+
+.wizard-pause-buttons form {
+  margin: 0 auto 0 0;
+}
+
+@media (max-width: 520px) {
+  .wizard-pause-buttons,
+  .wizard-pause-buttons form {
+    display: grid;
+    width: 100%;
+  }
+
+  .wizard-pause-buttons form {
+    order: 3;
   }
 }

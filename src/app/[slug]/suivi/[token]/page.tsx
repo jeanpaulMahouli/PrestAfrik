@@ -13,7 +13,7 @@ import { CheckIcon } from "@/components/ui/icons";
 export const metadata = { title: "Ma commande", robots: { index: false, follow: false } };
 
 /** Résultat et suivi d'une commande (lien personnel). Trois états : reçue, validée ou annulée. */
-export default async function OrderTrackingPage({ params, searchParams }: PageProps<"/boutique/[slug]/suivi/[token]">) {
+export default async function OrderTrackingPage({ params, searchParams }: PageProps<"/[slug]/suivi/[token]">) {
   const [{ slug, token }, query] = await Promise.all([params, searchParams]);
   if (!/^[\w-]{40,64}$/.test(token)) notFound();
 
@@ -139,8 +139,8 @@ export default async function OrderTrackingPage({ params, searchParams }: PagePr
         {whatsappUrl && !wantsWhatsapp && (
           <a className="sf-btn sf-btn-secondary sf-btn-block" href={whatsappUrl} rel="noopener noreferrer" target="_blank">Écrire à la boutique sur WhatsApp</a>
         )}
-        {isNew && <Link className="sf-btn sf-btn-secondary sf-btn-block" href={`/boutique/${slug}/suivi/${token}`}>Suivre ma commande</Link>}
-        <Link className="sf-link" href={`/boutique/${slug}`}>Retour à la boutique</Link>
+        {isNew && <Link className="sf-btn sf-btn-secondary sf-btn-block" href={`/${slug}/suivi/${token}`}>Suivre ma commande</Link>}
+        <Link className="sf-link" href={`/${slug}`}>Retour à la boutique</Link>
       </div>
       <p className="sf-muted sf-small">Ce lien est personnel : gardez-le pour suivre votre commande, ne le partagez pas.</p>
     </main>

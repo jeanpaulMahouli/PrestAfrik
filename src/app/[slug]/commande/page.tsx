@@ -5,7 +5,7 @@ import { getStorefrontExtras } from "@/modules/storefront/data";
 
 export const metadata = { title: "Finaliser ma commande", robots: { index: false } };
 
-export default async function CheckoutRoute({ params }: PageProps<"/boutique/[slug]/commande">) {
+export default async function CheckoutRoute({ params }: PageProps<"/[slug]/commande">) {
   const { slug } = await params;
   const store = await getStorefrontStore(slug);
   if (!store || store.isPreview || store.subscriptionPaused) notFound();

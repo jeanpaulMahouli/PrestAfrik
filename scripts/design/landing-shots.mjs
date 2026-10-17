@@ -44,7 +44,7 @@ async function save(page, name, width) {
 {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
   const page = await context.newPage();
-  const shop = `${base}/boutique/mboa-style`;
+  const shop = `${base}/mboa-style`;
   await page.goto(shop, { waitUntil: "networkidle", timeout: 180000 });
   await save(page, "client-boutique", 520);
   await page.locator(".sf-card-link").first().click();

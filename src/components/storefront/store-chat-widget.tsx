@@ -19,7 +19,7 @@ type Message = { from: "bot" | "client"; text: string } | { from: "ready"; text:
 type Stage = "menu" | "answered" | "transferred";
 
 function pageKind(pathname: string, storeSlug: string): keyof ChatWidgetConfig["showOn"] | "other" {
-  const rest = pathname.replace(`/boutique/${storeSlug}`, "");
+  const rest = pathname.replace(`/${storeSlug}`, "");
   if (rest === "" || rest === "/") return "home";
   if (rest.startsWith("/panier")) return "cart";
   if (rest.startsWith("/commande")) return "checkout";
@@ -85,7 +85,7 @@ export function StoreChatWidget({ config, storeName, storeSlug, storeInitials, l
 
   if (kind === "other" || !config.showOn[kind]) return null;
 
-  const home = `/boutique/${storeSlug}`;
+  const home = `/${storeSlug}`;
   const welcome = fillChatTemplate(config.welcomeMessage, { boutique: storeName });
 
   function say(label: string, answer: string) {

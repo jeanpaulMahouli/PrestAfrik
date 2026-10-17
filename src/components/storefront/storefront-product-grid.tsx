@@ -25,7 +25,7 @@ export function StorefrontProductGrid({ storeSlug, products }: { storeSlug: stri
     <ul className="sf-grid">
       {products.map((product, index) => (
         <li className="sf-card" key={product.id}>
-          <Link className="sf-card-link" href={`/boutique/${storeSlug}/${product.slug}`}>
+          <Link className="sf-card-link" href={`/${storeSlug}/${product.slug}`}>
             <span className="sf-card-media">
               {product.images[0] ? (
                 <StoreImage

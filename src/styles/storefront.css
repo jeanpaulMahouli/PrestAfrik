@@ -1365,7 +1365,8 @@
   background: var(--store-secondary);
 }
 
-.sf-hero h1 {
+.sf-hero h1,
+.sf-hero .sf-hero-name {
   margin: 0 0 0.5rem;
   font-size: clamp(1.6rem, 6vw, 2.4rem);
   font-weight: 800;
@@ -1376,6 +1377,15 @@
   margin: 0;
   line-height: 1.6;
   opacity: 0.9;
+}
+
+/* Le nom est un paragraphe (le titre de la page est le <h1> masqué) : même rendu que l'ancien titre. */
+.sf-hero .sf-hero-name {
+  max-width: none;
+  margin: 0 0 0.5rem;
+  font-family: var(--font-heading);
+  line-height: 1.2;
+  opacity: 1;
 }
 
 .sf-theme-boutique-marque .sf-header {
@@ -1492,4 +1502,17 @@
   .sf-progress-bar span {
     transition: none;
   }
+}
+
+/* ---------- Aperçu de « Ma boutique » et changement de thème en direct ---------- */
+
+/* Bandeau d'identité : seulement avec « Boutique de marque » ; sinon la description s'affiche sous l'en-tête. */
+.sf:not(.sf-theme-boutique-marque) .sf-hero,
+.sf-theme-boutique-marque .sf-home-description {
+  display: none;
+}
+
+/* Vitrine affichée dans l'aperçu de « Ma boutique » : sans le bandeau « Aperçu privé ». */
+.sf-embedded .sf-notice-preview {
+  display: none;
 }

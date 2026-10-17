@@ -10,7 +10,7 @@ const errors = [];
 page.on("pageerror", (error) => errors.push(error.message));
 page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
 const shot = (name) => page.screenshot({ path: `${out}/sf-${width}-${name}.png`, fullPage: true });
-const base = `http://localhost:3000/boutique/${slug}`;
+const base = `http://localhost:3000/${slug}`;
 
 await page.goto(base, { waitUntil: "networkidle", timeout: 180000 });
 await shot("1-accueil");

@@ -3,7 +3,7 @@
 import { chromium } from "@playwright/test";
 const browser = await chromium.launch();
 const page = await (await browser.newContext({ storageState: "storage/design-session.json", viewport: { width: 390, height: 844 } })).newPage();
-await page.goto(`http://localhost:3000/boutiques/nouvelle?boutique=${process.argv[3]}&etape=3`, { waitUntil: "networkidle" });
+await page.goto(`http://localhost:3000/boutiques/nouvelle?brouillon=${process.argv[3]}&etape=3`, { waitUntil: "networkidle" });
 await page.locator(".combobox-trigger").nth(1).click();
 await page.screenshot({ path: process.argv[2] });
 console.log(await page.locator(".combobox-list li").first().evaluate((el) => getComputedStyle(el).paddingLeft));

@@ -23,7 +23,7 @@ async function context() {
 
 function refresh(store: { id: string; slug: string }) {
   revalidatePath("/dashboard/boutique/pages");
-  revalidatePath(`/boutique/${store.slug}`);
+  revalidatePath(`/${store.slug}`);
   invalidateStorefrontCache(store.id, store.slug);
 }
 

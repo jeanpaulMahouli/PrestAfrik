@@ -4,7 +4,7 @@ import { richTextToPlain } from "@/modules/catalog/rich-text";
 import { getPublishedProduct, getStorefrontStore } from "@/modules/catalog/service";
 import { getStorefrontWhatsapp } from "@/modules/whatsapp/settings";
 
-export async function generateMetadata({ params }: PageProps<"/boutique/[slug]/[productSlug]">) {
+export async function generateMetadata({ params }: PageProps<"/[slug]/[productSlug]">) {
   const { slug, productSlug } = await params;
   const store = await getStorefrontStore(slug);
   const product = store ? await getPublishedProduct(store.id, productSlug) : null;
@@ -17,14 +17,14 @@ export async function generateMetadata({ params }: PageProps<"/boutique/[slug]/[
 
 export default async function PublicProductPage({
   params,
-}: PageProps<"/boutique/[slug]/[productSlug]">) {
+}: PageProps<"/[slug]/[productSlug]">) {
   const { slug, productSlug } = await params;
   const store = await getStorefrontStore(slug);
   const product = store ? await getPublishedProduct(store.id, productSlug) : null;
   if (!store || !product) notFound();
   const whatsapp = await getStorefrontWhatsapp(store.id);
   const productUrl = new URL(
-    `/boutique/${store.slug}/${product.slug}`,
+    `/${store.slug}/${product.slug}`,
     process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
   ).toString();
 

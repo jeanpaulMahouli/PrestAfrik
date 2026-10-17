@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { startTransition, useActionState, useEffect, useState, type ReactNode } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState, type ReactNode } from "react";
 import { PhotoManager, type ExistingPhoto } from "@/components/catalog/photo-manager";
 import { ProductVariantsEditor, type VariantDraft } from "@/components/catalog/product-variants-editor";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { useFormPersistence } from "@/components/ui/use-form-persistence";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { saveProduct, type ActionResult } from "@/modules/catalog/actions";
 
@@ -45,6 +46,9 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
   const [dirty, setDirty] = useState(false);
   const [creatingCategory, setCreatingCategory] = useState(false);
   const [trackInventory, setTrackInventory] = useState(values.trackInventory);
+  // Saisie gardée si la page est actualisée avant l'enregistrement.
+  const formRef = useRef<HTMLFormElement>(null);
+  useFormPersistence(formRef, `produit:${values.id ?? "nouveau"}`);
   const isEdit = Boolean(values.id);
   const errors = state && !state.ok ? state.error.fields ?? {} : {};
   const invalid = (name: string) => (errors[name] ? { "aria-invalid": true, "aria-describedby": `${name}-error` } : {});
@@ -98,6 +102,7 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
           id={formId}
           noValidate
           onChange={() => setDirty(true)}
+          ref={formRef}
           onSubmit={(event) => {
             // Envoi manuel : contrairement à <form action>, la saisie n'est pas effacée en cas d'erreur.
             event.preventDefault();

@@ -1,10 +1,12 @@
 "use client";
 
 import { StoreTheme } from "@prisma/client";
-import { startTransition, useActionState, useEffect, useRef, useState, type CSSProperties } from "react";
+import { startTransition, useActionState, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { StoreLivePreview } from "@/components/stores/store-live-preview";
 import { StoreImage } from "@/components/ui/store-image";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { useFormPersistence } from "@/components/ui/use-form-persistence";
 import { colorReadability } from "@/lib/contrast";
 import { updateStoreSettings, type StoreSettingsState } from "@/modules/stores/settings-actions";
 
@@ -51,25 +53,34 @@ export function StoreAppearanceForm({
   cities,
   publicUrl,
   published,
+  sideFooter,
 }: {
   initialValues: StoreSettingsValues;
   activities: { id: string; label: string }[];
   cities: readonly string[];
   publicUrl: string;
   published: boolean;
+  /** Affiché en bas de la carte d'aperçu (ex. la zone de suppression de la boutique). */
+  sideFooter?: ReactNode;
 }) {
   const [values, setValues] = useState(initialValues);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState("");
   const [dragging, setDragging] = useState(false);
   const logoInput = useRef<HTMLInputElement>(null);
+  // Saisie gardée si la page est actualisée avant l'enregistrement.
+  const formRef = useRef<HTMLFormElement>(null);
+  useFormPersistence(formRef, `boutique:${initialValues.slug}`);
   const [state, action, pending] = useActionState<StoreSettingsState, FormData>(updateStoreSettings, null);
+  // Nombre d'enregistrements réussis : l'aperçu se recharge après chacun.
+  const [savedCount, setSavedCount] = useState(0);
   const fieldError = (field: string) => (state && !state.ok && state.field === field ? state.message : null);
 
   useEffect(() => {
     if (!state?.ok) return;
     // Le nouveau logo est enregistré : l'aperçu local laisse place à l'image publiée.
     setLogoPreview(null);
+    setSavedCount((count) => count + 1);
     if (logoInput.current) logoInput.current.value = "";
     setValues((current) => ({ ...current, logoUrl: state.logoUrl }));
   }, [state]);
@@ -90,13 +101,17 @@ export function StoreAppearanceForm({
   }
   const set = <K extends keyof StoreSettingsValues>(key: K, value: StoreSettingsValues[K]) => setValues((current) => ({ ...current, [key]: value }));
   const initials = values.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr-FR")).join("") || "B";
-  const primary = colorReadability(values.primaryColor);
-  const previewStyle = {
-    "--store-primary": values.primaryColor,
-    "--store-secondary": values.secondaryColor,
-    "--store-accent": values.accentColor,
-    "--store-on-primary": primary.text,
-  } as CSSProperties;
+  const liveValues = useMemo(
+    () => ({
+      name: values.name,
+      theme: values.theme,
+      primaryColor: values.primaryColor,
+      secondaryColor: values.secondaryColor,
+      accentColor: values.accentColor,
+      logoUrl: logoPreview ?? values.logoUrl,
+    }),
+    [values.name, values.theme, values.primaryColor, values.secondaryColor, values.accentColor, values.logoUrl, logoPreview],
+  );
 
   return (
     <div className="v-split">
@@ -104,6 +119,7 @@ export function StoreAppearanceForm({
         className="v-stack"
         id={storeSettingsFormId}
         noValidate
+        ref={formRef}
         onSubmit={(event) => {
           // Envoi sans rechargement : en cas d'erreur, le logo choisi et les réglages restent affichés.
           event.preventDefault();
@@ -298,34 +314,19 @@ export function StoreAppearanceForm({
         </div>
       </form>
 
-      <section aria-labelledby="store-preview-title" className="v-card store-preview-card">
-        <h2 className="v-card-title" id="store-preview-title">Aperçu avant publication</h2>
-        <div className={`store-preview store-preview-${values.theme.toLowerCase()}`} style={previewStyle}>
-          <div className="store-preview-head">
-            <span className="store-preview-logo">
-              {logoPreview ? (
-                <img alt="" src={logoPreview} />
-              ) : values.logoUrl ? (
-                <StoreImage alt="" height={80} src={values.logoUrl} width={80} />
-              ) : (
-                initials
-              )}
-            </span>
-            <strong>{values.name || "Ma boutique"}</strong>
-          </div>
-          {values.theme === "BOUTIQUE_MARQUE" && <span className="store-preview-banner">{values.city || "Votre identité"}</span>}
-          <div className="store-preview-products">
-            {Array.from({ length: values.theme === "CATALOGUE_EXPRESS" ? 4 : values.theme === "MODE_BEAUTE" ? 1 : 2 }, (_, index) => (
-              <span aria-hidden="true" className="store-preview-image" key={index} />
-            ))}
-          </div>
-          <span className="store-preview-button">Commander</span>
-        </div>
-        {logoPreview && <p className="v-small store-preview-note">Nouveau logo : il sera publié à l’enregistrement.</p>}
-        <p className="v-small">
-          {published ? "Tout est prêt : partagez votre boutique avec un lien ou un QR code." : "Votre boutique est en brouillon : publiez-la quand tout est prêt."}
-        </p>
-      </section>
+      <div className="v-stack store-side">
+        <section aria-labelledby="store-preview-title" className="v-card store-preview-card">
+          <h2 className="v-card-title" id="store-preview-title">Aperçu avant publication</h2>
+          <p className="v-small v-muted">Votre vraie boutique, telle que vos clients la verront sur leur téléphone. Vos changements s’y affichent avant même d’être enregistrés.</p>
+          <StoreLivePreview reloadKey={savedCount} storePath={`/${initialValues.slug}`} values={liveValues} />
+          {logoPreview && <p className="v-small store-preview-note">Nouveau logo : il sera publié à l’enregistrement.</p>}
+          <p className="v-small">
+            {published ? "Tout est prêt : partagez votre boutique avec un lien ou un QR code." : "Votre boutique est en brouillon : publiez-la quand tout est prêt."}
+          </p>
+          {/* En bas de l'aperçu : zone sensible (suppression de la boutique). */}
+          {sideFooter}
+        </section>
+      </div>
     </div>
   );
 }

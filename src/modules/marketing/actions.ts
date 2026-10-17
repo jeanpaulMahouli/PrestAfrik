@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { isMarketingAudience } from "@/modules/marketing/audience";
 import { selectEligibleCampaignRecipients } from "@/modules/marketing/queries";
+import { getCampaignSender, sendPendingCampaignMessages, type CampaignSender } from "@/modules/marketing/sender";
 import { campaignIdSchema, marketingCampaignSchema } from "@/modules/marketing/validation";
 import { requireStorePermission } from "@/modules/stores/context";
 import {
@@ -30,7 +31,7 @@ export async function createMarketingCampaign(formData: FormData) {
     recipientLimit: formData.get("recipientLimit"),
   });
   if (!parsed.success) {
-    reportError("Vérifie le nom, le message, l’audience et la limite (de 1 à 10 000 destinataires).");
+    reportError("Vérifiez le nom, le message, l’audience et la limite (de 1 à 10 000 destinataires).");
   }
 
   const { session, store } = await requireStorePermission("marketing.manage");
@@ -51,39 +52,40 @@ export async function createMarketingCampaign(formData: FormData) {
   redirect(`${marketingPath}?succes=brouillon`);
 }
 
-export async function simulateMarketingCampaign(formData: FormData) {
+/**
+ * Envoi d'une campagne par WhatsApp (Cloud API). 1) Les destinataires consentants sont choisis et comptés
+ * dans le quota (transaction courte) ; 2) les messages partent ensuite, hors transaction.
+ * Sans API WhatsApp configurée, rien n'est envoyé et le vendeur sait pourquoi.
+ */
+export async function sendMarketingCampaign(formData: FormData) {
   const campaignId = campaignIdSchema.safeParse(formData.get("campaignId"));
   if (!campaignId.success) reportError("Campagne invalide.");
   // Confirmation explicite obligatoire avant tout envoi (brief §6.11).
   if (formData.get("confirm") !== "on") reportError("Cochez la case de confirmation avant d’envoyer la campagne.");
 
   const { store } = await requireStorePermission("marketing.manage");
-  let result: number | null;
+  const sender = await getCampaignSender(store.id);
+  if (!sender.ok) reportError(sender.reason);
+
+  let selected: number | null;
   try {
-    result = await prisma.$transaction(async (transaction) => {
+    selected = await prisma.$transaction(async (transaction) => {
       await lockSubscriptionForUpdate(transaction, store.id);
       const now = new Date();
       const access = await getSubscriptionAccessForTransaction(transaction, store.id, now);
       if (access.featureRestricted) {
         throw new SubscriptionLimitError(
           "EXPIRED_FEATURE",
-          "La période d’essai est expirée depuis au moins 7 jours. Choisis une offre pour simuler une campagne.",
+          "La période d’essai est expirée depuis au moins 7 jours. Choisissez une offre pour envoyer une campagne.",
         );
       }
       const monthlyUsed = await getMonthlyMessageUsageForTransaction(transaction, store.id, now);
       const remainingQuota = Math.max(0, access.plan.monthlyMessageQuota - monthlyUsed);
       if (remainingQuota === 0) {
-        throw new SubscriptionLimitError(
-          "MESSAGE_QUOTA",
-          "Le quota mensuel de messages est atteint. Choisis une offre supérieure.",
-        );
+        throw new SubscriptionLimitError("MESSAGE_QUOTA", "Le quota mensuel de messages est atteint. Choisissez une offre supérieure.");
       }
       const claimed = await transaction.marketingCampaign.updateMany({
-        where: {
-          id: campaignId.data,
-          storeId: store.id,
-          status: MarketingCampaignStatus.DRAFT,
-        },
+        where: { id: campaignId.data, storeId: store.id, status: MarketingCampaignStatus.DRAFT },
         data: { status: MarketingCampaignStatus.PROCESSING },
       });
       if (claimed.count !== 1) return null;
@@ -92,34 +94,17 @@ export async function simulateMarketingCampaign(formData: FormData) {
         where: { id: campaignId.data, storeId: store.id },
         select: { audience: true, recipientLimit: true },
       });
-      if (!campaign) {
-        throw new Error("La campagne est introuvable après son passage en simulation.");
-      }
-      if (!isMarketingAudience(campaign.audience)) {
-        throw new Error("L’audience enregistrée pour cette campagne n’est pas reconnue.");
-      }
+      if (!campaign) throw new Error("La campagne est introuvable après le début de l’envoi.");
+      if (!isMarketingAudience(campaign.audience)) throw new Error("L’audience enregistrée pour cette campagne n’est pas reconnue.");
 
-      const recipients = await selectEligibleCampaignRecipients(
-        transaction,
-        store.id,
-        campaign.audience,
-        Math.min(campaign.recipientLimit, remainingQuota),
-        now,
-      );
+      const recipients = await selectEligibleCampaignRecipients(transaction, store.id, campaign.audience, Math.min(campaign.recipientLimit, remainingQuota), now);
       if (recipients.length) {
         await transaction.marketingCampaignRecipient.createMany({
-          data: recipients.map((recipient) => ({
-            campaignId: campaignId.data,
-            customerId: recipient.id,
-            whatsapp: recipient.whatsapp,
-            simulatedAt: now,
-          })),
+          data: recipients.map((recipient) => ({ campaignId: campaignId.data, customerId: recipient.id, whatsapp: recipient.whatsapp, simulatedAt: now })),
         });
+      } else {
+        await transaction.marketingCampaign.update({ where: { id: campaignId.data }, data: { status: MarketingCampaignStatus.SENT, sentAt: now } });
       }
-      await transaction.marketingCampaign.update({
-        where: { id: campaignId.data },
-        data: { status: MarketingCampaignStatus.SIMULATED, simulatedAt: now },
-      });
       return recipients.length;
     });
   } catch (error) {
@@ -127,9 +112,27 @@ export async function simulateMarketingCampaign(formData: FormData) {
     throw error;
   }
 
-  if (result === null) {
-    reportError("Cette campagne n’est plus en brouillon ou n’existe pas dans ta boutique.");
-  }
+  if (selected === null) reportError("Cette campagne n’est plus en brouillon ou n’existe pas dans votre boutique.");
+  if (selected === 0) reportError("Aucun client de cette audience n’a accepté de recevoir vos offres : rien n’a été envoyé.");
+  await finishSending(store.id, campaignId.data, sender);
+}
+
+/** Reprend l'envoi d'une campagne commencée (gros envois, ou envoi interrompu par une erreur WhatsApp). */
+export async function continueMarketingCampaign(formData: FormData) {
+  const campaignId = campaignIdSchema.safeParse(formData.get("campaignId"));
+  if (!campaignId.success) reportError("Campagne invalide.");
+  const { store } = await requireStorePermission("marketing.manage");
+  const campaign = await prisma.marketingCampaign.findFirst({ where: { id: campaignId.data, storeId: store.id, status: MarketingCampaignStatus.PROCESSING }, select: { id: true } });
+  if (!campaign) reportError("Cette campagne n’est pas en cours d’envoi.");
+  const sender = await getCampaignSender(store.id);
+  if (!sender.ok) reportError(sender.reason);
+  await finishSending(store.id, campaign.id, sender);
+}
+
+async function finishSending(storeId: string, campaignId: string, sender: Extract<CampaignSender, { ok: true }>): Promise<never> {
+  const result = await sendPendingCampaignMessages(storeId, campaignId, sender);
   revalidatePath(marketingPath);
-  redirect(`${marketingPath}?simule=${result}`);
+  const query = new URLSearchParams({ envoyes: String(result.sent), echecs: String(result.failed), restants: String(result.remaining) });
+  if (result.stopError) query.set("erreur", `Envoi interrompu : ${result.stopError} Les messages restants partiront avec « Continuer l’envoi ».`);
+  redirect(`${marketingPath}?${query.toString()}`);
 }

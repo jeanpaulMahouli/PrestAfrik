@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ShareStoreButton } from "@/components/shared/share-store-button";
+import { DeleteStoreZone } from "@/components/stores/delete-store-zone";
 import { StoreAppearanceForm } from "@/components/stores/store-appearance-form";
 import { StoreSectionNav } from "@/components/stores/store-section-nav";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -23,11 +24,12 @@ const successMessages: Record<string, string> = {
 };
 
 export default async function StoreSettingsPage({ searchParams }: PageProps<"/dashboard/boutique">) {
-  const { session, store } = await requireStorePermission("store.manage");
+  const { session, store, membership } = await requireStorePermission("store.manage");
   const params = await searchParams;
-  const [activities, checklist] = await Promise.all([
+  const [activities, checklist, counts] = await Promise.all([
     prisma.activity.findMany({ orderBy: { position: "asc" }, select: { id: true, label: true } }),
     getPublicationChecklist(store.id, session.user.emailVerified),
+    prisma.store.findUniqueOrThrow({ where: { id: store.id }, select: { _count: { select: { orders: true, products: true } } } }),
   ]);
   const missing = checklist.filter((item) => !item.done && item.key !== "delivery");
   const phone = splitE164(store.phoneE164 ?? store.contactPhone);
@@ -56,7 +58,7 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
             </>
           ) : (
             <>
-              <Link className="btn btn-secondary" href={`/boutique/${store.slug}`} target="_blank">Prévisualiser</Link>
+              <Link className="btn btn-secondary" href={`/${store.slug}`} target="_blank">Prévisualiser</Link>
               <form action={publishStore}>
                 <SubmitButton className="btn btn-primary" disabled={missing.length > 0} pendingLabel="Publication…">Publier</SubmitButton>
               </form>
@@ -104,6 +106,9 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
         }}
         publicUrl={publicUrl}
         published={store.isPublished}
+        sideFooter={
+          membership.role === "OWNER" ? <DeleteStoreZone orderCount={counts._count.orders} productCount={counts._count.products} storeName={store.name} /> : null
+        }
       />
     </VendorShell>
   );

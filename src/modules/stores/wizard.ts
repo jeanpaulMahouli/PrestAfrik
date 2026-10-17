@@ -25,27 +25,15 @@ export async function requireWizardSession() {
   return session;
 }
 
-/** Boutique que l'utilisateur peut configurer : il doit en être propriétaire. */
+/** Adresse d'une étape de l'assistant pour un brouillon. */
+export function wizardStepHref(draftId: string, step: number) {
+  return `/boutiques/nouvelle?brouillon=${draftId}&etape=${step}`;
+}
+
+/** Boutique créée (dernier écran de l'assistant) : l'utilisateur doit en être propriétaire. */
 export async function findOwnedStore(userId: string, storeId: string) {
   return prisma.store.findFirst({
     where: { id: storeId, memberships: { some: { userId, role: "OWNER" } } },
-    include: { whatsappSettings: true, activity: { select: { label: true } } },
+    select: { id: true, name: true, slug: true, isPublished: true, theme: true, primaryColor: true, secondaryColor: true, accentColor: true, logoUrl: true, city: true, country: true },
   });
-}
-
-export type WizardStore = NonNullable<Awaited<ReturnType<typeof findOwnedStore>>>;
-
-/**
- * Boutique à reprendre : celle demandée, sinon la première dont l'assistant n'est pas terminé.
- * `nouvelle=1` force la création d'une nouvelle boutique.
- */
-export async function resolveWizardStore(userId: string, params: { boutique?: string; nouvelle?: string }) {
-  if (params.nouvelle === "1") return null;
-  if (params.boutique) return findOwnedStore(userId, params.boutique);
-  const inProgress = await prisma.store.findFirst({
-    where: { onboardingStep: { not: null }, memberships: { some: { userId, role: "OWNER" } } },
-    orderBy: { createdAt: "desc" },
-    select: { id: true },
-  });
-  return inProgress ? findOwnedStore(userId, inProgress.id) : null;
 }

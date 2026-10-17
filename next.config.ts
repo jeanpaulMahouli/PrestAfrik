@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "3mb",
     },
   },
+  async redirects() {
+    // Les boutiques sont passées de prestafrik.com/boutique/{adresse} à prestafrik.com/{adresse} :
+    // les liens déjà partagés (WhatsApp, QR codes imprimés…) continuent de fonctionner.
+    return [
+      { source: "/boutique/:slug", destination: "/:slug", permanent: true },
+      { source: "/boutique/:slug/:path*", destination: "/:slug/:path*", permanent: true },
+    ];
+  },
   async rewrites() {
     // Older product images were stored under public/uploads; files that are not
     // part of the build are served by the /media route instead.

@@ -35,7 +35,7 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
   const [zoneId, setZoneId] = useState(zones.length === 1 ? zones[0].id : "");
   const [landmark, setLandmark] = useState("");
   const [consent, setConsent] = useState(false);
-  const home = `/boutique/${storeSlug}`;
+  const home = `/${storeSlug}`;
 
   const zone = zones.find((item) => item.id === zoneId);
   const fee = method === "PICKUP" ? 0 : zone?.feeXaf ?? null;

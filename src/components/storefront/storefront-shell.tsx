@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { StoreChatWidget, type ChatWidgetConfig } from "@/components/storefront/store-chat-widget";
 import { StorefrontCartBar, StorefrontCartLink } from "@/components/storefront/storefront-cart-link";
 import { StoreCartProvider } from "@/components/storefront/store-cart-provider";
+import { StorefrontPreviewBridge } from "@/components/storefront/storefront-preview-bridge";
 import { StoreImage } from "@/components/ui/store-image";
 
 type StorefrontShellProps = {
@@ -21,6 +22,8 @@ type StorefrontShellProps = {
   chat: ChatWidgetConfig | null;
   isPreview?: boolean;
   isPaused?: boolean;
+  /** Classes supplémentaires (polices du thème). */
+  className?: string;
 };
 
 export function storeInitials(name: string) {
@@ -28,7 +31,7 @@ export function storeInitials(name: string) {
 }
 
 /** Cadre commun de la vitrine : en-tête, contenu, pied de page, panier et assistant. Thème réel appliqué par classe. */
-export function StorefrontShell({ children, store, pages, chat, isPreview = false, isPaused = false }: StorefrontShellProps) {
+export function StorefrontShell({ children, store, pages, chat, isPreview = false, isPaused = false, className = "" }: StorefrontShellProps) {
   const style = {
     "--store-primary": store.colors.primary,
     "--store-on-primary": store.colors.onPrimary,
@@ -36,19 +39,20 @@ export function StorefrontShell({ children, store, pages, chat, isPreview = fals
     "--store-on-secondary": store.colors.onSecondary,
     "--store-accent": store.colors.accent,
   } as CSSProperties;
-  const home = `/boutique/${store.slug}`;
+  const home = `/${store.slug}`;
 
   return (
     <StoreCartProvider storeId={store.id}>
-      <div className={`sf sf-theme-${store.theme.toLowerCase().replaceAll("_", "-")}`} style={style}>
+      <div className={`sf sf-theme-${store.theme.toLowerCase().replaceAll("_", "-")} ${className}`.trim()} data-theme={store.theme} style={style}>
+        <StorefrontPreviewBridge initials={storeInitials(store.name)} />
         <a className="sf-skip" href="#contenu">Aller au contenu</a>
         <header className="sf-header">
           <Link className="sf-brand" href={home}>
-            <span aria-hidden="true" className="sf-logo">
+            <span aria-hidden="true" className="sf-logo" data-store-logo="">
               {store.logoUrl ? <StoreImage alt="" height={88} src={store.logoUrl} width={88} /> : storeInitials(store.name)}
             </span>
             <span className="sf-brand-text">
-              <strong>{store.name}</strong>
+              <strong data-store-name="">{store.name}</strong>
               {store.city && <small>{store.city}</small>}
             </span>
           </Link>

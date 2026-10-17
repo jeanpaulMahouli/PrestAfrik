@@ -1,11 +1,11 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { useRestorableValue } from "@/components/ui/use-form-persistence";
 import { uuid } from "@/lib/uuid";
 
 // Gestion des photos produit (brief §6.4) : 5 photos au maximum, envoi immédiat de chaque fichier
 // avec sa progression, réorganisation (glisser ou boutons), texte alternatif, suppression.
-
 export type ExistingPhoto = { id: string; previewUrl: string; alt: string };
 
 type PhotoItem = {
@@ -24,10 +24,10 @@ const maxPhotos = 5;
 const maxBytes = 5 * 1024 * 1024;
 const acceptedTypes = ["image/jpeg", "image/png", "image/webp"];
 
-function uploadPhoto(file: File, onProgress: (value: number) => void) {
+function uploadPhoto(uploadUrl: string, file: File, onProgress: (value: number) => void) {
   return new Promise<{ key: string; previewUrl: string }>((resolve, reject) => {
     const request = new XMLHttpRequest();
-    request.open("POST", "/api/dashboard/produits/photos");
+    request.open("POST", uploadUrl);
     request.responseType = "json";
     request.upload.onprogress = (event) => event.lengthComputable && onProgress(Math.round((event.loaded / event.total) * 100));
     request.onload = () => {
@@ -42,7 +42,8 @@ function uploadPhoto(file: File, onProgress: (value: number) => void) {
   });
 }
 
-export function PhotoManager({ initialPhotos, error }: { initialPhotos: ExistingPhoto[]; error?: string }) {
+/** uploadUrl : adresse d'envoi (par défaut, le catalogue de la boutique ; l'assistant de création en fournit une autre). */
+export function PhotoManager({ initialPhotos, error, uploadUrl = "/api/dashboard/produits/photos" }: { initialPhotos: ExistingPhoto[]; error?: string; uploadUrl?: string }) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<PhotoItem[]>(
@@ -55,9 +56,34 @@ export function PhotoManager({ initialPhotos, error }: { initialPhotos: Existing
 
   const kept = photos.filter((photo) => photo.status !== "error");
   const remaining = maxPhotos - kept.length;
+  // previewUrl n'est pas utilisé par le serveur : il sert à réafficher les photos après une actualisation.
   const serialized = JSON.stringify(
-    photos.filter((photo) => photo.status === "ready").map((photo) => ({ id: photo.id, key: photo.key, alt: photo.alt.trim() })),
+    photos.filter((photo) => photo.status === "ready").map((photo) => ({ id: photo.id, key: photo.key, alt: photo.alt.trim(), previewUrl: photo.previewUrl })),
   );
+
+  // Saisie gardée (useFormPersistence) : on signale chaque changement de la liste, et on accepte la liste restaurée.
+  const hiddenRef = useRef<HTMLInputElement>(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    hiddenRef.current?.dispatchEvent(new Event("input", { bubbles: true }));
+  }, [serialized]);
+  useRestorableValue(hiddenRef, (restored) => {
+    try {
+      const items = JSON.parse(restored) as { id?: string; key?: string; alt?: string; previewUrl?: string }[];
+      setPhotos(
+        items
+          .filter((item) => item.previewUrl && (item.id || item.key))
+          .slice(0, maxPhotos)
+          .map((item) => ({ uid: item.id ?? item.key!, id: item.id, key: item.key, previewUrl: item.previewUrl, alt: item.alt ?? "", status: "ready", progress: 100 })),
+      );
+    } catch {
+      // Valeur illisible : on garde la liste actuelle.
+    }
+  });
 
   const update = (uid: string, patch: Partial<PhotoItem>) =>
     setPhotos((current) => current.map((photo) => (photo.uid === uid ? { ...photo, ...patch } : photo)));
@@ -83,7 +109,7 @@ export function PhotoManager({ initialPhotos, error }: { initialPhotos: Existing
         continue;
       }
       setPhotos((current) => [...current, item]);
-      uploadPhoto(file, (progress) => update(uid, { progress }))
+      uploadPhoto(uploadUrl, file, (progress) => update(uid, { progress }))
         .then(({ key, previewUrl }) => update(uid, { key, previewUrl, status: "ready", progress: 100 }))
         .catch((uploadError: Error) => update(uid, { status: "error", error: uploadError.message }));
     }
@@ -107,7 +133,7 @@ export function PhotoManager({ initialPhotos, error }: { initialPhotos: Existing
           · {kept.length} sur 5 · 5 photos au maximum
         </span>
       </h2>
-      <input name="photos" type="hidden" value={serialized} />
+      <input data-restorable="" name="photos" ref={hiddenRef} type="hidden" value={serialized} />
       {remaining > 0 && (
         <label
           className={`photo-dropzone ${dragging ? "is-dragging" : ""}`}

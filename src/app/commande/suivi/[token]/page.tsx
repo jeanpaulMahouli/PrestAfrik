@@ -7,5 +7,5 @@ export default async function LegacyTrackingPage({ params }: PageProps<"/command
   if (!/^[\w-]{40,64}$/.test(token)) notFound();
   const order = await prisma.order.findUnique({ where: { trackingToken: token }, select: { store: { select: { slug: true } } } });
   if (!order) notFound();
-  permanentRedirect(`/boutique/${order.store.slug}/suivi/${token}`);
+  permanentRedirect(`/${order.store.slug}/suivi/${token}`);
 }

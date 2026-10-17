@@ -147,7 +147,7 @@ export async function importProducts(_previous: ImportState, formData: FormData)
   }
 
   revalidatePath("/dashboard/produits");
-  revalidatePath(`/boutique/${store.slug}`);
+  revalidatePath(`/${store.slug}`);
   invalidateStorefrontCache(store.id, store.slug);
   return {
     step: "done",

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createContext, useContext, useState, type CSSProperties, type ReactNode } from "react";
 import { textColorFor } from "@/lib/contrast";
 import { CheckIcon } from "@/components/ui/icons";
+import { WizardPauseDialog } from "@/components/wizard/wizard-pause-dialog";
 
 export type PreviewDraft = {
   name: string;
@@ -33,14 +34,17 @@ type WizardShellProps = {
   current: number;
   /** Étapes déjà validées (cliquables pour revenir). */
   reached: number;
-  storeId: string | null;
+  /** Boutique en cours de création (null avant la première étape, ou une fois la boutique créée). */
+  draftId: string | null;
+  /** Où aller en quittant l'assistant : le tableau de bord, ou l'accueil si l'utilisateur n'a encore aucune boutique. */
+  exitHref?: string;
   initialDraft: PreviewDraft;
   showThemeLabel: boolean;
   children: ReactNode;
 };
 
 /** Mise en page de l'assistant de création (maquettes « Assistant · 1 à 8 »). */
-export function WizardShell({ steps, current, reached, storeId, initialDraft, showThemeLabel, children }: WizardShellProps) {
+export function WizardShell({ steps, current, reached, draftId, exitHref = "/dashboard", initialDraft, showThemeLabel, children }: WizardShellProps) {
   const [draft, setDraft] = useState(initialDraft);
   const update = (patch: Partial<PreviewDraft>) => setDraft((value) => ({ ...value, ...patch }));
   const initials = draft.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr-FR")).join("") || "MB";
@@ -58,15 +62,18 @@ export function WizardShell({ steps, current, reached, storeId, initialDraft, sh
           <Link aria-label="PrestAfrik" className="wizard-logo" href="/dashboard">
             <Image alt="PrestAfrik" height={34} priority src="/brand/logo-prestafrik.png" width={62} />
           </Link>
-          <p>
+          {/* <div> et non <p> : un paragraphe ne peut pas contenir le formulaire « Abandonner ». */}
+          <div className="wizard-header-info">
             Étape {Math.min(current, steps.length)} sur {steps.length}
-            {storeId && (
+            {draftId && (
               <>
                 {" · "}
-                <Link href="/dashboard">Enregistrer et quitter</Link>
+                <Link href={exitHref}>Enregistrer et quitter</Link>
+                {" · "}
+                <WizardPauseDialog draftId={draftId} exitHref={exitHref} storeName={draft.name} />
               </>
             )}
-          </p>
+          </div>
         </header>
         <div aria-hidden="true" className="wizard-progress">
           <span style={{ width: `${(Math.min(current, steps.length) / steps.length) * 100}%` }} />
@@ -88,7 +95,7 @@ export function WizardShell({ steps, current, reached, storeId, initialDraft, sh
                 );
                 return (
                   <li aria-current={step === current ? "step" : undefined} className={done ? "is-done" : step === current ? "is-current" : ""} key={label}>
-                    {storeId && step <= reached && step !== current ? <Link href={`/boutiques/nouvelle?boutique=${storeId}&etape=${step}`}>{content}</Link> : <span>{content}</span>}
+                    {draftId && step <= reached && step !== current ? <Link href={`/boutiques/nouvelle?brouillon=${draftId}&etape=${step}`}>{content}</Link> : <span>{content}</span>}
                   </li>
                 );
               })}

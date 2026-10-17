@@ -1,5 +1,5 @@
 // Adresse de boutique (brief §6.3, étape 1) : 3 à 40 caractères, minuscules, chiffres et tirets,
-// ni tiret en début ni en fin, unique, hors noms réservés.
+// ni tiret en début ni en fin, unique, hors noms réservés. La boutique est servie sur prestafrik.com/{adresse}.
 
 export const slugPattern = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
 
@@ -10,6 +10,13 @@ export const reservedSlugs = new Set([
   "store", "ftp", "webhook", "webhooks", "status", "dashboard", "compte", "profil", "legal", "cgu",
   "confidentialite", "prestafrik", "paiement", "paiements", "abonnement", "factures", "docs", "cdn",
   "login", "logout", "signup", "register", "auth", "root", "system", "null", "undefined",
+  // Les boutiques sont servies à la racine (prestafrik.com/{adresse}) : toutes les pages et dossiers
+  // publics du site sont réservés, ainsi que des mots susceptibles de servir plus tard.
+  "invitations", "invitation", "mot-de-passe-oublie", "reinitialiser", "brand", "landing", "favicon-ico",
+  "icon", "apple-icon", "robots", "sitemap", "manifest", "next", "tarifs", "prix", "fonctionnalites",
+  "a-propos", "demo", "equipe", "recherche", "panier", "nouvelle", "parametres", "messages", "marketing",
+  "livraisons", "produits", "clients", "argent", "mentions-legales", "conditions-generales",
+  "politique-de-confidentialite", "conditions-de-vente",
 ]);
 
 export function slugify(value: string) {

@@ -2,11 +2,13 @@ import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ActionDialog } from "@/components/ui/action-dialog";
 import { Badge } from "@/components/ui/badge";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { plural } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { isMarketingAudience, marketingAudienceLabels, marketingAudiences, type MarketingAudience } from "@/modules/marketing/audience";
-import { createMarketingCampaign, simulateMarketingCampaign } from "@/modules/marketing/actions";
+import { continueMarketingCampaign, createMarketingCampaign, sendMarketingCampaign } from "@/modules/marketing/actions";
 import { countEligibleCampaignRecipients } from "@/modules/marketing/queries";
+import { getCampaignSender, unsubscribeNotice, whatsappApiSettingsPath } from "@/modules/marketing/sender";
 import { requireStorePermission } from "@/modules/stores/context";
 import { getStoreSubscriptionAccess } from "@/modules/subscriptions/service";
 
@@ -15,7 +17,7 @@ export const metadata = { title: "Marketing" };
 export default async function MarketingPage({ searchParams }: PageProps<"/dashboard/marketing">) {
   const { store } = await requireStorePermission("marketing.manage");
   const params = await searchParams;
-  const [counts, campaigns, subscription] = await Promise.all([
+  const [counts, campaigns, subscription, sender] = await Promise.all([
     Promise.all(marketingAudiences.map(async (audience) => [audience, await countEligibleCampaignRecipients(store.id, audience)] as const)),
     prisma.marketingCampaign.findMany({
       where: { storeId: store.id },
@@ -24,16 +26,21 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
       include: { _count: { select: { recipients: true } } },
     }),
     getStoreSubscriptionAccess(store.id),
+    getCampaignSender(store.id),
   ]);
   const eligible = Object.fromEntries(counts) as Record<MarketingAudience, number>;
   const quota = subscription.plan.monthlyMessageQuota;
   const percent = quota > 0 ? Math.min(100, Math.round((subscription.usedMessages / quota) * 100)) : 0;
   const error = typeof params.erreur === "string" ? params.erreur : null;
+  const number = (key: string) => (typeof params[key] === "string" && /^\d+$/.test(params[key] as string) ? Number(params[key]) : null);
+  const sentNow = number("envoyes");
+  const failedNow = number("echecs") ?? 0;
+  const remainingNow = number("restants") ?? 0;
   const success =
     params.succes === "brouillon"
       ? "Campagne enregistrée en brouillon. Rien n’est envoyé tant que vous ne confirmez pas."
-      : typeof params.simule === "string" && /^\d+$/.test(params.simule)
-        ? `Simulation terminée : ${plural(Number(params.simule), "client autorisé", "clients autorisés")} — aucun message réel n’a été envoyé.`
+      : sentNow !== null && (sentNow > 0 || failedNow > 0)
+        ? `${plural(sentNow, "message envoyé", "messages envoyés")} sur WhatsApp${failedNow ? `, ${plural(failedNow, "échec", "échecs")} (numéro sans WhatsApp ou refus du client)` : ""}.${remainingNow ? ` Il reste ${plural(remainingNow, "message")} : touchez « Continuer l’envoi ».` : ""}`
         : null;
 
   return (
@@ -83,9 +90,17 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
         )}
       </div>
 
-      <p className="v-banner" role="note">
-        <strong>Mode simulation.</strong> WhatsApp n’est pas encore connecté : aucun message n’est envoyé aux clients.
-      </p>
+      {!sender.ok && (
+        <div className="v-banner v-banner-danger marketing-api-warning" role="alert">
+          <p>
+            <strong>Envoi impossible pour le moment.</strong> {sender.reason}
+          </p>
+          <Link className="btn btn-secondary btn-sm" href={whatsappApiSettingsPath}>
+            Configurer l’API WhatsApp
+          </Link>
+          <p className="v-small">Vous pouvez déjà préparer vos campagnes : elles restent en brouillon jusqu’à ce que l’API soit prête.</p>
+        </div>
+      )}
       {subscription.featureRestricted && (
         <p className="v-banner v-banner-danger" role="alert">
           Les campagnes sont bloquées depuis la fin de votre période d’essai. <Link href="/dashboard/abonnement">Choisir une offre</Link>
@@ -111,6 +126,12 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
                 {campaigns.map((campaign) => {
                   const audience = isMarketingAudience(campaign.audience) ? campaign.audience : "all";
                   const audienceCount = campaign.status === "DRAFT" ? Math.min(eligible[audience], campaign.recipientLimit) : campaign._count.recipients;
+                  const status = {
+                    DRAFT: { tone: "neutral", label: "Brouillon" },
+                    PROCESSING: { tone: "info", label: "Envoi en cours" },
+                    SENT: { tone: "success", label: "Envoyée" },
+                    SIMULATED: { tone: "neutral", label: "Simulée (aucun envoi)" },
+                  }[campaign.status] as { tone: "neutral" | "info" | "success"; label: string };
                   return (
                     <tr key={campaign.id}>
                       <td className="v-cell-primary">
@@ -119,15 +140,32 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
                       </td>
                       <td data-label="Audience">{plural(audienceCount, "client")}{campaign.status === "DRAFT" ? " avec consentement" : ""}</td>
                       <td className="v-cell-badges">
-                        <Badge tone={campaign.status === "DRAFT" ? "neutral" : campaign.status === "PROCESSING" ? "info" : "warning"}>
-                          {campaign.status === "DRAFT" ? "Brouillon" : campaign.status === "PROCESSING" ? "En cours" : "Simulée"}
-                        </Badge>
+                        <Badge tone={status.tone}>{status.label}</Badge>
+                        {(campaign.status === "SENT" || campaign.status === "PROCESSING") && (
+                          <span className="v-cell-sub">
+                            {plural(campaign.sentCount, "envoyé")}
+                            {campaign.failedCount ? ` · ${plural(campaign.failedCount, "échec")}` : ""}
+                          </span>
+                        )}
                       </td>
                       <td className="campaign-action">
-                        {campaign.status === "DRAFT" && !subscription.featureRestricted && subscription.remainingMessages > 0 && (
+                        {campaign.status === "DRAFT" && !subscription.featureRestricted && subscription.remainingMessages > 0 && !sender.ok && (
+                          <Link className="v-link" href={whatsappApiSettingsPath} title="L’API WhatsApp doit être configurée pour envoyer">
+                            API WhatsApp à configurer
+                          </Link>
+                        )}
+                        {campaign.status === "PROCESSING" && (
+                          <form action={continueMarketingCampaign}>
+                            <input name="campaignId" type="hidden" value={campaign.id} />
+                            <SubmitButton className="btn btn-secondary btn-sm" pendingLabel="Envoi…">
+                              Continuer l’envoi
+                            </SubmitButton>
+                          </form>
+                        )}
+                        {campaign.status === "DRAFT" && !subscription.featureRestricted && subscription.remainingMessages > 0 && sender.ok && (
                           <ActionDialog
-                            action={simulateMarketingCampaign}
-                            description="Mode simulation : aucun message réel ne part. Les destinataires sont recalculés au moment de l’envoi, uniquement parmi les clients consentants."
+                            action={sendMarketingCampaign}
+                            description={`Les messages partent tout de suite sur WhatsApp, depuis votre compte WhatsApp Business, avec le modèle « ${sender.templateName} ». Les destinataires sont recalculés au moment de l’envoi, uniquement parmi les clients consentants.`}
                             hiddenFields={{ campaignId: campaign.id }}
                             submitLabel="Confirmer l’envoi"
                             title={`Envoyer à ${plural(audienceCount, "client")} ?`}
@@ -137,7 +175,7 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
                             <div className="share-preview campaign-message">
                               <strong>Aperçu du message</strong>
                               <p>{campaign.message}</p>
-                              <p className="v-small">Pour ne plus recevoir nos offres, répondez STOP.</p>
+                              <p className="v-small">{unsubscribeNotice}</p>
                             </div>
                             <label className="v-check campaign-confirm">
                               <input name="confirm" required type="checkbox" />

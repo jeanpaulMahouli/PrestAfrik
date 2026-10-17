@@ -94,7 +94,7 @@ export default async function StorePagesPage({ searchParams }: PageProps<"/dashb
             initialTitle={selected.title}
             key={selected.id}
             kind={selected.kind}
-            previewHref={store.isPublished && selected.status === "PUBLISHED" ? `/boutique/${store.slug}/page/${selected.slug}` : null}
+            previewHref={store.isPublished && selected.status === "PUBLISHED" ? `/${store.slug}/page/${selected.slug}` : null}
           />
         ) : (
           <section className="v-card v-empty">

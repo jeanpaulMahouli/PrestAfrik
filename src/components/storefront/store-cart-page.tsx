@@ -8,7 +8,7 @@ import { BackIcon } from "@/components/ui/icons";
 /** Panier (maquette « Panier ») : quantités, retrait d'un article, sous-total. */
 export function StoreCartPage({ storeSlug }: { storeSlug: string }) {
   const { cart, lines, subtotal, loading, error, retry } = useCartPricing(storeSlug);
-  const home = `/boutique/${storeSlug}`;
+  const home = `/${storeSlug}`;
   const count = lines.reduce((total, line) => total + line.quantity, 0);
 
   return (

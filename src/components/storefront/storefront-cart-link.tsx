@@ -20,7 +20,7 @@ function useCartCount() {
 export function StorefrontCartLink({ storeSlug }: { storeSlug: string }) {
   const count = useCartCount();
   return (
-    <Link aria-label={`Mon panier${count ? ` : ${count} article${count > 1 ? "s" : ""}` : ", vide"}`} className="sf-cart-icon" href={`/boutique/${storeSlug}/panier`}>
+    <Link aria-label={`Mon panier${count ? ` : ${count} article${count > 1 ? "s" : ""}` : ", vide"}`} className="sf-cart-icon" href={`/${storeSlug}/panier`}>
       {bagIcon}
       {count > 0 && <span aria-hidden="true" className="sf-cart-count">{count}</span>}
     </Link>
@@ -35,7 +35,7 @@ export function StorefrontCartBar({ storeSlug }: { storeSlug: string }) {
   if (!count || hidden) return null;
   return (
     <div className="sf-cart-bar">
-      <Link className="sf-btn sf-btn-primary sf-btn-block" href={`/boutique/${storeSlug}/panier`}>
+      <Link className="sf-btn sf-btn-primary sf-btn-block" href={`/${storeSlug}/panier`}>
         Voir mon panier ({count})
       </Link>
     </div>

@@ -19,13 +19,13 @@ import { useWizardPreview } from "@/components/wizard/wizard-shell";
 import { WizardStepForm } from "@/components/wizard/wizard-step-form";
 import { CheckIcon } from "@/components/ui/icons";
 
-const back = (storeId: string | null, step: number) => (storeId ? `/boutiques/nouvelle?boutique=${storeId}&etape=${step}` : undefined);
+const back = (draftId: string | null, step: number) => (draftId ? `/boutiques/nouvelle?brouillon=${draftId}&etape=${step}` : undefined);
 
 /* ---------- 1. Nom ---------- */
 
 type SlugStatus = { state: "idle" | "checking" | "ok" | "error"; message?: string; suggestions: string[] };
 
-export function NameStep({ storeId, initialName, initialSlug, city }: { storeId: string | null; initialName: string; initialSlug: string; city: string | null }) {
+export function NameStep({ draftId, initialName, initialSlug, city }: { draftId: string | null; initialName: string; initialSlug: string; city: string | null }) {
   const { update } = useWizardPreview();
   const [name, setName] = useState(initialName);
   const [slug, setSlug] = useState(initialSlug);
@@ -41,7 +41,7 @@ export function NameStep({ storeId, initialName, initialSlug, city }: { storeId:
     const controller = new AbortController();
     // Anti-rebond de 400 ms (brief §6.3).
     const timer = window.setTimeout(() => {
-      const query = new URLSearchParams({ slug, nom: name || slug, ...(city ? { ville: city } : {}), ...(storeId ? { boutique: storeId } : {}) });
+      const query = new URLSearchParams({ slug, nom: name || slug, ...(city ? { ville: city } : {}) });
       fetch(`/api/boutiques/disponibilite?${query.toString()}`, { signal: controller.signal })
         .then((response) => response.json() as Promise<{ available?: boolean; message?: string; suggestions?: string[]; error?: string }>)
         .then((data) => setStatus({ state: data.available ? "ok" : "error", message: data.message ?? data.error, suggestions: data.suggestions ?? [] }))
@@ -53,10 +53,10 @@ export function NameStep({ storeId, initialName, initialSlug, city }: { storeId:
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [slug, name, city, storeId]);
+  }, [slug, name, city]);
 
   return (
-    <WizardStepForm action={saveNameStep} storeId={storeId} subtitle="C’est le nom que vos clients verront en premier. Pas d’inquiétude : vous pourrez le modifier plus tard." title="Comment s’appelle votre boutique ?">
+    <WizardStepForm action={saveNameStep} draftId={draftId} step={1} subtitle="C’est le nom que vos clients verront en premier. Pas d’inquiétude : vous pourrez le modifier plus tard. Votre boutique ne sera créée qu’à la dernière étape." title="Comment s’appelle votre boutique ?">
       {(fieldError) => (
         <>
           <label className="v-field">
@@ -84,7 +84,7 @@ export function NameStep({ storeId, initialName, initialSlug, city }: { storeId:
           <label className="v-field">
             Adresse web de la boutique
             <span className={`wizard-slug ${status.state === "ok" ? "is-valid" : status.state === "error" ? "is-invalid" : ""}`}>
-              <span className="wizard-slug-prefix">prestafrik.com/boutique/</span>
+              <span className="wizard-slug-prefix">prestafrik.com/</span>
               <input
                 aria-describedby="slug-status"
                 aria-invalid={status.state === "error" || Boolean(fieldError("slug")) || undefined}
@@ -105,7 +105,7 @@ export function NameStep({ storeId, initialName, initialSlug, city }: { storeId:
                 (status.state === "checking"
                   ? "Vérification de la disponibilité…"
                   : status.state === "ok"
-                    ? `Bonne nouvelle : cette adresse est disponible ! Votre boutique sera visible sur prestafrik.com/boutique/${slug}.`
+                    ? `Bonne nouvelle : cette adresse est disponible ! Votre boutique sera visible sur prestafrik.com/${slug}.`
                     : status.state === "error"
                       ? status.message
                       : "3 à 40 caractères : lettres minuscules, chiffres et tirets, sans espace.")}
@@ -138,7 +138,7 @@ export function NameStep({ storeId, initialName, initialSlug, city }: { storeId:
 
 /* ---------- 2. Activité ---------- */
 
-export function ActivityStep({ storeId, activities, initialId, initialOther }: { storeId: string; activities: { id: string; label: string; popular: boolean }[]; initialId: string; initialOther: string }) {
+export function ActivityStep({ draftId, activities, initialId, initialOther }: { draftId: string; activities: { id: string; label: string; popular: boolean }[]; initialId: string; initialOther: string }) {
   const { update } = useWizardPreview();
   const [activityId, setActivityId] = useState(initialId);
   const [other, setOther] = useState(initialOther);
@@ -150,7 +150,7 @@ export function ActivityStep({ storeId, activities, initialId, initialOther }: {
   };
 
   return (
-    <WizardStepForm action={saveActivityStep} backHref={back(storeId, 1)} storeId={storeId} subtitle="Choisissez votre activité principale pour que nous adaptions les suggestions à votre métier. La liste se filtre au fur et à mesure que vous tapez." title="Que vendez-vous ?">
+    <WizardStepForm action={saveActivityStep} backHref={back(draftId, 1)} draftId={draftId} step={2} subtitle="Choisissez votre activité principale pour que nous adaptions les suggestions à votre métier. La liste se filtre au fur et à mesure que vous tapez." title="Que vendez-vous ?">
       {(fieldError) => (
         <>
           <p className="wizard-label">Activités les plus choisies :</p>
@@ -195,7 +195,7 @@ export function ActivityStep({ storeId, activities, initialId, initialOther }: {
 
 type GeoRegion = { code: string; name: string; cities: string[] };
 
-export function LocationStep({ storeId, countries, geo, initial }: { storeId: string; countries: { iso: string; name: string }[]; geo: Record<string, GeoRegion[]>; initial: { country: string; region: string; city: string; neighborhood: string } }) {
+export function LocationStep({ draftId, countries, geo, initial }: { draftId: string; countries: { iso: string; name: string }[]; geo: Record<string, GeoRegion[]>; initial: { country: string; region: string; city: string; neighborhood: string } }) {
   const { update } = useWizardPreview();
   const [country, setCountry] = useState(initial.country || "CM");
   const regions = geo[country] ?? null;
@@ -212,7 +212,7 @@ export function LocationStep({ storeId, countries, geo, initial }: { storeId: st
   }, [city, countryName]);
 
   return (
-    <WizardStepForm action={saveLocationStep} backHref={back(storeId, 2)} storeId={storeId} subtitle="Votre pays, votre région et votre ville nous permettent de proposer les bonnes zones de livraison. Chaque liste s’adapte automatiquement au choix précédent." title="Où se trouve votre boutique ?">
+    <WizardStepForm action={saveLocationStep} backHref={back(draftId, 2)} draftId={draftId} step={3} subtitle="Votre pays, votre région et votre ville nous permettent de proposer les bonnes zones de livraison. Chaque liste s’adapte automatiquement au choix précédent." title="Où se trouve votre boutique ?">
       {(fieldError) => (
         <>
           <Combobox
@@ -298,10 +298,10 @@ export function LocationStep({ storeId, countries, geo, initial }: { storeId: st
 
 /* ---------- 4. Coordonnées ---------- */
 
-export function ContactStep({ storeId, phone, whatsapp, contactEmail }: { storeId: string; phone: { country: string; national: string }; whatsapp: { country: string; national: string } | null; contactEmail: string }) {
+export function ContactStep({ draftId, phone, whatsapp, contactEmail }: { draftId: string; phone: { country: string; national: string }; whatsapp: { country: string; national: string } | null; contactEmail: string }) {
   const [same, setSame] = useState(!whatsapp || (whatsapp.country === phone.country && whatsapp.national === phone.national));
   return (
-    <WizardStepForm action={saveContactStep} backHref={back(storeId, 3)} storeId={storeId} subtitle="Ces coordonnées s’affichent dans votre boutique. L’indicatif du pays est séparé du numéro : saisissez simplement votre numéro, nous ajoutons l’indicatif." title="Comment vos clients peuvent-ils vous joindre ?">
+    <WizardStepForm action={saveContactStep} backHref={back(draftId, 3)} draftId={draftId} step={4} subtitle="Ces coordonnées s’affichent dans votre boutique. L’indicatif du pays est séparé du numéro : saisissez simplement votre numéro, nous ajoutons l’indicatif." title="Comment vos clients peuvent-ils vous joindre ?">
       {(fieldError) => (
         <>
           <PhoneInput defaultCountry={phone.country} defaultNational={phone.national} error={fieldError("phone")} help="Saisissez le numéro sans l’indicatif. Le format international est créé automatiquement." label="Téléphone de la boutique" name="phone" />
@@ -331,11 +331,11 @@ const themes = [
   { id: "BOUTIQUE_MARQUE", name: "Boutique de marque", detail: "Votre identité en avant" },
 ] as const;
 
-export function ThemeStep({ storeId, initialTheme }: { storeId: string; initialTheme: (typeof themes)[number]["id"] }) {
+export function ThemeStep({ draftId, initialTheme }: { draftId: string; initialTheme: (typeof themes)[number]["id"] }) {
   const { update } = useWizardPreview();
   const [theme, setTheme] = useState(initialTheme);
   return (
-    <WizardStepForm action={saveThemeStep} backHref={back(storeId, 4)} storeId={storeId} subtitle="Les trois thèmes offrent exactement les mêmes fonctions. Seule la mise en page change. Vous pourrez en changer plus tard sans perdre vos produits ni vos commandes." title="Choisissez le style de votre boutique">
+    <WizardStepForm action={saveThemeStep} backHref={back(draftId, 4)} draftId={draftId} step={5} subtitle="Les trois thèmes offrent exactement les mêmes fonctions. Seule la mise en page change. Vous pourrez en changer plus tard sans perdre vos produits ni vos commandes." title="Choisissez le style de votre boutique">
       {() => (
         <div className="wizard-themes" role="radiogroup">
           {themes.map((item) => (
@@ -361,7 +361,7 @@ export function ThemeStep({ storeId, initialTheme }: { storeId: string; initialT
 
 const defaults = { primaryColor: "#FF9900", secondaryColor: "#000026", accentColor: "#EF765E" };
 
-export function BrandingStep({ storeId, initial }: { storeId: string; initial: { primaryColor: string; secondaryColor: string; accentColor: string; logoUrl: string | null; initials: string } }) {
+export function BrandingStep({ draftId, initial }: { draftId: string; initial: { primaryColor: string; secondaryColor: string; accentColor: string; logoUrl: string | null; initials: string } }) {
   const { update } = useWizardPreview();
   const [colors, setColors] = useState({ primaryColor: initial.primaryColor, secondaryColor: initial.secondaryColor, accentColor: initial.accentColor });
   const [logo, setLogo] = useState<string | null>(initial.logoUrl);
@@ -385,7 +385,7 @@ export function BrandingStep({ storeId, initial }: { storeId: string; initial: {
   };
 
   return (
-    <WizardStepForm action={saveBrandingStep} backHref={back(storeId, 5)} storeId={storeId} subtitle="Ajoutez votre logo (c’est vous qui le choisissez) et personnalisez les couleurs. Nous vérifions que vos textes restent bien lisibles." title="Votre logo et vos couleurs">
+    <WizardStepForm action={saveBrandingStep} backHref={back(draftId, 5)} draftId={draftId} step={6} subtitle="Ajoutez votre logo (c’est vous qui le choisissez) et personnalisez les couleurs. Nous vérifions que vos textes restent bien lisibles." title="Votre logo et vos couleurs">
       {(fieldError) => (
         <>
           <p className="wizard-label">Logo de votre boutique</p>
@@ -454,34 +454,40 @@ export function BrandingStep({ storeId, initial }: { storeId: string; initial: {
 
 /* ---------- 7. Premier produit ---------- */
 
-export function ProductStep({ storeId, existingProduct }: { storeId: string; existingProduct: string | null }) {
+type DraftProduct = { name: string; priceXaf: number; photos: { key: string; previewUrl: string; alt: string }[] } | null;
+
+export function ProductStep({ draftId, product }: { draftId: string; product: DraftProduct }) {
   return (
     <WizardStepForm
       action={saveProductStep}
-      backHref={back(storeId, 6)}
+      backHref={back(draftId, 6)}
+      draftId={draftId}
       secondary={
         <button className="btn btn-secondary" formNoValidate name="skip" type="submit" value="1">
-          {existingProduct ? "Continuer sans ajouter" : "Passer cette étape"}
+          Passer cette étape
         </button>
       }
-      storeId={storeId}
-      subtitle="C’est facultatif, mais une boutique avec un produit donne tout de suite envie d’acheter ! Vous pourrez ajouter jusqu’à 5 photos par produit."
-      title={existingProduct ? "Ajouter un autre produit ?" : "Ajoutons votre premier produit"}
+      step={7}
+      subtitle="C’est facultatif, mais une boutique avec un produit donne tout de suite envie d’acheter ! Vous pourrez ajouter jusqu’à 5 photos par produit, et d’autres produits ensuite depuis votre tableau de bord."
+      title="Ajoutons votre premier produit"
     >
       {(fieldError) => (
         <>
-          {existingProduct && <p className="v-banner v-banner-success">Déjà ajouté : {existingProduct}. Vous pouvez en ajouter un autre ou continuer.</p>}
           <label className="v-field">
             Nom du produit
-            <input maxLength={120} name="productName" placeholder="Ex. Robe wax Akwa" />
+            <input defaultValue={product?.name ?? ""} maxLength={120} name="productName" placeholder="Ex. Robe wax Akwa" />
             {fieldError("productName") && <span className="v-field-error">{fieldError("productName")}</span>}
           </label>
           <label className="v-field">
             Prix (en FCFA)
-            <input inputMode="numeric" name="productPrice" placeholder="18000" />
+            <input defaultValue={product ? String(product.priceXaf) : ""} inputMode="numeric" name="productPrice" placeholder="18000" />
             <span className={fieldError("productPrice") ? "v-field-error" : "v-field-help"}>{fieldError("productPrice") ?? "Saisissez un nombre entier, sans espace ni virgule."}</span>
           </label>
-          <PhotoManager error={fieldError("photos")} initialPhotos={[]} />
+          <PhotoManager
+            error={fieldError("photos")}
+            initialPhotos={(product?.photos ?? []).map((photo) => ({ id: photo.key, previewUrl: photo.previewUrl, alt: photo.alt }))}
+            uploadUrl={`/api/boutiques/brouillon/photos?brouillon=${draftId}`}
+          />
         </>
       )}
     </WizardStepForm>

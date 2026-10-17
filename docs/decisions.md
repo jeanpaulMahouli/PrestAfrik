@@ -72,3 +72,10 @@ Décision du porteur de projet (15/10/2026) : pendant le lancement, PrestAfrik e
 ## ADR-015 — E-mails : gabarits maison plutôt que react-email
 
 Le document des modèles autorise `@react-email/components` ou MJML. Pour ne pas ajouter de dépendance, les 25 modèles utilisent une mise en page unique en tableaux HTML et styles en ligne (`src/modules/email/templates.ts`), avec une version texte générée à partir du même contenu. Les textes sont centralisés dans `src/config/texts/emails.ts`. Toute variable manquante fait échouer le rendu ; les adresses `.test` ne reçoivent jamais d'envoi réel ; aperçu en développement sur `/dev/emails`. Branchés : E01, E02, E04, E05, E09 à E13, E21. En attente de leur fonctionnalité : E03, E06 à E08, E20, E22, E24, E25 (et les e-mails d'abonnement).
+
+## ADR-016 — Boutique créée à la fin de l'assistant, adresses à la racine
+
+- **Brouillon** : l'assistant `/boutiques/nouvelle` n'écrit plus dans `Store` à l'étape 1. Ses réponses vont dans `StoreDraft` (migration `20261018090000_store_drafts`) ; la boutique, son abonnement d'essai, ses réglages WhatsApp et son premier produit sont créés en une transaction à la dernière étape, avec l'identifiant du brouillon (le logo et les photos envoyés pendant l'assistant restent valides). Si l'adresse e-mail n'est pas confirmée, la boutique est créée sans être publiée et le vendeur sait comment la confirmer.
+- **Nom** : plusieurs boutiques peuvent porter le même nom, mais pas deux boutiques d'un même propriétaire (comparaison sans casse, accents ni espaces superflus) : contrôlé à l'étape 1, à la création et dans « Ma boutique ».
+- **Adresses** : `prestafrik.com/{adresse}` (routes `src/app/[slug]`). Les anciens liens `/boutique/{adresse}/…` redirigent en 308 (`next.config.ts`). Les pages du site ont priorité sur les boutiques ; leurs noms sont réservés (`reservedSlugs`).
+- **Suppression** : le propriétaire peut supprimer sa boutique (Ma boutique → Zone sensible), en retapant son nom ; paiements et commandes sont supprimés avant la boutique (relations `Restrict`), puis les images du stockage.

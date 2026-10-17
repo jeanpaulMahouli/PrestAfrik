@@ -84,7 +84,7 @@ function RowMenu({ row, tab, storeSlug, storePublished, actions, onDelete }: { r
             <button role="menuitem" type="submit">Dupliquer</button>
           </form>
           {row.status === "ACTIVE" && storePublished && (
-            <a href={`/boutique/${storeSlug}/${row.slug}`} rel="noopener noreferrer" role="menuitem" target="_blank">
+            <a href={`/${storeSlug}/${row.slug}`} rel="noopener noreferrer" role="menuitem" target="_blank">
               Voir dans la boutique
             </a>
           )}

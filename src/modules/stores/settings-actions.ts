@@ -11,6 +11,7 @@ import { deleteStoreImage, ImageUploadError, saveStoreImage } from "@/lib/upload
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { hexColorSchema } from "@/modules/catalog/validation";
 import { requireStorePermission } from "@/modules/stores/context";
+import { findOwnedStoreWithSameName } from "@/modules/stores/draft";
 import { publishStoreIfReady } from "@/modules/stores/publication";
 
 const settingsPath = "/dashboard/boutique";
@@ -45,7 +46,7 @@ const settingsSchema = z.object({
 function revalidateStore(store: { id: string; slug: string }) {
   revalidatePath(settingsPath);
   revalidatePath("/dashboard");
-  revalidatePath(`/boutique/${store.slug}`);
+  revalidatePath(`/${store.slug}`);
   invalidateStorefrontCache(store.id, store.slug);
 }
 
@@ -90,6 +91,12 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
   }
   const phone = text(formData, "phoneNational") ? parsePhone(text(formData, "phoneCountry"), text(formData, "phoneNational")) : null;
   if (phone && !phone.ok) return { ok: false, field: "phone", message: phone.message };
+  // Règle : un propriétaire ne peut pas avoir deux boutiques du même nom (d'autres vendeurs, si).
+  const owners = await prisma.storeMembership.findMany({ where: { storeId: store.id, role: "OWNER" }, select: { userId: true } });
+  for (const owner of owners) {
+    const sameName = await findOwnedStoreWithSameName(owner.userId, input.name, store.id);
+    if (sameName) return { ok: false, field: "name", message: `Le propriétaire a déjà une autre boutique nommée « ${sameName.name} ». Choisissez un autre nom.` };
+  }
   if (input.activityId && !(await prisma.activity.findUnique({ where: { id: input.activityId }, select: { id: true } }))) {
     return { ok: false, field: "activityId", message: "Choisissez une activité de la liste." };
   }
@@ -160,4 +167,39 @@ export async function unpublishStore() {
   await prisma.store.update({ where: { id: store.id }, data: { isPublished: false } });
   revalidateStore(store);
   redirect(`${settingsPath}?succes=brouillon`);
+}
+
+export type DeleteStoreState = null | { ok: false; message: string };
+
+/**
+ * Suppression définitive d'une boutique par son propriétaire, après avoir retapé son nom.
+ * Tout est supprimé : produits, commandes, clients, paiements, pages, réglages, images.
+ */
+export async function deleteStore(_previous: DeleteStoreState, formData: FormData): Promise<DeleteStoreState> {
+  const { session, store, membership } = await requireStorePermission("store.manage");
+  if (membership.role !== "OWNER") return { ok: false, message: "Seul le propriétaire de la boutique peut la supprimer." };
+  if (text(formData, "confirmName").trim() !== store.name) {
+    return { ok: false, message: `Pour confirmer, tapez exactement le nom de la boutique : « ${store.name} ».` };
+  }
+
+  await prisma.$transaction(async (transaction) => {
+    // Paiements et commandes d'abord : ces liens empêchent la suppression en cascade (onDelete: Restrict).
+    await transaction.payment.updateMany({ where: { storeId: store.id }, data: { reversesId: null } });
+    await transaction.payment.deleteMany({ where: { storeId: store.id } });
+    await transaction.order.deleteMany({ where: { storeId: store.id } });
+    await transaction.store.delete({ where: { id: store.id } });
+  });
+
+  // Images (logo, photos produit, pages) : en dehors de la transaction, sans bloquer en cas d'échec.
+  const { storage } = await import("@/lib/storage");
+  await Promise.allSettled([storage.deletePrefix(`stores/${store.id}`), storage.deletePrefix(store.id)]);
+  invalidateStorefrontCache(store.id, store.slug);
+
+  // Boutique suivante de l'utilisateur, sinon création d'une nouvelle boutique.
+  const next = await prisma.storeMembership.findFirst({ where: { userId: session.user.id }, orderBy: { createdAt: "asc" }, select: { storeId: true } });
+  const { cookies } = await import("next/headers");
+  const jar = await cookies();
+  if (next) jar.set("prestafrik-store", next.storeId, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/" });
+  else jar.delete("prestafrik-store");
+  redirect(next ? "/dashboard?succes=boutique-supprimee" : "/boutiques/nouvelle?boutique-supprimee=1");
 }

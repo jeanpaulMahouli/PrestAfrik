@@ -104,7 +104,20 @@ enum ConsentType {
 
 enum MarketingCampaignStatus {
   DRAFT
+  /// Envoi commencé (destinataires choisis) ; certains messages peuvent rester à envoyer.
   PROCESSING
+  /// Ancien mode simulation : aucun message réel n'est parti.
+  SIMULATED
+  /// Tous les destinataires ont été traités (envoyés ou en échec).
+  SENT
+}
+
+/// Envoi d'un message de campagne à un client.
+enum MarketingDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  /// Ancien mode simulation.
   SIMULATED
 }
 
@@ -145,6 +158,7 @@ model User {
   authoredCustomerNotes     CustomerNote[]     @relation("CustomerNoteAuthor")
   authoredCustomerReminders CustomerReminder[] @relation("CustomerReminderAuthor")
   authoredMarketingCampaigns MarketingCampaign[] @relation("MarketingCampaignAuthor")
+  storeDrafts               StoreDraft[]
 }
 
 model Account {
@@ -190,6 +204,23 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@index([identifier])
+}
+
+/// Boutique en cours de création (assistant). Aucune boutique n'existe tant que l'assistant n'est pas terminé :
+/// les réponses sont gardées ici, puis la boutique est créée à la dernière étape avec le même identifiant
+/// (les photos et le logo envoyés pendant l'assistant restent donc valides).
+model StoreDraft {
+  id        String   @id @default(cuid())
+  userId    String
+  /// Dernière étape atteinte (1 à 8).
+  step      Int      @default(1)
+  /// Réponses de l'assistant (voir src/modules/stores/draft.ts).
+  data      Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, updatedAt])
 }
 
 model Store {
@@ -485,6 +516,9 @@ model MarketingCampaign {
   recipientLimit Int
   status         MarketingCampaignStatus  @default(DRAFT)
   simulatedAt    DateTime?
+  sentAt         DateTime?
+  sentCount      Int                      @default(0)
+  failedCount    Int                      @default(0)
   createdAt      DateTime                 @default(now())
   updatedAt      DateTime                 @updatedAt
   store          Store                    @relation(fields: [storeId], references: [id], onDelete: Cascade)
@@ -500,12 +534,19 @@ model MarketingCampaignRecipient {
   campaignId  String
   customerId  String
   whatsapp    String           @db.VarChar(20)
+  /// Date de sélection du destinataire (compte dans le quota mensuel de messages).
   simulatedAt DateTime         @default(now())
+  status      MarketingDeliveryStatus @default(PENDING)
+  sentAt      DateTime?
+  /// Identifiant du message renvoyé par WhatsApp (wamid…).
+  waMessageId String?          @db.VarChar(128)
+  error       String?          @db.VarChar(300)
   campaign    MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   customer    Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@unique([campaignId, customerId])
   @@index([campaignId, simulatedAt])
+  @@index([campaignId, status])
 }
 
 model Plan {

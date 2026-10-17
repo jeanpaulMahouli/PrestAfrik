@@ -17,7 +17,7 @@ const errors = [];
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const page = await context.newPage();
   page.on("pageerror", (error) => errors.push(`client: ${error.message}`));
-  await page.goto(`${origin}/boutique/mboa-style`, { waitUntil: "networkidle", timeout: 180000 });
+  await page.goto(`${origin}/mboa-style`, { waitUntil: "networkidle", timeout: 180000 });
   results.secureContext = await page.evaluate(() => window.isSecureContext);
   await page.getByRole("button", { name: /Une question/ }).click();
   await page.locator(".sf-chat-chips button").nth(0).click();

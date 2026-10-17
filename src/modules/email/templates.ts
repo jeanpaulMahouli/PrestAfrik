@@ -158,7 +158,7 @@ export const sampleEmailVariables: Record<EmailId, EmailVariables> = {
   E10: { membre: "Jean Ekané", boutique: "Mboa Style", role: "Préparateur de commandes" },
   E11: { boutique: "Mboa Style" },
   E12: { boutique: "Mboa Style", role: "Gestionnaire", descriptionRole: "Vous pouvez gérer les produits, les commandes, les clients et la boutique." },
-  E13: { boutique: "Mboa Style", adresseBoutique: "https://prestafrik.com/boutique/mboa-style" },
+  E13: { boutique: "Mboa Style", adresseBoutique: "https://prestafrik.com/mboa-style" },
   E14: { jours: "3", finEssai: "18/10/2026", boutique: "Mboa Style", offres: "Essentiel : 3 000 FCFA par mois · Business : 7 500 FCFA par mois · Pro : 15 000 FCFA par mois" },
   E15: { boutique: "Mboa Style", dateExpiration: "15/10/2026", dateJ7: "22/10/2026", dateJ14: "29/10/2026" },
   E16: { boutique: "Mboa Style", offre: "Business", periode: "mensuel", montant: "7 500 FCFA", date: "15/10/2026", echeance: "15/11/2026", reference: "PAY-1042" },

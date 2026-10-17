@@ -55,6 +55,9 @@ export function ShareStoreButton({ storeName, storeUrl, published, className = "
               <button aria-live="polite" className="btn btn-secondary" onClick={copy} type="button">
                 {copied ? "Lien copié !" : "Copier"}
               </button>
+              <a className="btn btn-primary" href={storeUrl} rel="noopener noreferrer" target="_blank">
+                Voir ma boutique
+              </a>
             </span>
             {copyFailed && <span className="v-field-help" role="status">Copie automatique bloquée par le navigateur : le lien est sélectionné, faites un appui long puis « Copier ».</span>}
           </label>

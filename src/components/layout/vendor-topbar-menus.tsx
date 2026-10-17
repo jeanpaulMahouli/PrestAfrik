@@ -70,7 +70,7 @@ export function StoreSwitcher({ storeId, storeName, memberships }: { storeId: st
               </li>
             ))}
           </ul>
-          <Link className="topbar-menu-link" href="/boutiques/nouvelle?nouvelle=1">+ {t.createStore}</Link>
+          <Link className="topbar-menu-link" href="/boutiques/nouvelle">+ {t.createStore}</Link>
         </div>
       )}
     </div>

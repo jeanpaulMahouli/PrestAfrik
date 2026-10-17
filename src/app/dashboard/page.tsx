@@ -9,6 +9,7 @@ import { storePublicUrl } from "@/lib/urls";
 import { hasPermission } from "@/modules/auth/permissions";
 import { getDashboardOverview } from "@/modules/dashboard/service";
 import { getStoreContext } from "@/modules/stores/context";
+import { findDraft } from "@/modules/stores/draft";
 
 export const metadata = { title: "Accueil" };
 
@@ -17,7 +18,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const params = await searchParams;
   const value = (key: string) => (typeof params[key] === "string" ? (params[key] as string) : undefined);
   const period = resolvePeriod({ periode: value("periode"), du: value("du"), au: value("au") });
-  const overview = await getDashboardOverview(store.id, period.from, period.to);
+  const [overview, draft] = await Promise.all([getDashboardOverview(store.id, period.from, period.to), findDraft(session.user.id)]);
   const can = (permission: Parameters<typeof hasPermission>[1]) => hasPermission(membership.role, permission);
   const firstName = session.user.name.trim().split(/\s+/)[0] || session.user.name;
 
@@ -52,10 +53,19 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
         </div>
       </div>
 
-      {store.onboardingStep !== null && (
+      {value("succes") === "boutique-supprimee" && (
+        <p className="v-banner v-banner-success" role="status">
+          La boutique a été supprimée définitivement. Vous êtes maintenant sur « {store.name} ».
+        </p>
+      )}
+
+      {draft && (
         <p className="v-banner v-banner-info onboarding-resume" role="status">
-          <span>La création de votre boutique n’est pas terminée (étape {store.onboardingStep} sur 8). Tout ce que vous avez saisi est enregistré.</span>
-          <Link className="btn btn-primary btn-sm" href={`/boutiques/nouvelle?boutique=${store.id}&etape=${store.onboardingStep}`}>
+          <span>
+            La création de votre boutique{draft.data.name ? ` « ${draft.data.name} »` : ""} n’est pas terminée (étape {draft.step} sur 8). Tout ce que vous avez saisi est
+            enregistré : la boutique sera créée à la dernière étape.
+          </span>
+          <Link className="btn btn-primary btn-sm" href={`/boutiques/nouvelle?brouillon=${draft.id}&etape=${draft.step}`}>
             Reprendre la création
           </Link>
         </p>

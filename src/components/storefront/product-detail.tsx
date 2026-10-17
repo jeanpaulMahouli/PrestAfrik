@@ -112,7 +112,7 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
 
   return (
     <main className="sf-product">
-      <Link aria-label="Retour au catalogue" className="sf-back" href={`/boutique/${storeSlug}`}><BackIcon size={18} /></Link>
+      <Link aria-label="Retour au catalogue" className="sf-back" href={`/${storeSlug}`}><BackIcon size={18} /></Link>
       <Gallery images={product.images} name={product.name} />
       <div className="sf-product-copy">
         <h1>{product.name}</h1>
@@ -162,7 +162,7 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
               className="sf-btn sf-btn-primary sf-btn-block"
               disabled={!cart.ready}
               onClick={() => {
-                if (add()) router.push(`/boutique/${storeSlug}/commande`);
+                if (add()) router.push(`/${storeSlug}/commande`);
               }}
               type="button"
             >
