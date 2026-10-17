@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useDismiss } from "@/components/ui/use-dismiss";
 import { authLinks, navLinks } from "./content";
 import { MenuIcon } from "./icons";
 
@@ -12,16 +13,12 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
   const login = signedIn ? authLinks.dashboard : authLinks.login;
   const signup = signedIn ? authLinks.dashboard : authLinks.signup;
 
-  // Ferme le menu avec Échap.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  // Ferme le menu au clic en dehors (bouton et menu compris dans l'en-tête) et avec Échap.
+  const close = useCallback(() => setOpen(false), []);
+  const headerRef = useDismiss<HTMLElement>(open, close);
 
   return (
-    <header className="lp-header">
+    <header className="lp-header" ref={headerRef}>
       <nav aria-label="Navigation principale" className="lp-nav">
         <button
           aria-controls="lp-mobile-menu"

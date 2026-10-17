@@ -283,23 +283,15 @@
   font-weight: 600;
 }
 
-/* Soulignement orange au survol. */
-.lp-nav__links a::after {
-  content: "";
-  position: absolute;
-  left: clamp(6px, 0.7vw, 14px);
-  right: clamp(6px, 0.7vw, 14px);
-  bottom: 0.1em;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--lp-orange);
-  transform: scaleX(0);
-  transition: transform 0.25s var(--lp-ease);
+/* Survol : pastille pêche, sans soulignement. */
+.lp-nav__links a {
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
 }
 
-.lp-nav__links a:hover::after,
-.lp-nav__links a:focus-visible::after {
-  transform: scaleX(1);
+.lp-nav__links a:hover,
+.lp-nav__links a:focus-visible {
+  background: #fff1d6;
 }
 
 .lp-nav__actions {
@@ -1284,15 +1276,11 @@
 .lp-footer__col a {
   color: var(--lp-ink-soft);
   font: 300 clamp(0.95rem, 1.25vw, 1.5rem) / 1.4 var(--lp-text);
-  text-decoration-color: var(--lp-orange);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 5px;
   transition: color 0.2s ease;
 }
 
 .lp-footer__col a:hover {
-  color: var(--lp-ink);
-  text-decoration-line: underline;
+  color: var(--lp-orange-hover);
 }
 
 .lp-footer__socials {

@@ -59,10 +59,11 @@ pas de clé avant d’avoir choisi le prestataire et l’adaptateur à réaliser
 
 ## Images, URL et base
 
-Configure un bucket S3 compatible privé/public selon le besoin, son URL publique CDN, sa région et
-ses identifiants. L’application utilise encore `public/uploads` en développement : ce stockage
-local ne convient pas à un hébergement dont le disque est éphémère ; les variables de stockage du
-modèle ne sont pas encore consommées par le code.
+Les images des vendeurs (logos, photos produit, pages) sont enregistrées sur Cloudinary dès que
+`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY` et `CLOUDINARY_API_SECRET` sont définis, ou dans un
+stockage objet S3 compatible si `OBJECT_STORAGE_BUCKET` est défini ; sinon sur le disque (`UPLOADS_DIR`). Sans
+stockage objet ni disque persistant, **les images sont perdues à chaque redéploiement**. Procédure
+complète (Cloudinary, Supabase Storage, Cloudflare R2, serveur VPS) : [stockage-images.md](stockage-images.md).
 
 En production, `BETTER_AUTH_URL` doit être l’origine HTTPS publique sans chemin. `BETTER_AUTH_SECRET`
 doit être aléatoire et contenir au moins 32 caractères. `DATABASE_URL` pointe vers la base de

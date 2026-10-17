@@ -52,6 +52,8 @@ function HiddenIds({ ids, tab }: { ids: string[]; tab: string }) {
 
 function RowMenu({ row, tab, storeSlug, storePublished, actions, onDelete }: { row: ProductListRow; tab: string; storeSlug: string; storePublished: boolean; actions: ProductListProps["actions"]; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
+  // Ouvre le menu vers le haut quand la place manque sous le bouton (dernières lignes du tableau).
+  const [upward, setUpward] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -68,11 +70,14 @@ function RowMenu({ row, tab, storeSlug, storePublished, actions, onDelete }: { r
 
   return (
     <div className="row-menu" ref={ref}>
-      <button aria-expanded={open} aria-haspopup="menu" aria-label={`Plus d’actions pour ${row.name}`} className="row-menu-trigger" onClick={() => setOpen((value) => !value)} type="button">
+      <button aria-expanded={open} aria-haspopup="menu" aria-label={`Plus d’actions pour ${row.name}`} className="row-menu-trigger" onClick={(event) => {
+          setUpward(window.innerHeight - event.currentTarget.getBoundingClientRect().bottom < 280);
+          setOpen((value) => !value);
+        }} type="button">
         ···
       </button>
       {open && (
-        <div className="row-menu-panel" role="menu">
+        <div className={`row-menu-panel${upward ? " is-upward" : ""}`} role="menu">
           <Link href={`/dashboard/produits/${row.id}`} role="menuitem">Modifier</Link>
           <form action={actions.duplicate}>
             <input name="productId" type="hidden" value={row.id} />

@@ -1,15 +1,13 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { mkdir, rename, unlink } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import sharp from "sharp";
+import { legacyUploadsRoot, storage } from "@/lib/storage";
 
-// Images are kept outside `public/`: `next start` only serves public files that
-// existed at build time. They are served by `src/app/media/[...path]/route.ts`.
-// UPLOADS_DIR must point to a persistent disk in production.
-export const uploadsRoot = resolve(process.env.UPLOADS_DIR || join(process.cwd(), "storage", "uploads"));
-export const legacyUploadsRoot = join(process.cwd(), "public", "uploads");
+// Les images (logos de boutique) sont confiées au stockage de src/lib/storage.ts — stockage objet en
+// production, disque local en développement — et servies par src/app/media/[...path]/route.ts.
+export { legacyUploadsRoot };
 export const maxImageBytes = 2 * 1024 * 1024;
 
 const storeIdPattern = /^[a-z0-9]{20,40}$/;
@@ -21,9 +19,15 @@ export function isSafeUploadPath(storeId: string, filename: string) {
   return storeIdPattern.test(storeId) && filenamePattern.test(filename);
 }
 
-export function uploadFilePath(storeId: string, filename: string, root = uploadsRoot) {
+/** Clé de stockage d'une image de boutique (format « {storeId}/{uuid}.webp »). */
+export function uploadKey(storeId: string, filename: string) {
   if (!isSafeUploadPath(storeId, filename)) throw new ImageUploadError("Chemin d’image invalide.");
-  return join(root, storeId, filename);
+  return `${storeId}/${filename}`;
+}
+
+/** Chemin sur disque de l'ancien emplacement public/uploads. */
+export function legacyUploadPath(storeId: string, filename: string) {
+  return join(legacyUploadsRoot, uploadKey(storeId, filename));
 }
 
 /** Valide, réoriente et convertit l’image en WebP. Retourne null si aucun fichier n’est envoyé. */
@@ -53,26 +57,26 @@ export async function saveStoreImage(
     throw new ImageUploadError("L’image ne peut pas dépasser 5 000 pixels de côté.");
   }
 
-  const imageId = randomUUID();
-  const filename = `${imageId}.webp`;
-  const directory = join(uploadsRoot, storeId);
-  const finalFile = uploadFilePath(storeId, filename);
-  const temporaryFile = join(directory, `${imageId}.tmp`);
+  const filename = `${randomUUID()}.webp`;
   const maxSide = options.maxSide ?? 1600;
-  await mkdir(directory, { recursive: true });
-  await image
+  const body = await image
     .rotate()
     .resize({ width: maxSide, height: maxSide, fit: options.square ? "cover" : "inside", withoutEnlargement: !options.square })
     .webp({ quality: 82, effort: 4 })
-    .toFile(temporaryFile);
-  await rename(temporaryFile, finalFile);
-  return { path: finalFile, url: `/media/${storeId}/${filename}` };
+    .toBuffer();
+  const key = uploadKey(storeId, filename);
+  await storage.put(key, body);
+  return { key, url: `/media/${key}` };
 }
 
-/** Supprime une image déjà enregistrée (nouveau ou ancien emplacement), sans échouer si elle manque. */
+/** Supprime une image déjà enregistrée (stockage actuel ou ancien emplacement), sans échouer si elle manque. */
 export async function deleteStoreImage(url: string) {
   const match = /^\/(media|uploads)\/([^/]+)\/([^/]+)$/.exec(url);
   if (!match || !isSafeUploadPath(match[2], match[3])) return;
-  const root = match[1] === "media" ? uploadsRoot : legacyUploadsRoot;
-  await unlink(uploadFilePath(match[2], match[3], root)).catch(() => undefined);
+  if (match[1] === "media") {
+    await storage.delete(uploadKey(match[2], match[3])).catch(() => undefined);
+  } else {
+    const { rm } = await import("node:fs/promises");
+    await rm(legacyUploadPath(match[2], match[3]), { force: true });
+  }
 }

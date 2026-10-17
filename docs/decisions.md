@@ -28,7 +28,7 @@ La migration initiale avait été réécrite avec le schéma complet : une base 
 
 ## ADR-007 — Fichiers téléversés hors de `public/`
 
-`next start` ne sert que les fichiers de `public/` présents au moment du build : les photos ajoutées ensuite n'apparaissaient pas. Les fichiers sont stockés dans `storage/uploads` (ou `UPLOADS_DIR`) et servis par `/media/[...path]` avec un chemin préfixé par la boutique et validé par expression régulière. Les anciennes adresses `/uploads/…` restent servies (réécriture). En production sur disque éphémère, un stockage objet reste nécessaire.
+`next start` ne sert que les fichiers de `public/` présents au moment du build : les photos ajoutées ensuite n'apparaissaient pas. Les fichiers sont stockés dans `storage/uploads` (ou `UPLOADS_DIR`) et servis par `/media/[...path]` avec un chemin préfixé par la boutique et validé par expression régulière. Les anciennes adresses `/uploads/…` restent servies (réécriture). Depuis, `src/lib/storage.ts` bascule sur un stockage objet S3 compatible dès que `OBJECT_STORAGE_BUCKET` est défini (indispensable sur un disque éphémère) ; voir `docs/stockage-images.md`.
 
 ## ADR-008 — Photos produit : 3 tailles, fichiers provisoires puis rattachement
 

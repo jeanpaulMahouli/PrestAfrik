@@ -1,0 +1,780 @@
+/* =============================================================================
+   Espace vendeur — design system de la landing page
+   Ce fichier vient après vendor.css, catalog.css et store.css : il redéfinit les jetons
+   (couleurs, arrondis, ombres, polices) et habille les composants communs.
+   Couleurs de référence (landing) : orange #FF9900, pêche #FFDEAE, crème #FEF9EB, sable #FAF3DE,
+   carte #FAFAFA, texte #000 / rgba(0,0,0,.5), bleu nuit #000026.
+   ========================================================================== */
+
+/* ---------- 1. Jetons ---------- */
+/* Posés sur :root dès que l'espace vendeur est affiché : les fenêtres (dialogues ouverts dans <body>) en profitent aussi. */
+:root:has(.vendor-shell) {
+  --color-brand-primary: #ff9900;
+  --color-brand-primary-soft: #fff1d6;
+  --color-brand-secondary: #000026;
+
+  /* Fond de page d'origine (gris clair), conservé à la demande. */
+  --color-page-background: #f1f2ee;
+  --color-page-background-alt: #f7f8f4;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f6f2ea;
+  --color-surface-warm: #fef9eb;
+
+  --color-text-primary: #0b0b12;
+  --color-text-secondary: #6b665d;
+  --color-text-muted: #9b958a;
+  --color-border: #efe9dd;
+  --color-border-input: #e4dccb;
+  --color-divider: #f2ede3;
+  --color-link: #a85400;
+
+  --radius-xs: 0.875rem; /* boutons (14 px, comme la landing) */
+  --radius-sm: 0.875rem; /* champs */
+  --radius-md: 1.25rem; /* cartes (20 px) */
+  --radius-lg: 1.5rem; /* panneaux */
+
+  --shadow-card: 0 0 0 1px #f1ebdf, 0 1px 2px rgb(0 0 0 / 0.03);
+  --shadow-raised: 0 12px 30px rgb(0 0 0 / 0.07);
+  --shadow-overlay: 0 20px 50px rgb(0 0 0 / 0.12);
+
+  --sidebar-width: 15rem;
+  --topbar-height: 4.25rem;
+
+  /* Propres au thème. */
+  --dt-peach: #ffdeae;
+  --dt-cream: #fef9eb;
+  --dt-sand: #faf3de;
+  --dt-hover: #fff6e6;
+  --dt-hover-strong: #ffedcf;
+  --dt-active: linear-gradient(98.7deg, #ffdeae, rgb(255 174 73 / 0.16));
+  --dt-ring: 0 0 0 3px rgb(255 153 0 / 0.22);
+  --dt-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dt-font-text: var(--lp-font-text), "DM Sans", system-ui, sans-serif;
+  --dt-font-ui: var(--lp-font-ui), "Poppins", system-ui, sans-serif;
+  --dt-font-display: var(--lp-font-display), "Inter", system-ui, sans-serif;
+}
+
+.vendor-shell {
+  font-family: var(--dt-font-ui);
+  color: var(--color-text-primary);
+  background: var(--color-page-background);
+}
+
+/* ---------- 2. Éléments cliquables : curseur et transitions partout ---------- */
+.vendor-shell :is(a[href], button:not(:disabled), summary, select, [role="button"], [role="tab"], label:has(> input:not(:disabled))),
+.dialog-layer :is(a[href], button:not(:disabled), summary, select, [role="button"], label:has(> input:not(:disabled))) {
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    color 0.18s ease,
+    opacity 0.18s ease,
+    filter 0.18s ease,
+    translate 0.18s var(--dt-ease);
+}
+
+/* Liens : pas de soulignement au survol, seulement un changement de couleur. */
+.vendor-main a[href]:not([class]),
+.dialog-panel a[href]:not([class]),
+.text-link,
+.v-link,
+.v-back-link,
+.v-ref,
+.v-ref-dark,
+.todo-list a,
+.customer-name,
+.product-name {
+  text-decoration: none;
+}
+
+.vendor-main a[href]:not([class]):hover,
+.dialog-panel a[href]:not([class]):hover,
+.text-link:hover,
+.v-link:hover,
+.v-back-link:hover,
+.v-ref:hover,
+.todo-list a:hover {
+  color: #6b3400;
+}
+
+.v-ref-dark:hover,
+.customer-name:hover,
+.product-name:hover {
+  color: var(--color-link);
+}
+
+/* Boutons sans classe (petites actions dans les listes) : fond pêche léger. */
+.vendor-main button:not([class]):not(:disabled):hover,
+.dialog-panel button:not([class]):not(:disabled):hover {
+  background-color: var(--dt-hover);
+}
+
+/* ---------- 3. Barre du haut ---------- */
+.vendor-topbar {
+  border-bottom-color: var(--color-border);
+  /* Fond opaque, sans backdrop-filter : celui-ci enfermerait le tiroir mobile (position: fixed) dans la barre. */
+  background: #fff;
+}
+
+.vendor-logo {
+  border-radius: 12px;
+}
+
+.vendor-logo:hover {
+  opacity: 0.8;
+}
+
+.vendor-logo img {
+  height: 2.5rem;
+}
+
+.vendor-search {
+  position: relative;
+}
+
+.vendor-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  color: var(--color-text-secondary);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.vendor-search input,
+.topbar-search-overlay-form input {
+  height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--color-page-background-alt);
+  font-family: var(--dt-font-text);
+  font-size: 0.9rem;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.vendor-search input {
+  padding-left: 2.75rem;
+}
+
+.vendor-search input:hover,
+.topbar-search-overlay-form input:hover {
+  border-color: var(--color-border-input);
+  background: #fff;
+}
+
+.vendor-search input:focus-visible,
+.topbar-search-overlay-form input:focus-visible {
+  border-color: var(--color-brand-primary);
+  outline: 0;
+  background: #fff;
+  box-shadow: var(--dt-ring);
+}
+
+.topbar-icon-button,
+.topbar-store,
+.store-switch-item,
+.topbar-menu-link {
+  border-radius: 12px;
+}
+
+.topbar-icon-button:hover,
+.topbar-store:hover,
+.store-switch-item:hover,
+.store-switch-item.is-active,
+.topbar-menu-link:hover {
+  background: var(--dt-hover);
+}
+
+.topbar-store {
+  padding: 0 0.6rem;
+}
+
+.store-mark {
+  border-radius: 10px;
+  background: var(--dt-active);
+}
+
+.user-avatar {
+  box-shadow: 0 0 0 3px #fff, 0 0 0 4px var(--dt-peach);
+}
+
+.user-avatar:hover {
+  filter: brightness(0.95);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--color-brand-primary);
+}
+
+.topbar-signout:hover {
+  background: var(--color-danger-surface) !important;
+}
+
+.topbar-menu-panel {
+  padding: 0.6rem;
+  border-color: var(--color-border);
+  border-radius: 1.25rem;
+}
+
+.topbar-search-overlay {
+  border-bottom-color: var(--color-border);
+}
+
+/* ---------- 4. Menu latéral et tiroir mobile ---------- */
+.vendor-sidebar {
+  gap: 0.25rem;
+  padding: 1.25rem 0.875rem;
+}
+
+.vendor-sidebar a,
+.vendor-drawer-nav a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-radius: 14px;
+  font-size: 0.9rem;
+}
+
+.vendor-sidebar a:hover,
+.vendor-drawer-nav a:hover {
+  background: var(--dt-hover);
+  translate: 2px 0;
+}
+
+.vendor-sidebar a[aria-current="page"],
+.vendor-drawer-nav a[aria-current="page"] {
+  background: var(--dt-active);
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.vendor-drawer {
+  background: var(--color-page-background);
+}
+
+.vendor-menu-button:hover,
+.vendor-drawer-backdrop:hover {
+  background-color: var(--dt-hover);
+}
+
+.vendor-drawer-backdrop:hover {
+  background-color: rgb(0 0 38 / 0.5);
+}
+
+/* ---------- 5. En-têtes de page ---------- */
+.vendor-main {
+  max-width: 76rem;
+}
+
+.v-page-header {
+  margin-bottom: 1.5rem;
+}
+
+.v-page-title,
+.dashboard-heading {
+  font-family: var(--dt-font-ui);
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.v-page-subtitle,
+.page-heading .dashboard-copy {
+  font-family: var(--dt-font-text);
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+.v-back-link {
+  font-weight: 500;
+}
+
+@media (min-width: 768px) {
+  .v-page-title,
+  .dashboard-heading {
+    font-size: 1.9rem;
+  }
+}
+
+/* ---------- 6. Boutons (mêmes codes que la landing) ---------- */
+.btn,
+.primary-button,
+.secondary-button {
+  min-height: 2.875rem;
+  padding: 0.6rem 1.15rem;
+  border-radius: var(--radius-xs);
+  font-family: var(--dt-font-ui);
+  font-weight: 500;
+}
+
+.btn:not(:disabled):not([aria-disabled="true"]):hover,
+.primary-button:not(:disabled):hover,
+.secondary-button:not(:disabled):hover {
+  translate: 0 -1px;
+}
+
+.btn:not(:disabled):active,
+.primary-button:not(:disabled):active,
+.secondary-button:not(:disabled):active {
+  translate: 0 0;
+}
+
+/* Principal : orange plein d'origine (pas de dégradé). */
+.btn-primary:not(:disabled):hover,
+.primary-button:not(:disabled):hover {
+  filter: brightness(0.96);
+}
+
+/* Secondaire : blanc, bordure intérieure de 2 px. */
+.btn-secondary,
+.secondary-button {
+  border-color: transparent;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.1);
+}
+
+.btn-secondary:not(:disabled):hover,
+.secondary-button:not(:disabled):hover {
+  background: #f6f6f6;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.22);
+}
+
+.btn-danger:not(:disabled):hover {
+  filter: brightness(0.92);
+  box-shadow: 0 8px 18px rgb(201 54 54 / 0.25);
+}
+
+.btn-danger-outline:not(:disabled):hover {
+  background: var(--color-danger-surface);
+}
+
+.btn-whatsapp:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 8px 18px rgb(11 110 90 / 0.25);
+}
+
+.btn-ghost:not(:disabled):hover,
+.v-link-button:not(:disabled):hover {
+  background: var(--dt-hover);
+  color: var(--color-text-primary);
+}
+
+.v-link-button {
+  border-radius: 10px;
+}
+
+.btn:focus-visible,
+.primary-button:focus-visible,
+.secondary-button:focus-visible {
+  outline: 3px solid var(--color-brand-secondary);
+}
+
+/* ---------- 7. Cartes, indicateurs, bandeaux ---------- */
+.v-card,
+.surface-card,
+.stat-card {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+}
+
+.v-card {
+  padding: 1.5rem;
+}
+
+.v-card-flush {
+  padding: 0;
+}
+
+.v-card-title {
+  font-family: var(--dt-font-ui);
+  font-weight: 600;
+}
+
+.stat-card {
+  padding: 1.4rem 1.5rem;
+}
+
+.stat-card-value {
+  font-family: var(--dt-font-ui);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.stat-card p,
+.stat-card-hint,
+.v-muted {
+  font-family: var(--dt-font-text);
+}
+
+/* Bandeau par défaut et informatif : dégradé pêche, comme les questions de la FAQ de la landing. */
+.v-banner,
+.notice,
+.v-banner-info {
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  background: var(--dt-active);
+  box-shadow: none;
+  font-family: var(--dt-font-text);
+  font-size: 0.95rem;
+}
+
+.v-banner-success,
+.notice:not(.notice-warning):not(.notice-error)[role="status"] {
+  color: var(--color-success-strong);
+  background: var(--color-success-surface);
+}
+
+.v-banner-danger,
+.notice-error {
+  color: var(--color-danger-strong);
+  background: var(--color-danger-surface);
+}
+
+.email-banner {
+  background: var(--dt-active);
+  color: var(--color-text-primary);
+}
+
+.email-banner button:hover {
+  color: var(--color-text-primary);
+}
+
+/* Listes d'actions de l'accueil. */
+.todo-list a,
+.onboarding-list a {
+  border-radius: 10px;
+}
+
+.onboarding-list a:hover {
+  background: var(--dt-hover);
+}
+
+/* ---------- 8. Onglets ---------- */
+.v-tabs {
+  gap: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom-color: var(--color-divider);
+}
+
+.v-tabs a,
+.v-tabs button {
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 0;
+  border-radius: 999px;
+  font-family: var(--dt-font-ui);
+}
+
+.v-tabs a:hover,
+.v-tabs button:hover {
+  color: var(--color-text-primary);
+  background: var(--dt-hover);
+}
+
+.v-tabs [aria-current="page"],
+.v-tabs [aria-selected="true"] {
+  background: var(--dt-active);
+  font-weight: 600;
+}
+
+/* Onglets en pastilles (produits). */
+.pill-tabs a:hover {
+  background: var(--dt-hover);
+}
+
+.pill-tabs a[aria-current="page"] {
+  border-color: transparent;
+  color: var(--color-text-primary);
+  background: var(--dt-active);
+  font-weight: 600;
+}
+
+.v-tab-count {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--color-border);
+}
+
+/* ---------- 9. Tableaux et listes ---------- */
+.v-table th,
+.data-table th {
+  color: var(--color-text-muted);
+  font-family: var(--dt-font-ui);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.v-table tbody tr,
+.data-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.v-table tbody tr:hover,
+.data-table tbody tr:hover,
+.order-card:hover,
+.zone-list li:hover {
+  background: #fffaf1;
+}
+
+.v-ref {
+  color: var(--color-link);
+}
+
+/* Pagination. */
+.pagination a {
+  border-radius: 12px;
+}
+
+.pagination a:hover {
+  background: var(--dt-hover);
+}
+
+/* Filtre de période (menu déroulant). */
+.period-filter summary {
+  border-radius: var(--radius-xs);
+}
+
+.period-filter summary:hover {
+  background: #f6f6f6;
+}
+
+.period-filter-panel li a:hover {
+  background: var(--dt-hover);
+}
+
+/* Menus « … » des lignes : passent au-dessus de tout (barre du haut : 30) et ne sont plus coupés par la carte. */
+.row-menu-panel {
+  z-index: 70;
+}
+
+.v-card-flush:has(.row-menu) {
+  overflow: visible;
+}
+
+.row-menu-panel.is-upward {
+  top: auto;
+  bottom: calc(100% + 0.375rem);
+}
+
+/* Menus « … » des lignes. */
+.row-menu-trigger:hover {
+  background: var(--dt-hover);
+}
+
+.row-menu-danger:hover {
+  background: var(--color-danger-surface);
+}
+
+/* ---------- 10. Formulaires ---------- */
+.v-field {
+  font-family: var(--dt-font-ui);
+}
+
+.v-field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.v-field select,
+.v-field textarea {
+  border-color: var(--color-border-input);
+  border-radius: var(--radius-sm);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.v-field input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):hover,
+.v-field select:hover,
+.v-field textarea:hover {
+  border-color: #cfc5b1;
+}
+
+.v-field :is(input, select, textarea):focus-visible {
+  border-color: var(--color-brand-primary);
+  box-shadow: var(--dt-ring);
+}
+
+/* Cases, interrupteurs et étiquettes cliquables. */
+.v-check:hover,
+.v-radio:hover,
+.zone-active-check:hover,
+.campaign-confirm:hover {
+  color: var(--color-text-primary);
+}
+
+.v-check:hover input,
+.v-radio:hover input,
+.zone-active-check:hover input,
+.campaign-confirm:hover input {
+  filter: drop-shadow(0 0 3px rgb(255 153 0 / 0.55));
+}
+
+.v-switch:hover input:not(:checked),
+.quick-reply-switch:hover input:not(:checked) {
+  background: #d2c8b4;
+}
+
+.v-switch:hover input:checked,
+.quick-reply-switch:hover input:checked {
+  filter: brightness(0.95);
+}
+
+/* Zones de dépôt d'images, tuiles de thème et couleurs. */
+.photo-dropzone:hover,
+.logo-dropzone:hover {
+  border-color: var(--color-brand-primary) !important;
+  background: var(--dt-cream) !important;
+}
+
+.photo-add:hover {
+  border-color: var(--color-brand-primary) !important;
+  background: var(--dt-hover) !important;
+}
+
+.photo-remove:hover,
+.variants-remove:hover {
+  color: var(--color-danger) !important;
+  background: var(--color-danger-surface) !important;
+}
+
+.theme-tile:hover,
+.color-swatch:hover {
+  translate: 0 -2px;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
+}
+
+.combobox-trigger:hover,
+.combobox-not-listed:hover,
+.block-summary:hover,
+.rich-editor-mode:hover,
+.password-toggle:hover {
+  background: var(--dt-hover) !important;
+}
+
+/* ---------- 11. Fenêtres de dialogue ---------- */
+.share-preview {
+  border-left: 0;
+}
+
+.dialog-panel {
+  border-radius: var(--radius-lg);
+}
+
+.dialog-close:hover {
+  background: var(--dt-hover);
+}
+
+/* ---------- 12. Recherche (barre du haut) ---------- */
+.search-section {
+  margin-bottom: 1.25rem;
+}
+
+.search-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.search-list {
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+}
+
+.search-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.35rem 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.search-row:hover {
+  background: var(--dt-hover);
+}
+
+.search-row:hover strong:first-child {
+  color: var(--color-link);
+}
+
+.search-row-main {
+  display: grid;
+  min-width: 0;
+}
+
+.search-row-main strong {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-row-main small {
+  color: var(--color-text-secondary);
+  font-family: var(--dt-font-text);
+  font-size: 0.8rem;
+}
+
+.search-row-end {
+  grid-column: 2 / -1;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.search-row .badge {
+  grid-column: 2 / -1;
+  justify-self: start;
+}
+
+.search-avatar,
+.search-thumb {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--dt-active);
+  font-weight: 600;
+}
+
+.search-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-more {
+  margin: 0;
+  padding: 0 1.5rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .search-row {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+
+  .search-row-end,
+  .search-row .badge {
+    grid-column: auto;
+  }
+
+  .search-row-end {
+    text-align: right;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vendor-shell *,
+  .dialog-layer * {
+    transition: none !important;
+    translate: none !important;
+  }
+}

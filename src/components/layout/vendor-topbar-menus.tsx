@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { StoreRole } from "@prisma/client";
+import { useDismiss } from "@/components/ui/use-dismiss";
 import { texts } from "@/config/texts";
 import { authClient } from "@/modules/auth/client";
 import { selectStore } from "@/modules/stores/actions";
@@ -19,25 +20,6 @@ export function storeInitials(name: string) {
       .map((part) => part[0]?.toLocaleUpperCase("fr-FR"))
       .join("") || "B"
   );
-}
-
-/** Ferme un menu déroulant au clic extérieur et à la touche Échap. */
-function useDismiss(open: boolean, close: () => void) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node)) close();
-    };
-    const onKey = (event: KeyboardEvent) => event.key === "Escape" && close();
-    document.addEventListener("pointerdown", onPointer);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onPointer);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open, close]);
-  return ref;
 }
 
 type Membership = { storeId: string; role: StoreRole; store: { name: string; city: string | null } };
@@ -147,6 +129,8 @@ export function UserMenu({ userName, userEmail }: { userName: string; userEmail:
 export function MobileSearchButton() {
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const close = useCallback(() => setOpen(false), []);
+  const overlayRef = useDismiss(open, close);
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
@@ -160,9 +144,9 @@ export function MobileSearchButton() {
         </svg>
       </button>
       {open && (
-        <div className="topbar-search-overlay" role="search">
+        <div className="topbar-search-overlay" ref={overlayRef} role="search">
           <form action="/dashboard/recherche" className="topbar-search-overlay-form">
-            <input aria-label={t.searchLabel} maxLength={80} name="q" placeholder={t.searchPlaceholder} ref={inputRef} type="search" />
+            <input aria-label={t.searchLabel} maxLength={80} minLength={2} name="q" placeholder={t.searchPlaceholder} ref={inputRef} required type="search" />
             <button aria-label={t.closeSearch} className="topbar-icon-button" onClick={() => setOpen(false)} type="button">
               <svg aria-hidden="true" fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeWidth="2" viewBox="0 0 24 24" width="20">
                 <path d="M6 6l12 12M18 6 6 18" />

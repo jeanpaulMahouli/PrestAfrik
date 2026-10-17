@@ -1,9 +1,10 @@
+import { DismissibleDetails } from "@/components/ui/dismissible-details";
 import { periodKeys, periodLabels, type PeriodRange } from "@/lib/periods";
 
 /** Filtre de période (Aujourd'hui, 7 derniers jours, Mois en cours, Période personnalisée). */
 export function PeriodFilter({ basePath, period }: { basePath: string; period: PeriodRange }) {
   return (
-    <details className="period-filter">
+    <DismissibleDetails className="period-filter">
       <summary className="btn btn-secondary">
         {period.label} <span aria-hidden="true">▾</span>
       </summary>
@@ -35,6 +36,6 @@ export function PeriodFilter({ basePath, period }: { basePath: string; period: P
           </button>
         </form>
       </div>
-    </details>
+    </DismissibleDetails>
   );
 }

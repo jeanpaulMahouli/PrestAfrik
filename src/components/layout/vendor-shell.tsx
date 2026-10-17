@@ -4,6 +4,7 @@ import { texts } from "@/config/texts";
 import { EmailVerificationBanner } from "@/components/layout/email-verification-banner";
 import { VendorDrawer, VendorSidebar } from "@/components/layout/vendor-navigation";
 import { MobileSearchButton, StoreSwitcher, UserMenu } from "@/components/layout/vendor-topbar-menus";
+import { fontVariables } from "@/lib/fonts";
 import { getStoreContext } from "@/modules/stores/context";
 
 const t = texts.vendor.shell;
@@ -13,18 +14,22 @@ const t = texts.vendor.shell;
  * menu latéral de 216 px fixe dès 1024 px, tiroir en dessous.
  * Le contexte (boutique, rôle, utilisateur) est relu ici : il est mémoïsé pour la requête.
  */
-export async function VendorShell({ children }: { children: React.ReactNode }) {
+export async function VendorShell({ children, searchQuery }: { children: React.ReactNode; searchQuery?: string }) {
   const { session, store, memberships, membership } = await getStoreContext();
 
   return (
-    <div className="vendor-shell">
+    <div className={`vendor-shell ${fontVariables}`}>
       <header className="vendor-topbar">
         <VendorDrawer role={membership.role} storeName={store.name} />
         <Link aria-label="PrestAfrik, accueil de mon espace" className="vendor-logo" href="/dashboard">
           <Image alt="" height={34} priority src="/brand/logo-prestafrik.png" width={62} />
         </Link>
         <form action="/dashboard/recherche" className="vendor-search" role="search">
-          <input aria-label={t.searchLabel} maxLength={80} name="q" placeholder={t.searchPlaceholder} type="search" />
+          <svg aria-hidden="true" className="vendor-search-icon" fill="none" height="18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" viewBox="0 0 24 24" width="18">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <input aria-label={t.searchLabel} defaultValue={searchQuery} key={searchQuery} maxLength={80} minLength={2} name="q" placeholder={t.searchPlaceholder} required type="search" />
         </form>
         <span className="vendor-topbar-spacer" />
         <MobileSearchButton />

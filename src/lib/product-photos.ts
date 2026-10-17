@@ -1,14 +1,13 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
-import { join } from "node:path";
 import sharp, { type Metadata as SharpMetadata } from "sharp";
-import { uploadsRoot } from "@/lib/uploads";
+import { storage } from "@/lib/storage";
 
 // Photos produit (brief §6.4) : JPG/PNG/WebP vérifiés sur leur contenu, 5 Mo maximum, 400 à 8000 px,
 // métadonnées retirées, rotation appliquée, trois tailles WebP. Les envois précèdent l'enregistrement du
 // produit : ils restent dans stores/{storeId}/tmp jusqu'à l'enregistrement (nettoyés après 24 h).
+// Les fichiers sont confiés au stockage de src/lib/storage.ts (stockage objet en production).
 
 export const maxProductPhotos = 5;
 export const maxPhotoBytes = 5 * 1024 * 1024;
@@ -23,7 +22,7 @@ export const mediaPathPattern = new RegExp(`^stores/${idPattern}/(?:products/${i
 
 export class PhotoError extends Error {}
 
-const storeDir = (storeId: string) => join(uploadsRoot, "stores", storeId);
+const storeDir = (storeId: string) => `stores/${storeId}`;
 const fileName = (id: string, size: PhotoSize) => `${id}-${size}.webp`;
 
 export function photoUrl(storeId: string, productId: string, id: string, size: PhotoSize = 1600) {
@@ -56,16 +55,18 @@ export async function saveTemporaryPhoto(storeId: string, file: File) {
   if (Math.max(width, height) > 8000) throw new PhotoError("Cette photo est trop grande : 8 000 pixels de côté maximum.");
 
   const id = randomUUID();
-  const directory = join(storeDir(storeId), "tmp");
-  await mkdir(directory, { recursive: true });
-  for (const size of photoSizes) {
-    // rotate() applique l'orientation EXIF ; sharp ne recopie aucune métadonnée (dont la géolocalisation).
-    await sharp(input, { failOn: "error", limitInputPixels: 64_000_000 })
-      .rotate()
-      .resize({ width: size, height: size, fit: "inside", withoutEnlargement: true })
-      .webp({ quality: 80, effort: 4 })
-      .toFile(join(directory, fileName(id, size)));
-  }
+  const directory = `${storeDir(storeId)}/tmp`;
+  await Promise.all(
+    photoSizes.map(async (size) => {
+      // rotate() applique l'orientation EXIF ; sharp ne recopie aucune métadonnée (dont la géolocalisation).
+      const body = await sharp(input, { failOn: "error", limitInputPixels: 64_000_000 })
+        .rotate()
+        .resize({ width: size, height: size, fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 80, effort: 4 })
+        .toBuffer();
+      await storage.put(`${directory}/${fileName(id, size)}`, body);
+    }),
+  );
   return {
     key: `tmp/${id}`,
     previewUrl: `/media/stores/${storeId}/tmp/${fileName(id, 320)}`,
@@ -88,13 +89,12 @@ async function attachTemporaryPhotoTo(storeId: string, folder: string, key: stri
   const match = tmpKeyPattern.exec(key);
   if (!match) throw new PhotoError("Photo invalide. Réessayez l’envoi.");
   const id = match[1];
-  const source = join(storeDir(storeId), "tmp");
-  const target = join(storeDir(storeId), ...folder.split("/"));
-  await stat(join(source, fileName(id, 1600))).catch(() => {
+  const source = `${storeDir(storeId)}/tmp`;
+  const target = `${storeDir(storeId)}/${folder}`;
+  if (!(await storage.exists(`${source}/${fileName(id, 1600)}`))) {
     throw new PhotoError("Une photo envoyée a expiré. Ajoutez-la de nouveau.");
-  });
-  await mkdir(target, { recursive: true });
-  for (const size of photoSizes) await rename(join(source, fileName(id, size)), join(target, fileName(id, size)));
+  }
+  await Promise.all(photoSizes.map((size) => storage.move(`${source}/${fileName(id, size)}`, `${target}/${fileName(id, size)}`)));
   return `/media/stores/${storeId}/${folder}/${fileName(id, 1600)}`;
 }
 
@@ -102,7 +102,7 @@ async function attachTemporaryPhotoTo(storeId: string, folder: string, key: stri
 export async function deleteProductPhoto(url: string) {
   const path = url.replace(/^\/media\//, "");
   if (mediaPathPattern.test(path)) {
-    await Promise.all(photoSizes.map((size) => rm(join(uploadsRoot, photoVariant(path, size)), { force: true })));
+    await Promise.all(photoSizes.map((size) => storage.delete(photoVariant(path, size)).catch(() => undefined)));
     return;
   }
   const { deleteStoreImage } = await import("@/lib/uploads");
@@ -110,24 +110,21 @@ export async function deleteProductPhoto(url: string) {
 }
 
 export async function deleteProductPhotoFolder(storeId: string, productId: string) {
-  await rm(join(storeDir(storeId), "products", productId), { recursive: true, force: true });
+  await storage.deletePrefix(`${storeDir(storeId)}/products/${productId}`);
 }
 
-/** Nettoyage des photos provisoires de plus de 24 h (appelé par le worker et à chaque envoi). */
+// Dernier nettoyage par boutique : au plus un par heure, pour ménager l'API d'administration de Cloudinary
+// (nombre d'appels limité par heure) — inutile de lister le dossier à chaque photo envoyée.
+const lastPurge = new Map<string, number>();
+const purgeIntervalMs = 60 * 60 * 1000;
+
+/** Nettoyage des photos provisoires de plus de 24 h (appelé par le worker et après les envois, une fois par heure). */
 export async function purgeTemporaryPhotos(storeId: string, olderThanMs = 24 * 60 * 60 * 1000) {
-  const directory = join(storeDir(storeId), "tmp");
-  const entries = await readdir(directory).catch(() => [] as string[]);
-  const limit = Date.now() - olderThanMs;
-  let removed = 0;
-  await Promise.all(
-    entries.map(async (entry) => {
-      const file = join(directory, entry);
-      const info = await stat(file).catch(() => null);
-      if (info && info.mtimeMs < limit) {
-        await rm(file, { force: true });
-        removed += 1;
-      }
-    }),
-  );
-  return removed;
+  const now = Date.now();
+  if (now - (lastPurge.get(storeId) ?? 0) < purgeIntervalMs) return 0;
+  lastPurge.set(storeId, now);
+  const limit = now - olderThanMs;
+  const expired = (await storage.list(`${storeDir(storeId)}/tmp/`)).filter((object) => object.lastModified.getTime() < limit);
+  await Promise.all(expired.map((object) => storage.delete(object.key)));
+  return expired.length;
 }

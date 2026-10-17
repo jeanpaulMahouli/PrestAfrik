@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { mediaPathPattern } from "@/lib/product-photos";
-import { isSafeUploadPath, legacyUploadsRoot, uploadFilePath, uploadsRoot } from "@/lib/uploads";
+import { storage } from "@/lib/storage";
+import { isSafeUploadPath, legacyUploadPath, uploadKey } from "@/lib/uploads";
 
 const headers = {
   "Content-Type": "image/webp",
@@ -10,22 +10,19 @@ const headers = {
   "X-Content-Type-Options": "nosniff",
 };
 
-/** Sert les images stockées hors de public/ (voir src/lib/uploads.ts et src/lib/product-photos.ts). */
+/** Sert les images envoyées par les vendeurs depuis le stockage (voir src/lib/storage.ts). */
 export async function GET(_request: Request, { params }: RouteContext<"/media/[...path]">) {
   const { path } = await params;
   const relative = path.join("/");
 
-  let candidates: string[] = [];
+  let content: Buffer | null = null;
   if (mediaPathPattern.test(relative)) {
-    candidates = [join(uploadsRoot, ...path)];
+    content = await storage.get(relative);
   } else if (path.length === 2 && isSafeUploadPath(path[0], path[1])) {
-    // Ancien format : /media/{storeId}/{uuid}.webp (logos, premières photos).
-    candidates = [uploadFilePath(path[0], path[1]), uploadFilePath(path[0], path[1], legacyUploadsRoot)];
+    // Format des logos : /media/{storeId}/{uuid}.webp — avec l'ancien dossier public/uploads en secours.
+    content = (await storage.get(uploadKey(path[0], path[1]))) ?? (await readFile(legacyUploadPath(path[0], path[1])).catch(() => null));
   }
 
-  for (const file of candidates) {
-    const content = await readFile(file).catch(() => null);
-    if (content) return new Response(content, { headers });
-  }
+  if (content) return new Response(new Uint8Array(content), { headers });
   return new Response("Image introuvable.", { status: 404 });
 }
