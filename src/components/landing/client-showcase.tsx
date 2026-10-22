@@ -65,11 +65,11 @@ export function ClientShowcase({ signedIn }: { signedIn: boolean }) {
             <Image
               alt={i === active ? `Écran « ${step.label} » sur téléphone` : ""}
               className={`lp-client__phone${i === active ? " is-active" : ""}`}
-              height={2306}
+              height={2217}
               key={step.image}
               sizes="(max-width: 767px) 60vw, 360px"
               src={step.image}
-              width={1111}
+              width={1068}
             />
           ))}
         </div>

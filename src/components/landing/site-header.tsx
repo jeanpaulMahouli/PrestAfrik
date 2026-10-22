@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useDismiss } from "@/components/ui/use-dismiss";
 import { authLinks, navLinks } from "./content";
@@ -10,6 +11,10 @@ import { MenuIcon } from "./icons";
 /** Barre de navigation : liens sur grand écran, menu déroulant sur mobile et tablette. */
 export function SiteHeader({ signedIn }: { signedIn: boolean }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  // Lien actif : correspondance exacte pour l'accueil, par préfixe ailleurs (un article du blog garde « Blog » actif).
+  const isActive = (link: { label: string; href: string }) =>
+    link.href === "/" ? pathname === "/" && link === navLinks[0] : pathname === link.href || pathname.startsWith(`${link.href}/`);
   const login = signedIn ? authLinks.dashboard : authLinks.login;
   const signup = signedIn ? authLinks.dashboard : authLinks.signup;
 
@@ -36,11 +41,11 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
         </Link>
 
         <ul className="lp-nav__links">
-          {navLinks.map((link, i) => (
+          {navLinks.map((link) => (
             <li key={link.label}>
-              <a aria-current={i === 0 ? "page" : undefined} href={link.href}>
+              <Link aria-current={isActive(link) ? "page" : undefined} href={link.href}>
                 {link.label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
@@ -59,9 +64,9 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
 
       <div className={`lp-menu${open ? " is-open" : ""}`} id="lp-mobile-menu">
         {navLinks.map((link) => (
-          <a href={link.href} key={link.label} onClick={() => setOpen(false)}>
+          <Link aria-current={isActive(link) ? "page" : undefined} href={link.href} key={link.label} onClick={() => setOpen(false)}>
             {link.label}
-          </a>
+          </Link>
         ))}
         {!signedIn && <Link href={login.href}>{login.label}</Link>}
         <Link className="lp-menu__cta" href={signup.href}>

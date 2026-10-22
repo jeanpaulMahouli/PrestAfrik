@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: PageProps<"/[slug]">) {
   const { slug } = await params;
   const store = await getStorefrontStore(slug);
   return {
-    title: store ? store.name : "Boutique introuvable",
+    title: store ? store.name : "Boutique bientôt en ligne",
     description: store?.description ?? `Découvrez les produits de ${store?.name ?? "cette boutique"} et commandez en quelques secondes.`,
     ...(store?.isPreview ? { robots: { index: false, follow: false } } : {}),
   };

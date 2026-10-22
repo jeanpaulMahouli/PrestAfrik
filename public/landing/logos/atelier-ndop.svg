@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 178 40" width="178" height="40" fill="none">
+  <title>Atelier Ndop</title>
+  <rect x="2" y="3" width="34" height="34" rx="3" stroke="#14142b" stroke-width="2.4"/>
+  <path d="M8 31 13 22l5 9Zm12 0 5-9 5 9ZM14 18l5-9 5 9Z" fill="#14142b"/>
+  <text x="46" y="18" fill="#14142b" font-family="'Helvetica Neue',Arial,sans-serif" font-size="10" font-weight="500" letter-spacing="4.2">ATELIER</text>
+  <text x="45" y="35" fill="#14142b" font-family="Georgia,'Times New Roman',serif" font-size="20" font-weight="700" letter-spacing="4">NDOP</text>
+</svg>

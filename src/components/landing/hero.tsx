@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { LandingButton } from "./buttons";
 import { hero } from "./content";
+import { DemoVideoButton } from "./demo-video-button";
 import { SiteHeader } from "./site-header";
 
 /** Héros : carte orangée avec la navigation, le titre, les boutons et le téléphone entouré d'éléments flottants. */
@@ -18,9 +19,7 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
         <p className="lp-hero__subtitle lp-intro lp-intro--2">{hero.subtitle}</p>
         <div className="lp-hero__actions lp-intro lp-intro--3">
           <LandingButton href={primaryHref}>{signedIn ? "Aller à mon espace" : hero.primaryCta.label}</LandingButton>
-          <LandingButton href={hero.secondaryCta.href} variant="secondary">
-            {hero.secondaryCta.label}
-          </LandingButton>
+          <DemoVideoButton fallbackHref={hero.secondaryCta.href} label={hero.secondaryCta.label} />
         </div>
       </div>
 

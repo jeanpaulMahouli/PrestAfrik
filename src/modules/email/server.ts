@@ -43,6 +43,21 @@ export async function sendEmail(id: EmailId, to: string, variables: EmailVariabl
     return { sent: false, reason: "no-smtp" };
   }
 
+  const result = await smtpTransport().sendMail({
+    from: getSmtpConfig().from,
+    replyTo: site.email,
+    to,
+    subject: email.subject,
+    text: email.text,
+    html: email.html,
+  });
+  if (!result.accepted?.length || (result.rejected?.length ?? 0) > 0) {
+    throw new Error("Le serveur SMTP n’a pas accepté le destinataire du courriel.");
+  }
+  return { sent: true };
+}
+
+function smtpTransport() {
   const config = getSmtpConfig();
   transporter ??= nodemailer.createTransport({
     host: config.host,
@@ -55,18 +70,25 @@ export async function sendEmail(id: EmailId, to: string, variables: EmailVariabl
     socketTimeout: 20_000,
     tls: { minVersion: "TLSv1.2" },
   });
+  return transporter;
+}
 
-  const result = await transporter.sendMail({
-    from: config.from,
-    replyTo: site.email,
-    to,
-    subject: email.subject,
-    text: email.text,
-    html: email.html,
-  });
-  if (!result.accepted?.length || (result.rejected?.length ?? 0) > 0) {
-    throw new Error("Le serveur SMTP n’a pas accepté le destinataire du courriel.");
+/** Adresse qui reçoit les messages du formulaire de contact (CONTACT_INBOX, sinon l'adresse publique). */
+export function teamInbox() {
+  return process.env.CONTACT_INBOX?.trim() || site.email;
+}
+
+/**
+ * Message interne à l'équipe PrestAfrik (formulaire de contact), en texte brut.
+ * « Répondre » écrit directement à l'expéditeur.
+ */
+export async function sendTeamEmail({ subject, text, replyTo }: { subject: string; text: string; replyTo: string }): Promise<SendResult> {
+  if (process.env.NODE_ENV !== "production" && !hasSmtpConfig()) {
+    console.info(`[message de contact non envoyé : SMTP non configuré] ${subject}`);
+    return { sent: false, reason: "no-smtp" };
   }
+  const result = await smtpTransport().sendMail({ from: getSmtpConfig().from, to: teamInbox(), replyTo, subject, text });
+  if (!result.accepted?.length) throw new Error("Le serveur SMTP n’a pas accepté le message de contact.");
   return { sent: true };
 }
 

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { mediaPathPattern } from "@/lib/product-photos";
 import { storage } from "@/lib/storage";
-import { isSafeUploadPath, legacyUploadPath, uploadKey } from "@/lib/uploads";
+import { avatarPathPattern, isSafeUploadPath, legacyUploadPath, uploadKey } from "@/lib/uploads";
 
 const headers = {
   "Content-Type": "image/webp",
@@ -16,7 +16,7 @@ export async function GET(_request: Request, { params }: RouteContext<"/media/[.
   const relative = path.join("/");
 
   let content: Buffer | null = null;
-  if (mediaPathPattern.test(relative)) {
+  if (mediaPathPattern.test(relative) || avatarPathPattern.test(relative)) {
     content = await storage.get(relative);
   } else if (path.length === 2 && isSafeUploadPath(path[0], path[1])) {
     // Format des logos : /media/{storeId}/{uuid}.webp — avec l'ancien dossier public/uploads en secours.

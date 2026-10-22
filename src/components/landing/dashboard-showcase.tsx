@@ -7,7 +7,7 @@ import { Reveal } from "./reveal";
 
 /**
  * Tableau de bord : la capture change selon la carte active.
- * Grand écran : la carte active suit la progression du défilement (ou un clic).
+ * Grand écran : uniquement au clic sur une carte (le défilement ne change pas la capture).
  * Mobile/tablette : la capture reste collée en haut de l'écran et la carte la plus proche devient active.
  */
 export function DashboardShowcase() {
@@ -22,6 +22,8 @@ export function DashboardShowcase() {
 
     const update = () => {
       frame = 0;
+      // Grand écran : la capture ne suit pas le défilement, elle change seulement au clic.
+      if (desktop.matches) return;
       const cards = cardsRef.current.filter((c): c is HTMLButtonElement => Boolean(c));
       if (!cards.length) return;
       const vh = window.innerHeight;
@@ -31,14 +33,6 @@ export function DashboardShowcase() {
       if (lock) {
         if (Math.abs(window.scrollY - lock.y) < 160) return;
         lockRef.current = null;
-      }
-
-      if (desktop.matches) {
-        const start = cards[0].getBoundingClientRect().top - 0.9 * vh;
-        const end = cards[cards.length - 1].getBoundingClientRect().bottom - 0.3 * vh;
-        const progress = Math.min(1, Math.max(0, -start / (end - start)));
-        setActive(Math.min(cards.length - 1, Math.floor(progress * cards.length)));
-        return;
       }
 
       const frameBottom = frameRef.current?.getBoundingClientRect().bottom ?? 0;

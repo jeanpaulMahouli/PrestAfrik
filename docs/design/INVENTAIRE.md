@@ -44,11 +44,11 @@ Généré depuis `docs/design/reference/inventaire.json` (extraction : `node scr
 | Boutique publique (client) | Résultat de commande (lien wa.me) | 390×844 | [capture](reference/boutique-publique-client/07-resultat-de-commande-lien-wa-me/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
 | Boutique publique (client) | Résultat de commande | 390×844 | [capture](reference/boutique-publique-client/08-resultat-de-commande/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
 | Boutique publique (client) | Suivi de commande | 390×844 | [capture](reference/boutique-publique-client/09-suivi-de-commande/capture.png) | `/boutique/[slug]…` | Codé (ADR-013), vérifié 390/1280 |
-| Administration | Administration PrestAfrik | 1280×900 | [capture](reference/administration/01-administration-prestafrik/capture.png) | `/admin…` | À faire |
-| Administration | Administration · Abonnements | 1280×900 | [capture](reference/administration/02-administration-abonnements/capture.png) | `/admin…` | À faire |
-| Administration | Administration · Messages échoués | 1280×900 | [capture](reference/administration/03-administration-messages-echoues/capture.png) | `/admin…` | À faire |
-| Administration | Administration · Alertes | 1280×900 | [capture](reference/administration/04-administration-alertes/capture.png) | `/admin…` | À faire |
-| Administration | Administration · Utilisateurs | 1280×900 | [capture](reference/administration/05-administration-utilisateurs/capture.png) | `/admin…` | À faire |
+| Administration | Administration PrestAfrik | 1280×900 | [capture](reference/administration/01-administration-prestafrik/capture.png) | `/admin…` | Fait |
+| Administration | Administration · Abonnements | 1280×900 | [capture](reference/administration/02-administration-abonnements/capture.png) | `/admin…` | Fait |
+| Administration | Administration · Messages échoués | 1280×900 | [capture](reference/administration/03-administration-messages-echoues/capture.png) | `/admin…` | Fait |
+| Administration | Administration · Alertes | 1280×900 | [capture](reference/administration/04-administration-alertes/capture.png) | `/admin…` | Fait |
+| Administration | Administration · Utilisateurs | 1280×900 | [capture](reference/administration/05-administration-utilisateurs/capture.png) | `/admin…` | Fait |
 | E-mails | E-mail E01 · Confirmation de l’adresse e-mail (inscription) | 720×780 | [capture](reference/e-mails/01-e-mail-e01-confirmation-de-l-adresse-e-mail-inscription/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |
 | E-mails | E-mail E02 · Bienvenue (adresse confirmée) | 720×840 | [capture](reference/e-mails/02-e-mail-e02-bienvenue-adresse-confirmee/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |
 | E-mails | E-mail E04 · Réinitialisation du mot de passe | 720×784 | [capture](reference/e-mails/03-e-mail-e04-reinitialisation-du-mot-de-passe/capture.png) | `gabarit d’e-mail` | Codé (gabarit commun, aperçu /dev/emails) |

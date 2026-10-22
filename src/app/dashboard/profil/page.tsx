@@ -1,3 +1,5 @@
+import { AvatarForm } from "@/components/account/avatar-form";
+import { NameForm } from "@/components/account/name-form";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { getStoreContext } from "@/modules/stores/context";
 
@@ -25,10 +27,8 @@ export default async function ProfilePage() {
         </div>
       </div>
       <section aria-label="Informations du profil" className="surface-card profile-card">
-        <div>
-          <span>Nom</span>
-          <strong>{session.user.name}</strong>
-        </div>
+        <AvatarForm image={session.user.image ?? null} name={session.user.name} />
+        <NameForm name={session.user.name} />
         <div>
           <span>Adresse e-mail</span>
           <strong>{session.user.email}</strong>

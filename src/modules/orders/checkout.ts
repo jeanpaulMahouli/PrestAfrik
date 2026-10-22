@@ -191,7 +191,7 @@ export async function checkoutOrder({
   clientIp: string;
 }) {
   const store = await prisma.store.findFirst({
-    where: { slug: storeSlug, isPublished: true },
+    where: { slug: storeSlug, isPublished: true, suspendedAt: null },
     select: { id: true, slug: true, name: true },
   });
   if (!store) throw new CheckoutProblem("Cette boutique n’est pas disponible.");

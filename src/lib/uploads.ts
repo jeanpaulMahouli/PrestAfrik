@@ -80,3 +80,39 @@ export async function deleteStoreImage(url: string) {
     await rm(legacyUploadPath(match[2], match[3]), { force: true });
   }
 }
+
+/* ---------- Photos de profil ---------- */
+
+// Format « users/{userId}/{uuid}.webp » : les identifiants Better Auth mélangent majuscules et minuscules.
+export const avatarPathPattern = /^users\/[A-Za-z0-9_-]{16,64}\/[0-9a-f-]{36}\.webp$/;
+
+/** Valide, recadre en carré (512 px) et enregistre la photo de profil d'un utilisateur. */
+export async function saveUserAvatar(file: FormDataEntryValue | null, userId: string) {
+  if (file === null || (file instanceof File && file.size === 0)) return null;
+  if (!(file instanceof File)) throw new ImageUploadError("Le fichier image est invalide.");
+  if (file.size > maxImageBytes) throw new ImageUploadError("La photo ne peut pas dépasser 2 Mo.");
+
+  const image = sharp(Buffer.from(await file.arrayBuffer()), { failOn: "error", limitInputPixels: 25_000_000 });
+  let metadata;
+  try {
+    metadata = await image.metadata();
+  } catch {
+    throw new ImageUploadError("Cette image est illisible. Choisissez une image PNG, JPG ou WebP.");
+  }
+  if (!metadata.format || !["jpeg", "png", "webp"].includes(metadata.format)) {
+    throw new ImageUploadError("Choisissez une image PNG, JPG ou WebP.");
+  }
+
+  const key = `users/${userId}/${randomUUID()}.webp`;
+  if (!avatarPathPattern.test(key)) throw new ImageUploadError("Chemin d’image invalide.");
+  // rotate() applique l'orientation EXIF ; la conversion WebP retire les métadonnées (position GPS…).
+  const body = await image.rotate().resize({ width: 512, height: 512, fit: "cover" }).webp({ quality: 82, effort: 4 }).toBuffer();
+  await storage.put(key, body);
+  return `/media/${key}`;
+}
+
+/** Supprime une photo de profil enregistrée, sans échouer si elle manque (les images externes sont ignorées). */
+export async function deleteUserAvatar(url: string | null | undefined) {
+  const key = url?.replace(/^\/media\//, "");
+  if (key && avatarPathPattern.test(key)) await storage.delete(key).catch(() => undefined);
+}

@@ -6,14 +6,22 @@
 
 export type NavLink = { label: string; href: string };
 
+/**
+ * Pages désactivées en attendant leurs maquettes : elles renvoient « page introuvable », et leurs liens
+ * (menu, pied de page) restent visibles mais mènent à l'accueil. Retirez une adresse pour la remettre en ligne.
+ */
+export const disabledPages: ReadonlySet<string> = new Set(["/fonctionnalites", "/a-propos", "/demo"]);
+
+const toHomeIfDisabled = (link: NavLink): NavLink => (disabledPages.has(link.href.split("#")[0]) ? { ...link, href: "/" } : link);
+
 export const navLinks: NavLink[] = [
-  { label: "Accueil", href: "#accueil" },
-  { label: "Fonctionnalités", href: "#fonctionnalites" },
-  { label: "À propos", href: "#temoignages" },
-  { label: "Démo", href: "#demo" },
-  { label: "Blog", href: "#temoignages" },
-  { label: "Contact", href: "#contact" },
-];
+  { label: "Accueil", href: "/" },
+  { label: "Fonctionnalités", href: "/fonctionnalites" },
+  { label: "À propos", href: "/a-propos" },
+  { label: "Démo", href: "/demo" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
+].map(toHomeIfDisabled);
 
 export const authLinks = {
   login: { label: "Se connecter", href: "/connexion" },
@@ -43,15 +51,28 @@ export const hero = {
   },
 };
 
+/**
+ * Vidéo de démonstration ouverte par « Voir la démo » (fenêtre par-dessus la page).
+ * Collez le lien : YouTube (watch, youtu.be, shorts), Vimeo, ou un fichier .mp4 / .webm.
+ * Tant que url est vide, le bouton fait défiler jusqu'à la démo sur téléphone de l'accueil (#demo).
+ */
+export const demoVideo = {
+  url: "",
+  title: "Démonstration de PrestAfrik",
+};
+
 export const partners = {
   title: "Ces boutiques vendent déjà avec PrestAfrik",
+  /** Logos fictifs (public/landing/logos/) : remplacez-les par ceux de vraies boutiques, avec leur accord. */
   logos: [
-    { src: "/landing/logos/partenaire-1.svg", alt: "Logoipsum Brand Standard", width: 156, height: 35 },
-    { src: "/landing/logos/partenaire-2.svg", alt: "Logoipsum", width: 36, height: 36 },
-    { src: "/landing/logos/partenaire-3.svg", alt: "Logo", width: 155, height: 36 },
-    { src: "/landing/logos/partenaire-4.svg", alt: "Logoipsum", width: 90, height: 36 },
-    { src: "/landing/logos/partenaire-5.svg", alt: "Logoipsum", width: 202, height: 40 },
-    { src: "/landing/logos/partenaire-6.svg", alt: "Logoipsum", width: 60, height: 40 },
+    { src: "/landing/logos/mboa-style.svg", alt: "Mboa Style", width: 214, height: 40 },
+    { src: "/landing/logos/mama-pagne.svg", alt: "Mama Pagne", width: 214, height: 40 },
+    { src: "/landing/logos/linda-beauty.svg", alt: "Linda Beauty", width: 190, height: 40 },
+    { src: "/landing/logos/ekane-electro.svg", alt: "Ekane Électro", width: 204, height: 40 },
+    { src: "/landing/logos/kribi-accessoires.svg", alt: "Kribi Accessoires", width: 172, height: 40 },
+    { src: "/landing/logos/saveurs-du-littoral.svg", alt: "Saveurs du Littoral", width: 236, height: 40 },
+    { src: "/landing/logos/ndolo-kids.svg", alt: "Ndolo Kids", width: 156, height: 40 },
+    { src: "/landing/logos/atelier-ndop.svg", alt: "Atelier Ndop", width: 178, height: 40 },
   ],
 };
 
@@ -86,10 +107,10 @@ export const clientSide = {
   subtitle:
     "Vos clients achètent sur leur téléphone. Votre boutique aussi est faite pour ça. Pas d’application à télécharger, pas de paiement en ligne : ils paient à la livraison, en toute confiance.",
   steps: [
-    { label: "Votre boutique", image: "/landing/screens/client-boutique.webp" },
-    { label: "Détail produit", image: "/landing/screens/client-detail.webp" },
-    { label: "Commande en 1 minute", image: "/landing/screens/client-commande.webp" },
-    { label: "Suivi sans compte", image: "/landing/screens/client-suivi.webp" },
+    { label: "Votre boutique", image: "/landing/screens/telephone-1-boutique.webp" },
+    { label: "Détail produit", image: "/landing/screens/telephone-2-detail.webp" },
+    { label: "Commande en 1 minute", image: "/landing/screens/telephone-3-commande.webp" },
+    { label: "Suivez vos commandes", image: "/landing/screens/telephone-4-suivi.webp" },
   ],
   cta: { label: "Créer ma boutique gratuitement", href: "/inscription" },
 };
@@ -154,7 +175,7 @@ export const faq = {
     {
       question: "Comment fonctionnent les frais de livraison ?",
       answer:
-        "Vous définissez vos zones de livraison et vos tarifs. Quand le montant n’est pas encore connu, la commande indique « frais à confirmer » et vous le précisez avec le client sur WhatsApp.",
+        "Vous définissez vos zones de livraison et un tarif fixe pour chacune. Vos clients choisissent leur zone et voient le total exact avant de commander : pas de mauvaise surprise à la livraison. Le retrait en boutique reste possible.",
     },
     {
       question: "Quelle différence entre le lien wa.me et l’API WhatsApp ?",
@@ -164,7 +185,7 @@ export const faq = {
     {
       question: "Puis-je inviter mon équipe ?",
       answer:
-        "Oui. Invitez vos collaborateurs par e-mail et donnez à chacun les droits adaptés : propriétaire, gestionnaire, vendeur, livreur ou lecture seule.",
+        "Oui. Invitez vos collaborateurs par e-mail et donnez à chacun les droits adaptés : gestionnaire (presque tout, sauf l’équipe et l’abonnement) ou préparateur de commandes (commandes et livraisons). Vous restez propriétaire et gardez la main sur tout.",
     },
   ],
 };
@@ -174,7 +195,7 @@ export const finalCta = {
   title: "Vos prochains clients vous attendent déjà !",
   subtitle: "C’est gratuit, sans engagement, et vous n’avez besoin d’aucune compétence technique.",
   primary: { label: "Créer ma boutique gratuitement", href: "/inscription" },
-  secondary: { label: "Réserver une démo", href: "mailto:contact@prestafrik.com?subject=D%C3%A9mo%20PrestAfrik" },
+  secondary: { label: "Réserver une démo", href: "/contact?sujet=demo" },
 };
 
 export const footer = {
@@ -184,24 +205,24 @@ export const footer = {
     {
       title: "Ressources",
       links: [
-        { label: "Centre d’aide", href: "#faq" },
-        { label: "Blog", href: "#" },
-        { label: "Webinaires", href: "#" },
-        { label: "Modèles", href: "#" },
-        { label: "Études de cas", href: "#temoignages" },
-        { label: "Communauté", href: "#" },
-      ],
+        { label: "Centre d’aide", href: "/contact#faq" },
+        { label: "Blog", href: "/blog" },
+        { label: "Démo guidée", href: "/demo" },
+        { label: "Fonctionnalités", href: "/fonctionnalites" },
+        { label: "Témoignages", href: "/#temoignages" },
+        { label: "Créer ma boutique", href: "/inscription" },
+      ].map(toHomeIfDisabled),
     },
     {
       title: "Entreprise",
       links: [
-        { label: "À propos", href: "#temoignages" },
+        { label: "À propos", href: "/a-propos" },
         { label: "Mentions légales", href: "/legal/mentions-legales" },
-        { label: "Contact", href: "mailto:contact@prestafrik.com" },
+        { label: "Contact", href: "/contact" },
         { label: "Confidentialité", href: "/legal/politique-de-confidentialite" },
         { label: "Conditions générales", href: "/legal/conditions-generales" },
         { label: "Conditions de vente", href: "/legal/conditions-de-vente" },
-      ],
+      ].map(toHomeIfDisabled),
     },
   ],
   socialTitle: "Réseaux sociaux",

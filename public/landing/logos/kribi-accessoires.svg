@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 172 40" width="172" height="40" fill="none">
+  <title>Kribi Accessoires</title>
+  <circle cx="19" cy="20" r="17" fill="#14142b"/>
+  <path d="M6 22c3.5-3 6.5-3 10 0s6.5 3 10 0 5-2.5 7-1.5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M7 28c3.5-3 6.5-3 10 0s6.5 3 10 0" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="25" cy="12" r="3.4" fill="#fff"/>
+  <text x="45" y="21" fill="#14142b" font-family="'Trebuchet MS','Helvetica Neue',Arial,sans-serif" font-size="17" font-weight="700" letter-spacing="0.6">KRIBI</text>
+  <text x="45" y="34" fill="#14142b" font-family="'Trebuchet MS','Helvetica Neue',Arial,sans-serif" font-size="10" font-weight="400" letter-spacing="3.6">ACCESSOIRES</text>
+</svg>

@@ -99,6 +99,19 @@ export const auth = betterAuth({
       "/send-verification-email": { window: 15 * 60, max: 5 },
     },
   },
+  databaseHooks: {
+    session: {
+      create: {
+        // Compte suspendu par l'administration : aucune connexion possible, quel que soit le parcours.
+        before: async (session) => {
+          const user = await prisma.user.findUnique({ where: { id: session.userId }, select: { suspendedAt: true } });
+          if (user?.suspendedAt) {
+            throw new APIError("FORBIDDEN", { message: "L’accès à ce compte a été suspendu. Écrivez-nous pour en savoir plus." });
+          }
+        },
+      },
+    },
+  },
   hooks: {
     // La politique de mot de passe partagée fait foi côté serveur (brief §6.1).
     before: createAuthMiddleware(async (ctx) => {

@@ -1448,11 +1448,36 @@
   }
 }
 
-/* Boutons « secondaire puis principal » sur grand écran, comme la maquette ; l'inverse sur mobile. */
-@media (min-width: 768px) {
+/* Boutons « secondaire puis principal » sur la même ligne dès la tablette (600 px), comme la maquette ;
+   empilés, principal en premier, sur téléphone. */
+@media (min-width: 600px) {
+  .lp-hero__actions,
+  .lp-cta__actions {
+    flex-wrap: nowrap;
+  }
+
+  .lp-hero__actions .lp-btn,
+  .lp-cta__actions .lp-btn {
+    flex: 0 1 auto;
+  }
+
   .lp-hero__actions .lp-btn--secondary,
   .lp-cta__actions .lp-btn--secondary {
     order: -1;
+  }
+}
+
+@media (max-width: 599px) {
+  .lp-hero__actions,
+  .lp-cta__actions {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .lp-hero__actions .lp-btn--primary,
+  .lp-cta__actions .lp-btn--primary {
+    width: min(100%, 360px);
   }
 }
 
@@ -1464,18 +1489,6 @@
 
   .lp-nav__logo {
     margin-left: auto;
-  }
-
-  .lp-hero__actions,
-  .lp-cta__actions {
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-  }
-
-  .lp-hero__actions .lp-btn--primary,
-  .lp-cta__actions .lp-btn--primary {
-    width: min(100%, 360px);
   }
 
   /* Scène du héros recomposée pour un écran étroit. */

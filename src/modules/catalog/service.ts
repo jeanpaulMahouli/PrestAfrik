@@ -13,7 +13,8 @@ export async function getPublishedStore(slug: string) {
   const store = await unstable_cache(
     () =>
       prisma.store.findFirst({
-        where: { slug, isPublished: true },
+        // Une boutique suspendue par l'administration n'est plus visible (brief §6.13).
+        where: { slug, isPublished: true, suspendedAt: null },
         select: {
           id: true,
           name: true,

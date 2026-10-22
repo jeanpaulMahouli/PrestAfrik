@@ -141,24 +141,29 @@ enum SubscriptionPaymentStatus {
 }
 
 model User {
-  id                        String             @id @default(cuid())
-  name                      String
-  email                     String             @unique
-  emailVerified             Boolean            @default(false)
-  image                     String?
-  platformRole              PlatformRole       @default(USER)
-  createdAt                 DateTime           @default(now())
-  updatedAt                 DateTime           @updatedAt
-  accounts                  Account[]
-  sessions                  Session[]
-  memberships               StoreMembership[]
-  invitations               StoreInvitation[]  @relation("InvitationSender")
-  acceptedInvites           StoreInvitation[]  @relation("InvitationRecipient")
-  authoredPayments          Payment[]
-  authoredCustomerNotes     CustomerNote[]     @relation("CustomerNoteAuthor")
-  authoredCustomerReminders CustomerReminder[] @relation("CustomerReminderAuthor")
+  id                         String              @id @default(cuid())
+  name                       String
+  email                      String              @unique
+  emailVerified              Boolean             @default(false)
+  image                      String?
+  platformRole               PlatformRole        @default(USER)
+  /// Accès suspendu par l'administration : aucune nouvelle session n'est ouverte.
+  suspendedAt                DateTime?
+  suspensionReason           String?             @db.VarChar(300)
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+  accounts                   Account[]
+  sessions                   Session[]
+  memberships                StoreMembership[]
+  invitations                StoreInvitation[]   @relation("InvitationSender")
+  acceptedInvites            StoreInvitation[]   @relation("InvitationRecipient")
+  authoredPayments           Payment[]
+  authoredCustomerNotes      CustomerNote[]      @relation("CustomerNoteAuthor")
+  authoredCustomerReminders  CustomerReminder[]  @relation("CustomerReminderAuthor")
   authoredMarketingCampaigns MarketingCampaign[] @relation("MarketingCampaignAuthor")
-  storeDrafts               StoreDraft[]
+  storeDrafts                StoreDraft[]
+  auditLogs                  AuditLog[]          @relation("AuditLogActor")
+  adminAlertStates           AdminAlertState[]   @relation("AdminAlertStateAuthor")
 }
 
 model Account {
@@ -224,59 +229,59 @@ model StoreDraft {
 }
 
 model Store {
-  id                String                 @id @default(cuid())
-  name              String
-  slug              String                 @unique
-  businessCategory  String?
-  activityId        String?
-  activityOther     String?                @db.VarChar(80)
-  country           String                 @default("CM") @db.VarChar(2)
-  region            String?                @db.VarChar(80)
-  city              String?
-  neighborhood      String?                @db.VarChar(80)
-  contactPhone      String?
-  phoneCountry      String?                @db.VarChar(2)
-  phoneNational     String?                @db.VarChar(20)
-  phoneE164         String?                @db.VarChar(20)
-  contactEmail      String?                @db.VarChar(254)
-  address           String?                @db.VarChar(200)
-  pickupEnabled     Boolean                @default(true)
-  pickupAddress     String?                @db.VarChar(200)
-  pickupHours       String?                @db.VarChar(120)
+  id                 String                 @id @default(cuid())
+  name               String
+  slug               String                 @unique
+  businessCategory   String?
+  activityId         String?
+  activityOther      String?                @db.VarChar(80)
+  country            String                 @default("CM") @db.VarChar(2)
+  region             String?                @db.VarChar(80)
+  city               String?
+  neighborhood       String?                @db.VarChar(80)
+  contactPhone       String?
+  phoneCountry       String?                @db.VarChar(2)
+  phoneNational      String?                @db.VarChar(20)
+  phoneE164          String?                @db.VarChar(20)
+  contactEmail       String?                @db.VarChar(254)
+  address            String?                @db.VarChar(200)
+  pickupEnabled      Boolean                @default(true)
+  pickupAddress      String?                @db.VarChar(200)
+  pickupHours        String?                @db.VarChar(120)
   /// Étape en cours de l'assistant de création (1 à 8) ; null quand l'assistant est terminé.
-  onboardingStep    Int?
-  publishedAt       DateTime?
-  suspendedAt       DateTime?
-  suspensionReason  String?                @db.VarChar(300)
-  theme             StoreTheme             @default(CATALOGUE_EXPRESS)
-  isPublished       Boolean                @default(false)
-  description       String?                @db.VarChar(2000)
-  logoUrl           String?
-  bannerUrl         String?
-  primaryColor      String                 @default("#FF9900") @db.VarChar(7)
-  secondaryColor    String                 @default("#000026") @db.VarChar(7)
-  accentColor       String                 @default("#EF765E") @db.VarChar(7)
-  createdAt         DateTime               @default(now())
-  updatedAt         DateTime               @updatedAt
-  memberships       StoreMembership[]
-  invitations       StoreInvitation[]
-  categories        ProductCategory[]
-  products          Product[]
-  customers         Customer[]
-  customerNotes     CustomerNote[]
-  customerReminders CustomerReminder[]
-  orders            Order[]
-  deliveryZones     DeliveryZone[]
-  consents          CustomerConsent[]
-  outboxEvents      OutboxEvent[]
-  rateLimitBuckets  StoreRateLimitBucket[]
-  couriers          Courier[]
-  deliveries        Delivery[]
-  payments          Payment[]
+  onboardingStep     Int?
+  publishedAt        DateTime?
+  suspendedAt        DateTime?
+  suspensionReason   String?                @db.VarChar(300)
+  theme              StoreTheme             @default(CATALOGUE_EXPRESS)
+  isPublished        Boolean                @default(false)
+  description        String?                @db.VarChar(2000)
+  logoUrl            String?
+  bannerUrl          String?
+  primaryColor       String                 @default("#FF9900") @db.VarChar(7)
+  secondaryColor     String                 @default("#000026") @db.VarChar(7)
+  accentColor        String                 @default("#EF765E") @db.VarChar(7)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  memberships        StoreMembership[]
+  invitations        StoreInvitation[]
+  categories         ProductCategory[]
+  products           Product[]
+  customers          Customer[]
+  customerNotes      CustomerNote[]
+  customerReminders  CustomerReminder[]
+  orders             Order[]
+  deliveryZones      DeliveryZone[]
+  consents           CustomerConsent[]
+  outboxEvents       OutboxEvent[]
+  rateLimitBuckets   StoreRateLimitBucket[]
+  couriers           Courier[]
+  deliveries         Delivery[]
+  payments           Payment[]
   marketingCampaigns MarketingCampaign[]
   subscription       Subscription?
   whatsappSettings   WhatsappSettings?
-  activity           Activity?               @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  activity           Activity?              @relation(fields: [activityId], references: [id], onDelete: SetNull)
   chatConfig         StoreChatConfig?
   chatQuickReplies   StoreChatQuickReply[]
   pages              StorePage[]
@@ -409,25 +414,25 @@ model ProductVariant {
 }
 
 model Customer {
-  id           String             @id @default(cuid())
-  storeId      String
-  name         String             @db.VarChar(120)
-  whatsapp     String             @db.VarChar(20)
-  email        String?            @db.VarChar(254)
-  firstOrderAt DateTime?
-  lastOrderAt  DateTime?
-  orderCount   Int                @default(0)
-  source       String             @default("storefront") @db.VarChar(24)
-  nameConflict Boolean            @default(false)
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
-  store        Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  orders       Order[]
-  addresses    CustomerAddress[]
-  consents     CustomerConsent[]
-  tags         CustomerTag[]
-  notes        CustomerNote[]
-  reminders    CustomerReminder[]
+  id                 String                       @id @default(cuid())
+  storeId            String
+  name               String                       @db.VarChar(120)
+  whatsapp           String                       @db.VarChar(20)
+  email              String?                      @db.VarChar(254)
+  firstOrderAt       DateTime?
+  lastOrderAt        DateTime?
+  orderCount         Int                          @default(0)
+  source             String                       @default("storefront") @db.VarChar(24)
+  nameConflict       Boolean                      @default(false)
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+  store              Store                        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders             Order[]
+  addresses          CustomerAddress[]
+  consents           CustomerConsent[]
+  tags               CustomerTag[]
+  notes              CustomerNote[]
+  reminders          CustomerReminder[]
   campaignRecipients MarketingCampaignRecipient[]
 
   @@unique([storeId, whatsapp])
@@ -507,22 +512,22 @@ model CustomerReminder {
 }
 
 model MarketingCampaign {
-  id             String                   @id @default(cuid())
+  id             String                       @id @default(cuid())
   storeId        String
   createdById    String
-  name           String                   @db.VarChar(100)
-  audience       String                   @db.VarChar(24)
-  message        String                   @db.VarChar(1000)
+  name           String                       @db.VarChar(100)
+  audience       String                       @db.VarChar(24)
+  message        String                       @db.VarChar(1000)
   recipientLimit Int
-  status         MarketingCampaignStatus  @default(DRAFT)
+  status         MarketingCampaignStatus      @default(DRAFT)
   simulatedAt    DateTime?
   sentAt         DateTime?
-  sentCount      Int                      @default(0)
-  failedCount    Int                      @default(0)
-  createdAt      DateTime                 @default(now())
-  updatedAt      DateTime                 @updatedAt
-  store          Store                    @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  createdBy      User                     @relation("MarketingCampaignAuthor", fields: [createdById], references: [id], onDelete: Restrict)
+  sentCount      Int                          @default(0)
+  failedCount    Int                          @default(0)
+  createdAt      DateTime                     @default(now())
+  updatedAt      DateTime                     @updatedAt
+  store          Store                        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdBy      User                         @relation("MarketingCampaignAuthor", fields: [createdById], references: [id], onDelete: Restrict)
   recipients     MarketingCampaignRecipient[]
 
   @@index([storeId, createdAt])
@@ -530,19 +535,19 @@ model MarketingCampaign {
 }
 
 model MarketingCampaignRecipient {
-  id          String           @id @default(cuid())
+  id          String                  @id @default(cuid())
   campaignId  String
   customerId  String
-  whatsapp    String           @db.VarChar(20)
+  whatsapp    String                  @db.VarChar(20)
   /// Date de sélection du destinataire (compte dans le quota mensuel de messages).
-  simulatedAt DateTime         @default(now())
+  simulatedAt DateTime                @default(now())
   status      MarketingDeliveryStatus @default(PENDING)
   sentAt      DateTime?
   /// Identifiant du message renvoyé par WhatsApp (wamid…).
-  waMessageId String?          @db.VarChar(128)
-  error       String?          @db.VarChar(300)
-  campaign    MarketingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  customer    Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  waMessageId String?                 @db.VarChar(128)
+  error       String?                 @db.VarChar(300)
+  campaign    MarketingCampaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  customer    Customer                @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@unique([campaignId, customerId])
   @@index([campaignId, simulatedAt])
@@ -550,44 +555,44 @@ model MarketingCampaignRecipient {
 }
 
 model Plan {
-  id                    String         @id @default(cuid())
-  code                  String         @unique @db.VarChar(24)
-  name                  String         @db.VarChar(60)
-  monthlyPriceXaf       Int
-  yearlyPriceXaf        Int
-  productQuota          Int?
-  monthlyMessageQuota   Int
-  memberQuota           Int
-  recommended           Boolean        @default(false)
-  active                Boolean        @default(true)
-  sortOrder             Int            @default(0)
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
-  subscriptions         Subscription[] @relation("SubscriptionPlan")
+  id                     String         @id @default(cuid())
+  code                   String         @unique @db.VarChar(24)
+  name                   String         @db.VarChar(60)
+  monthlyPriceXaf        Int
+  yearlyPriceXaf         Int
+  productQuota           Int?
+  monthlyMessageQuota    Int
+  memberQuota            Int
+  recommended            Boolean        @default(false)
+  active                 Boolean        @default(true)
+  sortOrder              Int            @default(0)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  subscriptions          Subscription[] @relation("SubscriptionPlan")
   scheduledSubscriptions Subscription[] @relation("ScheduledSubscriptionPlan")
 
   @@index([active, sortOrder])
 }
 
 model Subscription {
-  id                String             @id @default(cuid())
-  storeId           String             @unique
-  planId            String
-  scheduledPlanId   String?
-  status            SubscriptionStatus @default(TRIAL)
-  billingPeriod     SubscriptionPeriod?
-  trialStartedAt    DateTime
-  trialEndsAt       DateTime
+  id                 String                @id @default(cuid())
+  storeId            String                @unique
+  planId             String
+  scheduledPlanId    String?
+  status             SubscriptionStatus    @default(TRIAL)
+  billingPeriod      SubscriptionPeriod?
+  trialStartedAt     DateTime
+  trialEndsAt        DateTime
   currentPeriodStart DateTime?
   currentPeriodEnd   DateTime?
-  scheduledAt       DateTime?
-  canceledAt        DateTime?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  store             Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  plan              Plan               @relation("SubscriptionPlan", fields: [planId], references: [id], onDelete: Restrict)
-  scheduledPlan     Plan?              @relation("ScheduledSubscriptionPlan", fields: [scheduledPlanId], references: [id], onDelete: Restrict)
-  payments          SubscriptionPayment[]
+  scheduledAt        DateTime?
+  canceledAt         DateTime?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  store              Store                 @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  plan               Plan                  @relation("SubscriptionPlan", fields: [planId], references: [id], onDelete: Restrict)
+  scheduledPlan      Plan?                 @relation("ScheduledSubscriptionPlan", fields: [scheduledPlanId], references: [id], onDelete: Restrict)
+  payments           SubscriptionPayment[]
 
   @@index([status, trialEndsAt])
   @@index([status, currentPeriodEnd])
@@ -689,7 +694,6 @@ model Payment {
   @@index([storeId, createdAt])
   @@index([storeId, orderId, createdAt])
   @@index([courierId, createdAt])
-
   @@index([storeId, receivedAt])
 }
 
@@ -910,4 +914,41 @@ model StorePage {
 
   @@unique([storeId, kind])
   @@unique([storeId, slug])
+}
+
+/// Journal des actions d'administration (brief §6.13) : qui, quand, quoi, cible.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String   @db.VarChar(60)
+  targetType String   @db.VarChar(30)
+  targetId   String   @db.VarChar(60)
+  storeId    String?
+  /// Détails sans donnée sensible (motif, durée…).
+  details    Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("AuditLogActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+}
+
+enum AdminAlertStatus {
+  RESOLVED
+  IGNORED
+}
+
+/// Les alertes sont calculées à partir des données ; seule la décision de l'équipe est enregistrée ici.
+model AdminAlertState {
+  key         String           @id @db.VarChar(160)
+  status      AdminAlertStatus
+  level       String           @db.VarChar(20)
+  title       String           @db.VarChar(200)
+  body        String           @db.VarChar(500)
+  updatedById String?
+  updatedAt   DateTime         @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedBy   User?            @relation("AdminAlertStateAuthor", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([status, updatedAt])
 }

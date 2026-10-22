@@ -37,6 +37,10 @@ export async function getPublicationChecklist(storeId: string, emailVerified: bo
 
 /** Publie la boutique si toutes les conditions sont remplies (dont une zone à frais fixes ou le retrait). */
 export async function publishStoreIfReady(storeId: string, emailVerified: boolean) {
+  const suspended = await prisma.store.findUnique({ where: { id: storeId }, select: { suspendedAt: true } });
+  if (suspended?.suspendedAt) {
+    return { ok: false as const, missing: [{ key: "suspended", label: "Boutique suspendue par l’administration PrestAfrik", done: false, href: "/dashboard/boutique" }] };
+  }
   const checklist = await getPublicationChecklist(storeId, emailVerified);
   const missing = checklist.filter((item) => !item.done);
   if (missing.length) return { ok: false as const, missing };

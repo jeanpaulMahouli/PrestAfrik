@@ -21,6 +21,7 @@ Référence : `PrestAfrik maquettes UX UI/PRESTAFRIK-BRIEF-CLAUDE-CODE.md`. Inve
 - E-mails : 25 modèles vouvoyés (ADR-015), aperçu `/dev/emails`, envois branchés pour l’inscription, la bienvenue, le mot de passe, l’équipe, la publication et les nouvelles commandes.
 - Connexion et inscription : panneau de présentation retiré, boutons désactivés tant que le formulaire est incomplet ; mot de passe oublié : le compte est vérifié avant l’envoi du lien.
 - Abonnement désactivé pendant le lancement gratuit (ADR-014) ; page « Accès refusé » au lieu d’une erreur serveur quand un rôle n’a pas le droit d’ouvrir une page.
+- Administration (`/admin`, ADR-017) : boutiques (suspendre/rétablir), abonnements (prolonger l’essai), messages échoués, alertes, utilisateurs (lien de réinitialisation, suspension d’accès), journal et exports CSV. Photo de profil modifiable dans « Mon profil ». Parcours : `node scripts/design/admin-walk.mjs <dossier>`.
 - Photos produit : correction du bug d’affichage (fichiers hors `public/`, servis par `/media`, remplacement au lieu d’ajout masqué, limite de 1 Mo des Server Actions relevée).
 
 ### Codé, à vérifier visuellement (la base locale a été arrêtée faute de mémoire)
@@ -29,7 +30,7 @@ Référence : `PrestAfrik maquettes UX UI/PRESTAFRIK-BRIEF-CLAUDE-CODE.md`. Inve
 
 ### Reste à faire
 
-- Équipe, Administration, stockage cloud des photos (S3 ou Supabase Storage) pour la production, en-têtes de sécurité/CSP, worker et webhooks WhatsApp, tests Playwright de la matrice de viewports, CI.
+- Équipe, stockage cloud des photos (S3 ou Supabase Storage) pour la production, en-têtes de sécurité/CSP, worker et webhooks WhatsApp, tests Playwright de la matrice de viewports, CI.
 
 ## Étape 1 — initialisation, base, authentification et boutiques
 

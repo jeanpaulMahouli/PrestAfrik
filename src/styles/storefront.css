@@ -1516,3 +1516,72 @@
 .sf-embedded .sf-notice-preview {
   display: none;
 }
+
+/* ---------- Boutique hors ligne (pas encore publiée ou suspendue) ---------- */
+
+.sf-unavailable {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px 16px;
+  background: linear-gradient(180deg, var(--color-page-background-alt), var(--color-surface));
+  font-family: var(--font-sans, "Poppins", system-ui, sans-serif);
+}
+
+.sf-unavailable-card {
+  display: grid;
+  width: min(100%, 30rem);
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1.75rem 1.75rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  text-align: center;
+}
+
+.sf-unavailable-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 24px;
+  object-fit: cover;
+}
+
+.sf-unavailable-initial {
+  display: grid;
+  place-items: center;
+  color: var(--color-surface);
+  background: var(--sf-unavailable-color, var(--color-brand-primary));
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.sf-unavailable-card h1 {
+  margin: 0.25rem 0 0;
+  font-size: 1.5rem;
+}
+
+.sf-unavailable-card p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+
+.sf-unavailable-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  color: var(--color-warning-strong) !important;
+  background: var(--color-warning-surface);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.sf-unavailable-footer {
+  margin-top: 1rem !important;
+  font-size: 0.8125rem;
+}
+
+.sf-unavailable-footer a {
+  color: var(--color-link);
+  font-weight: 600;
+}

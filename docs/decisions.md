@@ -79,3 +79,24 @@ Le document des modèles autorise `@react-email/components` ou MJML. Pour ne pas
 - **Nom** : plusieurs boutiques peuvent porter le même nom, mais pas deux boutiques d'un même propriétaire (comparaison sans casse, accents ni espaces superflus) : contrôlé à l'étape 1, à la création et dans « Ma boutique ».
 - **Adresses** : `prestafrik.com/{adresse}` (routes `src/app/[slug]`). Les anciens liens `/boutique/{adresse}/…` redirigent en 308 (`next.config.ts`). Les pages du site ont priorité sur les boutiques ; leurs noms sont réservés (`reservedSlugs`).
 - **Suppression** : le propriétaire peut supprimer sa boutique (Ma boutique → Zone sensible), en retapant son nom ; paiements et commandes sont supprimés avant la boutique (relations `Restrict`), puis les images du stockage.
+
+## ADR-017 — Administration PrestAfrik et photo de profil
+
+- **Accès** : `/admin` est réservé au rôle plateforme `ADMIN`, relu en base à chaque requête (`requirePlatformAdmin`) ; un vendeur reçoit une page introuvable. Le rôle se donne avec `npm run admin:promote -- email` (ou `--retirer`).
+- **Journal** : chaque action (suspension, prolongation d'essai, alerte, lien de réinitialisation, export) est écrite dans `AuditLog` et visible sur `/admin/journal`.
+- **Suspension de boutique** : motif obligatoire, e-mail E20 au propriétaire, boutique masquée au public et commandes refusées (`suspendedAt`), bandeau dans l'espace vendeur, publication refusée.
+- **Suspension de compte** : sessions supprimées et toute nouvelle session refusée (`databaseHooks.session.create`). Ni l'administrateur lui-même ni un autre administrateur ne peuvent être suspendus depuis l'écran.
+- **Alertes** : calculées à partir des données (API WhatsApp en échec, ≥ 3 messages échoués en 24 h, ≥ 3 commandes sans réponse depuis 3 jours ; fin d'essai et quota à 90 % seulement si la facturation est active). Seule la décision (traitée / ignorée) est enregistrée (`AdminAlertState`), par clé journalière. Le « webhook silencieux » de la maquette attend l'implémentation des webhooks. « Tout marquer comme lu » devient « Tout marquer comme traité ».
+- **Messages échoués** : seule la catégorie de l'erreur est affichée (jeton, modèle, numéro, autre) ; ni contenu, ni numéro, ni texte brut de l'erreur.
+- **Nom du profil** : modifiable dans « Mon profil » (2 à 80 caractères, espaces superflus retirés, même règle qu'à l'inscription) ; il est mis à jour partout (menu du compte, équipe, administration).
+- **Photo de profil** : `User.image`, recadrée en carré 512 px WebP, stockée sous `users/{userId}/{uuid}.webp` (servie par `/media`), ancienne photo supprimée après remplacement.
+
+## ADR-018 — Pages publiques, boutiques hors ligne et favicon par boutique
+
+- **Pages du site** : `/fonctionnalites`, `/a-propos`, `/demo`, `/blog` (+ `/blog/{article}`) et `/contact`, sur le gabarit `PageShell` (héros compact, appel final, pied de page) et les blocs de `src/components/landing/blocks.tsx`, avec les jetons de la landing (`src/styles/site-pages.css`). La navigation pointe vers ces pages.
+- **Blog** : articles dans `src/components/landing/blog-posts.ts` (blocs typés) ; ajouter un objet suffit à publier. Pas de statistiques inventées : les chiffres sont des exemples de calcul et les citations sont signalées comme illustratives.
+- **Contact** : action serveur avec validation, champ piège anti-robots et 5 messages / 15 min par IP ; message texte à `CONTACT_INBOX` (sinon `contact@prestafrik.com`, « Répondre » écrit à l'expéditeur) et accusé de réception E24.
+- **Boutique hors ligne** : une adresse de boutique existante mais non publiée (ou suspendue) affiche « Bientôt en ligne » (ou « temporairement indisponible ») au lieu d'un 404, sans indexation. Cause des 404 signalés : boutiques créées sans produit actif, condition de publication non remplie.
+- **Favicon** : les icônes PrestAfrik ne sont plus des fichiers de `src/app` (prioritaires sur `generateMetadata`) mais déclarées dans le layout racine ; une boutique avec logo le remplace par `/api/boutique/{adresse}/icone` (PNG 32/180/192/512, adresse versionnée par le logo).
+- **Logos partenaires** : 8 logos fictifs (`public/landing/logos/`), à remplacer par ceux de vraies boutiques avec leur accord.
+- **Mise à jour** : Fonctionnalités, À propos et Démo sont désactivées en attendant leurs maquettes (`disabledPages` dans `src/components/landing/content.ts` : page introuvable ; leurs liens restent dans le menu et le pied de page mais mènent à l'accueil ; code conservé). Seuls Blog et Contact sont en ligne. « Voir la démo » ouvre la vidéo de `demoVideo.url` (YouTube, Vimeo, .mp4/.webm) dans une fenêtre ; sans lien, il fait défiler jusqu'à la démo sur téléphone de l'accueil.

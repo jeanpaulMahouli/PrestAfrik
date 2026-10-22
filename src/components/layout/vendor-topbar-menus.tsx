@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { StoreRole } from "@prisma/client";
+import { UserAvatar } from "@/components/account/user-avatar";
 import { useDismiss } from "@/components/ui/use-dismiss";
 import { texts } from "@/config/texts";
 import { authClient } from "@/modules/auth/client";
@@ -77,7 +78,7 @@ export function StoreSwitcher({ storeId, storeName, memberships }: { storeId: st
   );
 }
 
-export function UserMenu({ userName, userEmail }: { userName: string; userEmail: string }) {
+export function UserMenu({ userName, userEmail, userImage = null, adminLink = false }: { userName: string; userEmail: string; userImage?: string | null; adminLink?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -107,7 +108,7 @@ export function UserMenu({ userName, userEmail }: { userName: string; userEmail:
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
-        {userName.trim()[0]?.toLocaleUpperCase("fr-FR") ?? "?"}
+        {userImage ? <UserAvatar image={userImage} name={userName} size={32} /> : (userName.trim()[0]?.toLocaleUpperCase("fr-FR") ?? "?")}
       </button>
       {open && (
         <div className="topbar-menu-panel topbar-menu-panel-end">
@@ -116,6 +117,7 @@ export function UserMenu({ userName, userEmail }: { userName: string; userEmail:
             <small>{userEmail}</small>
           </p>
           <Link className="topbar-menu-link" href="/dashboard/profil" onClick={() => setOpen(false)}>{t.profile}</Link>
+          {adminLink && <Link className="topbar-menu-link" href="/admin" onClick={() => setOpen(false)}>Administration</Link>}
           <button className="topbar-menu-link topbar-signout" disabled={pending} onClick={signOut} type="button">
             {pending ? t.signingOut : t.signOut}
           </button>

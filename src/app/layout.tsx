@@ -14,6 +14,14 @@ export const metadata: Metadata = {
     template: "%s | PrestAfrik",
   },
   description: "Crée ta boutique, reçois tes commandes et fais-les confirmer par tes clients.",
+  // Icônes déclarées ici (et non par fichiers dans src/app) : chaque boutique peut les remplacer par son logo.
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/brand/icon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: { url: "/brand/apple-icon.png", sizes: "180x180" },
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

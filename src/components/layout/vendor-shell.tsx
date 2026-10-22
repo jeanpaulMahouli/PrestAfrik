@@ -5,6 +5,7 @@ import { EmailVerificationBanner } from "@/components/layout/email-verification-
 import { VendorDrawer, VendorSidebar } from "@/components/layout/vendor-navigation";
 import { MobileSearchButton, StoreSwitcher, UserMenu } from "@/components/layout/vendor-topbar-menus";
 import { fontVariables } from "@/lib/fonts";
+import { isPlatformAdmin } from "@/modules/admin/context";
 import { getStoreContext } from "@/modules/stores/context";
 
 const t = texts.vendor.shell;
@@ -16,6 +17,7 @@ const t = texts.vendor.shell;
  */
 export async function VendorShell({ children, searchQuery }: { children: React.ReactNode; searchQuery?: string }) {
   const { session, store, memberships, membership } = await getStoreContext();
+  const showAdminLink = await isPlatformAdmin(session.user.id);
 
   return (
     <div className={`vendor-shell ${fontVariables}`}>
@@ -42,9 +44,14 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
           storeId={store.id}
           storeName={store.name}
         />
-        <UserMenu userEmail={session.user.email} userName={session.user.name} />
+        <UserMenu adminLink={showAdminLink} userEmail={session.user.email} userImage={session.user.image ?? null} userName={session.user.name} />
       </header>
       {!session.user.emailVerified && <EmailVerificationBanner email={session.user.email} />}
+      {store.suspendedAt && (
+        <p className="v-banner v-banner-danger vendor-suspension-banner" role="alert">
+          <strong>{store.name} est suspendue par l’équipe PrestAfrik.</strong> Vos clients ne la voient plus. Motif : {store.suspensionReason ?? "non précisé"}. Répondez à l’e-mail reçu pour la rétablir.
+        </p>
+      )}
       <div className="vendor-body">
         <VendorSidebar role={membership.role} />
         <main className="vendor-main" id="contenu">
