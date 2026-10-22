@@ -25,6 +25,10 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: process.env.NODE_ENV === "development" ? localNetworkOrigins : [],
   poweredByHeader: false,
   experimental: {
+    // Processus du build limités : sur un serveur qui annonce beaucoup de processeurs (64 chez l'hébergeur),
+    // Next.js en lançait 63, chacun chargeant le moteur Prisma et ses threads, jusqu'à épuiser la limite de
+    // threads du conteneur (« OS can't spawn worker thread »). Réglable avec NEXT_BUILD_WORKERS.
+    cpus: Math.max(1, Number(process.env.NEXT_BUILD_WORKERS) || 2),
     serverActions: {
       // Photos are limited to 2 MB by the application; keep room for multipart overhead.
       bodySizeLimit: "3mb",
