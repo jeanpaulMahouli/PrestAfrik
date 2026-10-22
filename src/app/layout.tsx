@@ -9,6 +9,8 @@ import { NavigationLoadingIndicator } from "@/components/ui/navigation-loading-i
 import "./globals.css";
 
 export const metadata: Metadata = {
+  // Adresse publique : les images de partage (Open Graph) des articles du blog pointent vers le vrai domaine.
+  metadataBase: new URL(process.env.BETTER_AUTH_URL || "http://localhost:3000"),
   title: {
     default: "PrestAfrik",
     template: "%s | PrestAfrik",
