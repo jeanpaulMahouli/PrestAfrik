@@ -23,7 +23,7 @@ const essentials = [
 
 const more = [
   { icon: Megaphone, title: "Campagnes WhatsApp", text: "Relancez vos clients qui ont accepté de recevoir vos offres, par segment, avec un historique des envois." },
-  { icon: Palette, title: "3 thèmes, vos couleurs", text: "Catalogue express, Mode et beauté ou Boutique de marque : votre logo, vos couleurs, avec un contrôle de lisibilité." },
+  { icon: Palette, title: "3 thèmes, vos couleurs", text: "Catalogue express, Mode et beauté ou Galerie : votre logo, vos couleurs, avec un contrôle de lisibilité." },
   { icon: LayoutTemplate, title: "Pages de votre boutique", text: "À propos, contact, FAQ ou promotion : composez vos pages en blocs, sans compétence technique." },
   { icon: Bot, title: "Assistant de discussion", text: "Des réponses guidées aux questions fréquentes de vos clients, puis un passage fluide vers votre WhatsApp." },
   { icon: QrCode, title: "QR code et partage", text: "Un QR code à imprimer, un lien à copier, un partage WhatsApp en un geste : votre boutique voyage partout." },

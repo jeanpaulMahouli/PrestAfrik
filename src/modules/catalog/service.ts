@@ -27,6 +27,7 @@ export async function getPublishedStore(slug: string) {
           primaryColor: true,
           secondaryColor: true,
           accentColor: true,
+          reviewsEnabled: true,
           categories: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, slug: true } },
           _count: { select: { products: { where: { status: "ACTIVE" } } } },
         },
@@ -75,6 +76,7 @@ async function resolveStorefrontStore(slug: string) {
       primaryColor: true,
       secondaryColor: true,
       accentColor: true,
+      reviewsEnabled: true,
       categories: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, slug: true } },
       _count: { select: { products: { where: { status: "ACTIVE" } } } },
     },
@@ -142,6 +144,7 @@ export async function getPublishedProduct(storeId: string, slug: string) {
         select: {
           id: true,
           storeId: true,
+          categoryId: true,
           name: true,
           slug: true,
           description: true,

@@ -316,9 +316,15 @@
   background: #f6ddd6;
 }
 
-.wizard-theme-mock-boutique_marque span:first-child {
-  grid-column: 1 / -1;
-  background: var(--color-brand-secondary);
+/* Galerie : deux grandes photos carrées bord à bord, sans arrondi. */
+.wizard-theme-mock-boutique_marque {
+  gap: 2px;
+  padding: 0;
+}
+
+.wizard-theme-mock-boutique_marque span {
+  border-radius: 0;
+  background: #cfd8d1;
 }
 
 /* Aperçu en direct */

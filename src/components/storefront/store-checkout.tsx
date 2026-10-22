@@ -35,6 +35,9 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
   const [zoneId, setZoneId] = useState(zones.length === 1 ? zones[0].id : "");
   const [landmark, setLandmark] = useState("");
   const [consent, setConsent] = useState(false);
+  // Champs déjà quittés par le client : leur erreur s'affiche juste en dessous, avant tout envoi.
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const touch = (field: string) => setTouched((value) => (value[field] ? value : { ...value, [field]: true }));
   const home = `/${storeSlug}`;
 
   const zone = zones.find((item) => item.id === zoneId);
@@ -69,7 +72,14 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
     }
   }, [cart, home, router, state]);
 
-  const fieldError = (field: string) => (state?.error && state.field === field ? state.error : undefined);
+  const clientErrors: Record<string, string | undefined> = {
+    name: name.trim().length < 2 ? "Indiquez votre nom (2 caractères au moins)." : undefined,
+    zoneId: method === "DELIVERY" && !zone ? "Choisissez votre zone de livraison." : undefined,
+    landmark: method === "DELIVERY" && landmark.trim().length < 3 ? "Indiquez un point de repère (3 caractères au moins)." : undefined,
+    followUpConsent: !consent ? "Cochez cette case : le suivi sur WhatsApp est nécessaire pour commander." : undefined,
+  };
+  // Erreur du serveur en priorité, sinon erreur vérifiée dans le navigateur une fois le champ quitté.
+  const fieldError = (field: string) => (state?.error && state.field === field ? state.error : touched[field] ? clientErrors[field] : undefined);
   const generalError = state?.error && !["name", "whatsapp", "landmark", "followUpConsent"].includes(state.field ?? "") ? state.error : null;
 
   if (!deliveryAvailable && !pickup.enabled) {
@@ -102,7 +112,7 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
         <Link aria-label="Retour au panier" className="sf-back" href={`${home}/panier`}><BackIcon size={18} /></Link>
         <h1>Finaliser ma commande</h1>
       </div>
-      <p className="sf-muted">Aucun compte à créer. Vous payez à la livraison.</p>
+      <p className="sf-muted">Aucun compte à créer.</p>
 
       <div aria-live="polite" className="sf-progress">
         <span>
@@ -130,10 +140,10 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
         <input name="idempotencyKey" type="hidden" value={idempotencyKey} />
         <input name="deliveryMethod" type="hidden" value={method} />
 
-        <label className="sf-field">
+        <label className={`sf-field${fieldError("name") ? " sf-field-invalid" : ""}`}>
           Votre nom
-          <input autoComplete="name" maxLength={120} name="name" onChange={(event) => setName(event.target.value)} placeholder="Ex. Estelle Nkoa" required value={name} />
-          {fieldError("name") && <span className="sf-field-error">{fieldError("name")}</span>}
+          <input aria-invalid={fieldError("name") ? true : undefined} autoComplete="name" maxLength={120} name="name" onBlur={() => touch("name")} onChange={(event) => setName(event.target.value)} placeholder="Ex. Estelle Nkoa" required value={name} />
+          {fieldError("name") && <span className="sf-field-error" role="alert">{fieldError("name")}</span>}
         </label>
 
         <PhoneInput
@@ -162,9 +172,19 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
 
         {method === "DELIVERY" ? (
           <>
-            <label className="sf-field">
+            <label className={`sf-field${fieldError("zoneId") ? " sf-field-invalid" : ""}`}>
               Zone de livraison
-              <select name="zoneId" onChange={(event) => setZoneId(event.target.value)} required value={zoneId}>
+              <select
+                aria-invalid={fieldError("zoneId") ? true : undefined}
+                name="zoneId"
+                onBlur={() => touch("zoneId")}
+                onChange={(event) => {
+                  setZoneId(event.target.value);
+                  touch("zoneId");
+                }}
+                required
+                value={zoneId}
+              >
                 <option disabled value="">Choisir votre quartier ou zone</option>
                 {zones.map((item) => (
                   <option key={item.id} value={item.id}>
@@ -175,11 +195,12 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
               <span className="sf-field-help">
                 {zone ? `Frais de livraison : ${zone.feeXaf === 0 ? "gratuits" : formatXaf(zone.feeXaf)}${zone.delay ? ` · délai : ${zone.delay}` : ""}.` : "Votre zone n’est pas dans la liste ? Écrivez à la boutique ou choisissez le retrait."}
               </span>
+              {fieldError("zoneId") && <span className="sf-field-error" role="alert">{fieldError("zoneId")}</span>}
             </label>
-            <label className="sf-field">
+            <label className={`sf-field${fieldError("landmark") ? " sf-field-invalid" : ""}`}>
               Point de repère
-              <input maxLength={250} name="landmark" onChange={(event) => setLandmark(event.target.value)} placeholder="Ex. Près de la pharmacie du carrefour" required value={landmark} />
-              {fieldError("landmark") && <span className="sf-field-error">{fieldError("landmark")}</span>}
+              <input aria-invalid={fieldError("landmark") ? true : undefined} maxLength={250} name="landmark" onBlur={() => touch("landmark")} onChange={(event) => setLandmark(event.target.value)} placeholder="Ex. Près de la pharmacie du carrefour" required value={landmark} />
+              {fieldError("landmark") && <span className="sf-field-error" role="alert">{fieldError("landmark")}</span>}
             </label>
           </>
         ) : (
@@ -196,10 +217,22 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
           <textarea maxLength={500} name="comment" placeholder="Ex. Appelez-moi en arrivant" rows={2} />
         </label>
 
-        <label className="sf-check">
-          <input checked={consent} name="followUpConsent" onChange={(event) => setConsent(event.target.checked)} required type="checkbox" />
+        <label className={`sf-check${fieldError("followUpConsent") ? " sf-check-invalid" : ""}`}>
+          <input
+            aria-invalid={fieldError("followUpConsent") ? true : undefined}
+            checked={consent}
+            name="followUpConsent"
+            onBlur={() => touch("followUpConsent")}
+            onChange={(event) => {
+              setConsent(event.target.checked);
+              touch("followUpConsent");
+            }}
+            required
+            type="checkbox"
+          />
           J’accepte de recevoir le suivi de ma commande sur WhatsApp.
         </label>
+        {fieldError("followUpConsent") && <span className="sf-field-error" role="alert">{fieldError("followUpConsent")}</span>}
         <label className="sf-check">
           <input name="marketingConsent" type="checkbox" />
           Je souhaite recevoir les offres de la boutique (facultatif).
@@ -222,7 +255,7 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
 
         {(generalError || pricingError) && <p className="sf-notice sf-notice-error" role="alert">{generalError ?? pricingError}</p>}
 
-        <div className="sf-actions-sticky">
+        <div className="sf-checkout-actions">
           <button className="sf-btn sf-btn-primary sf-btn-block" disabled={pending || !valid} name="intent" type="submit" value="site">
             {pending && intent.current === "site" ? "Envoi de la commande…" : "Commander"}
           </button>

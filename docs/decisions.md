@@ -100,3 +100,19 @@ Le document des modèles autorise `@react-email/components` ou MJML. Pour ne pas
 - **Favicon** : les icônes PrestAfrik ne sont plus des fichiers de `src/app` (prioritaires sur `generateMetadata`) mais déclarées dans le layout racine ; une boutique avec logo le remplace par `/api/boutique/{adresse}/icone` (PNG 32/180/192/512, adresse versionnée par le logo).
 - **Logos partenaires** : 8 logos fictifs (`public/landing/logos/`), à remplacer par ceux de vraies boutiques avec leur accord.
 - **Mise à jour** : Fonctionnalités, À propos et Démo sont désactivées en attendant leurs maquettes (`disabledPages` dans `src/components/landing/content.ts` : page introuvable ; leurs liens restent dans le menu et le pied de page mais mènent à l'accueil ; code conservé). Seuls Blog et Contact sont en ligne. « Voir la démo » ouvre la vidéo de `demoVideo.url` (YouTube, Vimeo, .mp4/.webm) dans une fenêtre ; sans lien, il fait défiler jusqu'à la démo sur téléphone de l'accueil.
+
+## ADR-019 — Avis clients, produits similaires et finitions de la boutique publique
+
+- **Avis** : table `ProductReview` (note 1 à 5 contrôlée en base, prénom, commentaire, statut `PENDING` / `APPROVED` / `REJECTED`) et interrupteur `Store.reviewsEnabled` (activé par défaut). Un visiteur laisse un avis sans compte (champ piège, 3 avis / 10 min par IP) ; il n'est affiché qu'après validation par le vendeur dans **Avis clients** (`/dashboard/avis`, permission `products.manage`) : publier, refuser, retirer, supprimer, activer ou désactiver les avis. Désactivés : ni étoiles ni avis sur la boutique, avis conservés.
+- **Affichage** : étoiles (remplissage partiel) et note sous le nom du produit ; sur chaque carte du catalogue, une ligne d'étoiles puis le nombre d'avis. Synthèses mises en cache 60 s, invalidées à chaque modération.
+- **Produits similaires** : même catégorie d'abord, complétés par le reste du catalogue (4 au plus).
+- **Fiche produit** : bouton d'agrandissement (visionneuse plein écran, flèches, touches ← → et Échap).
+- **Commande** : erreurs affichées sous chaque champ dès qu'il est quitté ; boutons actifs seulement quand tout est valide ; barre des boutons dans le flux (non fixée).
+- **Boutique** : fond de l'espace vendeur, pied de page séparé (espace, filet, fond blanc de l'en-tête), « Powered by PrestAfrik » vers la landing.
+- **Mise à jour** : les avis sont publiés dès leur dépôt (le vendeur peut les retirer, les republier ou les supprimer ; « En attente » ne concerne plus que d'anciens avis). Un clic sur la photo du produit ouvre la visionneuse (plus de bouton dédié).
+
+## ADR-020 — Couleurs tirées du logo, thème « Galerie » et adresse qui suit le nom
+
+- **Pipette** : quand un logo est choisi (assistant, Ma boutique), les trois couleurs en sont tirées dans le navigateur (`src/lib/logo-palette.ts`) : principale = couleur vive dominante, secondaire = couleur foncée du logo (sinon version foncée de la principale), accent = autre teinte vive ; principale et secondaire sont assombries jusqu'à être lisibles (WCAG 4,5:1). Modifiables ensuite ; « Reprendre les couleurs de mon logo » remplace « Retour aux couleurs par défaut ».
+- **Thème « Galerie »** (valeur `BOUTIQUE_MARQUE` conservée, aucune migration) : plus de bannière (supprimée pour tous les thèmes), aucun coin arrondi, deux produits par ligne bord à bord sur mobile et ordinateur, recherche par une loupe placée avant le panier.
+- **Adresse** : changer le nom dans Ma boutique met à jour l'adresse (`slugify` du nom). Si elle est prise par une autre boutique ou réservée, on ajoute « -» et un identifiant court (6 caractères sans ambiguïté) et le vendeur en est clairement informé. Le nom n'est jamais modifié. L'ancienne adresse est gardée dans `StoreSlugAlias` et redirige (308) vers l'adresse actuelle ; une adresse gardée pour une boutique n'est pas attribuée à une autre.

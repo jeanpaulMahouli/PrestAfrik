@@ -3,6 +3,7 @@ import type { StoreTheme } from "@prisma/client";
 import type { CSSProperties, ReactNode } from "react";
 import { StoreChatWidget, type ChatWidgetConfig } from "@/components/storefront/store-chat-widget";
 import { StorefrontCartBar, StorefrontCartLink } from "@/components/storefront/storefront-cart-link";
+import { StorefrontHeaderSearch } from "@/components/storefront/storefront-header-search";
 import { StoreCartProvider } from "@/components/storefront/store-cart-provider";
 import { StorefrontPreviewBridge } from "@/components/storefront/storefront-preview-bridge";
 import { StoreImage } from "@/components/ui/store-image";
@@ -56,7 +57,10 @@ export function StorefrontShell({ children, store, pages, chat, isPreview = fals
               {store.city && <small>{store.city}</small>}
             </span>
           </Link>
-          {!isPreview && !isPaused && <StorefrontCartLink storeSlug={store.slug} />}
+          <div className="sf-header-actions">
+            <StorefrontHeaderSearch storeSlug={store.slug} />
+            {!isPreview && !isPaused && <StorefrontCartLink storeSlug={store.slug} />}
+          </div>
         </header>
         {isPreview && (
           <p className="sf-notice sf-notice-preview" role="status">
@@ -85,7 +89,10 @@ export function StorefrontShell({ children, store, pages, chat, isPreview = fals
             <Link href="/legal/conditions-de-vente">Conditions de vente</Link>
             <Link href="/legal/politique-de-confidentialite">Confidentialité</Link>
           </nav>
-          <small>Vous commandez directement auprès de {store.name}. Propulsé par PrestAfrik.</small>
+          <small>Vous commandez directement auprès de {store.name}.</small>
+          <small className="sf-powered">
+            Powered by <Link href="/">PrestAfrik</Link>
+          </small>
         </footer>
         {!isPreview && !isPaused && <StorefrontCartBar storeSlug={store.slug} />}
         {!isPaused && chat && <StoreChatWidget config={chat} logoUrl={store.logoUrl} storeInitials={storeInitials(store.name)} storeName={store.name} storeSlug={store.slug} />}

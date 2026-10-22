@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StarRating, reviewCountLabel } from "@/components/storefront/star-rating";
 import { StoreImage } from "@/components/ui/store-image";
 import { formatXaf } from "@/modules/catalog/format";
 
@@ -20,7 +21,19 @@ export function ProductPrice({ priceXaf, promotionalPriceXaf }: { priceXaf: numb
   );
 }
 
-export function StorefrontProductGrid({ storeSlug, products }: { storeSlug: string; products: StoreProduct[] }) {
+/**
+ * Grille du catalogue. Avec `ratings` (boutique qui accepte les avis), chaque carte affiche une ligne
+ * d'étoiles et, en dessous, le nombre d'avis.
+ */
+export function StorefrontProductGrid({
+  storeSlug,
+  products,
+  ratings = null,
+}: {
+  storeSlug: string;
+  products: StoreProduct[];
+  ratings?: Record<string, { average: number; count: number }> | null;
+}) {
   return (
     <ul className="sf-grid">
       {products.map((product, index) => (
@@ -42,6 +55,12 @@ export function StorefrontProductGrid({ storeSlug, products }: { storeSlug: stri
             </span>
             <span className="sf-card-body">
               <strong>{product.name}</strong>
+              {ratings && (
+                <span className="sf-card-rating">
+                  <StarRating size={14} value={ratings[product.id]?.average ?? 0} />
+                  <small>{reviewCountLabel(ratings[product.id]?.count ?? 0)}</small>
+                </span>
+              )}
               <ProductPrice priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} />
             </span>
           </Link>

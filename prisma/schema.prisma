@@ -253,6 +253,8 @@ model Store {
   publishedAt        DateTime?
   suspendedAt        DateTime?
   suspensionReason   String?                @db.VarChar(300)
+  /// Avis clients sur les fiches produit (le vendeur peut les désactiver).
+  reviewsEnabled     Boolean                @default(true)
   theme              StoreTheme             @default(CATALOGUE_EXPRESS)
   isPublished        Boolean                @default(false)
   description        String?                @db.VarChar(2000)
@@ -285,6 +287,8 @@ model Store {
   chatConfig         StoreChatConfig?
   chatQuickReplies   StoreChatQuickReply[]
   pages              StorePage[]
+  reviews            ProductReview[]
+  slugAliases        StoreSlugAlias[]
 }
 
 model StoreMembership {
@@ -370,6 +374,7 @@ model Product {
   variants            ProductVariant[]
   orderItems          OrderItem[]
   reservations        StockReservation[]
+  reviews             ProductReview[]
 
   @@unique([storeId, sku])
   @@unique([storeId, slug])
@@ -951,4 +956,40 @@ model AdminAlertState {
   updatedBy   User?            @relation("AdminAlertStateAuthor", fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@index([status, updatedAt])
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Avis laissé par un visiteur sur un produit ; publié seulement après validation par la boutique.
+model ProductReview {
+  id          String       @id @default(cuid())
+  storeId     String
+  productId   String
+  authorName  String       @db.VarChar(60)
+  /// Note de 1 à 5 (contrainte en base).
+  rating      Int
+  comment     String       @db.VarChar(1000)
+  status      ReviewStatus @default(PENDING)
+  moderatedAt DateTime?
+  createdAt   DateTime     @default(now())
+  store       Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, status, createdAt])
+  @@index([storeId, status, createdAt])
+}
+
+/// Anciennes adresses d'une boutique (après un changement de nom) : elles redirigent vers l'adresse actuelle,
+/// pour que les liens déjà partagés et les QR codes imprimés continuent de fonctionner.
+model StoreSlugAlias {
+  slug      String   @id @db.VarChar(40)
+  storeId   String
+  createdAt DateTime @default(now())
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
 }

@@ -34,6 +34,7 @@ export const vendorTexts = {
     orders: "Commandes",
     deliveries: "Livraisons",
     products: "Produits",
+    reviews: "Avis clients",
     customers: "Clients",
     money: "Argent reçu",
     marketing: "Marketing",

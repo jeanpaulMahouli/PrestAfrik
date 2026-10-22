@@ -915,6 +915,7 @@
 .v-field-help {
   color: var(--color-text-secondary);
   font-size: 0.75rem;
+  margin-top: 10px;
 }
 
 .v-field-error {
@@ -2404,4 +2405,79 @@
   .billing-disabled-content {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+
+/* ---------- Avis clients ---------- */
+.reviews-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.reviews-settings > div {
+  flex: 1 1 22rem;
+}
+
+.reviews-settings p {
+  margin: 0.25rem 0 0;
+}
+
+.reviews-average {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.reviews-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.review-item-product {
+  margin: 0.375rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+
+.review-item-product a {
+  color: var(--color-link);
+}
+
+.review-item-comment {
+  margin: 0.75rem 0 0;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.review-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.875rem;
+}
+
+/* Boutons d'en-tête toujours sur une seule ligne (ex. « Partager ma boutique » et « Mettre en brouillon »). */
+.v-page-actions-inline {
+  flex-wrap: nowrap;
+}
+
+.v-page-actions-inline .btn {
+  white-space: nowrap;
 }

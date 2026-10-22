@@ -11,7 +11,9 @@ import { deleteStoreImage, ImageUploadError, saveStoreImage } from "@/lib/upload
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { hexColorSchema } from "@/modules/catalog/validation";
 import { requireStorePermission } from "@/modules/stores/context";
+import { storePublicUrl } from "@/lib/urls";
 import { findOwnedStoreWithSameName } from "@/modules/stores/draft";
+import { slugForRenamedStore, type SlugProposal } from "@/modules/stores/slug-rename";
 import { publishStoreIfReady } from "@/modules/stores/publication";
 
 const settingsPath = "/dashboard/boutique";
@@ -52,7 +54,7 @@ function revalidateStore(store: { id: string; slug: string }) {
 
 export type StoreSettingsState =
   | null
-  | { ok: true; message: string; logoUrl: string | null }
+  | { ok: true; message: string; logoUrl: string | null; slug: string; slugNotice: string | null }
   | { ok: false; message: string; field?: string };
 
 /** Enregistre « Ma boutique » sans rechargement : en cas d'erreur, la saisie (logo compris) est conservée. */
@@ -110,9 +112,18 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
   }
   const previousLogo = logoUrl ? store.logoUrl : null;
 
-  await prisma.store.update({
-    where: { id: store.id },
-    data: {
+  // Nouveau nom → nouvelle adresse. Une adresse prise (par une autre boutique ou une ancienne adresse
+  // conservée en redirection) reçoit « -» et un identifiant court ; le nom, lui, reste tel quel.
+  const isTaken = async (slug: string) => {
+    const [owner, alias] = await Promise.all([
+      prisma.store.findUnique({ where: { slug }, select: { id: true } }),
+      prisma.storeSlugAlias.findUnique({ where: { slug }, select: { storeId: true } }),
+    ]);
+    return Boolean((owner && owner.id !== store.id) || (alias && alias.storeId !== store.id));
+  };
+  let proposal: SlugProposal | null = input.name !== store.name ? await slugForRenamedStore(input.name, store.slug, isTaken) : null;
+
+  const data = {
       name: input.name,
       description: input.description || null,
       activityId: input.activityId || null,
@@ -130,11 +141,43 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
       accentColor: input.accentColor,
       ...(phone?.ok ? { phoneCountry: phone.country, phoneNational: phone.national, phoneE164: phone.e164, contactPhone: phone.e164 } : {}),
       ...(logoUrl ? { logoUrl } : {}),
-    },
-  });
+  };
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await prisma.$transaction(async (tx) => {
+        if (proposal) {
+          // L'ancienne adresse redirige vers la nouvelle (liens partagés, QR codes imprimés).
+          await tx.storeSlugAlias.deleteMany({ where: { slug: proposal.slug, storeId: store.id } });
+          await tx.storeSlugAlias.upsert({ where: { slug: store.slug }, create: { slug: store.slug, storeId: store.id }, update: { storeId: store.id } });
+        }
+        await tx.store.update({ where: { id: store.id }, data: { ...data, ...(proposal ? { slug: proposal.slug } : {}) } });
+      });
+      break;
+    } catch (error) {
+      // Adresse prise entre-temps par une autre boutique : on en calcule une autre.
+      const conflict = (error as { code?: string })?.code === "P2002";
+      if (!proposal || !conflict || attempt >= 2) throw error;
+      proposal = await slugForRenamedStore(input.name, store.slug, async (slug) => slug === proposal!.slug || (await isTaken(slug)));
+    }
+  }
   if (previousLogo) await deleteStoreImage(previousLogo);
   revalidateStore(store);
-  return { ok: true, message: "Modifications enregistrées. Votre boutique est à jour.", logoUrl: logoUrl ?? store.logoUrl };
+
+  let slugNotice: string | null = null;
+  if (proposal) {
+    const shown = (slug: string) => storePublicUrl(slug).replace(/^https?:\/\//, "");
+    revalidateStore({ id: store.id, slug: proposal.slug });
+    slugNotice = proposal.suffixed
+      ? `Le lien ${shown(proposal.base)} ${proposal.reason === "taken" ? "est déjà utilisé par une autre boutique" : "est réservé par PrestAfrik"}. Nous avons ajouté « -${proposal.slug.slice(proposal.slug.lastIndexOf("-") + 1)} » pour faire la différence : votre nouveau lien est ${shown(proposal.slug)}. Votre nom de boutique, lui, ne change pas. L’ancien lien ${shown(store.slug)} redirige automatiquement vers le nouveau.`
+      : `Votre lien suit le nouveau nom : ${shown(proposal.slug)}. L’ancien lien ${shown(store.slug)} redirige automatiquement vers le nouveau.`;
+  }
+  return {
+    ok: true,
+    message: "Modifications enregistrées. Votre boutique est à jour.",
+    logoUrl: logoUrl ?? store.logoUrl,
+    slug: proposal?.slug ?? store.slug,
+    slugNotice,
+  };
 }
 
 export async function removeStoreLogo() {
@@ -145,13 +188,6 @@ export async function removeStoreLogo() {
   }
   revalidateStore(store);
   redirect(`${settingsPath}?succes=logo-retire`);
-}
-
-export async function resetStoreColors() {
-  const { store } = await requireStorePermission("store.manage");
-  await prisma.store.update({ where: { id: store.id }, data: { primaryColor: "#FF9900", secondaryColor: "#000026", accentColor: "#EF765E" } });
-  revalidateStore(store);
-  redirect(`${settingsPath}?succes=couleurs`);
 }
 
 export async function publishStore() {

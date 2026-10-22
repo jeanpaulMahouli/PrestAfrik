@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { StarRating, reviewCountLabel } from "@/components/storefront/star-rating";
 import { ProductPrice } from "@/components/storefront/storefront-product-grid";
 import { useStoreCart } from "@/components/storefront/store-cart-provider";
 import { RichText } from "@/components/ui/rich-text";
@@ -17,6 +18,10 @@ type ProductDetailProps = {
   productUrl: string;
   whatsappNumber: string | null;
   canOrder?: boolean;
+  /** Note des visiteurs (null quand la boutique a désactivé les avis). */
+  rating?: { average: number; count: number } | null;
+  /** Sections affichées sous le produit (avis, produits similaires). */
+  children?: ReactNode;
   product: {
     id: string;
     name: string;
@@ -30,9 +35,59 @@ type ProductDetailProps = {
   };
 };
 
-/** Galerie à faire glisser (jusqu'à 5 photos), avec points de position et flèches au survol. */
+type GalleryImage = ProductDetailProps["product"]["images"][number];
+
+/** Visionneuse plein écran (élément <dialog> : Échap géré par le navigateur), flèches et touches ← →. */
+function Lightbox({ images, name, start, onClose }: { images: GalleryImage[]; name: string; start: number; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [current, setCurrent] = useState(start);
+  const go = (next: number) => setCurrent((next + images.length) % images.length);
+
+  useEffect(() => {
+    dialogRef.current?.showModal();
+  }, []);
+
+  const image = images[current];
+  return (
+    <dialog
+      aria-label={`Photos de ${name}`}
+      className="sf-lightbox"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) dialogRef.current?.close();
+      }}
+      onClose={onClose}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowRight") go(current + 1);
+        if (event.key === "ArrowLeft") go(current - 1);
+      }}
+      ref={dialogRef}
+    >
+      <button aria-label="Fermer" autoFocus className="sf-lightbox-close" onClick={() => dialogRef.current?.close()} type="button">
+        <X aria-hidden="true" size={24} />
+      </button>
+      {/* L'image est déjà optimisée (WebP 1600 px) : affichage direct en taille réelle. */}
+      <img alt={image.altText ?? `${name}, photo ${current + 1}`} className="sf-lightbox-image" src={image.url} />
+      {images.length > 1 && (
+        <>
+          <button aria-label="Photo précédente" className="sf-gallery-arrow sf-gallery-arrow-prev sf-lightbox-arrow" onClick={() => go(current - 1)} type="button">
+            <ChevronLeft aria-hidden="true" size={26} strokeWidth={2.4} />
+          </button>
+          <button aria-label="Photo suivante" className="sf-gallery-arrow sf-gallery-arrow-next sf-lightbox-arrow" onClick={() => go(current + 1)} type="button">
+            <ChevronRight aria-hidden="true" size={26} strokeWidth={2.4} />
+          </button>
+          <p aria-live="polite" className="sf-lightbox-count">
+            {current + 1} / {images.length}
+          </p>
+        </>
+      )}
+    </dialog>
+  );
+}
+
+/** Galerie à faire glisser (jusqu'à 5 photos), avec points de position, flèches au survol ; clic sur la photo pour l'agrandir. */
 function Gallery({ images, name }: { images: ProductDetailProps["product"]["images"]; name: string }) {
   const [index, setIndex] = useState(0);
+  const [zoomed, setZoomed] = useState(false);
   const track = useRef<HTMLDivElement>(null);
   if (!images.length) return <div aria-hidden="true" className="sf-gallery sf-card-placeholder" />;
   // Défilement de la galerie seule (scrollIntoView pouvait aussi faire bouger la page) ; les flèches bouclent.
@@ -56,17 +111,20 @@ function Gallery({ images, name }: { images: ProductDetailProps["product"]["imag
         tabIndex={0}
       >
         {images.map((image, imageIndex) => (
-          <StoreImage
-            alt={image.altText ?? `${name}, photo ${imageIndex + 1}`}
-            height={1000}
-            key={image.url}
-            priority={imageIndex === 0}
-            sizes="(max-width: 768px) 100vw, 50vw"
-            src={image.url}
-            width={1000}
-          />
+          // Un clic (ou Entrée) sur la photo l'ouvre en grand ; le glissement du doigt reste possible.
+          <button aria-label={`Agrandir la photo ${imageIndex + 1}`} className="sf-gallery-slide" key={image.url} onClick={() => setZoomed(true)} type="button">
+            <StoreImage
+              alt={image.altText ?? `${name}, photo ${imageIndex + 1}`}
+              height={1000}
+              priority={imageIndex === 0}
+              sizes="(max-width: 768px) 100vw, 50vw"
+              src={image.url}
+              width={1000}
+            />
+          </button>
         ))}
       </div>
+      {zoomed && <Lightbox images={images} name={name} onClose={() => setZoomed(false)} start={index} />}
       {images.length > 1 && (
         <>
           <button aria-label="Photo précédente" className="sf-gallery-arrow sf-gallery-arrow-prev" onClick={() => go(index - 1)} type="button">
@@ -88,7 +146,7 @@ function Gallery({ images, name }: { images: ProductDetailProps["product"]["imag
   );
 }
 
-export function ProductDetail({ product, storeSlug, storeName, productUrl, whatsappNumber, canOrder = true }: ProductDetailProps) {
+export function ProductDetail({ product, storeSlug, storeName, productUrl, whatsappNumber, canOrder = true, rating = null, children }: ProductDetailProps) {
   const router = useRouter();
   const cart = useStoreCart();
   const available = product.variants.filter((variant) => variant.stockQuantity !== 0);
@@ -125,11 +183,18 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
   }
 
   return (
-    <main className="sf-product">
+    <main className="sf-product-page">
+    <div className="sf-product">
       <Link aria-label="Retour au catalogue" className="sf-back" href={`/${storeSlug}`}><BackIcon size={18} /></Link>
       <Gallery images={product.images} name={product.name} />
       <div className="sf-product-copy">
         <h1>{product.name}</h1>
+        {rating && (
+          <a className="sf-product-rating" href="#sf-reviews-title">
+            <StarRating size={18} value={rating.average} />
+            <span>{rating.count > 0 ? `${rating.average.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} · ${reviewCountLabel(rating.count)}` : "Aucun avis pour le moment"}</span>
+          </a>
+        )}
         {variant?.priceXaf ? <span className="sf-price">{new Intl.NumberFormat("fr-FR").format(variant.priceXaf)} FCFA</span> : <ProductPrice priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} />}
 
         {canOrder && product.variants.length > 0 && (
@@ -196,6 +261,8 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
           <p className="sf-notice">La commande sera possible après la publication de la boutique.</p>
         )}
       </div>
+    </div>
+    {children}
     </main>
   );
 }

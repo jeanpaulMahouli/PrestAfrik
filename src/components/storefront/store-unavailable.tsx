@@ -24,7 +24,7 @@ export function StoreUnavailable({ store }: { store: { name: string; logoUrl: st
           </>
         )}
         <p className="sf-unavailable-footer">
-          Boutique propulsée par <Link href="/">PrestAfrik</Link>
+          Powered by <Link href="/">PrestAfrik</Link>
         </p>
       </section>
     </main>

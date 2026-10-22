@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { cache } from "react";
 import { StoreUnavailable } from "@/components/storefront/store-unavailable";
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
@@ -47,7 +47,12 @@ export default async function PublicStoreLayout({ children, params }: LayoutProp
   if (!store) {
     // La boutique existe mais n'est pas en ligne (pas encore publiée, ou suspendue) : page d'attente plutôt qu'un 404.
     const existing = await findStoreBySlug(slug);
-    if (!existing) notFound();
+    if (!existing) {
+      // Ancienne adresse d'une boutique renommée : redirection vers son adresse actuelle.
+      const alias = await prisma.storeSlugAlias.findUnique({ where: { slug }, select: { store: { select: { slug: true } } } });
+      if (alias) permanentRedirect(`/${alias.store.slug}`);
+      notFound();
+    }
     return (
       <StoreUnavailable
         store={{ name: existing.name, logoUrl: existing.logoUrl, primaryColor: safeColor(existing.primaryColor, "#FF9900"), suspended: Boolean(existing.suspendedAt) }}

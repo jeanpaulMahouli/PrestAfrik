@@ -8,6 +8,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { useFormPersistence } from "@/components/ui/use-form-persistence";
 import { colorReadability } from "@/lib/contrast";
+import { paletteFromImage } from "@/lib/logo-palette";
 import { updateStoreSettings, type StoreSettingsState } from "@/modules/stores/settings-actions";
 
 export type StoreSettingsValues = {
@@ -35,7 +36,7 @@ export type StoreSettingsValues = {
 const themes: { id: StoreTheme; name: string; detail: string }[] = [
   { id: "CATALOGUE_EXPRESS", name: "Catalogue express", detail: "Simple et rapide" },
   { id: "MODE_BEAUTE", name: "Mode et beauté", detail: "Photos en grand" },
-  { id: "BOUTIQUE_MARQUE", name: "Boutique de marque", detail: "Votre identité" },
+  { id: "BOUTIQUE_MARQUE", name: "Galerie", detail: "Grandes photos, angles droits" },
 ];
 
 const colorFields = [
@@ -67,6 +68,7 @@ export function StoreAppearanceForm({
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState("");
   const [dragging, setDragging] = useState(false);
+  const [paletteNote, setPaletteNote] = useState("");
   const logoInput = useRef<HTMLInputElement>(null);
   // Saisie gardée si la page est actualisée avant l'enregistrement.
   const formRef = useRef<HTMLFormElement>(null);
@@ -93,13 +95,27 @@ export function StoreAppearanceForm({
     } else if (file.size > 2 * 1024 * 1024) {
       setLogoError("Le logo ne peut pas dépasser 2 Mo.");
     } else {
-      setLogoPreview(URL.createObjectURL(file));
+      const url = URL.createObjectURL(file);
+      setLogoPreview(url);
+      void applyLogoColors(url);
       return;
     }
     if (logoInput.current) logoInput.current.value = "";
     setLogoPreview(null);
   }
   const set = <K extends keyof StoreSettingsValues>(key: K, value: StoreSettingsValues[K]) => setValues((current) => ({ ...current, [key]: value }));
+
+  /** Pipette : les couleurs de la boutique sont reprises du logo (modifiables ensuite). */
+  async function applyLogoColors(src: string) {
+    const palette = await paletteFromImage(src);
+    if (!palette) {
+      setPaletteNote("");
+      return;
+    }
+    setValues((current) => ({ ...current, ...palette }));
+    setPaletteNote("Couleurs reprises de votre logo. Vous pouvez les ajuster ci-dessous, puis enregistrez.");
+  }
+  const currentLogo = logoPreview ?? values.logoUrl;
   const initials = values.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr-FR")).join("") || "B";
   const liveValues = useMemo(
     () => ({
@@ -130,6 +146,12 @@ export function StoreAppearanceForm({
         {state && (
           <p className={`v-banner ${state.ok ? "v-banner-success" : "v-banner-danger"}`} role={state.ok ? "status" : "alert"}>
             {state.message}
+          </p>
+        )}
+        {state?.ok && state.slugNotice && (
+          // Le lien a suivi le nouveau nom : on dit clairement au vendeur ce qui a changé (et pourquoi un indice a été ajouté).
+          <p className="v-banner v-banner-info" role="status">
+            <strong>Votre lien a changé.</strong> {state.slugNotice}
           </p>
         )}
         <section className="v-card" id="logo">
@@ -199,6 +221,11 @@ export function StoreAppearanceForm({
 
         <section className="v-card">
           <h2 className="v-card-title">Couleurs</h2>
+          {paletteNote && (
+            <p className="v-banner v-banner-info" role="status">
+              {paletteNote}
+            </p>
+          )}
           <ul className="color-list">
             {colorFields.map(([key, label]) => {
               const readability = colorReadability(values[key]);
@@ -222,6 +249,11 @@ export function StoreAppearanceForm({
             })}
           </ul>
           <p className="v-field-help">Le texte des boutons (blanc ou bleu nuit) est choisi automatiquement pour rester lisible.</p>
+          {currentLogo && (
+            <button className="v-link-button" onClick={() => void applyLogoColors(currentLogo)} type="button">
+              Reprendre les couleurs de mon logo
+            </button>
+          )}
         </section>
 
         <section className="v-card" id="informations">
@@ -230,6 +262,9 @@ export function StoreAppearanceForm({
             <label className="v-field">
               Nom de la boutique
               <input maxLength={60} name="name" onChange={(event) => set("name", event.target.value)} required value={values.name} />
+              {values.name.trim() !== initialValues.name.trim() && (
+                <span className="v-field-help">Le lien de votre boutique suivra ce nouveau nom ; l’ancien lien redirigera vers le nouveau.</span>
+              )}
             </label>
             <div className="v-field">
               Adresse de la boutique
@@ -307,7 +342,7 @@ export function StoreAppearanceForm({
           )}
         </section>
 
-        <div className="v-sticky-actions">
+        <div className="v-sticky-actions store-save-actions">
           <SubmitButton className="btn btn-primary" loading={pending} pendingLabel="Enregistrement…">
             Enregistrer les modifications
           </SubmitButton>

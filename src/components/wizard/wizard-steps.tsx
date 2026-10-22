@@ -5,6 +5,7 @@ import { PhotoManager } from "@/components/catalog/photo-manager";
 import { Combobox } from "@/components/ui/combobox";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { colorReadability } from "@/lib/contrast";
+import { paletteFromImage } from "@/lib/logo-palette";
 import { slugify } from "@/modules/stores/slug";
 import {
   saveActivityStep,
@@ -328,7 +329,7 @@ export function ContactStep({ draftId, phone, whatsapp, contactEmail }: { draftI
 const themes = [
   { id: "CATALOGUE_EXPRESS", name: "Catalogue express", detail: "Simple et rapide, idéal pour beaucoup de produits" },
   { id: "MODE_BEAUTE", name: "Mode et beauté", detail: "Grandes photos, ambiance soignée" },
-  { id: "BOUTIQUE_MARQUE", name: "Boutique de marque", detail: "Votre identité en avant" },
+  { id: "BOUTIQUE_MARQUE", name: "Galerie", detail: "Grandes photos bord à bord, angles droits, deux produits par ligne" },
 ] as const;
 
 export function ThemeStep({ draftId, initialTheme }: { draftId: string; initialTheme: (typeof themes)[number]["id"] }) {
@@ -366,6 +367,7 @@ export function BrandingStep({ draftId, initial }: { draftId: string; initial: {
   const [colors, setColors] = useState({ primaryColor: initial.primaryColor, secondaryColor: initial.secondaryColor, accentColor: initial.accentColor });
   const [logo, setLogo] = useState<string | null>(initial.logoUrl);
   const [logoError, setLogoError] = useState("");
+  const [paletteNote, setPaletteNote] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const setColor = (key: keyof typeof colors, value: string) => {
     setColors((current) => ({ ...current, [key]: value.toUpperCase() }));
@@ -382,6 +384,13 @@ export function BrandingStep({ draftId, initial }: { draftId: string; initial: {
     const url = URL.createObjectURL(file);
     setLogo(url);
     update({ logoUrl: url });
+    // Pipette : les couleurs de la boutique sont reprises du logo (modifiables ensuite).
+    void paletteFromImage(url).then((palette) => {
+      if (!palette) return;
+      setColors(palette);
+      update(palette);
+      setPaletteNote(true);
+    });
   };
 
   return (
@@ -412,6 +421,11 @@ export function BrandingStep({ draftId, initial }: { draftId: string; initial: {
           </div>
           {(logoError || fieldError("logo")) && <p className="v-field-error">{logoError || fieldError("logo")}</p>}
           <p className="wizard-label">Couleurs</p>
+          {paletteNote && (
+            <p className="v-field-help" role="status">
+              Couleurs reprises de votre logo : vous pouvez les ajuster.
+            </p>
+          )}
           <ul className="color-list">
             {(
               [

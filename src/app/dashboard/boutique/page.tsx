@@ -11,7 +11,7 @@ import { storePublicUrl } from "@/lib/urls";
 import { requireStorePermission } from "@/modules/stores/context";
 import { cameroonCities } from "@/modules/stores/options";
 import { getPublicationChecklist } from "@/modules/stores/publication";
-import { publishStore, resetStoreColors, unpublishStore } from "@/modules/stores/settings-actions";
+import { publishStore, unpublishStore } from "@/modules/stores/settings-actions";
 
 export const metadata = { title: "Ma boutique" };
 
@@ -45,10 +45,7 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
           <h1 className="v-page-title">Ma boutique</h1>
           <p className="v-page-subtitle">Personnalisez l’apparence de votre boutique : logo, thème, couleurs et informations pratiques.</p>
         </div>
-        <div className="v-page-actions">
-          <form action={resetStoreColors}>
-            <SubmitButton className="btn btn-secondary" pendingLabel="…">Retour aux couleurs par défaut</SubmitButton>
-          </form>
+        <div className="v-page-actions v-page-actions-inline">
           {store.isPublished ? (
             <>
               <ShareStoreButton className="btn btn-secondary" published storeName={store.name} storeUrl={publicUrl} />

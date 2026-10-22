@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { StorefrontProductGrid } from "@/components/storefront/storefront-product-grid";
 import { formatXaf, getPublishedProducts, getStorefrontStore } from "@/modules/catalog/service";
 import { deliverySummary, getStorefrontExtras } from "@/modules/storefront/data";
+import { getRatingSummaries } from "@/modules/reviews/queries";
 
 export async function generateMetadata({ params }: PageProps<"/[slug]">) {
   const { slug } = await params;
@@ -21,18 +22,16 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
 
   const search = typeof query.q === "string" ? query.q.trim().slice(0, 100) : "";
   const category = typeof query.categorie === "string" ? query.categorie.slice(0, 90) : undefined;
-  const [products, extras] = await Promise.all([getPublishedProducts(store.id, { category, query: search }), getStorefrontExtras(store.id)]);
+  const [products, extras, ratings] = await Promise.all([
+    getPublishedProducts(store.id, { category, query: search }),
+    getStorefrontExtras(store.id),
+    store.reviewsEnabled ? getRatingSummaries(store.id) : null,
+  ]);
   const home = `/${store.slug}`;
 
   return (
     <main className="sf-home">
-      {/* Le bandeau n'apparaît qu'avec le thème « Boutique de marque » (storefront.css) ; il est toujours présent dans la page
-          pour que l'aperçu de « Ma boutique » puisse changer de thème en direct. */}
       <h1 className="visually-hidden" data-store-name="">{store.name}</h1>
-      <section aria-hidden="true" className="sf-hero">
-        <p className="sf-hero-name" data-store-name="">{store.name}</p>
-        {store.description && <p>{store.description}</p>}
-      </section>
       {store.description && <p className="sf-description sf-home-description">{store.description}</p>}
 
       <form action={home} className="sf-search" role="search">
@@ -56,7 +55,7 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
       <p className="sf-info">{deliverySummary(extras, formatXaf)}</p>
 
       {products.length ? (
-        <StorefrontProductGrid products={products} storeSlug={store.slug} />
+        <StorefrontProductGrid products={products} ratings={ratings} storeSlug={store.slug} />
       ) : (
         <section className="sf-empty">
           <h2>{search || category ? "Aucun produit trouvé" : "La boutique prépare son catalogue"}</h2>

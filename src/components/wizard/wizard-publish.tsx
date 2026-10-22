@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import QRCode from "qrcode";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SocialShare } from "@/components/shared/social-share";
 import { CopyButton } from "@/components/ui/copy-button";
 import { WizardStepForm } from "@/components/wizard/wizard-step-form";
@@ -113,7 +112,8 @@ export function PublishStep({
 }
 
 /** Lien de la boutique avec boutons Copier et Voir. */
-function StoreLink({ storeUrl }: { storeUrl: string }) {
+/** Lien de la boutique à copier ; « Voir ma boutique » sur la même ligne une fois la boutique en ligne. */
+function StoreLink({ storeUrl, showView = false }: { storeUrl: string; showView?: boolean }) {
   const display = storeUrl.replace(/^https?:\/\//, "");
   return (
     <label className="v-field">
@@ -121,19 +121,18 @@ function StoreLink({ storeUrl }: { storeUrl: string }) {
       <span className="share-link-row">
         <input readOnly value={display} />
         <CopyButton label="Copier" value={storeUrl} />
+        {showView && (
+          <a className="btn btn-primary" href={storeUrl} rel="noopener noreferrer" target="_blank">
+            Voir ma boutique
+          </a>
+        )}
       </span>
     </label>
   );
 }
 
-/** Écran « Boutique publiée » : lien, QR code téléchargeable, partage, prochaines étapes. */
+/** Écran « Boutique publiée » : lien (copier, voir), partage sur les réseaux, prochaines étapes. */
 export function PublishedScreen({ storeName, storeUrl }: { storeName: string; storeUrl: string }) {
-  const [qr, setQr] = useState("");
-  useEffect(() => {
-    QRCode.toDataURL(storeUrl, { width: 600, margin: 1, color: { dark: "#000026", light: "#ffffff" } }).then(setQr).catch(() => setQr(""));
-  }, [storeUrl]);
-  const display = storeUrl.replace(/^https?:\/\//, "");
-
   return (
     <section aria-labelledby="published-title" className="wizard-card wizard-published">
       <span aria-hidden="true" className="wizard-published-icon"><CheckIcon size={24} /></span>
@@ -141,20 +140,7 @@ export function PublishedScreen({ storeName, storeUrl }: { storeName: string; st
       <p className="wizard-subtitle">
         Elle est maintenant visible par vos clients. Partagez-la sans attendre : le premier client est peut-être déjà en train de la chercher.
       </p>
-      <StoreLink storeUrl={storeUrl} />
-      <div className="wizard-published-share">
-        <a className="btn btn-primary" href={storeUrl} rel="noopener noreferrer" target="_blank">
-          Voir ma boutique
-        </a>
-        <a className="btn btn-whatsapp" href={`https://wa.me/?text=${encodeURIComponent(`Découvrez ma boutique ${storeName} : ${storeUrl}`)}`} rel="noopener noreferrer" target="_blank">
-          Partager sur WhatsApp
-        </a>
-        {qr && (
-          <a className="btn btn-secondary" download={`qr-${display.split("/").pop()}.png`} href={qr}>
-            Télécharger le QR code
-          </a>
-        )}
-      </div>
+      <StoreLink showView storeUrl={storeUrl} />
       <SocialShare text={`Découvrez ma boutique ${storeName}`} title={storeName} url={storeUrl} />
       <div className="wizard-next">
         <Link className="btn btn-secondary" href="/dashboard/livraisons">Régler mes zones de livraison</Link>

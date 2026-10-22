@@ -1,9 +1,10 @@
 /* Boutique publique (maquettes « Boutique publique (client) »), mobile d'abord.
    Couleurs de la boutique : --store-primary / --store-on-primary / --store-secondary / --store-accent.
-   Trois thèmes réels : .sf-theme-catalogue-express, .sf-theme-mode-beaute, .sf-theme-boutique-marque. */
+   Trois thèmes réels : .sf-theme-catalogue-express, .sf-theme-mode-beaute et « Galerie » (.sf-theme-boutique-marque). */
 
 .sf {
-  --sf-page: var(--color-page-background-alt);
+  /* Même fond que l'espace vendeur. */
+  --sf-page: var(--color-page-background);
   --sf-radius: var(--radius-md);
   display: flex;
   min-height: 100vh;
@@ -189,6 +190,7 @@
   color: var(--color-text-secondary);
   font-size: 0.875rem;
   line-height: 1.55;
+  margin-top: 10px;
 }
 
 .sf-small {
@@ -566,9 +568,7 @@
 .sf-gallery-track img {
   width: 100%;
   height: 100%;
-  flex: 0 0 100%;
   object-fit: cover;
-  scroll-snap-align: start;
 }
 
 /* Flèches précédente / suivante : cercles sombres qui apparaissent au survol de la photo (ou au clavier). */
@@ -755,6 +755,7 @@
 
 .sf-whatsapp-link {
   justify-self: center;
+  margin-top: 0.75rem;
   font-size: 0.875rem;
 }
 
@@ -1140,11 +1141,15 @@
 
 /* ---------- Pied de page ---------- */
 
+/* Pied de page bien séparé du contenu : espace, filet et fond blanc de l'en-tête (aucune couleur ajoutée). */
 .sf-footer {
   display: grid;
   justify-items: center;
   gap: 0.75rem;
-  padding: 1.5rem 1rem 2rem;
+  margin-top: 3rem;
+  padding: 2rem 1rem calc(2rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
   color: var(--color-text-secondary);
   font-size: 0.8125rem;
   text-align: center;
@@ -1417,54 +1422,6 @@
   background: color-mix(in srgb, var(--store-accent) 14%, white);
 }
 
-/* Boutique de marque : bandeau d'identité à la couleur secondaire. */
-.sf-hero {
-  margin: 0;
-  padding: 2rem 1rem 1.75rem;
-  color: var(--store-on-secondary);
-  background: var(--store-secondary);
-}
-
-.sf-hero h1,
-.sf-hero .sf-hero-name {
-  margin: 0 0 0.5rem;
-  font-size: clamp(1.6rem, 6vw, 2.4rem);
-  font-weight: 800;
-}
-
-.sf-hero p {
-  max-width: 40rem;
-  margin: 0;
-  line-height: 1.6;
-  opacity: 0.9;
-}
-
-/* Le nom est un paragraphe (le titre de la page est le <h1> masqué) : même rendu que l'ancien titre. */
-.sf-hero .sf-hero-name {
-  max-width: none;
-  margin: 0 0 0.5rem;
-  font-family: var(--font-heading);
-  line-height: 1.2;
-  opacity: 1;
-}
-
-.sf-theme-boutique-marque .sf-header {
-  color: var(--store-on-secondary);
-  background: var(--store-secondary);
-  border-bottom-color: transparent;
-}
-
-.sf-theme-boutique-marque .sf-brand-text small {
-  color: inherit;
-  opacity: 0.8;
-}
-
-.sf-theme-boutique-marque .sf-card {
-  border-radius: var(--radius-xs);
-  box-shadow: none;
-  border: 1px solid var(--color-divider);
-}
-
 /* ---------- Grands écrans ---------- */
 
 @media (min-width: 640px) {
@@ -1522,10 +1479,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .sf-hero {
-    padding: 3rem 2rem;
-  }
-
   .sf-product {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1569,11 +1522,6 @@
 /* ---------- Aperçu de « Ma boutique » et changement de thème en direct ---------- */
 
 /* Bandeau d'identité : seulement avec « Boutique de marque » ; sinon la description s'affiche sous l'en-tête. */
-.sf:not(.sf-theme-boutique-marque) .sf-hero,
-.sf-theme-boutique-marque .sf-home-description {
-  display: none;
-}
-
 /* Vitrine affichée dans l'aperçu de « Ma boutique » : sans le bandeau « Aperçu privé ». */
 .sf-embedded .sf-notice-preview {
   display: none;
@@ -1646,4 +1594,445 @@
 .sf-unavailable-footer a {
   color: var(--color-link);
   font-weight: 600;
+}
+
+
+/* ---------- Commande : barre des boutons dans le flux (non fixée) ---------- */
+.sf-checkout-actions {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.sf-field-invalid input,
+.sf-field-invalid select {
+  border-color: var(--color-danger);
+}
+
+.sf-check-invalid {
+  color: var(--color-danger);
+}
+
+.sf-powered a {
+  color: var(--color-link);
+  font-weight: 600;
+}
+
+/* ---------- Étoiles ---------- */
+.sf-stars {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  vertical-align: middle;
+}
+
+.sf-stars-empty,
+.sf-stars-full {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.sf-stars svg {
+  width: var(--sf-star-size, 16px);
+  height: var(--sf-star-size, 16px);
+  flex: none;
+}
+
+.sf-stars-empty svg {
+  fill: var(--color-border-input, #e4dccb);
+}
+
+.sf-stars-full {
+  position: absolute;
+  inset: 0 auto 0 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sf-stars-full svg {
+  fill: #f5a623;
+}
+
+.sf-card-rating {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.sf-card-rating small {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.sf-product-rating {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.sf-product-rating:hover span {
+  text-decoration: underline;
+}
+
+/* ---------- Sections sous le produit (avis, produits similaires) ---------- */
+.sf-section {
+  margin: 2rem 1rem 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.sf-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.sf-section-head h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+}
+
+.sf-similar .sf-grid {
+  padding: 0;
+}
+
+.sf-reviews-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.sf-reviews-summary strong {
+  color: var(--color-text-primary);
+}
+
+.sf-notice-success {
+  color: var(--color-success-strong, #14532d);
+  background: var(--color-success-surface, #e3f6e8);
+}
+
+.sf-review-form {
+  max-width: 40rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-radius: var(--sf-radius);
+  background: var(--color-surface);
+}
+
+.sf-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sf-star-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.sf-star-picker button {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sf-star-picker svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  fill: var(--color-border-input, #e4dccb);
+  transition: fill 0.12s ease, transform 0.12s ease;
+}
+
+.sf-star-picker button.is-on svg {
+  fill: #f5a623;
+}
+
+.sf-star-picker button:hover svg {
+  transform: scale(1.12);
+}
+
+.sf-star-picker-word {
+  margin-left: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
+
+.sf-trap {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.sf-review-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-review {
+  padding: 1rem;
+  border-radius: var(--sf-radius);
+  background: var(--color-surface);
+}
+
+.sf-review-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sf-review-head > div {
+  display: grid;
+  flex: 1;
+  min-width: 8rem;
+}
+
+.sf-review-head time {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.sf-review-avatar {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--store-on-primary, #000);
+  background: var(--store-primary, var(--color-brand-primary));
+  font-weight: 700;
+}
+
+.sf-review p {
+  margin: 0.75rem 0 0;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* ---------- Agrandissement des photos (clic sur la photo) ---------- */
+.sf-gallery-slide {
+  display: block;
+  width: 100%;
+  height: 100%;
+  flex: 0 0 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  scroll-snap-align: start;
+}
+
+.sf-gallery-slide:focus-visible {
+  outline: 3px solid var(--store-primary, var(--color-brand-primary));
+  outline-offset: -3px;
+}
+
+/* La remise à zéro de Tailwind annule le placement natif de <dialog> : on le fixe en plein écran. */
+.sf-lightbox {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.sf-lightbox::backdrop {
+  background: rgb(0 0 0 / 0.9);
+}
+
+.sf-lightbox[open] {
+  display: grid;
+  place-items: center;
+}
+
+.sf-lightbox-image {
+  max-width: min(94vw, 1600px);
+  max-height: 86dvh;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.sf-lightbox-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 3;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: rgb(255 255 255 / 0.15);
+  cursor: pointer;
+}
+
+.sf-lightbox-close:hover {
+  background: rgb(255 255 255 / 0.28);
+}
+
+/* Dans la visionneuse, les flèches restent visibles (pas de survol nécessaire), y compris sur téléphone. */
+.sf-lightbox .sf-lightbox-arrow {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  opacity: 1;
+  transform: translateY(-50%);
+  background: rgb(255 255 255 / 0.15);
+}
+
+.sf-lightbox .sf-lightbox-arrow:hover {
+  background: rgb(255 255 255 / 0.28);
+}
+
+.sf-lightbox-count {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  margin: 0;
+  color: #fff;
+  font-size: 0.875rem;
+  transform: translateX(-50%);
+}
+
+@media (min-width: 1024px) {
+  .sf-section {
+    margin-right: 2rem;
+    margin-left: 2rem;
+  }
+}
+
+/* ---------- En-tête : loupe avant le panier ---------- */
+.sf-header-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* La loupe n'apparaît qu'avec le thème « Galerie » (les autres thèmes gardent la barre de recherche de la page). */
+.sf-header-search {
+  display: none;
+}
+
+.sf-header-search-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 31;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 12px 24px rgb(0 0 0 / 0.08);
+}
+
+.sf-header-search-panel input {
+  min-width: 0;
+  min-height: 2.75rem;
+  flex: 1;
+  padding: 0 0.875rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--sf-radius);
+  font: inherit;
+}
+
+@media (min-width: 1024px) {
+  .sf-header-search-panel {
+    padding-right: calc(max(0px, (100% - 72rem) / 2) + 2rem);
+    padding-left: calc(max(0px, (100% - 72rem) / 2) + 2rem);
+  }
+}
+
+/* ---------- Thème « Galerie » (valeur BOUTIQUE_MARQUE) ----------
+   Grandes photos bord à bord, aucun coin arrondi, deux produits par ligne sur tous les écrans,
+   recherche dans l'en-tête (loupe avant le panier). */
+.sf-theme-boutique-marque {
+  --sf-radius: 0;
+}
+
+.sf-theme-boutique-marque .sf-header-search {
+  display: block;
+}
+
+.sf-theme-boutique-marque .sf-home > .sf-search {
+  display: none;
+}
+
+.sf-theme-boutique-marque :is(.sf-btn, .sf-chips a, .sf-chips button, .sf-info, .sf-notice, .sf-card, .sf-card-media, .sf-gallery, .sf-review, .sf-review-form, .sf-stepper, .sf-cart-icon, .sf-logo, .sf-field input, .sf-field select, .sf-field textarea, .sf-header-search-panel input, .sf-empty) {
+  border-radius: 0;
+}
+
+.sf-theme-boutique-marque .sf-grid,
+.sf-theme-boutique-marque .sf-similar .sf-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+.sf-theme-boutique-marque .sf-card {
+  border: 0;
+  box-shadow: none;
+}
+
+.sf-theme-boutique-marque .sf-card-media img,
+.sf-theme-boutique-marque .sf-card-placeholder {
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.sf-theme-boutique-marque .sf-card-body {
+  padding: 0.75rem 0.75rem 1rem;
+}
+
+@media (min-width: 1024px) {
+  .sf-theme-boutique-marque .sf-grid,
+  .sf-theme-boutique-marque .sf-similar .sf-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding-right: 15px;
+    padding-left: 15px;
+  }
+
+  .sf-theme-boutique-marque .sf-card-body {
+    padding: 1rem 1.25rem 1.5rem;
+  }
+
+  .sf-theme-boutique-marque .sf-card-body strong {
+    font-size: 1.05rem;
+  }
 }

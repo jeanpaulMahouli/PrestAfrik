@@ -157,8 +157,10 @@
   background: #f6ddd6;
 }
 
+/* Galerie : deux grandes photos carrées bord à bord. */
 .theme-tile-thumb-boutique_marque {
-  background: #dde5df;
+  border-radius: 0;
+  background: linear-gradient(90deg, #cfd8d1 0 calc(50% - 1px), #fff calc(50% - 1px) calc(50% + 1px), #cfd8d1 calc(50% + 1px));
 }
 
 .color-list {
@@ -745,4 +747,23 @@
 
 .block-add {
   margin: 0 0 0.75rem;
+}
+
+/* « Enregistrer les modifications » de Ma boutique : bien séparé de l'aperçu qui le suit sur une seule colonne
+   (mobile et tablette). La barre collée en bas du mobile n'empiète plus sur l'aperçu. */
+.store-save-actions {
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .store-save-actions {
+    margin: 1.5rem 0 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Aperçu dans la colonne de droite : pas d'espace supplémentaire sous le bouton. */
+  .store-save-actions {
+    margin-bottom: 0;
+  }
 }

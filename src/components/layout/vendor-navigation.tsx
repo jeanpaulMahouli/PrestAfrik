@@ -15,6 +15,7 @@ const links: readonly { title: string; href: string; permission?: Permission }[]
   { title: nav.orders, href: "/dashboard/commandes", permission: "orders.read" },
   { title: nav.deliveries, href: "/dashboard/livraisons", permission: "delivery.manage" },
   { title: nav.products, href: "/dashboard/produits", permission: "products.read" },
+  { title: nav.reviews, href: "/dashboard/avis", permission: "products.manage" },
   { title: nav.customers, href: "/dashboard/clients", permission: "customers.read" },
   { title: nav.money, href: "/dashboard/argent", permission: "payments.read" },
   { title: nav.marketing, href: "/dashboard/marketing", permission: "marketing.manage" },
