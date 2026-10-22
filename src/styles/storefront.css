@@ -571,6 +571,66 @@
   scroll-snap-align: start;
 }
 
+/* Flèches précédente / suivante : cercles sombres qui apparaissent au survol de la photo (ou au clavier). */
+.sf-gallery-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: rgb(0 0 0 / 0.55);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-50%) scale(0.9);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.sf-gallery-arrow-prev {
+  left: 0.75rem;
+}
+
+.sf-gallery-arrow-next {
+  right: 0.75rem;
+}
+
+.sf-gallery:hover .sf-gallery-arrow,
+.sf-gallery-arrow:focus-visible {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+.sf-gallery-arrow:hover {
+  background: rgb(0 0 0 / 0.75);
+}
+
+.sf-gallery-arrow:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Écrans tactiles (sans survol) : on fait glisser la photo, les flèches restent cachées. */
+@media (hover: none) {
+  .sf-gallery-arrow {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-gallery-arrow {
+    transition: none;
+  }
+}
+
 .sf-gallery-dots {
   position: absolute;
   right: 0;
@@ -1434,8 +1494,10 @@
 }
 
 @media (min-width: 1024px) {
+  /* Le fond de l'en-tête occupe toute la largeur, mais le logo et le panier s'alignent sur le contenu
+     (colonne .sf-main de 72rem centrée, avec 2rem de marge intérieure). */
   .sf-header {
-    padding: 0.75rem 2rem;
+    padding: 0.75rem calc(max(0px, (100% - 72rem) / 2) + 2rem);
   }
 
   .sf-search,

@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -29,14 +30,17 @@ type ProductDetailProps = {
   };
 };
 
-/** Galerie à faire glisser (jusqu'à 5 photos) avec points de position. */
+/** Galerie à faire glisser (jusqu'à 5 photos), avec points de position et flèches au survol. */
 function Gallery({ images, name }: { images: ProductDetailProps["product"]["images"]; name: string }) {
   const [index, setIndex] = useState(0);
   const track = useRef<HTMLDivElement>(null);
   if (!images.length) return <div aria-hidden="true" className="sf-gallery sf-card-placeholder" />;
+  // Défilement de la galerie seule (scrollIntoView pouvait aussi faire bouger la page) ; les flèches bouclent.
   const go = (next: number) => {
-    const target = track.current?.children[next] as HTMLElement | undefined;
-    target?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+    const element = track.current;
+    if (!element) return;
+    const target = (next + images.length) % images.length;
+    element.scrollTo({ left: target * element.clientWidth, behavior: "smooth" });
   };
   return (
     <div className="sf-gallery">
@@ -63,6 +67,16 @@ function Gallery({ images, name }: { images: ProductDetailProps["product"]["imag
           />
         ))}
       </div>
+      {images.length > 1 && (
+        <>
+          <button aria-label="Photo précédente" className="sf-gallery-arrow sf-gallery-arrow-prev" onClick={() => go(index - 1)} type="button">
+            <ChevronLeft aria-hidden="true" size={22} strokeWidth={2.4} />
+          </button>
+          <button aria-label="Photo suivante" className="sf-gallery-arrow sf-gallery-arrow-next" onClick={() => go(index + 1)} type="button">
+            <ChevronRight aria-hidden="true" size={22} strokeWidth={2.4} />
+          </button>
+        </>
+      )}
       {images.length > 1 && (
         <div className="sf-gallery-dots">
           {images.map((image, imageIndex) => (
