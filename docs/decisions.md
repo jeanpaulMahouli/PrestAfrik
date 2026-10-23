@@ -129,3 +129,9 @@ Le document des modèles autorise `@react-email/components` ou MJML. Pour ne pas
 - **Next.js 16.4.0 → 16.4.2** : corrige une exécution de code à distance sans authentification dans l'optimiseur d'images (fichiers SVG) et un déni de service via les Server Actions (avis critiques).
 - **`npm audit fix`** (sans `--force`, versions compatibles) : cloudinary 2.11 (injection d'arguments), SDK AWS 3.11xx (fast-xml-parser, critique), uuid. `npm audit` : 0 vulnérabilité.
 - Vérifié : build de production complet, lint, typecheck, 130 tests, parcours public, vendeur, administration, optimiseur d'images et Server Actions sur la base de démonstration.
+
+## ADR-023 — Page Démo selon la maquette « Démo.svg »
+
+- `/demo` réactivée : héros « Découvrez PrestAfrik en vidéo », grand lecteur (67 % de la largeur, cadre blanc) qui chevauche le héros, onglets « Choisissez ce que vous voulez apprendre », témoignages et logos partenaires (composants de l'accueil réutilisés).
+- Vidéos dans `demoPage.videos` (`src/components/landing/content.ts`) : un lien YouTube, Vimeo ou .mp4 par onglet, image d'attente facultative (sinon miniature YouTube). La vidéo se lit dans le cadre (youtube-nocookie). Onglet sans lien : « Vidéo bientôt disponible ». Changer d'onglet arrête la lecture ; flèches ← → entre onglets.
+- « Voir la démo » de l'accueil mène à `/demo`.

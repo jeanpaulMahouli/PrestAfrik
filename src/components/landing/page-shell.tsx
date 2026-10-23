@@ -23,9 +23,22 @@ export async function isSignedIn() {
  * Gabarit des pages publiques secondaires (Fonctionnalités, À propos, Démo, Blog, Contact) :
  * même carte orangée que l'accueil en version compacte, contenu, dernier appel à l'action et pied de page.
  */
-export function PageShell({ hero, signedIn, children, cta = true }: { hero: PageHeroProps; signedIn: boolean; children: ReactNode; cta?: boolean }) {
+export function PageShell({
+  hero,
+  signedIn,
+  children,
+  cta = true,
+  className = "",
+}: {
+  hero: PageHeroProps;
+  signedIn: boolean;
+  children: ReactNode;
+  cta?: boolean;
+  /** Classe propre à la page (ex. « lp-page--demo »). */
+  className?: string;
+}) {
   return (
-    <div className={`lp lp-page ${fontVariables}`}>
+    <div className={`lp lp-page ${className} ${fontVariables}`.replace(/\s+/g, " ")}>
       <a className="lp-skip" href="#contenu">
         Aller au contenu
       </a>

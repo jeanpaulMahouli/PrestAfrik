@@ -10,7 +10,7 @@ export type NavLink = { label: string; href: string };
  * Pages désactivées en attendant leurs maquettes : elles renvoient « page introuvable », et leurs liens
  * (menu, pied de page) restent visibles mais mènent à l'accueil. Retirez une adresse pour la remettre en ligne.
  */
-export const disabledPages: ReadonlySet<string> = new Set(["/fonctionnalites", "/a-propos", "/demo"]);
+export const disabledPages: ReadonlySet<string> = new Set(["/fonctionnalites", "/a-propos"]);
 
 const toHomeIfDisabled = (link: NavLink): NavLink => (disabledPages.has(link.href.split("#")[0]) ? { ...link, href: "/" } : link);
 
@@ -35,7 +35,7 @@ export const hero = {
   subtitle:
     "Une boutique en ligne gratuite, professionnelle et prête en 5 minutes. Les commandes arrivent sur WhatsApp, le paiement se fait à la livraison.",
   primaryCta: { label: "Créer ma boutique gratuitement", href: "/inscription" },
-  secondaryCta: { label: "Voir la démo", href: "#demo" },
+  secondaryCta: { label: "Voir la démo", href: "/demo" },
   phoneScreen: "/landing/screens/hero-boutique.webp",
   /** Petites photos de la carte flottante à gauche du téléphone. */
   community: [
@@ -54,11 +54,36 @@ export const hero = {
 /**
  * Vidéo de démonstration ouverte par « Voir la démo » (fenêtre par-dessus la page).
  * Collez le lien : YouTube (watch, youtu.be, shorts), Vimeo, ou un fichier .mp4 / .webm.
- * Tant que url est vide, le bouton fait défiler jusqu'à la démo sur téléphone de l'accueil (#demo).
+ * Tant que url est vide, le bouton mène à la page Démo (/demo), qui regroupe les vidéos.
  */
 export const demoVideo = {
   url: "",
   title: "Démonstration de PrestAfrik",
+};
+
+export type DemoVideo = {
+  id: string;
+  /** Libellé de l'onglet. */
+  label: string;
+  title: string;
+  /** Lien YouTube, Vimeo ou fichier .mp4 / .webm. Vide : « Vidéo bientôt disponible ». */
+  url: string;
+  /** Image affichée avant la lecture (sinon la miniature YouTube). */
+  poster?: string;
+};
+
+/** Page Démo : une vidéo par onglet « Choisissez ce que vous voulez apprendre ». */
+export const demoPage = {
+  title: "Découvrez PrestAfrik en vidéo",
+  subtitle:
+    "Créer votre boutique, ajouter vos produits, recevoir vos commandes sur WhatsApp : regardez comment tout fonctionne, à votre rythme. Quelques minutes suffisent pour tout comprendre.",
+  chooseTitle: "Choisissez ce que vous voulez apprendre",
+  videos: [
+    { id: "decouvrir", label: "Découvrir PrestAfrik", title: "Votre boutique, en ligne en 2 minutes", url: "https://youtu.be/mqG-gLXfd5A", poster: "/landing/demo/decouvrir-prestafrik.webp" },
+    { id: "commencer", label: "Commencer sa boutique", title: "Commencer sa boutique", url: "" },
+    { id: "produits", label: "Gérer ses produits", title: "Gérer ses produits", url: "" },
+    { id: "whatsapp", label: "Paramétrer WhatsApp", title: "Paramétrer WhatsApp", url: "" },
+  ] satisfies DemoVideo[],
 };
 
 export const partners = {
