@@ -6,10 +6,15 @@ import { StorefrontCartBar, StorefrontCartLink } from "@/components/storefront/s
 import { StorefrontHeaderSearch } from "@/components/storefront/storefront-header-search";
 import { StoreCartProvider } from "@/components/storefront/store-cart-provider";
 import { StorefrontPreviewBridge } from "@/components/storefront/storefront-preview-bridge";
+import { StoreLinksProvider } from "@/components/storefront/store-links";
 import { StoreImage } from "@/components/ui/store-image";
+import { storeHref } from "@/lib/store-host";
+import { appBaseUrl } from "@/lib/urls";
 
 type StorefrontShellProps = {
   children: ReactNode;
+  /** Début des liens de la boutique : « » en sous-domaine, « /adresse » sur le domaine principal. */
+  base: string;
   store: {
     id: string;
     name: string;
@@ -32,7 +37,7 @@ export function storeInitials(name: string) {
 }
 
 /** Cadre commun de la vitrine : en-tête, contenu, pied de page, panier et assistant. Thème réel appliqué par classe. */
-export function StorefrontShell({ children, store, pages, chat, isPreview = false, isPaused = false, className = "" }: StorefrontShellProps) {
+export function StorefrontShell({ children, base, store, pages, chat, isPreview = false, isPaused = false, className = "" }: StorefrontShellProps) {
   const style = {
     "--store-primary": store.colors.primary,
     "--store-on-primary": store.colors.onPrimary,
@@ -40,9 +45,12 @@ export function StorefrontShell({ children, store, pages, chat, isPreview = fals
     "--store-on-secondary": store.colors.onSecondary,
     "--store-accent": store.colors.accent,
   } as CSSProperties;
-  const home = `/${store.slug}`;
+  const home = storeHref(base);
+  // Pages de PrestAfrik : toujours sur le domaine principal, même depuis le sous-domaine d’une boutique.
+  const platform = appBaseUrl();
 
   return (
+    <StoreLinksProvider base={base}>
     <StoreCartProvider storeId={store.id}>
       <div className={`sf sf-theme-${store.theme.toLowerCase().replaceAll("_", "-")} ${className}`.trim()} data-theme={store.theme} style={style}>
         <StorefrontPreviewBridge initials={storeInitials(store.name)} />
@@ -81,22 +89,23 @@ export function StorefrontShell({ children, store, pages, chat, isPreview = fals
           {pages.length > 0 && (
             <nav aria-label="Informations de la boutique" className="sf-footer-pages">
               {pages.map((page) => (
-                <Link href={`${home}/page/${page.slug}`} key={page.slug}>{page.title}</Link>
+                <Link href={storeHref(base, "page", page.slug)} key={page.slug}>{page.title}</Link>
               ))}
             </nav>
           )}
           <nav aria-label="Informations légales" className="sf-footer-legal">
-            <Link href="/legal/conditions-de-vente">Conditions de vente</Link>
-            <Link href="/legal/politique-de-confidentialite">Confidentialité</Link>
+            <Link href={`${platform}/legal/conditions-de-vente`}>Conditions de vente</Link>
+            <Link href={`${platform}/legal/politique-de-confidentialite`}>Confidentialité</Link>
           </nav>
           <small>Vous commandez directement auprès de {store.name}.</small>
           <small className="sf-powered">
-            Powered by <Link href="/">PrestAfrik</Link>
+            Powered by <a href={platform}>PrestAfrik</a>
           </small>
         </footer>
         {!isPreview && !isPaused && <StorefrontCartBar storeSlug={store.slug} />}
         {!isPaused && chat && <StoreChatWidget config={chat} logoUrl={store.logoUrl} storeInitials={storeInitials(store.name)} storeName={store.name} storeSlug={store.slug} />}
       </div>
     </StoreCartProvider>
+    </StoreLinksProvider>
   );
 }

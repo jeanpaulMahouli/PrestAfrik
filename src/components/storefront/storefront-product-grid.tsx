@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { StarRating, reviewCountLabel } from "@/components/storefront/star-rating";
+import { storeHref } from "@/lib/store-host";
 import { StoreImage } from "@/components/ui/store-image";
 import { formatXaf } from "@/modules/catalog/format";
 
@@ -26,11 +27,12 @@ export function ProductPrice({ priceXaf, promotionalPriceXaf }: { priceXaf: numb
  * d'étoiles et, en dessous, le nombre d'avis.
  */
 export function StorefrontProductGrid({
-  storeSlug,
+  base,
   products,
   ratings = null,
 }: {
-  storeSlug: string;
+  /** Début des liens de la boutique (storeBasePath). */
+  base: string;
   products: StoreProduct[];
   ratings?: Record<string, { average: number; count: number }> | null;
 }) {
@@ -38,7 +40,7 @@ export function StorefrontProductGrid({
     <ul className="sf-grid">
       {products.map((product, index) => (
         <li className="sf-card" key={product.id}>
-          <Link className="sf-card-link" href={`/${storeSlug}/${product.slug}`}>
+          <Link className="sf-card-link" href={storeHref(base, product.slug)}>
             <span className="sf-card-media">
               {product.images[0] ? (
                 <StoreImage

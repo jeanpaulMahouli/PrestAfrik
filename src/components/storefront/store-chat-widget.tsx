@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useStoreBase, useStoreHref } from "@/components/storefront/store-links";
 import { StoreImage } from "@/components/ui/store-image";
 import { fillChatTemplate } from "@/modules/chat/config";
 import { buildWaMeUrl } from "@/modules/whatsapp/wa-me";
@@ -18,8 +19,8 @@ export type ChatWidgetConfig = {
 type Message = { from: "bot" | "client"; text: string } | { from: "ready"; text: string; url: string };
 type Stage = "menu" | "answered" | "transferred";
 
-function pageKind(pathname: string, storeSlug: string): keyof ChatWidgetConfig["showOn"] | "other" {
-  const rest = pathname.replace(`/${storeSlug}`, "");
+function pageKind(pathname: string, base: string): keyof ChatWidgetConfig["showOn"] | "other" {
+  const rest = base && pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
   if (rest === "" || rest === "/") return "home";
   if (rest.startsWith("/panier")) return "cart";
   if (rest.startsWith("/commande")) return "checkout";
@@ -53,8 +54,10 @@ function withStoreName(text: string, storeName: string) {
  */
 export function StoreChatWidget({ config, storeName, storeSlug, storeInitials, logoUrl }: { config: ChatWidgetConfig; storeName: string; storeSlug: string; storeInitials: string; logoUrl: string | null }) {
   const pathname = usePathname();
+  const storeBase = useStoreBase(storeSlug);
+  const link = useStoreHref(storeSlug);
   const router = useRouter();
-  const kind = pageKind(pathname, storeSlug);
+  const kind = pageKind(pathname, storeBase);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [stage, setStage] = useState<Stage>("menu");
@@ -85,7 +88,7 @@ export function StoreChatWidget({ config, storeName, storeSlug, storeInitials, l
 
   if (kind === "other" || !config.showOn[kind]) return null;
 
-  const home = `/${storeSlug}`;
+  const home = link();
   const welcome = fillChatTemplate(config.welcomeMessage, { boutique: storeName });
 
   function say(label: string, answer: string) {
@@ -120,7 +123,7 @@ export function StoreChatWidget({ config, storeName, storeSlug, storeInitials, l
         <button key={reply.label} onClick={() => say(reply.label, reply.answer)} type="button">{reply.label}</button>
       ))}
       {kind !== "checkout" && (
-        <button onClick={() => { close(); router.push(`${home}/panier`); }} type="button">Passer commande</button>
+        <button onClick={() => { close(); router.push(link("panier")); }} type="button">Passer commande</button>
       )}
       <button className="is-filled" onClick={() => transfer("", "Parler au vendeur")} type="button">Parler au vendeur</button>
     </div>

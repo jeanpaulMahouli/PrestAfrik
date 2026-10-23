@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useStoreHref } from "@/components/storefront/store-links";
 import { useCartPricing } from "@/components/storefront/use-cart-pricing";
 import { formatXaf } from "@/modules/catalog/format";
 import { BackIcon } from "@/components/ui/icons";
@@ -8,7 +9,8 @@ import { BackIcon } from "@/components/ui/icons";
 /** Panier (maquette « Panier ») : quantités, retrait d'un article, sous-total. */
 export function StoreCartPage({ storeSlug }: { storeSlug: string }) {
   const { cart, lines, subtotal, loading, error, retry } = useCartPricing(storeSlug);
-  const home = `/${storeSlug}`;
+  const link = useStoreHref(storeSlug);
+  const home = link();
   const count = lines.reduce((total, line) => total + line.quantity, 0);
 
   return (
@@ -71,7 +73,7 @@ export function StoreCartPage({ storeSlug }: { storeSlug: string }) {
           </dl>
           <p className="sf-muted">Les frais de livraison s’affichent à l’étape suivante, avant de commander. Paiement à la livraison.</p>
           <div className="sf-actions-sticky">
-            <Link className="sf-btn sf-btn-primary sf-btn-block" href={`${home}/commande`}>Commander</Link>
+            <Link className="sf-btn sf-btn-primary sf-btn-block" href={link("commande")}>Commander</Link>
             <Link className="sf-btn sf-btn-secondary sf-btn-block" href={home}>Continuer mes achats</Link>
           </div>
         </>

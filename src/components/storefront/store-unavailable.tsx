@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { appBaseUrl } from "@/lib/urls";
 import { StoreImage } from "@/components/ui/store-image";
 
 /**
@@ -24,7 +24,7 @@ export function StoreUnavailable({ store }: { store: { name: string; logoUrl: st
           </>
         )}
         <p className="sf-unavailable-footer">
-          Powered by <Link href="/">PrestAfrik</Link>
+          Powered by <a href={appBaseUrl()}>PrestAfrik</a>
         </p>
       </section>
     </main>

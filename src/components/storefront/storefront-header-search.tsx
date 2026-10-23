@@ -3,6 +3,7 @@
 import { Search, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDismiss } from "@/components/ui/use-dismiss";
+import { useStoreHref } from "@/components/storefront/store-links";
 
 /**
  * Loupe de l'en-tête, juste avant le panier (thème « Galerie », où la barre de recherche de la page est masquée).
@@ -10,6 +11,7 @@ import { useDismiss } from "@/components/ui/use-dismiss";
  */
 export function StorefrontHeaderSearch({ storeSlug }: { storeSlug: string }) {
   const [open, setOpen] = useState(false);
+  const link = useStoreHref(storeSlug);
   const inputRef = useRef<HTMLInputElement>(null);
   const close = useCallback(() => setOpen(false), []);
   const ref = useDismiss<HTMLDivElement>(open, close);
@@ -24,7 +26,7 @@ export function StorefrontHeaderSearch({ storeSlug }: { storeSlug: string }) {
         {open ? <X aria-hidden="true" size={22} /> : <Search aria-hidden="true" size={22} />}
       </button>
       {open && (
-        <form action={`/${storeSlug}`} className="sf-header-search-panel" role="search">
+        <form action={link()} className="sf-header-search-panel" role="search">
           <label className="visually-hidden" htmlFor="sf-header-search-input">
             Rechercher un produit
           </label>

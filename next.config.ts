@@ -21,8 +21,17 @@ const localNetworkOrigins = Object.values(networkInterfaces()).flatMap((interfac
     .map((address) => address.address),
 );
 
+// Boutiques en sous-domaine (ADR-024) : les scripts, styles et polices du build sont chargés depuis le
+// domaine principal. Ils ne passent pas par le Worker Cloudflare des sous-domaines, dont le quota gratuit
+// est compté en requêtes. Fixé au build : FEATURE_SUBDOMAINS et BETTER_AUTH_URL doivent y être définis.
+const subdomainAssetOrigin =
+  process.env.NODE_ENV === "production" && process.env.FEATURE_SUBDOMAINS === "true" && process.env.BETTER_AUTH_URL?.startsWith("https://")
+    ? process.env.BETTER_AUTH_URL.replace(/\/$/, "")
+    : undefined;
+
 const nextConfig: NextConfig = {
   allowedDevOrigins: process.env.NODE_ENV === "development" ? localNetworkOrigins : [],
+  assetPrefix: subdomainAssetOrigin,
   poweredByHeader: false,
   experimental: {
     // Processus du build limités : sur un serveur qui annonce beaucoup de processeurs (64 chez l'hébergeur),
@@ -30,9 +39,18 @@ const nextConfig: NextConfig = {
     // threads du conteneur (« OS can't spawn worker thread »). Réglable avec NEXT_BUILD_WORKERS.
     cpus: Math.max(1, Number(process.env.NEXT_BUILD_WORKERS) || 2),
     serverActions: {
+      // Boutiques en sous-domaine : le formulaire de commande est envoyé depuis mboa-style.prestafrik.com
+      // alors que la requête arrive avec l'hôte prestafrik.com (Cloudflare réécrit l'en-tête Host).
+      allowedOrigins: process.env.STORE_ROOT_DOMAIN ? [`*.${process.env.STORE_ROOT_DOMAIN}`] : [],
       // Photos are limited to 2 MB by the application; keep room for multipart overhead.
       bodySizeLimit: "3mb",
     },
+  },
+  async headers() {
+    // Polices et scripts lus depuis {boutique}.prestafrik.com : le navigateur exige ce droit pour les polices.
+    return subdomainAssetOrigin
+      ? [{ source: "/_next/static/:path*", headers: [{ key: "Access-Control-Allow-Origin", value: "*" }] }]
+      : [];
   },
   async redirects() {
     // Les boutiques sont passées de prestafrik.com/boutique/{adresse} à prestafrik.com/{adresse} :

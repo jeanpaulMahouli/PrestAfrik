@@ -4,6 +4,8 @@ import { StorefrontProductGrid } from "@/components/storefront/storefront-produc
 import { formatXaf, getPublishedProducts, getStorefrontStore } from "@/modules/catalog/service";
 import { deliverySummary, getStorefrontExtras } from "@/modules/storefront/data";
 import { getRatingSummaries } from "@/modules/reviews/queries";
+import { storeHref } from "@/lib/store-host";
+import { storeBasePath } from "@/lib/store-links";
 
 export async function generateMetadata({ params }: PageProps<"/[slug]">) {
   const { slug } = await params;
@@ -27,7 +29,8 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
     getStorefrontExtras(store.id),
     store.reviewsEnabled ? getRatingSummaries(store.id) : null,
   ]);
-  const home = `/${store.slug}`;
+  const base = await storeBasePath(store.slug);
+  const home = storeHref(base);
 
   return (
     <main className="sf-home">
@@ -55,7 +58,7 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
       <p className="sf-info">{deliverySummary(extras, formatXaf)}</p>
 
       {products.length ? (
-        <StorefrontProductGrid products={products} ratings={ratings} storeSlug={store.slug} />
+        <StorefrontProductGrid products={products} ratings={ratings} base={base} />
       ) : (
         <section className="sf-empty">
           <h2>{search || category ? "Aucun produit trouvé" : "La boutique prépare son catalogue"}</h2>

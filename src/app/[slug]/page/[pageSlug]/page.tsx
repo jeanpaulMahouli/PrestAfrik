@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { StoreImage } from "@/components/ui/store-image";
 import { formatPhone } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { storeHref } from "@/lib/store-host";
+import { storeBasePath } from "@/lib/store-links";
 import { getStorefrontStore } from "@/modules/catalog/service";
 import { blocksSchema, pageKinds, type PageBlock } from "@/modules/pages/blocks";
 import { getStorefrontExtras, type StorefrontExtras } from "@/modules/storefront/data";
@@ -32,16 +34,16 @@ export default async function StoreEditorialPage({ params }: PageProps<"/[slug]/
   if (!loaded) notFound();
   const { store, page } = loaded;
   const blocks = blocksSchema.safeParse(page.blocks);
-  const extras = await getStorefrontExtras(store.id);
+  const [extras, base] = await Promise.all([getStorefrontExtras(store.id), storeBasePath(store.slug)]);
 
   return (
     <main className="sf-page sf-editorial">
       <div className="sf-page-head">
-        <Link aria-label="Retour au catalogue" className="sf-back" href={`/${store.slug}`}><BackIcon size={18} /></Link>
+        <Link aria-label="Retour au catalogue" className="sf-back" href={storeHref(base)}><BackIcon size={18} /></Link>
         <h1>{page.title}</h1>
       </div>
       {blocks.success ? (
-        blocks.data.map((block, index) => <Block block={block} extras={extras} key={index} storeName={store.name} storeSlug={store.slug} />)
+        blocks.data.map((block, index) => <Block block={block} extras={extras} key={index} base={base} storeName={store.name} />)
       ) : (
         <p className="sf-muted">Cette page est en cours de mise à jour.</p>
       )}
@@ -49,7 +51,7 @@ export default async function StoreEditorialPage({ params }: PageProps<"/[slug]/
   );
 }
 
-function Block({ block, extras, storeSlug, storeName }: { block: PageBlock; extras: StorefrontExtras; storeSlug: string; storeName: string }) {
+function Block({ block, extras, base, storeName }: { block: PageBlock; extras: StorefrontExtras; base: string; storeName: string }) {
   switch (block.type) {
     case "heading":
       return <h2>{block.text}</h2>;
@@ -80,7 +82,7 @@ function Block({ block, extras, storeSlug, storeName }: { block: PageBlock; extr
           <a className="sf-btn sf-btn-whatsapp" href={buildWaMeUrl(extras.whatsappNumber, `Bonjour ${storeName}, `)} rel="noopener noreferrer" target="_blank">{block.label}</a>
         ) : null;
       }
-      const href = block.target === "contact" ? `/${storeSlug}/page/${pageKinds.CONTACT.slug}` : `/${storeSlug}`;
+      const href = block.target === "contact" ? storeHref(base, "page", pageKinds.CONTACT.slug) : storeHref(base);
       return <Link className="sf-btn sf-btn-primary" href={href}>{block.label}</Link>;
     }
     case "contact": {

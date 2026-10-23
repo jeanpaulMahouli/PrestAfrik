@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { useStoreHref } from "@/components/storefront/store-links";
 import { useCartPricing } from "@/components/storefront/use-cart-pricing";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { formatXaf } from "@/modules/catalog/format";
@@ -38,7 +39,8 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
   // Champs déjà quittés par le client : leur erreur s'affiche juste en dessous, avant tout envoi.
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const touch = (field: string) => setTouched((value) => (value[field] ? value : { ...value, [field]: true }));
-  const home = `/${storeSlug}`;
+  const link = useStoreHref(storeSlug);
+  const home = link();
 
   const zone = zones.find((item) => item.id === zoneId);
   const fee = method === "PICKUP" ? 0 : zone?.feeXaf ?? null;
@@ -68,9 +70,9 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
     if (state?.reference && state.trackingToken && !redirected.current) {
       redirected.current = true;
       cart.clear();
-      router.replace(`${home}/suivi/${state.trackingToken}?nouvelle=1${intent.current === "whatsapp" ? "&whatsapp=1" : ""}`);
+      router.replace(`${link("suivi", state.trackingToken)}?nouvelle=1${intent.current === "whatsapp" ? "&whatsapp=1" : ""}`);
     }
-  }, [cart, home, router, state]);
+  }, [cart, link, router, state]);
 
   const clientErrors: Record<string, string | undefined> = {
     name: name.trim().length < 2 ? "Indiquez votre nom (2 caractères au moins)." : undefined,
@@ -109,7 +111,7 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
   return (
     <main className="sf-page sf-checkout">
       <div className="sf-page-head">
-        <Link aria-label="Retour au panier" className="sf-back" href={`${home}/panier`}><BackIcon size={18} /></Link>
+        <Link aria-label="Retour au panier" className="sf-back" href={link("panier")}><BackIcon size={18} /></Link>
         <h1>Finaliser ma commande</h1>
       </div>
       <p className="sf-muted">Aucun compte à créer.</p>

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { WhatsappAutoOpen } from "@/components/storefront/whatsapp-auto-open";
 import { formatDateTime, formatReference, maskPhone } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { storeHref } from "@/lib/store-host";
+import { storeBasePath } from "@/lib/store-links";
 import { formatXaf } from "@/modules/catalog/format";
 import { orderStage } from "@/modules/orders/state-machine";
 import { getStorefrontExtras } from "@/modules/storefront/data";
@@ -39,6 +41,7 @@ export default async function OrderTrackingPage({ params, searchParams }: PagePr
     },
   });
   if (!order || order.store.slug !== slug) notFound();
+  const base = await storeBasePath(slug);
 
   const stage = orderStage(order.processingStatus);
   const isNew = query.nouvelle === "1";
@@ -139,8 +142,8 @@ export default async function OrderTrackingPage({ params, searchParams }: PagePr
         {whatsappUrl && !wantsWhatsapp && (
           <a className="sf-btn sf-btn-secondary sf-btn-block" href={whatsappUrl} rel="noopener noreferrer" target="_blank">Écrire à la boutique sur WhatsApp</a>
         )}
-        {isNew && <Link className="sf-btn sf-btn-secondary sf-btn-block" href={`/${slug}/suivi/${token}`}>Suivre ma commande</Link>}
-        <Link className="sf-link" href={`/${slug}`}>Retour à la boutique</Link>
+        {isNew && <Link className="sf-btn sf-btn-secondary sf-btn-block" href={storeHref(base, "suivi", token)}>Suivre ma commande</Link>}
+        <Link className="sf-link" href={storeHref(base)}>Retour à la boutique</Link>
       </div>
       <p className="sf-muted sf-small">Ce lien est personnel : gardez-le pour suivre votre commande, ne le partagez pas.</p>
     </main>

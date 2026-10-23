@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { storeBasePath } from "@/lib/store-links";
+import { storePublicUrl } from "@/lib/urls";
 import { ProductDetail } from "@/components/storefront/product-detail";
 import { ProductReviews } from "@/components/storefront/product-reviews";
 import { StorefrontProductGrid } from "@/components/storefront/storefront-product-grid";
@@ -32,10 +34,9 @@ export default async function PublicProductPage({
     getSimilarProducts(store.id, product.id, product.categoryId),
     reviewsEnabled ? getRatingSummaries(store.id) : null,
   ]);
-  const productUrl = new URL(
-    `/${store.slug}/${product.slug}`,
-    process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
-  ).toString();
+  // Adresse publique partagée (sous-domaine de la boutique quand il est activé).
+  const productUrl = `${storePublicUrl(store.slug)}/${product.slug}`;
+  const base = await storeBasePath(store.slug);
 
   return (
     <ProductDetail
@@ -53,7 +54,7 @@ export default async function PublicProductPage({
           <div className="sf-section-head">
             <h2 id="sf-similar-title">Produits similaires</h2>
           </div>
-          <StorefrontProductGrid products={similar} ratings={ratings} storeSlug={store.slug} />
+          <StorefrontProductGrid products={similar} ratings={ratings} base={base} />
         </section>
       )}
     </ProductDetail>

@@ -135,3 +135,12 @@ Le document des modèles autorise `@react-email/components` ou MJML. Pour ne pas
 - `/demo` réactivée : héros « Découvrez PrestAfrik en vidéo », grand lecteur (67 % de la largeur, cadre blanc) qui chevauche le héros, onglets « Choisissez ce que vous voulez apprendre », témoignages et logos partenaires (composants de l'accueil réutilisés).
 - Vidéos dans `demoPage.videos` (`src/components/landing/content.ts`) : un lien YouTube, Vimeo ou .mp4 par onglet, image d'attente facultative (sinon miniature YouTube). La vidéo se lit dans le cadre (youtube-nocookie). Onglet sans lien : « Vidéo bientôt disponible ». Changer d'onglet arrête la lecture ; flèches ← → entre onglets.
 - « Voir la démo » de l'accueil mène à `/demo`.
+
+## ADR-024 — Boutiques en sous-domaine (mboa-style.prestafrik.com)
+
+- **Activation** : `FEATURE_SUBDOMAINS=true`, `STORE_ROOT_DOMAIN=prestafrik.com`, `STORE_PROXY_SECRET`. Désactivé, rien ne change. Activé, l'adresse partagée (assistant, Ma boutique, QR code, fiche produit) devient `https://{adresse}.prestafrik.com` ; `prestafrik.com/{adresse}` reste valide.
+- **Routage** : `src/proxy.ts` réécrit `{adresse}.prestafrik.com/{chemin}` en `/{adresse}/{chemin}` (fichiers `_next`, `api`, `media` exclus). L'hôte vient de l'en-tête Host ou, derrière Cloudflare, de `x-prestafrik-store-host`, accepté seulement avec la clé `x-prestafrik-proxy-key`. Sous-domaines réservés (www, mail, admin…) ignorés.
+- **Liens** : la vitrine construit ses liens avec `storeHref(base, …)` ; `base` vaut « » en sous-domaine et « /adresse » sinon (`storeBasePath` côté serveur, `useStoreHref` côté client). Pages légales et « Powered by » pointent vers le domaine principal.
+- **Hébergement Hostinger** : ni joker DNS servi ni certificat joker sur l'offre Node.js, et la réécriture de Host par règle Cloudflare est réservée à Enterprise : DNS chez Cloudflare (certificat universel `*.prestafrik.com`) et Worker `infra/cloudflare/worker-sous-domaines.js`. Les fichiers du build sont servis depuis le domaine principal (`assetPrefix`, CORS) pour ménager le quota du Worker. Server Actions autorisées depuis `*.prestafrik.com` (`allowedOrigins`).
+- **Panier** : il est propre à chaque adresse (stockage du navigateur) ; un panier commencé sur `prestafrik.com/{adresse}` n'apparaît pas sur le sous-domaine.
+- Guide pas à pas : `docs/sous-domaines.md`.

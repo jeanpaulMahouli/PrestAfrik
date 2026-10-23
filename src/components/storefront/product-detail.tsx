@@ -11,6 +11,7 @@ import { RichText } from "@/components/ui/rich-text";
 import { StoreImage } from "@/components/ui/store-image";
 import { buildProductWhatsappOrderMessage, buildWaMeUrl } from "@/modules/whatsapp/wa-me";
 import { BackIcon } from "@/components/ui/icons";
+import { useStoreHref } from "@/components/storefront/store-links";
 
 type ProductDetailProps = {
   storeSlug: string;
@@ -148,6 +149,7 @@ function Gallery({ images, name }: { images: ProductDetailProps["product"]["imag
 
 export function ProductDetail({ product, storeSlug, storeName, productUrl, whatsappNumber, canOrder = true, rating = null, children }: ProductDetailProps) {
   const router = useRouter();
+  const link = useStoreHref(storeSlug);
   const cart = useStoreCart();
   const available = product.variants.filter((variant) => variant.stockQuantity !== 0);
   const [variantId, setVariantId] = useState(available[0]?.id ?? "");
@@ -185,7 +187,7 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
   return (
     <main className="sf-product-page">
     <div className="sf-product">
-      <Link aria-label="Retour au catalogue" className="sf-back" href={`/${storeSlug}`}><BackIcon size={18} /></Link>
+      <Link aria-label="Retour au catalogue" className="sf-back" href={link()}><BackIcon size={18} /></Link>
       <Gallery images={product.images} name={product.name} />
       <div className="sf-product-copy">
         <h1>{product.name}</h1>
@@ -241,7 +243,7 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
               className="sf-btn sf-btn-primary sf-btn-block"
               disabled={!cart.ready}
               onClick={() => {
-                if (add()) router.push(`/${storeSlug}/commande`);
+                if (add()) router.push(link("commande"));
               }}
               type="button"
             >

@@ -4,6 +4,8 @@ import { cache } from "react";
 import { StoreUnavailable } from "@/components/storefront/store-unavailable";
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { prisma } from "@/lib/prisma";
+import { storeBasePath } from "@/lib/store-links";
+import { storePublicUrl } from "@/lib/urls";
 import { getStorefrontStore } from "@/modules/catalog/service";
 import { hexColorSchema } from "@/modules/catalog/validation";
 import { getAccessibleTextColor } from "@/modules/stores/appearance";
@@ -50,7 +52,7 @@ export default async function PublicStoreLayout({ children, params }: LayoutProp
     if (!existing) {
       // Ancienne adresse d'une boutique renommée : redirection vers son adresse actuelle.
       const alias = await prisma.storeSlugAlias.findUnique({ where: { slug }, select: { store: { select: { slug: true } } } });
-      if (alias) permanentRedirect(`/${alias.store.slug}`);
+      if (alias) permanentRedirect((await storeBasePath(slug)) === "" ? storePublicUrl(alias.store.slug) : `/${alias.store.slug}`);
       notFound();
     }
     return (
@@ -65,6 +67,7 @@ export default async function PublicStoreLayout({ children, params }: LayoutProp
 
   return (
     <StorefrontShell
+      base={await storeBasePath(store.slug)}
       chat={
         extras.chat && extras.whatsappNumber
           ? { ...extras.chat, whatsappNumber: extras.whatsappNumber }
