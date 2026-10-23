@@ -123,3 +123,9 @@ Le document des modèles autorise `@react-email/components` ou MJML. Pour ne pas
 - **Étape 8 « Livraison et retrait » (facultative)** : jusqu'à 20 zones à frais fixes (nom, frais en FCFA, délai) dans la ville de la boutique, et retrait en boutique (activé par défaut, adresse préremplie avec le quartier et la ville, horaires facultatifs). Créés avec la boutique ; modifiables ensuite dans « Livraisons » et « Ma boutique ». La publication devient l'étape 9.
 - **Marque réservée** : un nom contenant « PrestAfrik » (quelle que soit l'écriture) ou une adresse contenant « prestafrik » est refusé à tous sauf à l'administrateur de la plateforme (assistant, vérification en direct, renommage dans Ma boutique) ; l'administrateur peut prendre l'adresse `prestafrik`.
 - **Adresses gardées en redirection** : l'assistant les considère désormais comme prises (`isSlugTaken`), comme le renommage.
+
+## ADR-022 — Mise à jour de sécurité des dépendances (23/10/2026)
+
+- **Next.js 16.4.0 → 16.4.2** : corrige une exécution de code à distance sans authentification dans l'optimiseur d'images (fichiers SVG) et un déni de service via les Server Actions (avis critiques).
+- **`npm audit fix`** (sans `--force`, versions compatibles) : cloudinary 2.11 (injection d'arguments), SDK AWS 3.11xx (fast-xml-parser, critique), uuid. `npm audit` : 0 vulnérabilité.
+- Vérifié : build de production complet, lint, typecheck, 130 tests, parcours public, vendeur, administration, optimiseur d'images et Server Actions sur la base de démonstration.
