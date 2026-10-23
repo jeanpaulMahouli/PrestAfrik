@@ -30,6 +30,12 @@ export type DraftData = {
   product?: { name: string; priceXaf: number; photos: { key: string; alt?: string }[] } | null;
   /** L'étape « Premier produit » a été vue (produit ajouté ou étape passée). */
   productStepDone?: boolean;
+  /** Étape « Livraison » (facultative) : zones à frais fixes et retrait en boutique. */
+  deliveryZones?: { name: string; feeXaf: number; estimatedDelay: string | null }[];
+  pickupEnabled?: boolean;
+  pickupAddress?: string | null;
+  pickupHours?: string | null;
+  deliveryStepDone?: boolean;
 };
 
 export type StoreDraftRecord = { id: string; userId: string; step: number; data: DraftData; updatedAt: Date };

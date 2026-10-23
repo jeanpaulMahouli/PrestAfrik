@@ -13,9 +13,12 @@ import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { photosSchema, parseJsonField } from "@/modules/catalog/validation";
 import { getCities, getRegions, hasGeoData } from "@/modules/geo";
 import { createDraft, draftMissing, findDraft, findOwnedStoreWithSameName, updateDraft, type DraftData, type StoreDraftRecord } from "@/modules/stores/draft";
+import { isPlatformAdmin } from "@/modules/admin/context";
+import { brandNameMessage, brandSlug, brandSlugMessage, usesBrandName, usesBrandSlug } from "@/modules/stores/brand";
 import { publishStoreIfReady } from "@/modules/stores/publication";
 import { checkSlug, slugMessages, slugify } from "@/modules/stores/slug";
-import { requireWizardSession, wizardStepHref } from "@/modules/stores/wizard";
+import { isSlugTaken } from "@/modules/stores/slug-availability";
+import { requireVerifiedWizardSession, wizardStepHref } from "@/modules/stores/wizard";
 import { addCalendarPeriod } from "@/modules/subscriptions/dates";
 
 // Assistant de création (/boutiques/nouvelle). Chaque étape enregistre ses réponses dans un brouillon
@@ -30,9 +33,9 @@ const text = (formData: FormData, key: string) => {
 
 const fail = (message: string, field?: string): WizardState => ({ ok: false, message, field });
 
-/** Brouillon de l'utilisateur désigné par le formulaire (champ caché « draftId »). */
+/** Brouillon de l'utilisateur désigné par le formulaire (champ caché « draftId »). Adresse e-mail confirmée obligatoire. */
 async function currentDraft(formData: FormData) {
-  const session = await requireWizardSession();
+  const session = await requireVerifiedWizardSession();
   const draftId = text(formData, "draftId");
   const draft = draftId ? await findDraft(session.user.id, draftId) : null;
   return { session, draft };
@@ -57,10 +60,13 @@ export async function saveNameStep(_previous: WizardState, formData: FormData): 
   if (sameName) {
     return fail(`Vous avez déjà une boutique nommée « ${sameName.name} ». Choisissez un autre nom pour celle-ci (par exemple en ajoutant votre ville).`, "name");
   }
-  const issue = checkSlug(slug);
+  // « PrestAfrik » (nom ou adresse) : réservé à l'administrateur de la plateforme.
+  const admin = await isPlatformAdmin(session.user.id);
+  if (!admin && usesBrandName(name)) return fail(brandNameMessage, "name");
+  if (!admin && usesBrandSlug(slug)) return fail(brandSlugMessage, "slug");
+  const issue = admin && slug === brandSlug ? null : checkSlug(slug);
   if (issue) return fail(slugMessages[issue], "slug");
-  const taken = await prisma.store.findUnique({ where: { slug }, select: { id: true } });
-  if (taken) return fail(slugMessages.taken, "slug");
+  if (await isSlugTaken(slug)) return fail(slugMessages.taken, "slug");
 
   if (draft) await saveAndContinue(draft, { name, slug }, 1);
   const created = await createDraft(session.user.id, { name, slug }, 2);
@@ -207,7 +213,50 @@ export async function saveProductStep(_previous: WizardState, formData: FormData
   return saveAndContinue(draft, { product: { name, priceXaf: Number(price), photos: keys }, productStepDone: true }, 7);
 }
 
-/* ---------- 8. Création (et publication) de la boutique ---------- */
+/* ---------- 8. Livraison et retrait (facultatif) ---------- */
+
+const zoneSchema = z.object({
+  name: z.string().trim().min(2, "Donnez un nom à chaque zone (ex. Akwa, Bonamoussadi).").max(120, "Le nom d’une zone ne peut pas dépasser 120 caractères."),
+  feeXaf: z.number().int().min(0, "Les frais ne peuvent pas être négatifs.").max(9_999_999, "Les frais sont trop élevés."),
+  estimatedDelay: z.string().trim().max(100, "Le délai ne peut pas dépasser 100 caractères."),
+});
+
+export async function saveDeliveryStep(_previous: WizardState, formData: FormData): Promise<WizardState> {
+  const { draft } = await currentDraft(formData);
+  if (!draft) return missingDraft();
+  if (formData.get("skip") === "1") return saveAndContinue(draft, { deliveryStepDone: true }, 8);
+
+  // Zones : lignes « nom / frais / délai » ; une ligne entièrement vide est ignorée.
+  const names = formData.getAll("zoneName").map(String);
+  const fees = formData.getAll("zoneFee").map(String);
+  const delays = formData.getAll("zoneDelay").map(String);
+  const zones: NonNullable<DraftData["deliveryZones"]> = [];
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i]?.trim() ?? "";
+    const fee = (fees[i] ?? "").replace(/[\s\u00a0\u202f]/g, "");
+    const delay = delays[i]?.trim() ?? "";
+    if (!name && !fee && !delay) continue;
+    if (!/^\d{1,7}$/.test(fee)) return fail(`Indiquez les frais de la zone « ${name || i + 1} » en FCFA, en chiffres (0 si la livraison est gratuite).`, "zones");
+    const parsed = zoneSchema.safeParse({ name, feeXaf: Number(fee), estimatedDelay: delay });
+    if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Vérifiez vos zones de livraison.", "zones");
+    zones.push({ name: parsed.data.name, feeXaf: parsed.data.feeXaf, estimatedDelay: parsed.data.estimatedDelay || null });
+  }
+  if (zones.length > 20) return fail("Vous pouvez ajouter jusqu’à 20 zones ici ; les autres se règlent ensuite dans « Livraisons ».", "zones");
+
+  const pickupEnabled = formData.get("pickupEnabled") === "on";
+  const pickupAddress = text(formData, "pickupAddress").slice(0, 200);
+  const pickupHours = text(formData, "pickupHours").slice(0, 120);
+  if (pickupEnabled && pickupAddress.length < 3) {
+    return fail("Indiquez l’adresse où vos clients viendront chercher leur commande, ou décochez le retrait en boutique.", "pickupAddress");
+  }
+  return saveAndContinue(
+    draft,
+    { deliveryZones: zones, pickupEnabled, pickupAddress: pickupEnabled ? pickupAddress : null, pickupHours: pickupEnabled ? pickupHours || null : null, deliveryStepDone: true },
+    8,
+  );
+}
+
+/* ---------- 9. Création (et publication) de la boutique ---------- */
 
 async function selectStoreCookie(storeId: string) {
   (await cookies()).set("prestafrik-store", storeId, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/" });
@@ -221,7 +270,10 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
   if (missing.length) return fail(`Il manque encore ${missing.map((item) => item.label).join(", ")}. Touchez « Modifier » sur la ligne concernée pour compléter.`);
   const sameName = await findOwnedStoreWithSameName(session.user.id, data.name!);
   if (sameName) return fail(`Vous avez déjà une boutique nommée « ${sameName.name} ». Revenez à l’étape 1 pour choisir un autre nom.`);
-  if (await prisma.store.findUnique({ where: { slug: data.slug! }, select: { id: true } })) {
+  if (!(await isPlatformAdmin(session.user.id)) && (usesBrandName(data.name!) || usesBrandSlug(data.slug!))) {
+    return fail(`${brandNameMessage} Revenez à l’étape 1 pour le modifier.`);
+  }
+  if (await isSlugTaken(data.slug!)) {
     return fail(`L’adresse prestafrik.com/${data.slug} vient d’être prise par une autre boutique. Revenez à l’étape 1 pour en choisir une autre.`);
   }
   const photoKeys = data.product?.photos.map((photo) => photo.key) ?? [];
@@ -259,6 +311,10 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
           ...(data.theme ? { theme: data.theme } : {}),
           ...(data.primaryColor ? { primaryColor: data.primaryColor, secondaryColor: data.secondaryColor, accentColor: data.accentColor } : {}),
           logoUrl: data.logoUrl ?? null,
+          // Retrait en boutique : celui choisi à l'étape « Livraison » (activé par défaut si l'étape a été passée).
+          pickupEnabled: data.pickupEnabled ?? true,
+          pickupAddress: data.pickupAddress ?? null,
+          pickupHours: data.pickupHours ?? null,
           onboardingStep: null,
           isPublished: false,
           memberships: { create: { userId: session.user.id, role: "OWNER" } },
@@ -267,6 +323,11 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
       await transaction.subscription.create({
         data: { storeId, planId: plan.id, status: "TRIAL", trialStartedAt: now, trialEndsAt: addCalendarPeriod(now, "MONTHLY") },
       });
+      if (data.deliveryZones?.length) {
+        await transaction.deliveryZone.createMany({
+          data: data.deliveryZones.map((zone) => ({ storeId, city: data.city ?? "", name: zone.name, feeXaf: zone.feeXaf, estimatedDelay: zone.estimatedDelay, isActive: true })),
+        });
+      }
       if (data.whatsapp) {
         await transaction.whatsappSettings.create({ data: { storeId, businessNumber: data.whatsapp.e164, businessCountry: data.whatsapp.country } });
       }
@@ -301,7 +362,7 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
   await selectStoreCookie(storeId);
   invalidateStorefrontCache(storeId, data.slug!);
 
-  // Publication immédiate si tout est prêt ; sinon la boutique est créée et le vendeur sait quoi faire.
+  // Publication immédiate si tout est prêt (l'adresse e-mail est forcément confirmée) ; sinon le vendeur sait quoi faire.
   const result = await publishStoreIfReady(storeId, session.user.emailVerified);
   redirect(`/boutiques/nouvelle?boutique=${storeId}&etape=${result.ok ? "publiee" : "creee"}`);
 }

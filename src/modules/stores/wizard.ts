@@ -13,6 +13,7 @@ export const wizardSteps = [
   "Thème",
   "Couleurs et logo",
   "Premier produit",
+  "Livraison",
   "Publication",
 ] as const;
 
@@ -22,6 +23,16 @@ export const wizardStepCount = wizardSteps.length;
 export async function requireWizardSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/connexion?next=/boutiques/nouvelle");
+  return session;
+}
+
+/**
+ * Session avec adresse e-mail confirmée : obligatoire pour enregistrer une étape ou créer la boutique.
+ * Sans confirmation, l'assistant affiche l'écran « Confirmez votre adresse e-mail ».
+ */
+export async function requireVerifiedWizardSession() {
+  const session = await requireWizardSession();
+  if (!session.user.emailVerified) redirect("/boutiques/nouvelle");
   return session;
 }
 

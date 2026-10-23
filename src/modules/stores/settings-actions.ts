@@ -12,7 +12,10 @@ import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { hexColorSchema } from "@/modules/catalog/validation";
 import { requireStorePermission } from "@/modules/stores/context";
 import { storePublicUrl } from "@/lib/urls";
+import { isPlatformAdmin } from "@/modules/admin/context";
+import { brandNameMessage, brandSlug, usesBrandName } from "@/modules/stores/brand";
 import { findOwnedStoreWithSameName } from "@/modules/stores/draft";
+import { isSlugTaken } from "@/modules/stores/slug-availability";
 import { slugForRenamedStore, type SlugProposal } from "@/modules/stores/slug-rename";
 import { publishStoreIfReady } from "@/modules/stores/publication";
 
@@ -59,7 +62,7 @@ export type StoreSettingsState =
 
 /** Enregistre « Ma boutique » sans rechargement : en cas d'erreur, la saisie (logo compris) est conservée. */
 export async function updateStoreSettings(_previous: StoreSettingsState, formData: FormData): Promise<StoreSettingsState> {
-  const { store } = await requireStorePermission("store.manage");
+  const { session, store } = await requireStorePermission("store.manage");
   const parsed = settingsSchema.safeParse({
     name: text(formData, "name"),
     description: text(formData, "description"),
@@ -114,14 +117,12 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
 
   // Nouveau nom → nouvelle adresse. Une adresse prise (par une autre boutique ou une ancienne adresse
   // conservée en redirection) reçoit « -» et un identifiant court ; le nom, lui, reste tel quel.
-  const isTaken = async (slug: string) => {
-    const [owner, alias] = await Promise.all([
-      prisma.store.findUnique({ where: { slug }, select: { id: true } }),
-      prisma.storeSlugAlias.findUnique({ where: { slug }, select: { storeId: true } }),
-    ]);
-    return Boolean((owner && owner.id !== store.id) || (alias && alias.storeId !== store.id));
-  };
-  let proposal: SlugProposal | null = input.name !== store.name ? await slugForRenamedStore(input.name, store.slug, isTaken) : null;
+  const isTaken = (slug: string) => isSlugTaken(slug, store.id);
+  // « PrestAfrik » : nom réservé à l'administrateur de la plateforme (qui peut aussi prendre l'adresse « prestafrik »).
+  const admin = await isPlatformAdmin(session.user.id);
+  if (input.name !== store.name && usesBrandName(input.name) && !admin) return { ok: false, field: "name", message: brandNameMessage };
+  let proposal: SlugProposal | null =
+    input.name !== store.name ? await slugForRenamedStore(input.name, store.slug, isTaken, undefined, (slug) => admin && slug === brandSlug) : null;
 
   const data = {
       name: input.name,
@@ -157,7 +158,7 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
       // Adresse prise entre-temps par une autre boutique : on en calcule une autre.
       const conflict = (error as { code?: string })?.code === "P2002";
       if (!proposal || !conflict || attempt >= 2) throw error;
-      proposal = await slugForRenamedStore(input.name, store.slug, async (slug) => slug === proposal!.slug || (await isTaken(slug)));
+      proposal = await slugForRenamedStore(input.name, store.slug, async (slug) => slug === proposal!.slug || (await isTaken(slug)), undefined, (slug) => admin && slug === brandSlug);
     }
   }
   if (previousLogo) await deleteStoreImage(previousLogo);

@@ -49,28 +49,17 @@ export function EmailConfirmationNotice({ email, afterCreation = false }: { emai
   );
 }
 
-export function PublishStep({
-  draftId,
-  recap,
-  missing,
-  emailVerified,
-  email,
-}: {
-  draftId: string;
-  recap: RecapItem[];
-  missing: { label: string; step: number }[];
-  emailVerified: boolean;
-  email: string;
-}) {
+/** Dernière étape : récapitulatif et création. L'adresse e-mail est déjà confirmée (écran préalable de l'assistant). */
+export function PublishStep({ draftId, recap, missing }: { draftId: string; recap: RecapItem[]; missing: { label: string; step: number }[] }) {
   const stepHref = (step: number) => `/boutiques/nouvelle?brouillon=${draftId}&etape=${step}`;
   return (
     <WizardStepForm
       action={finishWizard}
-      backHref={stepHref(7)}
+      backHref={stepHref(8)}
       draftId={draftId}
-      step={8}
+      step={9}
       subtitle="Vérifiez ce récapitulatif : votre boutique sera créée en touchant le bouton ci-dessous. Vous pourrez toujours modifier chaque information ensuite."
-      submitLabel={emailVerified ? "Créer et publier ma boutique" : "Créer ma boutique"}
+      submitLabel="Créer et publier ma boutique"
       title="Tout est prêt ?"
     >
       {() => (
@@ -99,8 +88,7 @@ export function PublishStep({
               </ul>
             </div>
           )}
-          {!emailVerified && <EmailConfirmationNotice email={email} />}
-          {emailVerified && missing.length === 0 && (
+          {missing.length === 0 && (
             <p className="v-banner v-banner-info">
               Votre boutique sera créée et mise en ligne tout de suite. Vos commandes arriveront dans « Commandes » : écrivez au client sur WhatsApp, puis touchez « Valider ».
             </p>

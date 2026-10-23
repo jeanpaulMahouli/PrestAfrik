@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CreatedScreen, PublishedScreen, PublishStep } from "@/components/wizard/wizard-publish";
+import { DeliveryStep } from "@/components/wizard/wizard-delivery-step";
+import { EmailVerificationGate } from "@/components/wizard/wizard-email-gate";
 import { WizardShell, type PreviewDraft } from "@/components/wizard/wizard-shell";
 import { ActivityStep, BrandingStep, ContactStep, LocationStep, NameStep, ProductStep, ThemeStep } from "@/components/wizard/wizard-steps";
 import { formatFcfa } from "@/lib/format";
@@ -52,6 +54,15 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
       );
     }
     redirect("/dashboard/boutique");
+  }
+
+  // Adresse e-mail à confirmer avant toute création de boutique : on demande de consulter sa boîte de réception.
+  if (!session.user.emailVerified) {
+    return (
+      <WizardShell current={1} draftId={null} initialDraft={previewOfDraft({})} reached={1} showThemeLabel={false} steps={wizardSteps}>
+        <EmailVerificationGate email={session.user.email} />
+      </WizardShell>
+    );
   }
 
   const draft = value("nouvelle") === "1" ? null : await findDraft(session.user.id, value("brouillon"));
@@ -111,6 +122,19 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
         }
       : null;
     content = <ProductStep draftId={draft.id} product={product} />;
+  } else if (step === 8) {
+    content = (
+      <DeliveryStep
+        city={data.city ?? ""}
+        draftId={draft.id}
+        initial={{
+          zones: data.deliveryZones ?? [],
+          pickupEnabled: data.pickupEnabled ?? true,
+          pickupAddress: data.pickupAddress ?? [data.neighborhood, data.city].filter(Boolean).join(", "),
+          pickupHours: data.pickupHours ?? "",
+        }}
+      />
+    );
   } else {
     const phone = data.phone?.e164;
     const recap = [
@@ -126,8 +150,20 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
         step: 7,
         done: Boolean(data.product),
       },
+      {
+        label: "Livraison et retrait",
+        value:
+          [
+            data.deliveryZones?.length ? `${data.deliveryZones.length} zone${data.deliveryZones.length > 1 ? "s" : ""} de livraison` : null,
+            (data.pickupEnabled ?? true) ? `retrait${data.pickupAddress ? ` : ${data.pickupAddress}` : " en boutique"}` : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") || "À régler plus tard dans « Livraisons »",
+        step: 8,
+        done: Boolean(data.deliveryZones?.length || (data.pickupEnabled && data.pickupAddress)),
+      },
     ];
-    content = <PublishStep draftId={draft.id} email={session.user.email} emailVerified={session.user.emailVerified} missing={draftMissing(data)} recap={recap} />;
+    content = <PublishStep draftId={draft.id} missing={draftMissing(data)} recap={recap} />;
   }
 
   return (

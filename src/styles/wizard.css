@@ -802,6 +802,12 @@
   gap: 0.35rem;
   margin: 0;
   padding-left: 1.25rem;
+  /* La remise à zéro de Tailwind retire les numéros : on les rétablit (étapes 1, 2, 3). */
+  list-style: decimal;
+}
+
+.email-confirm li::marker {
+  font-weight: 700;
 }
 
 .email-confirm p {
@@ -836,4 +842,108 @@
   .wizard-pause-buttons form {
     order: 3;
   }
+}
+
+/* ---------- Étape « Livraison et retrait » ---------- */
+
+.wizard-fieldset {
+  display: grid;
+  gap: 0.625rem;
+  min-width: 0;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  border: 0;
+}
+
+.wizard-fieldset legend {
+  margin-bottom: 0.25rem;
+  padding: 0;
+}
+
+.wizard-zones {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Zone, frais, délai et bouton « retirer » sur une ligne ; empilés sur téléphone. */
+.wizard-zones li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 1fr) 2.75rem;
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.wizard-zone-remove {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-xs);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.wizard-zone-remove:hover {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.wizard-fieldset > .v-link-button {
+  justify-self: start;
+}
+
+@media (max-width: 639px) {
+  .wizard-zones li {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 2.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--color-divider);
+  }
+
+  .wizard-zones li > label:first-child {
+    grid-column: 1 / -1;
+  }
+
+  /* Sur téléphone, chaque champ garde son intitulé (la ligne d'en-tête n'existe plus). */
+  .wizard-zones li .visually-hidden {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    white-space: normal;
+  }
+}
+
+/* ---------- Écran « Confirmez votre adresse e-mail » ---------- */
+
+.email-gate {
+  text-align: left;
+}
+
+.email-gate-icon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  margin-bottom: 0.75rem;
+  border-radius: 50%;
+  color: var(--color-brand-secondary);
+  background: var(--color-brand-primary-soft, #fff1d6);
+}
+
+.email-gate .wizard-actions {
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.email-gate .v-banner {
+  margin-top: 1rem;
 }

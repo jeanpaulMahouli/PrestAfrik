@@ -18,12 +18,19 @@ export type SlugProposal = { slug: string; base: string; suffixed: boolean; reas
  * Adresse proposée pour un nom. `isTaken` dit si une adresse appartient déjà à une autre boutique.
  * Renvoie null quand le nom donne la même adresse qu'aujourd'hui (rien à changer).
  */
-export async function slugForRenamedStore(name: string, currentSlug: string, isTaken: (slug: string) => Promise<boolean>, makeId = shortId): Promise<SlugProposal | null> {
+export async function slugForRenamedStore(
+  name: string,
+  currentSlug: string,
+  isTaken: (slug: string) => Promise<boolean>,
+  makeId = shortId,
+  /** Adresse réservée autorisée malgré tout (ex. « prestafrik » pour l'administrateur). */
+  allowReserved: (slug: string) => boolean = () => false,
+): Promise<SlugProposal | null> {
   let base = slugify(name);
   if (base === currentSlug) return null;
   // Nom trop court ou sans lettres (ex. « A+ ») : on garde une base valide.
   if (base.length < 3) base = `${base || "boutique"}-shop`.replace(/^-/, "");
-  const issue = checkSlug(base);
+  const issue = allowReserved(base) ? null : checkSlug(base);
   if (!issue && !(await isTaken(base))) return { slug: base, base, suffixed: false, reason: null };
 
   const reason = issue ?? "taken";
