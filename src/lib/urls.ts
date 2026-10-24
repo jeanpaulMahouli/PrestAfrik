@@ -7,8 +7,24 @@ export function appBaseUrl() {
   return (process.env.BETTER_AUTH_URL ?? "http://localhost:3000").replace(/\/$/, "");
 }
 
+function subdomainsEnabled() {
+  return process.env.FEATURE_SUBDOMAINS === "true" && Boolean(process.env.STORE_ROOT_DOMAIN);
+}
+
+/** Forme de l'adresse affichée au vendeur : « {adresse}.prestafrik.com » ou « prestafrik.com/{adresse} ». */
+export function storeAddressFormat(): { prefix: string; suffix: string } {
+  if (subdomainsEnabled()) return { prefix: "", suffix: `.${process.env.STORE_ROOT_DOMAIN}` };
+  return { prefix: `${new URL(appBaseUrl()).host}/`, suffix: "" };
+}
+
+/** Adresse lisible d'une boutique, sans « https:// » (messages, récapitulatifs). */
+export function storeAddressLabel(slug: string) {
+  const { prefix, suffix } = storeAddressFormat();
+  return `${prefix}${slug}${suffix}`;
+}
+
 export function storePublicUrl(slug: string) {
-  if (process.env.FEATURE_SUBDOMAINS === "true" && process.env.STORE_ROOT_DOMAIN) {
+  if (subdomainsEnabled()) {
     const protocol = appBaseUrl().startsWith("http://") ? "http" : "https";
     return `${protocol}://${slug}.${process.env.STORE_ROOT_DOMAIN}`;
   }

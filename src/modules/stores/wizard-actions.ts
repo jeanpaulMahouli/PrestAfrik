@@ -7,6 +7,7 @@ import { z } from "zod";
 import { colorReadability } from "@/lib/contrast";
 import { parsePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
+import { storeAddressLabel } from "@/lib/urls";
 import { PhotoError, attachedPhotoUrl, checkTemporaryPhotos, moveTemporaryPhotos, tmpKeyPattern } from "@/lib/product-photos";
 import { ImageUploadError, deleteStoreImage, saveStoreImage } from "@/lib/uploads";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
@@ -274,7 +275,7 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
     return fail(`${brandNameMessage} Revenez à l’étape 1 pour le modifier.`);
   }
   if (await isSlugTaken(data.slug!)) {
-    return fail(`L’adresse prestafrik.com/${data.slug} vient d’être prise par une autre boutique. Revenez à l’étape 1 pour en choisir une autre.`);
+    return fail(`L’adresse ${storeAddressLabel(data.slug!)} vient d’être prise par une autre boutique. Revenez à l’étape 1 pour en choisir une autre.`);
   }
   const photoKeys = data.product?.photos.map((photo) => photo.key) ?? [];
   try {
@@ -350,7 +351,7 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return fail(`L’adresse prestafrik.com/${data.slug} vient d’être prise par une autre boutique. Revenez à l’étape 1 pour en choisir une autre.`);
+      return fail(`L’adresse ${storeAddressLabel(data.slug!)} vient d’être prise par une autre boutique. Revenez à l’étape 1 pour en choisir une autre.`);
     }
     throw error;
   }

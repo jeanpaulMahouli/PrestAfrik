@@ -8,7 +8,7 @@ import { ActivityStep, BrandingStep, ContactStep, LocationStep, NameStep, Produc
 import { formatFcfa } from "@/lib/format";
 import { phoneCountries } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
-import { storePublicUrl } from "@/lib/urls";
+import { storeAddressFormat, storeAddressLabel, storePublicUrl } from "@/lib/urls";
 import { geoDataset } from "@/modules/geo";
 import { draftMissing, findDraft, type DraftData } from "@/modules/stores/draft";
 import { getPublicationChecklist } from "@/modules/stores/publication";
@@ -77,7 +77,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
 
   let content: React.ReactNode = null;
   if (!draft || step === 1) {
-    content = <NameStep city={data.city ?? null} draftId={draftId} initialName={data.name ?? ""} initialSlug={data.slug ?? ""} />;
+    content = <NameStep address={storeAddressFormat()} city={data.city ?? null} draftId={draftId} initialName={data.name ?? ""} initialSlug={data.slug ?? ""} />;
   } else if (step === 2) {
     const activities = await prisma.activity.findMany({ orderBy: { position: "asc" }, select: { id: true, label: true, popular: true } });
     content = <ActivityStep activities={activities} draftId={draft.id} initialId={data.activityId ?? ""} initialOther={data.activityOther ?? ""} />;
@@ -138,7 +138,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
   } else {
     const phone = data.phone?.e164;
     const recap = [
-      { label: "Nom et adresse", value: data.name ? `${data.name} · prestafrik.com/${data.slug}` : "À préciser", step: 1, done: Boolean(data.name && data.slug) },
+      { label: "Nom et adresse", value: data.name ? `${data.name} · ${storeAddressLabel(data.slug ?? "")}` : "À préciser", step: 1, done: Boolean(data.name && data.slug) },
       { label: "Activité", value: data.activityLabel ?? data.activityOther ?? "À préciser", step: 2, done: Boolean(data.activityId || data.activityOther) },
       { label: "Localisation", value: [data.city, data.region].filter(Boolean).join(", ") || "À préciser", step: 3, done: Boolean(data.city) },
       { label: "Coordonnées", value: phone ? phone.replace(/(\+\d{3})(\d)\d+(\d{2})$/, "$1 $2 •• •• •• $3") : "À préciser", step: 4, done: Boolean(phone) },

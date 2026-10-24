@@ -99,7 +99,6 @@ export function PublishStep({ draftId, recap, missing }: { draftId: string; reca
   );
 }
 
-/** Lien de la boutique avec boutons Copier et Voir. */
 /** Lien de la boutique à copier ; « Voir ma boutique » sur la même ligne une fois la boutique en ligne. */
 function StoreLink({ storeUrl, showView = false }: { storeUrl: string; showView?: boolean }) {
   const display = storeUrl.replace(/^https?:\/\//, "");

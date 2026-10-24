@@ -55,7 +55,10 @@ export function ProductReviews({ productId, reviews, summary }: { productId: str
           <input name="rating" type="hidden" value={rating || ""} />
           <fieldset className="sf-field">
             <legend>Votre note</legend>
-            <div className="sf-star-picker" onMouseLeave={() => setHover(0)}>
+            <span className="sf-field-help" id={`${productId}-rating-help`}>
+              Sélectionnez le nombre d’étoiles que vous attribuez : 1 étoile pour « Décevant », jusqu’à 5 étoiles pour « Excellent ».
+            </span>
+            <div aria-describedby={`${productId}-rating-help`} className="sf-star-picker" role="group" onMouseLeave={() => setHover(0)}>
               {[1, 2, 3, 4, 5].map((value) => (
                 <button
                   aria-label={`${value} étoile${value > 1 ? "s" : ""} : ${ratingWords[value]}`}
@@ -94,6 +97,11 @@ export function ProductReviews({ productId, reviews, summary }: { productId: str
           {state && !state.ok && !state.field && (
             <p className="sf-notice sf-notice-error" role="alert">
               {state.message}
+            </p>
+          )}
+          {rating === 0 && (
+            <p className="sf-field-help" role="status">
+              Touchez une étoile pour donner votre note avant de publier votre avis.
             </p>
           )}
           <div className="sf-review-actions">

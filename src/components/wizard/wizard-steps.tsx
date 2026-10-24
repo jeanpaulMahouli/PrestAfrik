@@ -26,7 +26,20 @@ const back = (draftId: string | null, step: number) => (draftId ? `/boutiques/no
 
 type SlugStatus = { state: "idle" | "checking" | "ok" | "error"; message?: string; suggestions: string[] };
 
-export function NameStep({ draftId, initialName, initialSlug, city }: { draftId: string | null; initialName: string; initialSlug: string; city: string | null }) {
+export function NameStep({
+  draftId,
+  initialName,
+  initialSlug,
+  city,
+  address,
+}: {
+  draftId: string | null;
+  initialName: string;
+  initialSlug: string;
+  city: string | null;
+  /** Forme de l'adresse (storeAddressFormat) : « prestafrik.com/ » devant, ou « .prestafrik.com » derrière. */
+  address: { prefix: string; suffix: string };
+}) {
   const { update } = useWizardPreview();
   const [name, setName] = useState(initialName);
   const [slug, setSlug] = useState(initialSlug);
@@ -84,21 +97,27 @@ export function NameStep({ draftId, initialName, initialSlug, city }: { draftId:
           </label>
           <label className="v-field">
             Adresse web de la boutique
-            <span className={`wizard-slug ${status.state === "ok" ? "is-valid" : status.state === "error" ? "is-invalid" : ""}`}>
-              <span className="wizard-slug-prefix">prestafrik.com/</span>
-              <input
-                aria-describedby="slug-status"
-                aria-invalid={status.state === "error" || Boolean(fieldError("slug")) || undefined}
-                autoCapitalize="none"
-                maxLength={40}
-                name="slug"
-                onChange={(event) => {
-                  setSlugEdited(true);
-                  setSlug(event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
-                }}
-                spellCheck={false}
-                value={slug}
-              />
+            <span className={`wizard-slug${address.suffix ? " wizard-slug--sub" : ""} ${status.state === "ok" ? "is-valid" : status.state === "error" ? "is-invalid" : ""}`}>
+              {address.prefix && <span className="wizard-slug-prefix">{address.prefix}</span>}
+              <span className="wizard-slug-grow" data-value={slug || (address.suffix ? "votre-boutique" : "")}>
+                <input
+                  aria-describedby="slug-status"
+                  aria-invalid={status.state === "error" || Boolean(fieldError("slug")) || undefined}
+                  autoCapitalize="none"
+                  maxLength={40}
+                  name="slug"
+                  onChange={(event) => {
+                    setSlugEdited(true);
+                    setSlug(event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                  }}
+                  placeholder={address.suffix ? "votre-boutique" : undefined}
+                  // Largeur minimale d'un caractère : le champ suit son texte (voir .wizard-slug-grow).
+                  size={address.suffix ? 1 : undefined}
+                  spellCheck={false}
+                  value={slug}
+                />
+              </span>
+              {address.suffix && <span className="wizard-slug-suffix">{address.suffix}</span>}
               {status.state === "ok" && <CheckIcon />}
             </span>
             <span aria-live="polite" className={status.state === "error" || fieldError("slug") ? "v-field-error" : status.state === "ok" ? "wizard-success" : "v-field-help"} id="slug-status">
@@ -106,7 +125,7 @@ export function NameStep({ draftId, initialName, initialSlug, city }: { draftId:
                 (status.state === "checking"
                   ? "Vérification de la disponibilité…"
                   : status.state === "ok"
-                    ? `Bonne nouvelle : cette adresse est disponible ! Votre boutique sera visible sur prestafrik.com/${slug}.`
+                    ? `Bonne nouvelle : cette adresse est disponible ! Votre boutique sera visible sur ${address.prefix}${slug}${address.suffix}.`
                     : status.state === "error"
                       ? status.message
                       : "3 à 40 caractères : lettres minuscules, chiffres et tirets, sans espace.")}

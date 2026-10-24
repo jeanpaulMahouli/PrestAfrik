@@ -214,6 +214,48 @@
   padding-left: 0.125rem !important;
 }
 
+/* Champ d'adresse : la zone de saisie prend la largeur de son texte (copie invisible dans ::after),
+   pour que « .prestafrik.com » suive directement l'adresse tapée. */
+.wizard-slug-grow {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wizard-slug-grow > input,
+.wizard-slug-grow::after {
+  grid-area: 1 / 1;
+}
+
+.wizard-slug--sub .wizard-slug-grow {
+  flex: 0 1 auto;
+}
+
+.wizard-slug--sub .wizard-slug-grow::after {
+  content: attr(data-value);
+  overflow: hidden;
+  padding: 0 0 0 0.875rem;
+  font-size: 1rem;
+  visibility: hidden;
+  white-space: pre;
+}
+
+.v-field .wizard-slug--sub input {
+  width: 100%;
+  min-width: 3ch;
+  padding-left: 0.875rem !important;
+  padding-right: 0 !important;
+}
+
+.wizard-slug-suffix {
+  flex: none;
+  margin-right: auto;
+  padding-right: 0.875rem;
+  color: var(--color-text-secondary);
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
 .wizard-success {
   color: var(--color-success);
   font-size: 0.75rem;

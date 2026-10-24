@@ -1880,12 +1880,26 @@
   text-decoration: underline;
 }
 
-.customers-table td {
-  white-space: nowrap;
-}
-
 .customers-table tbody tr {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Mobile : intitulé au-dessus de la valeur, pour que deux colonnes étroites ne se chevauchent jamais. */
+@media (max-width: 767.98px) {
+  .customers-table.v-table td[data-label]:not(.v-cell-primary):not(.v-cell-end)::before {
+    display: block;
+    content: attr(data-label);
+  }
+
+  .customers-table td {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (min-width: 768px) {
+  .customers-table td {
+    white-space: nowrap;
+  }
 }
 
 .customers-table .v-cell-badges {
