@@ -243,7 +243,6 @@ export default async function SubscriptionPage({
       <nav aria-label="Informations légales PrestAfrik" className="subscription-legal-links">
         <Link href="/legal/conditions-generales">Conditions générales</Link>
         <Link href="/legal/politique-de-confidentialite">Confidentialité</Link>
-        <Link href="/legal/mentions-legales">Mentions légales</Link>
       </nav>
     </DashboardShell>
   );

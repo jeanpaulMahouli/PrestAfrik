@@ -14,7 +14,6 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         <nav aria-label="Informations légales" className="auth-legal">
           <Link href="/legal/conditions-generales">{texts.legalLinks.terms}</Link>
           <Link href="/legal/politique-de-confidentialite">{texts.legalLinks.privacy}</Link>
-          <Link href="/legal/mentions-legales">{texts.legalLinks.notice}</Link>
         </nav>
       </main>
     </div>

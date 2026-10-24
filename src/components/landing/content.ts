@@ -7,10 +7,10 @@
 export type NavLink = { label: string; href: string };
 
 /**
- * Pages désactivées en attendant leurs maquettes : elles renvoient « page introuvable », et leurs liens
+ * Pages désactivées en attendant leurs maquettes ou leurs informations (mentions légales) : elles renvoient « page introuvable », et leurs liens
  * (menu, pied de page) restent visibles mais mènent à l'accueil. Retirez une adresse pour la remettre en ligne.
  */
-export const disabledPages: ReadonlySet<string> = new Set(["/fonctionnalites", "/a-propos"]);
+export const disabledPages: ReadonlySet<string> = new Set(["/fonctionnalites", "/a-propos", "/legal/mentions-legales"]);
 
 const toHomeIfDisabled = (link: NavLink): NavLink => (disabledPages.has(link.href.split("#")[0]) ? { ...link, href: "/" } : link);
 
