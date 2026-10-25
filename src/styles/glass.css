@@ -1,5 +1,5 @@
 /* =============================================================================
-   Design system « Club des 1000 » (flyer PrestAfrik) : fond crème et pêche avec une grille légère,
+   Design system « Club des 1000 » (flyer PrestAfrik) : fond crème très clair, presque blanc,
    surfaces de verre translucides à bord blanc, ombres chaudes, bleu nuit et orange.
    Chargé en dernier par l'espace vendeur, l'administration, l'assistant et la connexion.
    Performance : le flou (backdrop-filter, coûteux) est réservé aux couches flottantes
@@ -7,12 +7,9 @@
    ========================================================================== */
 
 :root {
-  --glass-page: linear-gradient(165deg, #fffaf3 0%, #fff3e1 42%, #fde6c8 100%);
-  /* Grille du flyer : lignes très fines tous les 72 px. */
-  --glass-grid:
-    linear-gradient(rgb(232 178 104 / 0.13) 1px, transparent 1px) 0 0 / 72px 72px,
-    linear-gradient(90deg, rgb(232 178 104 / 0.13) 1px, transparent 1px) 0 0 / 72px 72px;
-  --glass-surface: rgb(255 255 255 / 0.62);
+  /* Crème qui tend vers le blanc : rien de foncé. */
+  --glass-page: linear-gradient(170deg, #fffefb 0%, #fffbf5 55%, #fff7ee 100%);
+  --glass-surface: rgb(255 255 255 / 0.72);
   --glass-surface-strong: rgb(255 255 255 / 0.86);
   --glass-edge: rgb(255 255 255 / 0.9);
   --glass-line: rgb(214 170 110 / 0.22);
@@ -25,8 +22,8 @@
 .vendor-shell,
 .wizard,
 .auth-page {
-  background: var(--glass-grid), var(--glass-page);
-  background-color: #fff7ec;
+  background: var(--glass-page);
+  background-color: #fffcf7;
 }
 
 /* ---------- Surfaces de verre ---------- */
@@ -49,8 +46,8 @@
 .vendor-shell .vendor-topbar,
 .wizard-header {
   border-bottom: 1px solid var(--glass-edge);
-  background: rgb(255 250 243 / 0.92);
-  box-shadow: 0 6px 24px rgb(170 96 10 / 0.06);
+  background: #fffefb;
+  box-shadow: 0 6px 24px rgb(170 96 10 / 0.05);
 }
 
 .vendor-shell .vendor-sidebar {

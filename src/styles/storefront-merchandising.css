@@ -157,7 +157,7 @@
   margin-top: 0.5rem;
 }
 
-/* Badge de réduction : rectangle sans arrondi, à la couleur de la boutique. */
+/* Badge de réduction à la couleur de la boutique ; son arrondi suit le thème (voir plus bas). */
 .sf-card-media {
   position: relative;
 }
@@ -167,7 +167,7 @@
   top: 0.5rem;
   left: 0.5rem;
   padding: 0.25rem 0.5rem;
-  border-radius: 0;
+  border-radius: 0.375rem;
   color: var(--store-on-primary);
   background: var(--store-primary);
   font-size: 0.8125rem;
@@ -185,7 +185,7 @@
   /* Bloc de référence des textes masqués (position absolue) des cartes : sinon ils débordent de la page. */
   position: relative;
   display: grid;
-  grid-auto-columns: minmax(9.5rem, 44%);
+  grid-auto-columns: minmax(10.5rem, 54%);
   grid-auto-flow: column;
   gap: 0.75rem;
   overflow-x: auto;
@@ -260,13 +260,13 @@
 
 @media (min-width: 640px) {
   .sf-rail-list {
-    grid-auto-columns: minmax(11rem, 28%);
+    grid-auto-columns: minmax(12.5rem, 36%);
   }
 }
 
 @media (min-width: 1024px) {
   .sf-rail-list {
-    grid-auto-columns: calc((100% - 4rem - 3 * 1.25rem) / 4);
+    grid-auto-columns: calc((100% - 4rem - 2 * 1.25rem) / 3.3);
     gap: 1.25rem;
     padding-right: 2rem;
     padding-left: 2rem;
@@ -489,7 +489,7 @@
 }
 
 /* Thème « Galerie » : aucun coin arrondi. */
-.sf-theme-boutique-marque :is(.sf-banner, .sf-popup-card, .sf-rail-more a) {
+.sf-theme-boutique-marque :is(.sf-banner, .sf-popup-card, .sf-rail-more a, .sf-discount-badge) {
   border-radius: 0;
 }
 
@@ -534,4 +534,75 @@
   .sf .sf-similar .sf-grid {
     grid-auto-columns: 10rem;
   }
+}
+
+/* Arrondi du badge selon le thème : léger (Catalogue express), en pilule (Mode et beauté), aucun (Galerie). */
+.sf-theme-mode-beaute .sf-discount-badge {
+  border-radius: 999px;
+}
+
+/* ---------- Bouton de discussion : flotte légèrement ---------- */
+
+.sf-chat-trigger {
+  animation: sf-float 3.2s ease-in-out infinite;
+}
+
+.sf-chat-trigger:hover,
+.sf-chat-trigger:focus-visible {
+  animation-play-state: paused;
+}
+
+@keyframes sf-float {
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-chat-trigger {
+    animation: none;
+  }
+}
+
+/* ---------- Thème par défaut (Catalogue express) : style PrestAfrik, crème clair et verre ---------- */
+
+.sf-theme-catalogue-express {
+  --sf-glass: rgb(255 255 255 / 0.78);
+  --sf-glass-edge: rgb(255 255 255 / 0.95);
+  --sf-glass-shadow: 0 1px 1px rgb(255 255 255 / 0.8) inset, 0 10px 28px rgb(170 96 10 / 0.07), 0 1px 3px rgb(0 0 38 / 0.04);
+  background: linear-gradient(170deg, #fffefb 0%, #fffbf5 55%, #fff7ee 100%);
+  background-color: #fffcf7;
+}
+
+.sf-theme-catalogue-express .sf-header {
+  border-bottom: 1px solid rgb(214 170 110 / 0.18);
+  background: #fffefb;
+  box-shadow: 0 6px 24px rgb(170 96 10 / 0.05);
+}
+
+.sf-theme-catalogue-express :is(.sf-card, .sf-empty, .sf-review, .sf-review-form, .sf-chips a:not([aria-current="page"]), .sf-chips button:not([aria-pressed="true"]), .sf-pagination ol a:not([aria-current="page"])) {
+  border-color: var(--sf-glass-edge);
+  background-color: var(--sf-glass);
+  box-shadow: var(--sf-glass-shadow);
+}
+
+.sf-theme-catalogue-express :is(.sf-search input, .sf-field input, .sf-field select, .sf-field textarea) {
+  border-color: rgb(214 170 110 / 0.35);
+  background: rgb(255 255 255 / 0.92);
+}
+
+.sf-theme-catalogue-express .sf-info {
+  border: 1px solid var(--sf-glass-edge);
+  background: color-mix(in srgb, var(--store-primary) 9%, rgb(255 255 255 / 0.85));
+}
+
+.sf-theme-catalogue-express :is(.sf-cart-icon, .sf-logo) {
+  border: 1px solid var(--sf-glass-edge);
+  background: var(--sf-glass);
+  box-shadow: var(--sf-glass-shadow);
+}
+
+.sf-theme-catalogue-express .sf-footer {
+  border-top: 1px solid var(--sf-glass-edge);
+  background: rgb(255 255 255 / 0.55);
 }
