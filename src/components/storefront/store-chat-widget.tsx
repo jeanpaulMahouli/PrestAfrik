@@ -1,5 +1,6 @@
 "use client";
 
+import { MessageCircleMore, SendHorizontal, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useStoreBase, useStoreHref } from "@/components/storefront/store-links";
@@ -133,9 +134,8 @@ export function StoreChatWidget({ config, storeName, storeSlug, storeInitials, l
     <>
       {!open && (
         <div className="sf-chat-launcher">
-          <span aria-hidden="true" className="sf-chat-label">Une question ?</span>
-          <button aria-haspopup="dialog" aria-label={`Une question ? Discuter avec ${storeName}`} className="sf-chat-trigger" onClick={() => setOpen(true)} ref={triggerRef} type="button">
-            {whatsappIcon(28)}
+          <button aria-haspopup="dialog" aria-label={`Discuter avec ${storeName}`} className="sf-chat-trigger" onClick={() => setOpen(true)} ref={triggerRef} title="Discuter avec la boutique" type="button">
+            <MessageCircleMore aria-hidden="true" size={26} />
           </button>
         </div>
       )}
@@ -151,7 +151,9 @@ export function StoreChatWidget({ config, storeName, storeSlug, storeInitials, l
                 <strong>{storeName}</strong>
                 <small>Assistant de la boutique · réponses guidées</small>
               </span>
-              <button aria-label="Fermer la discussion" className="sf-chat-close" onClick={close} ref={closeRef} type="button">✕</button>
+              <button aria-label="Fermer la discussion" className="sf-chat-close" onClick={close} ref={closeRef} type="button">
+                <X aria-hidden="true" size={18} />
+              </button>
             </header>
 
             <div aria-live="polite" className="sf-chat-messages" ref={listRef}>
@@ -196,7 +198,9 @@ export function StoreChatWidget({ config, storeName, storeSlug, storeInitials, l
             >
               <label className="visually-hidden" htmlFor="sf-chat-question">Votre question</label>
               <input id="sf-chat-question" maxLength={300} onChange={(event) => setDraft(event.target.value)} placeholder="Écrire votre question…" value={draft} />
-              <button aria-label="Préparer le message pour la boutique" type="submit">➤</button>
+              <button aria-label="Préparer le message pour la boutique" type="submit">
+                <SendHorizontal aria-hidden="true" size={18} />
+              </button>
             </form>
           </section>
         </>

@@ -1,0 +1,153 @@
+/* =============================================================================
+   Design system « Club des 1000 » (flyer PrestAfrik) : fond crème et pêche avec une grille légère,
+   surfaces de verre translucides à bord blanc, ombres chaudes, bleu nuit et orange.
+   Chargé en dernier par l'espace vendeur, l'administration, l'assistant et la connexion.
+   Performance : le flou (backdrop-filter, coûteux) est réservé aux couches flottantes
+   (fenêtres, menus) ; les cartes posées sur le fond fixe n'en ont pas besoin.
+   ========================================================================== */
+
+:root {
+  --glass-page: linear-gradient(165deg, #fffaf3 0%, #fff3e1 42%, #fde6c8 100%);
+  /* Grille du flyer : lignes très fines tous les 72 px. */
+  --glass-grid:
+    linear-gradient(rgb(232 178 104 / 0.13) 1px, transparent 1px) 0 0 / 72px 72px,
+    linear-gradient(90deg, rgb(232 178 104 / 0.13) 1px, transparent 1px) 0 0 / 72px 72px;
+  --glass-surface: rgb(255 255 255 / 0.62);
+  --glass-surface-strong: rgb(255 255 255 / 0.86);
+  --glass-edge: rgb(255 255 255 / 0.9);
+  --glass-line: rgb(214 170 110 / 0.22);
+  --glass-shadow: 0 1px 1px rgb(255 255 255 / 0.8) inset, 0 10px 30px rgb(170 96 10 / 0.07), 0 1px 3px rgb(0 0 38 / 0.04);
+  --glass-shadow-raised: 0 18px 46px rgb(170 96 10 / 0.14), 0 2px 6px rgb(0 0 38 / 0.06);
+  --glass-blur: blur(18px) saturate(150%);
+}
+
+/* ---------- Fonds de page ---------- */
+.vendor-shell,
+.wizard,
+.auth-page {
+  background: var(--glass-grid), var(--glass-page);
+  background-color: #fff7ec;
+}
+
+/* ---------- Surfaces de verre ---------- */
+:is(.vendor-shell, .wizard, .auth-page) :is(.v-card, .surface-card, .stat-card, .kpi-card, .wizard-card, .auth-card, .banner-card, .popup-item) {
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Tableaux et listes dans une carte : lignes discrètes sur le verre. */
+.vendor-shell .v-table :is(th, td) {
+  border-color: var(--glass-line);
+}
+
+.vendor-shell .v-table thead th {
+  background: rgb(255 255 255 / 0.35);
+}
+
+/* Barre du haut et menu : verre presque opaque, sans flou (le tiroir mobile reste libre). */
+.vendor-shell .vendor-topbar,
+.wizard-header {
+  border-bottom: 1px solid var(--glass-edge);
+  background: rgb(255 250 243 / 0.92);
+  box-shadow: 0 6px 24px rgb(170 96 10 / 0.06);
+}
+
+.vendor-shell .vendor-sidebar {
+  background: transparent;
+}
+
+.vendor-shell .vendor-sidebar a[aria-current="page"],
+.vendor-shell .admin-tabs a[aria-current="page"] {
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-surface-strong);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ---------- Pilules (onglets, filtres, période) : verre arrondi comme sur le flyer ---------- */
+.vendor-shell :is(.pill-tabs a, .segmented, .filter-chip, .badge) {
+  backdrop-filter: none;
+}
+
+.vendor-shell .pill-tabs a:not([aria-current="page"]),
+.vendor-shell .filter-chip:not(:has(input:checked)) {
+  border-color: var(--glass-edge);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+}
+
+.vendor-shell .segmented {
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-surface);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ---------- Boutons ---------- */
+:is(.vendor-shell, .wizard, .auth-page, .dialog-layer) :is(.btn-secondary, .icon-button:not(.icon-button-whatsapp)) {
+  border: 1px solid var(--glass-edge);
+  background: var(--glass-surface-strong);
+  box-shadow: var(--glass-shadow);
+}
+
+:is(.vendor-shell, .wizard, .auth-page, .dialog-layer) :is(.btn-secondary, .icon-button:not(.icon-button-whatsapp)):not(:disabled):hover {
+  background: #fff;
+  box-shadow: var(--glass-shadow-raised);
+}
+
+:is(.vendor-shell, .wizard, .auth-page, .dialog-layer) .btn-primary {
+  box-shadow: 0 8px 20px rgb(255 153 0 / 0.28);
+}
+
+/* Icônes toujours centrées dans leur bouton ou leur pastille. */
+:is(.icon-button, .bell-button, .severity-icon, .kpi-icon, .sf-chat-trigger, .sf-popup-close, .sf-menu-button, .sf-drawer-close) svg {
+  display: block;
+  flex: none;
+}
+
+/* ---------- Champs : blancs et nets, pour la lisibilité ---------- */
+:is(.vendor-shell, .wizard, .auth-page, .dialog-layer) :is(input:not([type="checkbox"], [type="radio"], [type="range"]), select, textarea) {
+  background-color: rgb(255 255 255 / 0.92);
+}
+
+/* ---------- Couches flottantes : vrai verre dépoli ---------- */
+.dialog-panel,
+.topbar-menu-panel,
+.row-menu-panel,
+.period-filter-panel {
+  border: 1px solid var(--glass-edge);
+  background: rgb(255 251 245 / 0.82);
+  box-shadow: var(--glass-shadow-raised);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+
+.dialog-backdrop {
+  background: rgb(0 0 38 / 0.38);
+}
+
+/* ---------- Bandeaux ---------- */
+.vendor-shell .v-banner {
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+}
+
+/* ---------- Titres : fins avec un mot fort, comme le flyer ---------- */
+:is(.vendor-shell, .wizard) .v-page-title,
+.wizard-card h1,
+.auth-card h1 {
+  color: #000026;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Le flou est désactivé si l'appareil le demande ou ne le gère pas (meilleure fluidité). */
+@media (prefers-reduced-transparency: reduce) {
+  .dialog-panel,
+  .topbar-menu-panel,
+  .row-menu-panel,
+  .period-filter-panel {
+    background: #fffaf3;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

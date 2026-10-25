@@ -73,7 +73,6 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
             <thead>
               <tr>
                 <th scope="col">Nom</th>
-                <th scope="col">E-mail</th>
                 <th scope="col">Téléphone</th>
                 <th scope="col">Ville</th>
                 <th scope="col">Pays</th>
@@ -99,8 +98,7 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
                         </span>
                       )}
                     </td>
-                    <td data-label="E-mail">{row.email}</td>
-                    <td data-label="Téléphone">{row.phone ?? <span className="v-muted">Non renseigné</span>}</td>
+                    <td className="prospect-phone" data-label="Téléphone">{row.phone ?? <span className="v-muted">Non renseigné</span>}</td>
                     <td data-label="Ville">{row.city ?? "—"}</td>
                     <td data-label="Pays">{row.country ?? "—"}</td>
                     <td data-label="Boutiques">{formatNumber(row.storeCount)}</td>
@@ -118,7 +116,7 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
                             <MessageCircle aria-hidden="true" size={16} />
                           </button>
                         )}
-                        {row.phone && <CopyButton className="v-link-button" copiedLabel="Copié !" label="Copier le numéro" value={`+${row.phoneDigits}`} />}
+                        {row.phone && <CopyButton className="icon-button icon-button-sm" copiedLabel="Numéro copié" iconOnly label={`Copier le numéro de ${row.name}`} value={`+${row.phoneDigits}`} />}
                       </span>
                     </td>
                   </tr>

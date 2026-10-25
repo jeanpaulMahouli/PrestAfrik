@@ -4,62 +4,6 @@
   margin-bottom: 1.25rem;
 }
 
-/* ---------- Téléphone : indicatif + numéro ---------- */
-
-.phone-input {
-  position: relative;
-  display: grid;
-  grid-template-columns: 6rem minmax(0, 1fr);
-  overflow: hidden;
-  border: 1px solid var(--color-border-input);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-}
-
-.phone-input:focus-within {
-  border-color: var(--color-brand-primary);
-  box-shadow: 0 0 0 3px rgb(255 153 0 / 0.18);
-}
-
-.phone-input.is-valid {
-  border-color: var(--color-success);
-}
-
-.phone-input.is-invalid {
-  border-color: var(--color-danger);
-}
-
-.phone-input select,
-.phone-input input {
-  min-width: 0;
-  min-height: 2.875rem;
-  border: 0 !important;
-  border-radius: 0 !important;
-  outline: none;
-  background: transparent;
-  box-shadow: none !important;
-  font-size: 1rem;
-}
-
-.phone-input select {
-  padding: 0 0.625rem;
-  border-right: 1px solid var(--color-border-input) !important;
-  background: var(--color-page-background-alt);
-}
-
-.phone-input input {
-  padding: 0 2.25rem 0 0.75rem;
-}
-
-.phone-check {
-  position: absolute;
-  top: 50%;
-  right: 0.875rem;
-  color: var(--color-success);
-  font-weight: 700;
-  transform: translateY(-50%);
-}
-
 /* ---------- Ma boutique ---------- */
 
 .logo-row {

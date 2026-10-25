@@ -1,3 +1,5 @@
+import "@/styles/star-rating.css";
+
 const starPath = "M12 2.5l2.94 6.06 6.56.92-4.78 4.6 1.17 6.52L12 17.5l-5.89 3.1 1.17-6.52-4.78-4.6 6.56-.92L12 2.5z";
 
 function Stars() {

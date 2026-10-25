@@ -651,7 +651,7 @@ async function main() {
             kind: "ABOUT",
             title: "À propos",
             slug: "a-propos",
-            status: "PUBLISHED",
+            status: "DRAFT",
             position: 0,
             blocks: [
               { type: "heading", text: "Notre histoire" },
@@ -663,7 +663,7 @@ async function main() {
             kind: "CONTACT",
             title: "Contact",
             slug: "contact",
-            status: "PUBLISHED",
+            status: "DRAFT",
             position: 1,
             blocks: [{ type: "paragraph", text: "Écrivez-nous sur WhatsApp : nous répondons rapidement." }],
           },

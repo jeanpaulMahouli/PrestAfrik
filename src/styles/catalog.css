@@ -811,34 +811,3 @@
   font-size: 0.9rem;
 }
 
-.rich-text {
-  line-height: 1.6;
-}
-
-.rich-text > :first-child {
-  margin-top: 0;
-}
-
-.rich-text p,
-.rich-text ul,
-.rich-text ol {
-  margin: 0 0 0.75rem;
-}
-
-.rich-text ul,
-.rich-text ol {
-  padding-left: 1.25rem;
-}
-
-.rich-text ul {
-  list-style: disc;
-}
-
-.rich-text ol {
-  list-style: decimal;
-}
-
-.rich-text h3 {
-  margin: 1rem 0 0.375rem;
-  font-size: 1rem;
-}

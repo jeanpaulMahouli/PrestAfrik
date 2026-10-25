@@ -58,8 +58,9 @@
   --sidebar-width: 13.5rem;
   --topbar-height: 3.5rem;
 
-  --font-body: "Poppins", Arial, sans-serif;
-  --font-heading: "Poppins", Arial, sans-serif;
+  /* Poppins unique pour tout le site (src/lib/fonts.ts, variable posée sur <html>). */
+  --font-body: var(--lp-font-ui), "Poppins", Arial, sans-serif;
+  --font-heading: var(--lp-font-ui), "Poppins", Arial, sans-serif;
 }
 
 @theme inline {

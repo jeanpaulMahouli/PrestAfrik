@@ -1,5 +1,6 @@
 "use client";
 
+import { Search, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { createContext, useContext, useState, type CSSProperties, type ReactNode } from "react";
@@ -106,23 +107,33 @@ export function WizardShell({ steps, current, reached, draftId, exitHref = "/das
 
           <details className="wizard-preview" open>
             <summary>Aperçu de votre boutique, en direct</summary>
+            {/* Même organisation que la vitrine de chaque thème : en-tête, recherche, catégories, bannière, produits. */}
             <div className={`wizard-preview-card wizard-preview-${draft.theme.toLowerCase()}`} style={style}>
               <div className="wizard-preview-head">
                 <span className="wizard-preview-logo">
                   {/* Logo choisi : image locale (aperçu) ou logo déjà enregistré. */}
                   {draft.logoUrl ? <img alt="" src={draft.logoUrl} /> : initials}
                 </span>
-                <strong>{draft.name || "Ma boutique"}</strong>
+                <span className="wizard-preview-name">
+                  <strong>{draft.name || "Ma boutique"}</strong>
+                  {draft.location && <small>{draft.location}</small>}
+                </span>
+                {draft.theme === "BOUTIQUE_MARQUE" && <Search aria-hidden="true" className="wizard-preview-icon" size={14} />}
+                <ShoppingBag aria-hidden="true" className="wizard-preview-icon" size={14} />
               </div>
-              {(draft.activity || draft.location) && (
-                <div className="wizard-preview-tags">
-                  {draft.activity && <span>{draft.activity}</span>}
-                  {draft.location && <span>{draft.location}</span>}
-                </div>
+              {draft.theme !== "BOUTIQUE_MARQUE" && (
+                <span className="wizard-preview-search">
+                  <Search aria-hidden="true" size={11} /> Rechercher un produit
+                </span>
               )}
-              <div className="wizard-preview-hero">Bienvenue !</div>
+              <div className="wizard-preview-hero">{draft.activity || "Bienvenue !"}</div>
+              <div aria-hidden="true" className="wizard-preview-tags">
+                <span className="is-active">Tout</span>
+                <span>Nouveautés</span>
+                <span>Promotions</span>
+              </div>
               <div className="wizard-preview-products">
-                {[1, 2].map((index) => (
+                {[1, 2, 3, 4].map((index) => (
                   <span key={index}>
                     <span aria-hidden="true" />
                     <strong>Produit {index}</strong>

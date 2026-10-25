@@ -1,16 +1,13 @@
 import { revalidatePath } from "next/cache";
-import { Badge } from "@/components/ui/badge";
+import { MailOpen } from "lucide-react";
+import { SeverityIcon } from "@/components/admin/notification-bell";
 import { SubmitButton } from "@/components/ui/submit-button";
-import type { Tone } from "@/config/statuses";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { listSystemNotifications, slowQueryMs, systemNotificationTypeLabels, type SystemNotificationType } from "@/modules/system/notifications";
 
 export const metadata = { title: "Notifications techniques" };
-
-const severityLabels = { INFO: "Info", WARNING: "Attention", CRITICAL: "Critique" } as const;
-const severityTones: Record<keyof typeof severityLabels, Tone> = { INFO: "info", WARNING: "warning", CRITICAL: "danger" };
 
 async function markAllRead() {
   "use server";
@@ -35,7 +32,9 @@ export default async function AdminNotificationsPage() {
         </div>
         {unread > 0 && (
           <form action={markAllRead} className="v-page-actions">
-            <SubmitButton className="btn btn-secondary" pendingLabel="…">Tout marquer comme lu</SubmitButton>
+            <SubmitButton aria-label="Tout marquer comme lu" className="icon-button" pendingLabel="…" title="Tout marquer comme lu">
+              <MailOpen aria-hidden="true" size={18} />
+            </SubmitButton>
           </form>
         )}
       </div>
@@ -55,7 +54,7 @@ export default async function AdminNotificationsPage() {
             <tbody>
               {notifications.map((item) => (
                 <tr className={item.readAt ? "" : "is-unread"} key={item.id}>
-                  <td className="v-cell-badges" data-label="Gravité"><Badge tone={severityTones[item.severity]}>{severityLabels[item.severity]}</Badge></td>
+                  <td data-label="Gravité"><SeverityIcon severity={item.severity} /></td>
                   <td data-label="Type">{systemNotificationTypeLabels[item.type as SystemNotificationType] ?? item.type}</td>
                   <td className="v-cell-primary notification-message" data-label="Message">
                     {item.message}

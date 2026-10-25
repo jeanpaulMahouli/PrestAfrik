@@ -49,6 +49,8 @@ export async function savePopup(_previous: PopupActionState, formData: FormData)
   if (rawId && !existing) return { ok: false, message: "Ce popup n’existe plus. Rechargez la page." };
   const file = formData.get("image");
   if (!existing && (!(file instanceof File) || file.size === 0)) return { ok: false, message: "Choisissez l’image du popup." };
+  // Un seul popup par boutique : on modifie celui qui existe.
+  if (!existing && (await prisma.storePopup.count({ where: { storeId } })) > 0) return { ok: false, message: "Votre boutique a déjà un popup : modifiez-le plutôt que d’en créer un autre." };
 
   let imageUrl: string | undefined;
   try {

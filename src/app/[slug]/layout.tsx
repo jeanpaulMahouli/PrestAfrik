@@ -1,3 +1,5 @@
+import "@/styles/storefront.css";
+import "@/styles/storefront-merchandising.css";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { cache } from "react";

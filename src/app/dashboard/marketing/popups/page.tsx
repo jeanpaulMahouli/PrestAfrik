@@ -63,7 +63,7 @@ export default async function PopupsPage({ searchParams }: PageProps<"/dashboard
         <div>
           <h1 className="v-page-title">Popups</h1>
           <p className="v-page-subtitle">
-            Une image qui s’affiche à l’ouverture de votre boutique, une fois par visite. Un seul popup peut être actif à la fois.
+            Une image qui s’affiche à l’ouverture de votre boutique, une fois par visite. Votre boutique a un seul popup : modifiez-le, activez-le ou désactivez-le quand vous voulez.
           </p>
         </div>
       </div>

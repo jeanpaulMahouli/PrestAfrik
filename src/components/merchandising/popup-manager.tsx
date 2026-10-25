@@ -78,7 +78,7 @@ function PopupForm({ popup, targets, onDone }: { popup?: ManagedPopup; targets: 
         </div>
         <label className="v-check">
           <input defaultChecked={popup ? popup.isActive : true} name="isActive" type="checkbox" />
-          Activer ce popup (les autres popups seront désactivés)
+          Afficher ce popup dans ma boutique
         </label>
         {(error || (state && !state.ok)) && <p className="v-field-error" role="alert">{error || state?.message}</p>}
         <SubmitButton className="btn btn-primary" pendingLabel="Enregistrement…">{popup ? "Enregistrer" : "Créer le popup"}</SubmitButton>
@@ -115,16 +115,13 @@ export function PopupManager({ popups, targets, flash }: { popups: ManagedPopup[
 
   return (
     <div className="popup-manager">
-      <div className="v-page-actions">
-        <button className="btn btn-primary" onClick={() => setEditing("new")} type="button">Nouveau popup</button>
-      </div>
       {(saved || flash) && <p className="v-banner v-banner-success" role="status">{saved ?? flash}</p>}
 
       {popups.length === 0 ? (
         <section className="v-card v-empty">
           <h2>Accueillez vos visiteurs avec une offre</h2>
           <p>Un popup s’affiche à l’ouverture de votre boutique, une fois par visite : idéal pour annoncer des soldes, une nouveauté ou la livraison gratuite.</p>
-          <button className="btn btn-primary" onClick={() => setEditing("new")} type="button">Créer mon premier popup</button>
+          <button className="btn btn-primary" onClick={() => setEditing("new")} type="button">Créer mon popup</button>
         </section>
       ) : (
         <ul className="popup-list">
@@ -157,7 +154,7 @@ export function PopupManager({ popups, targets, flash }: { popups: ManagedPopup[
                   <button
                     aria-label={popup.isActive ? `Désactiver « ${popup.title} »` : `Activer « ${popup.title} »`}
                     className={`icon-button${popup.isActive ? " is-on" : ""}`}
-                    title={popup.isActive ? "Désactiver" : "Activer (les autres seront désactivés)"}
+                    title={popup.isActive ? "Désactiver" : "Activer"}
                     type="submit"
                   >
                     {popup.isActive ? <Power aria-hidden="true" size={16} /> : <PowerOff aria-hidden="true" size={16} />}

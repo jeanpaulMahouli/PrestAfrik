@@ -4,7 +4,6 @@ import { texts } from "@/config/texts";
 import { EmailVerificationBanner } from "@/components/layout/email-verification-banner";
 import { VendorDrawer, VendorSidebar } from "@/components/layout/vendor-navigation";
 import { MobileSearchButton, StoreSwitcher, UserMenu } from "@/components/layout/vendor-topbar-menus";
-import { fontVariables } from "@/lib/fonts";
 import { isPlatformAdmin } from "@/modules/admin/context";
 import { getStoreContext } from "@/modules/stores/context";
 
@@ -20,7 +19,7 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
   const showAdminLink = await isPlatformAdmin(session.user.id);
 
   return (
-    <div className={`vendor-shell ${fontVariables}`}>
+    <div className="vendor-shell">
       <header className="vendor-topbar">
         <VendorDrawer role={membership.role} storeName={store.name} />
         <Link aria-label="PrestAfrik, accueil de mon espace" className="vendor-logo" href="/dashboard">

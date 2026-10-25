@@ -56,7 +56,7 @@ export function ChatAssistantEditor({ initial, storeName, storeSlug }: { initial
               <input checked={config.enabled} onChange={(event) => set("enabled", event.target.checked)} type="checkbox" />
             </label>
             <p className="v-small v-muted">
-              Un bouton « Une question ? » apparaît sur votre boutique. Vos visiteurs choisissent une question, puis continuent la discussion avec vous sur
+              Un bouton de discussion (aux couleurs de votre boutique) apparaît sur votre boutique. Vos visiteurs choisissent une question, puis continuent la discussion avec vous sur
               WhatsApp. Aucune intelligence artificielle : les réponses sont celles que vous rédigez.
             </p>
           </section>

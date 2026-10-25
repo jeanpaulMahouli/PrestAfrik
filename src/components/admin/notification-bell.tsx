@@ -1,15 +1,26 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell, Info, MailOpen, OctagonAlert, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useDismiss } from "@/components/ui/use-dismiss";
 
-type Item = { id: string; type: string; severity: "INFO" | "WARNING" | "CRITICAL"; message: string; occurrences: number; lastSeenAt: string; read: boolean };
+type Severity = "INFO" | "WARNING" | "CRITICAL";
+type Item = { id: string; type: string; severity: Severity; message: string; occurrences: number; lastSeenAt: string; read: boolean };
 
 const pollMs = 60_000;
-const severityLabels = { INFO: "Info", WARNING: "Attention", CRITICAL: "Critique" } as const;
 const timeFormat = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "Africa/Douala" });
+
+/** Icône de gravité (critique, attention, information), centrée dans une pastille. */
+export function SeverityIcon({ severity }: { severity: Severity }) {
+  const Icon = severity === "CRITICAL" ? OctagonAlert : severity === "WARNING" ? TriangleAlert : Info;
+  const label = severity === "CRITICAL" ? "Critique" : severity === "WARNING" ? "Attention" : "Information";
+  return (
+    <span aria-label={label} className={`severity-icon severity-${severity.toLowerCase()}`} role="img" title={label}>
+      <Icon aria-hidden="true" size={16} />
+    </span>
+  );
+}
 
 /** Cloche des notifications techniques (avant l'avatar) : badge des non lues, panneau déroulant. */
 export function NotificationBell({ initialUnread }: { initialUnread: number }) {
@@ -66,14 +77,13 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
       </button>
       {open && (
         <div className="topbar-menu-panel bell-panel">
-          <div className="bell-head">
-            <strong>Notifications techniques</strong>
-            {unread > 0 && (
-              <button className="v-link-button" onClick={() => void mark({ all: true })} type="button">
-                Tout marquer comme lu
+          {unread > 0 && (
+            <div className="bell-head">
+              <button aria-label="Tout marquer comme lu" className="icon-button icon-button-sm" onClick={() => void mark({ all: true })} title="Tout marquer comme lu" type="button">
+                <MailOpen aria-hidden="true" size={16} />
               </button>
-            )}
-          </div>
+            </div>
+          )}
           {failed && <p className="v-field-error">Impossible de charger les notifications. Nouvel essai dans une minute.</p>}
           {items === null && !failed && <p className="v-muted v-small">Chargement…</p>}
           {items?.length === 0 && <p className="v-muted v-small">Aucune notification : tout fonctionne normalement.</p>}
@@ -81,7 +91,7 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
             <ul className="bell-list">
               {items.map((item) => (
                 <li className={item.read ? "" : "is-unread"} key={item.id}>
-                  <span className={`bell-severity bell-severity-${item.severity.toLowerCase()}`}>{severityLabels[item.severity]}</span>
+                  <SeverityIcon severity={item.severity} />
                   <span className="bell-text">
                     <strong>{item.type}</strong>
                     <span>{item.message}</span>
@@ -91,8 +101,8 @@ export function NotificationBell({ initialUnread }: { initialUnread: number }) {
                     </small>
                   </span>
                   {!item.read && (
-                    <button aria-label="Marquer comme lu" className="v-link-button bell-read" onClick={() => void mark({ id: item.id })} title="Marquer comme lu" type="button">
-                      ✓
+                    <button aria-label="Marquer comme lu" className="icon-button icon-button-xs" onClick={() => void mark({ id: item.id })} title="Marquer comme lu" type="button">
+                      <MailOpen aria-hidden="true" size={14} />
                     </button>
                   )}
                 </li>

@@ -1178,26 +1178,17 @@
   gap: 0.5rem;
 }
 
-.sf-chat-label {
-  padding: 0.5625rem 0.875rem;
-  border-radius: var(--radius-pill);
-  color: var(--color-text-primary);
-  background: var(--color-surface);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  box-shadow: 0 6px 18px rgb(0 0 38 / 0.2);
-}
-
 .sf-chat-trigger {
   display: grid;
   width: 3.5rem;
   height: 3.5rem;
   place-items: center;
   border: 0;
+  border: 2px solid rgb(255 255 255 / 0.7);
   border-radius: 50%;
-  color: var(--color-on-whatsapp);
-  background: var(--color-whatsapp);
-  box-shadow: 0 6px 18px rgb(0 0 38 / 0.25);
+  color: var(--store-on-primary);
+  background: var(--store-primary);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--store-primary) 45%, transparent);
   cursor: pointer;
 }
 
@@ -1216,7 +1207,7 @@
   flex-direction: column;
   overflow: hidden;
   border-radius: 1.25rem 1.25rem 0 0;
-  background: #ece5dd;
+  background: color-mix(in srgb, var(--store-primary) 8%, #fbf8f4);
   box-shadow: 0 -10px 40px rgb(0 0 0 / 0.35);
 }
 
@@ -1272,8 +1263,9 @@
   border-radius: 50%;
   color: inherit;
   background: rgb(255 255 255 / 0.3);
-  font-size: 1.05rem;
   cursor: pointer;
+  display: grid;
+  place-items: center;
 }
 
 .sf-chat-messages {
@@ -1305,7 +1297,7 @@
   max-width: 70%;
   border-radius: 0.875rem 0.25rem 0.875rem 0.875rem;
   color: var(--color-text-primary);
-  background: #d9fdd3;
+  background: color-mix(in srgb, var(--store-primary) 20%, white);
 }
 
 .sf-chat-chips {
@@ -1328,7 +1320,7 @@
 }
 
 .sf-chat-chips button.is-alt {
-  color: var(--color-whatsapp);
+  border-color: var(--color-border-input);
 }
 
 .sf-chat-chips button.is-filled {
@@ -1390,8 +1382,9 @@
   border-radius: 50%;
   color: var(--store-on-primary);
   background: var(--store-primary);
-  font-size: 1.05rem;
   cursor: pointer;
+  display: grid;
+  place-items: center;
 }
 
 /* ---------- Thèmes ---------- */
@@ -1596,7 +1589,6 @@
   font-weight: 600;
 }
 
-
 /* ---------- Commande : barre des boutons dans le flux (non fixée) ---------- */
 .sf-checkout-actions {
   display: grid;
@@ -1616,41 +1608,6 @@
 .sf-powered a {
   color: var(--color-link);
   font-weight: 600;
-}
-
-/* ---------- Étoiles ---------- */
-.sf-stars {
-  position: relative;
-  display: inline-flex;
-  flex: none;
-  vertical-align: middle;
-}
-
-.sf-stars-empty,
-.sf-stars-full {
-  display: inline-flex;
-  gap: 1px;
-}
-
-.sf-stars svg {
-  width: var(--sf-star-size, 16px);
-  height: var(--sf-star-size, 16px);
-  flex: none;
-}
-
-.sf-stars-empty svg {
-  fill: var(--color-border-input, #e4dccb);
-}
-
-.sf-stars-full {
-  position: absolute;
-  inset: 0 auto 0 0;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.sf-stars-full svg {
-  fill: #f5a623;
 }
 
 .sf-card-rating {

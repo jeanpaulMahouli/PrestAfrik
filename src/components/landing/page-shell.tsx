@@ -1,6 +1,6 @@
+import "@/styles/landing-site.css";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
-import { fontVariables } from "@/lib/fonts";
 import { auth } from "@/modules/auth/server";
 import { FinalCta } from "./final-cta";
 import { SiteFooter } from "./site-footer";
@@ -40,7 +40,7 @@ export function PageShell({
   className?: string;
 }) {
   return (
-    <div className={`lp lp-page ${className} ${fontVariables}`.replace(/\s+/g, " ")}>
+    <div className={`lp lp-page ${className}`.trim()}>
       <a className="lp-skip" href="#contenu">
         Aller au contenu
       </a>

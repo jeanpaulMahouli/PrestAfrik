@@ -149,7 +149,7 @@ export default async function AdminRolesPage({ searchParams }: PageProps<"/admin
         </table>
       </section>
 
-      <section aria-labelledby="roles-history" className="v-card">
+      <section aria-labelledby="roles-history" className="v-card admin-section-spaced">
         <h2 className="v-card-title" id="roles-history">Historique des droits</h2>
         {history.length ? (
           <ul className="admin-history">

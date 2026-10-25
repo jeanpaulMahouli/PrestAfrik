@@ -1,5 +1,6 @@
 "use client";
 
+import "@/styles/popup-card.css";
 import { X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";

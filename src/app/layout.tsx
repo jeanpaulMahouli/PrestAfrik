@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import "@fontsource/poppins/400.css";
-import "@fontsource/poppins/500.css";
-import "@fontsource/poppins/600.css";
-import "@fontsource/poppins/700.css";
-import "@fontsource/poppins/800.css";
+import { fontVariables } from "@/lib/fonts";
 import { NavigationLoadingIndicator } from "@/components/ui/navigation-loading-indicator";
 import "./globals.css";
 
@@ -28,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr">
+    <html className={fontVariables} lang="fr">
       <body>
         {children}
         <Suspense fallback={null}>

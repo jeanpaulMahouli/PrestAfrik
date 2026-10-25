@@ -1,0 +1,34 @@
+/* ---------- Étoiles ---------- */
+.sf-stars {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  vertical-align: middle;
+}
+
+.sf-stars-empty,
+.sf-stars-full {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.sf-stars svg {
+  width: var(--sf-star-size, 16px);
+  height: var(--sf-star-size, 16px);
+  flex: none;
+}
+
+.sf-stars-empty svg {
+  fill: var(--color-border-input, #e4dccb);
+}
+
+.sf-stars-full {
+  position: absolute;
+  inset: 0 auto 0 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sf-stars-full svg {
+  fill: #f5a623;
+}

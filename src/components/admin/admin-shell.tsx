@@ -3,7 +3,6 @@ import Link from "next/link";
 import { AdminNavigation } from "@/components/admin/admin-navigation";
 import { NotificationBell } from "@/components/admin/notification-bell";
 import { UserMenu } from "@/components/layout/vendor-topbar-menus";
-import { fontVariables } from "@/lib/fonts";
 import { countOpenAlerts } from "@/modules/admin/alerts";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { countUnreadSystemNotifications } from "@/modules/system/notifications";
@@ -15,7 +14,7 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
   const superAdmin = admin.platformRole === "SUPER_ADMIN";
 
   return (
-    <div className={`vendor-shell admin-shell ${fontVariables}`}>
+    <div className="vendor-shell admin-shell">
       <header className="vendor-topbar">
         <Link aria-label="PrestAfrik, accueil de l’administration" className="vendor-logo" href="/admin">
           <Image alt="" height={34} priority src="/brand/logo-prestafrik.png" width={62} />

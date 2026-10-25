@@ -1,3 +1,4 @@
+import "@/styles/legal-page.css";
 import Link from "next/link";
 
 type LegalPageProps = {

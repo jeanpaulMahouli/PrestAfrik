@@ -1,3 +1,5 @@
+import "@/styles/auth.css";
+import "@/styles/glass.css";
 import Image from "next/image";
 import Link from "next/link";
 import { texts } from "@/config/texts";

@@ -2828,7 +2828,7 @@
   display: grid;
   overflow: hidden;
   place-items: center;
-  border: 6px solid var(--color-brand-secondary, #000026);
+  border: 2px solid var(--color-brand-secondary, #000026);
   background: rgb(0 0 38 / 0.55);
 }
 

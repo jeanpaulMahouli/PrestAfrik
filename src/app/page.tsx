@@ -1,3 +1,4 @@
+import "@/styles/landing-site.css";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { ClientShowcase } from "@/components/landing/client-showcase";
@@ -8,7 +9,6 @@ import { Hero } from "@/components/landing/hero";
 import { Partners } from "@/components/landing/partners";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { Testimonials } from "@/components/landing/testimonials";
-import { fontVariables } from "@/lib/fonts";
 import { auth } from "@/modules/auth/server";
 
 export const metadata: Metadata = {
@@ -23,7 +23,7 @@ export default async function LandingPage() {
   const signedIn = Boolean(session);
 
   return (
-    <div className={`lp ${fontVariables}`}>
+    <div className="lp">
       <a className="lp-skip" href="#contenu">
         Aller au contenu
       </a>

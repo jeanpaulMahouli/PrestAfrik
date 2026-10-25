@@ -1,0 +1,12 @@
+/* Espace vendeur, administration, assistant de création et pages de connexion. */
+@import "./auth.css";
+@import "./vendor.css";
+@import "./catalog.css";
+@import "./store.css";
+@import "./wizard.css";
+@import "./dashboard-theme.css";
+@import "./dashboard-home.css";
+@import "./admin.css";
+@import "./admin-extra.css";
+@import "./app-legacy.css";
+@import "./glass.css";

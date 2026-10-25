@@ -94,11 +94,7 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
             ))}
             {promotions.length > promoRowSize && (
               <li className="sf-rail-card sf-rail-more">
-                <Link href={storeHref(base, "promotions")}>
-                  <strong>Voir toutes les promotions</strong>
-                  <span>{promotions.length} produits à prix réduit</span>
-                  <span aria-hidden="true" className="sf-rail-more-arrow">→</span>
-                </Link>
+                <Link href={storeHref(base, "promotions")}>Voir toutes les promotions</Link>
               </li>
             )}
           </PromoRail>

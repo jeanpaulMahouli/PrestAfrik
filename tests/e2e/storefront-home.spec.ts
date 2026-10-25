@@ -4,7 +4,7 @@ import { demoStore, demoVendor, signIn, skipWelcomePopup } from "./helpers";
 
 // Accueil de la boutique de démonstration « Mboa Style » : 3 images de bannière (catégorie, produit,
 // promotions), au moins 9 produits en promotion, 14 mis en avant et notés, pages « À propos » et
-// « Contact », popup actif.
+// « Contact » en brouillon, popup actif.
 
 const home = `/${demoStore}`;
 const promotionsUrl = new RegExp(`${home}/promotions$`);
@@ -63,12 +63,13 @@ test.describe("promotions", () => {
     const [promo, regular] = priceText.match(/\d+/g)!.map(Number);
     expect(Math.round(((regular - promo) / regular) * 100)).toBe(values[0]);
 
-    const more = rail.getByRole("link", { name: /Voir toutes les promotions/ });
-    await expect(more).toBeVisible();
-    const total = Number(/(\d+) produits/.exec(await more.innerText())?.[1]);
-    expect(total).toBeGreaterThan(7);
+    // Dernière carte : seulement « Voir toutes les promotions », sans nombre ni flèche.
+    const more = rail.getByRole("link", { name: "Voir toutes les promotions", exact: true });
+    await expect(more).toHaveText("Voir toutes les promotions");
     await more.click();
     await expect(page).toHaveURL(promotionsUrl, { timeout: 90_000 });
+    const total = Number(/(\d+) produits? à prix réduit/.exec(await page.locator(".sf-home-section-lead").innerText())?.[1]);
+    expect(total).toBeGreaterThan(7);
     await expect(page.locator(".sf-promotions .sf-card")).toHaveCount(Math.min(total, 12));
     await expect(page.locator(".sf-promotions .sf-discount-badge")).toHaveCount(Math.min(total, 12));
   });
@@ -95,41 +96,58 @@ test.describe("sections paginées", () => {
 });
 
 test.describe("menu de la boutique", () => {
-  test("ordinateur : « Boutique » en premier puis les pages publiées", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto(home);
-    const nav = page.locator(".sf-nav");
-    await expect(nav.getByRole("link")).toHaveText(["Boutique", "À propos", "Contact"]);
-    await expect(nav.getByRole("link", { name: "Boutique" })).toHaveAttribute("aria-current", "page");
-    await nav.getByRole("link", { name: "Contact" }).click();
-    await expect(page).toHaveURL(new RegExp(`${home}/page/contact$`), { timeout: 90_000 });
-    await expect(page.locator(".sf-nav").getByRole("link", { name: "Contact" })).toHaveAttribute("aria-current", "page");
-  });
+  test.describe.configure({ mode: "serial" });
 
-  test("mobile : bouton menu avant le logo, panneau latéral fermé par Échap", async ({ browser }) => {
-    const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
-    const page = await context.newPage();
-    await skipWelcomePopup(page);
+  test("absent par défaut : les pages sont en brouillon tant que le vendeur ne les publie pas", async ({ page }) => {
     await page.goto(home);
-    await expect(page.locator(".sf-banner")).toBeVisible();
-    // Aucun défilement horizontal de la page (rangée « Promotions » comprise).
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
-    const button = page.getByRole("button", { name: "Ouvrir le menu de la boutique" });
-    const [buttonBox, logoBox] = await Promise.all([button.boundingBox(), page.locator(".sf-brand").boundingBox()]);
-    expect(buttonBox!.x).toBeLessThan(logoBox!.x);
-    await button.click();
-    const drawer = page.getByRole("dialog", { name: /Menu de/ });
-    await expect(drawer.getByRole("link")).toHaveText(["Boutique", "À propos", "Contact"]);
-    await page.keyboard.press("Escape");
-    await expect(drawer).toHaveCount(0);
-    await context.close();
-  });
-
-  test("absent quand la boutique n’a aucune page publiée", async ({ page }) => {
-    await page.goto("/douala-maison");
     await expect(page.locator(".sf-brand")).toBeVisible();
     await expect(page.locator(".sf-nav")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Ouvrir le menu de la boutique" })).toHaveCount(0);
+  });
+
+  test("« Boutique » en premier puis les pages publiées, sur ordinateur et sur téléphone", async ({ page, browser }) => {
+    // Le vendeur publie « À propos » et « Contact » (icône œil dans Ma boutique → Pages).
+    await signIn(page, demoVendor, "/dashboard/boutique/pages");
+    await page.goto("/dashboard/boutique/pages");
+    for (const name of ["À propos", "Contact"]) {
+      await page.getByRole("button", { name: `Afficher « ${name} » dans le menu` }).click();
+      await expect(page.getByRole("button", { name: `Masquer « ${name} » du menu` })).toBeVisible({ timeout: 60_000 });
+    }
+
+    const desktop = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+    const store = await desktop.newPage();
+    await skipWelcomePopup(store);
+    await store.goto(home);
+    const nav = store.locator(".sf-nav");
+    await expect(nav.getByRole("link")).toHaveText(["Boutique", "À propos", "Contact"]);
+    await expect(nav.getByRole("link", { name: "Boutique" })).toHaveAttribute("aria-current", "page");
+    await nav.getByRole("link", { name: "Contact" }).click();
+    await expect(store).toHaveURL(new RegExp(`${home}/page/contact$`), { timeout: 90_000 });
+    await expect(store.locator(".sf-nav").getByRole("link", { name: "Contact" })).toHaveAttribute("aria-current", "page");
+    await desktop.close();
+
+    const mobile = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const phone = await mobile.newPage();
+    await skipWelcomePopup(phone);
+    await phone.goto(home);
+    await expect(phone.locator(".sf-banner")).toBeVisible();
+    // Aucun défilement horizontal de la page (rangée « Promotions » comprise).
+    expect(await phone.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+    const button = phone.getByRole("button", { name: "Ouvrir le menu de la boutique" });
+    const [buttonBox, logoBox] = await Promise.all([button.boundingBox(), phone.locator(".sf-brand").boundingBox()]);
+    expect(buttonBox!.x).toBeLessThan(logoBox!.x);
+    await button.click();
+    const drawer = phone.getByRole("dialog", { name: /Menu de/ });
+    await expect(drawer.getByRole("link")).toHaveText(["Boutique", "À propos", "Contact"]);
+    await phone.keyboard.press("Escape");
+    await expect(drawer).toHaveCount(0);
+    await mobile.close();
+
+    // Remise en état : les pages repassent en brouillon.
+    for (const name of ["À propos", "Contact"]) {
+      await page.getByRole("button", { name: `Masquer « ${name} » du menu` }).click();
+      await expect(page.getByRole("button", { name: `Afficher « ${name} » dans le menu` })).toBeVisible({ timeout: 60_000 });
+    }
   });
 });
 

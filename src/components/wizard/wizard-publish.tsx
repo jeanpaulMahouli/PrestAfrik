@@ -129,8 +129,7 @@ export function PublishedScreen({ storeName, storeUrl }: { storeName: string; st
       </p>
       <StoreLink showView storeUrl={storeUrl} />
       <SocialShare text={`Découvrez ma boutique ${storeName}`} title={storeName} url={storeUrl} />
-      <div className="wizard-next">
-        <Link className="btn btn-secondary" href="/dashboard/livraisons">Régler mes zones de livraison</Link>
+      <div className="wizard-next wizard-next-pair">
         <Link className="btn btn-secondary" href="/dashboard/produits/nouveau">Ajouter d’autres produits</Link>
         <Link className="btn btn-primary" href="/dashboard">Aller à mon tableau de bord</Link>
       </div>
@@ -170,7 +169,7 @@ export function CreatedScreen({
         </ul>
       )}
       <StoreLink storeUrl={storeUrl} />
-      <div className="wizard-next">
+      <div className="wizard-next wizard-next-pair">
         <Link className="btn btn-secondary" href="/dashboard/produits/nouveau">Ajouter des produits</Link>
         <Link className="btn btn-primary" href="/dashboard">Aller à mon tableau de bord</Link>
       </div>
