@@ -1,8 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { StorefrontProductGrid } from "@/components/storefront/storefront-product-grid";
+import { BannerCarousel } from "@/components/storefront/banner-carousel";
+import { PromoRail } from "@/components/storefront/promo-rail";
+import { StorePagination } from "@/components/storefront/store-pagination";
+import { ProductCard, StorefrontProductGrid } from "@/components/storefront/storefront-product-grid";
 import { formatXaf, getPublishedProducts, getStorefrontStore } from "@/modules/catalog/service";
+import { storeLinkHref } from "@/modules/merchandising/links";
 import { deliverySummary, getStorefrontExtras } from "@/modules/storefront/data";
+import { getStorefrontMerchandising, homeSectionPageSize, pageSlice, promoRowSize, readPage } from "@/modules/storefront/merchandising";
 import { getRatingSummaries } from "@/modules/reviews/queries";
 import { storeHref } from "@/lib/store-host";
 import { storeBasePath } from "@/lib/store-links";
@@ -24,13 +29,31 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
 
   const search = typeof query.q === "string" ? query.q.trim().slice(0, 100) : "";
   const category = typeof query.categorie === "string" ? query.categorie.slice(0, 90) : undefined;
-  const [products, extras, ratings] = await Promise.all([
+  const filtering = Boolean(search || category);
+  const [products, extras, ratings, merchandising] = await Promise.all([
     getPublishedProducts(store.id, { category, query: search }),
     getStorefrontExtras(store.id),
     store.reviewsEnabled ? getRatingSummaries(store.id) : null,
+    getStorefrontMerchandising(store.id),
   ]);
   const base = await storeBasePath(store.slug);
   const home = storeHref(base);
+
+  // Sections de l'accueil, masquées pendant une recherche ou dans une catégorie.
+  const slides = merchandising.banners.map((banner) => ({ id: banner.id, imageUrl: banner.imageUrl, altText: banner.altText, href: storeLinkHref(banner, base) }));
+  const promotions = merchandising.promotions;
+  const topRated = store.reviewsEnabled ? merchandising.topRated : [];
+  const featuredPage = readPage(query.featured, merchandising.featured.length);
+  const topPage = readPage(query.top, topRated.length);
+  const pagesOf = (total: number) => Math.ceil(total / homeSectionPageSize);
+  const sectionHref = (key: "featured" | "top") => (page: number) => {
+    const next = new URLSearchParams();
+    const pagesBy = { featured: featuredPage, top: topPage, [key]: page };
+    if (pagesBy.featured > 1) next.set("featured", String(pagesBy.featured));
+    if (pagesBy.top > 1) next.set("top", String(pagesBy.top));
+    const text = next.toString();
+    return text ? `${home}?${text}` : home;
+  };
 
   return (
     <main className="sf-home">
@@ -43,6 +66,8 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
         <input defaultValue={search} id="sf-search" maxLength={100} name="q" placeholder="Rechercher un produit" type="search" />
         {category && <input name="categorie" type="hidden" value={category} />}
       </form>
+
+      {!filtering && <BannerCarousel slides={slides} />}
 
       {store.categories.length > 0 && (
         <nav aria-label="Catégories" className="sf-chips">
@@ -57,13 +82,61 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
 
       <p className="sf-info">{deliverySummary(extras, formatXaf)}</p>
 
+      {!filtering && promotions.length > 0 && (
+        <section aria-labelledby="sf-promo-title" className="sf-home-section">
+          <header className="sf-home-section-head">
+            <h2 id="sf-promo-title">Promotions</h2>
+            <Link href={storeHref(base, "promotions")}>Tout voir</Link>
+          </header>
+          <PromoRail label="Promotions">
+            {promotions.slice(0, promoRowSize).map((product, index) => (
+              <ProductCard base={base} className="sf-card sf-rail-card" discountBadge key={product.id} priority={index < 2 && slides.length === 0} product={product} ratings={ratings} />
+            ))}
+            {promotions.length > promoRowSize && (
+              <li className="sf-rail-card sf-rail-more">
+                <Link href={storeHref(base, "promotions")}>
+                  <strong>Voir toutes les promotions</strong>
+                  <span>{promotions.length} produits à prix réduit</span>
+                  <span aria-hidden="true" className="sf-rail-more-arrow">→</span>
+                </Link>
+              </li>
+            )}
+          </PromoRail>
+        </section>
+      )}
+
+      {!filtering && merchandising.featured.length > 0 && (
+        <section aria-labelledby="sf-featured-title" className="sf-home-section">
+          <header className="sf-home-section-head">
+            <h2 id="sf-featured-title">Nos produits mis en avant</h2>
+          </header>
+          <StorefrontProductGrid base={base} eager={0} products={pageSlice(merchandising.featured, featuredPage)} ratings={ratings} />
+          <StorePagination href={sectionHref("featured")} label="Nos produits mis en avant" page={featuredPage} pages={pagesOf(merchandising.featured.length)} />
+        </section>
+      )}
+
+      {!filtering && topRated.length > 0 && (
+        <section aria-labelledby="sf-top-title" className="sf-home-section">
+          <header className="sf-home-section-head">
+            <h2 id="sf-top-title">Les mieux notés</h2>
+          </header>
+          <StorefrontProductGrid base={base} eager={0} products={pageSlice(topRated, topPage)} ratings={ratings} />
+          <StorePagination href={sectionHref("top")} label="Les mieux notés" page={topPage} pages={pagesOf(topRated.length)} />
+        </section>
+      )}
+
       {products.length ? (
-        <StorefrontProductGrid products={products} ratings={ratings} base={base} />
+        <section aria-labelledby="sf-all-title" className="sf-home-section">
+          <header className="sf-home-section-head">
+            <h2 id="sf-all-title">{filtering ? `${products.length} produit${products.length > 1 ? "s" : ""} trouvé${products.length > 1 ? "s" : ""}` : "Tous nos produits"}</h2>
+          </header>
+          <StorefrontProductGrid base={base} eager={filtering || slides.length === 0 ? 4 : 0} products={products} ratings={ratings} />
+        </section>
       ) : (
         <section className="sf-empty">
-          <h2>{search || category ? "Aucun produit trouvé" : "La boutique prépare son catalogue"}</h2>
+          <h2>{filtering ? "Aucun produit trouvé" : "La boutique prépare son catalogue"}</h2>
           <p>{search ? "Essayez un autre mot." : category ? "Essayez une autre catégorie." : "Les produits apparaîtront ici très bientôt."}</p>
-          {(search || category) && <Link className="sf-btn sf-btn-secondary" href={home}>Voir tous les produits</Link>}
+          {filtering && <Link className="sf-btn sf-btn-secondary" href={home}>Voir tous les produits</Link>}
         </section>
       )}
     </main>

@@ -147,3 +147,6 @@ export function parseCsvRows(input: string): { headers: string[]; rows: string[]
   if (headers.length === 0) throw new Error("Le fichier ne contient aucune colonne.");
   return { headers, rows: data };
 }
+
+/** Adresses déjà prises par des pages de la boutique (/panier, /promotions…) : jamais attribuées à un produit. */
+export const reservedProductSlugs: ReadonlySet<string> = new Set(["panier", "commande", "suivi", "page", "promotions"]);

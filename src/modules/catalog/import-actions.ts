@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { hasPermission } from "@/modules/auth/permissions";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { analyzeProductCsv, maxImportBytes, type ImportAnalysis } from "@/modules/catalog/import";
+import { reservedProductSlugs } from "@/modules/catalog/validation";
 import { getStoreContext } from "@/modules/stores/context";
 import { getSubscriptionAccessForTransaction } from "@/modules/subscriptions/service";
 
@@ -103,11 +104,10 @@ export async function importProducts(_previous: ImportState, formData: FormData)
           categoryIds.set(name, category.id);
         }
 
-        const usedSlugs = new Set(
-          (await transaction.product.findMany({ where: { storeId: store.id }, select: { slug: true } })).map(
-            (product) => product.slug,
-          ),
-        );
+        const usedSlugs = new Set([
+          ...reservedProductSlugs,
+          ...(await transaction.product.findMany({ where: { storeId: store.id }, select: { slug: true } })).map((product) => product.slug),
+        ]);
         for (const row of analysis.rows) {
           const data = {
             name: row.name,

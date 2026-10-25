@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const sections = [
   { href: "/dashboard/boutique", label: "Apparence et informations" },
+  { href: "/dashboard/boutique/banniere", label: "Bannière" },
   { href: "/dashboard/boutique/pages", label: "Pages" },
   { href: "/dashboard/boutique/whatsapp", label: "Messages WhatsApp" },
   { href: "/dashboard/boutique/assistant", label: "Assistant WhatsApp" },

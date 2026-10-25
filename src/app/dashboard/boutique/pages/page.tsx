@@ -1,3 +1,4 @@
+import { ArrowDown, ArrowUp, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { PageEditor } from "@/components/pages/page-editor";
@@ -5,16 +6,22 @@ import { StoreSectionNav } from "@/components/stores/store-section-nav";
 import { ActionDialog } from "@/components/ui/action-dialog";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
-import { createStorePage, deleteStorePage } from "@/modules/pages/actions";
+import { createStorePage, deleteStorePage, moveStorePage, setStorePageVisibility } from "@/modules/pages/actions";
 import { blocksSchema, pageKindKeys, pageKinds, type PageKind } from "@/modules/pages/blocks";
 import { requireStorePermission } from "@/modules/stores/context";
 
 export const metadata = { title: "Pages de la boutique" };
 
+const successMessages: Record<string, string> = {
+  supprimee: "Page supprimée.",
+  affichee: "La page est publiée : elle apparaît dans le menu de votre boutique.",
+  masquee: "La page est masquée : elle n’apparaît plus dans le menu de votre boutique.",
+};
+
 export default async function StorePagesPage({ searchParams }: PageProps<"/dashboard/boutique/pages">) {
   const { store } = await requireStorePermission("store.manage");
   const params = await searchParams;
-  const pages = await prisma.storePage.findMany({ where: { storeId: store.id } });
+  const pages = await prisma.storePage.findMany({ where: { storeId: store.id }, orderBy: [{ position: "asc" }, { createdAt: "asc" }] });
   const byKind = new Map(pages.map((page) => [page.kind, page]));
   const requested = typeof params.page === "string" && pageKindKeys.includes(params.page as PageKind) ? (params.page as PageKind) : null;
   const selected = (requested && byKind.get(requested)) ?? pages[0] ?? null;
@@ -29,7 +36,12 @@ export default async function StorePagesPage({ searchParams }: PageProps<"/dashb
           <p className="v-page-subtitle">Créez les pages de présentation de votre boutique (À propos, Contact, FAQ) avec des blocs simples à assembler.</p>
         </div>
       </div>
-      {params.succes === "supprimee" && <p className="v-banner v-banner-success" role="status">Page supprimée.</p>}
+      {typeof params.succes === "string" && successMessages[params.succes] && <p className="v-banner v-banner-success" role="status">{successMessages[params.succes]}</p>}
+      <p className="v-banner v-banner-info">
+        {pages.some((page) => page.status === "PUBLISHED")
+          ? "Vos pages publiées apparaissent dans le menu de votre boutique, juste après « Boutique », dans l’ordre ci-dessous."
+          : "Publiez au moins une page : un menu apparaîtra alors en haut de votre boutique (« Boutique », puis vos pages)."}
+      </p>
 
       <div className="pages-layout">
         <section aria-labelledby="my-pages" className="v-card">
@@ -42,24 +54,44 @@ export default async function StorePagesPage({ searchParams }: PageProps<"/dashb
               </span>
               <Badge tone={store.isPublished ? "success" : "neutral"}>{store.isPublished ? "Publiée" : "Brouillon"}</Badge>
             </li>
-            {pageKindKeys.map((kind) => {
-              const page = byKind.get(kind);
-              return (
-                <li aria-current={selected?.kind === kind ? "page" : undefined} key={kind}>
-                  {page ? (
-                    <Link href={`/dashboard/boutique/pages?page=${kind}`}>{pageKinds[kind].label}</Link>
-                  ) : (
-                    <span>
-                      {pageKinds[kind].label}
-                      <small>Pas encore créée</small>
-                    </span>
-                  )}
-                  <Badge tone={page ? (page.status === "PUBLISHED" ? "success" : "neutral") : "neutral"}>
-                    {page ? (page.status === "PUBLISHED" ? "Publiée" : "Brouillon") : "—"}
-                  </Badge>
-                </li>
-              );
-            })}
+            {pages.map((page, index) => (
+              <li aria-current={selected?.kind === page.kind ? "page" : undefined} key={page.kind}>
+                <Link href={`/dashboard/boutique/pages?page=${page.kind}`}>{pageKinds[page.kind].label}</Link>
+                <span className="icon-actions">
+                  <form action={moveStorePage}>
+                    <input name="kind" type="hidden" value={page.kind} />
+                    <button aria-label={`Monter « ${pageKinds[page.kind].label} » dans le menu`} className="icon-button" disabled={index === 0} name="direction" title="Monter dans le menu" type="submit" value="up">
+                      <ArrowUp aria-hidden="true" size={15} />
+                    </button>
+                    <button aria-label={`Descendre « ${pageKinds[page.kind].label} » dans le menu`} className="icon-button" disabled={index === pages.length - 1} name="direction" title="Descendre dans le menu" type="submit" value="down">
+                      <ArrowDown aria-hidden="true" size={15} />
+                    </button>
+                  </form>
+                  <form action={setStorePageVisibility}>
+                    <input name="kind" type="hidden" value={page.kind} />
+                    <input name="visible" type="hidden" value={page.status === "PUBLISHED" ? "0" : "1"} />
+                    <button
+                      aria-label={page.status === "PUBLISHED" ? `Masquer « ${pageKinds[page.kind].label} » du menu` : `Afficher « ${pageKinds[page.kind].label} » dans le menu`}
+                      className={`icon-button${page.status === "PUBLISHED" ? " is-on" : ""}`}
+                      title={page.status === "PUBLISHED" ? "Visible dans le menu : touchez pour masquer" : "Masquée : touchez pour l’afficher dans le menu"}
+                      type="submit"
+                    >
+                      {page.status === "PUBLISHED" ? <Eye aria-hidden="true" size={15} /> : <EyeOff aria-hidden="true" size={15} />}
+                    </button>
+                  </form>
+                  <Badge tone={page.status === "PUBLISHED" ? "success" : "neutral"}>{page.status === "PUBLISHED" ? "Publiée" : "Brouillon"}</Badge>
+                </span>
+              </li>
+            ))}
+            {missing.map((kind) => (
+              <li key={kind}>
+                <span>
+                  {pageKinds[kind].label}
+                  <small>Pas encore créée</small>
+                </span>
+                <Badge tone="neutral">—</Badge>
+              </li>
+            ))}
           </ul>
           {missing.length > 0 && (
             <ActionDialog action={createStorePage} submitLabel="Créer la page" title="Ajouter une page" triggerClassName="btn btn-secondary btn-block" triggerLabel="Ajouter une page">

@@ -42,6 +42,7 @@ export async function createStorePage(formData: FormData) {
       title: meta.title,
       slug: meta.slug,
       blocks: starterBlocks(kind.data, ctx.store.name) as Prisma.InputJsonValue,
+      position: await prisma.storePage.count({ where: { storeId: ctx.store.id } }),
     },
   });
   refresh(ctx.store);
@@ -124,3 +125,34 @@ export async function deleteStorePage(formData: FormData) {
   redirect("/dashboard/boutique/pages?succes=supprimee");
 }
 
+
+/** Rend une page visible dans le menu de la boutique (publiée) ou la masque (brouillon). */
+export async function setStorePageVisibility(formData: FormData) {
+  const ctx = await context();
+  if (!ctx) redirect("/dashboard/boutique/pages?erreur=non-autorise");
+  const kind = kindSchema.safeParse(formData.get("kind"));
+  const visible = formData.get("visible") === "1";
+  if (!kind.success) redirect("/dashboard/boutique/pages");
+  await prisma.storePage.updateMany({ where: { storeId: ctx.store.id, kind: kind.data }, data: { status: visible ? "PUBLISHED" : "DRAFT" } });
+  refresh(ctx.store);
+  redirect(`/dashboard/boutique/pages?page=${kind.data}&succes=${visible ? "affichee" : "masquee"}`);
+}
+
+/** Monte ou descend une page dans le menu de la boutique (« Boutique » reste toujours en premier). */
+export async function moveStorePage(formData: FormData) {
+  const ctx = await context();
+  if (!ctx) redirect("/dashboard/boutique/pages?erreur=non-autorise");
+  const kind = kindSchema.safeParse(formData.get("kind"));
+  const direction = formData.get("direction") === "up" ? -1 : 1;
+  if (!kind.success) redirect("/dashboard/boutique/pages");
+  const pages = await prisma.storePage.findMany({ where: { storeId: ctx.store.id }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { id: true, kind: true } });
+  const from = pages.findIndex((page) => page.kind === kind.data);
+  const to = from + direction;
+  if (from >= 0 && to >= 0 && to < pages.length) {
+    const [moved] = pages.splice(from, 1);
+    pages.splice(to, 0, moved);
+    await prisma.$transaction(pages.map((page, position) => prisma.storePage.update({ where: { id: page.id }, data: { position } })));
+    refresh(ctx.store);
+  }
+  redirect(`/dashboard/boutique/pages?page=${kind.data}`);
+}

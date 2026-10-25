@@ -7,6 +7,8 @@ import { StorefrontHeaderSearch } from "@/components/storefront/storefront-heade
 import { StoreCartProvider } from "@/components/storefront/store-cart-provider";
 import { StorefrontPreviewBridge } from "@/components/storefront/storefront-preview-bridge";
 import { StoreLinksProvider } from "@/components/storefront/store-links";
+import { StoreDesktopNav, StoreMobileMenu } from "@/components/storefront/store-menu";
+import { StorePopup, type StorePopupData } from "@/components/storefront/store-popup";
 import { StoreImage } from "@/components/ui/store-image";
 import { storeHref } from "@/lib/store-host";
 import { appBaseUrl } from "@/lib/urls";
@@ -26,6 +28,8 @@ type StorefrontShellProps = {
   };
   pages: { title: string; slug: string }[];
   chat: ChatWidgetConfig | null;
+  /** Popup d’accueil actif (Marketing → Popups). */
+  popup?: StorePopupData | null;
   isPreview?: boolean;
   isPaused?: boolean;
   /** Classes supplémentaires (polices du thème). */
@@ -37,7 +41,7 @@ export function storeInitials(name: string) {
 }
 
 /** Cadre commun de la vitrine : en-tête, contenu, pied de page, panier et assistant. Thème réel appliqué par classe. */
-export function StorefrontShell({ children, base, store, pages, chat, isPreview = false, isPaused = false, className = "" }: StorefrontShellProps) {
+export function StorefrontShell({ children, base, store, pages, chat, popup = null, isPreview = false, isPaused = false, className = "" }: StorefrontShellProps) {
   const style = {
     "--store-primary": store.colors.primary,
     "--store-on-primary": store.colors.onPrimary,
@@ -55,7 +59,8 @@ export function StorefrontShell({ children, base, store, pages, chat, isPreview 
       <div className={`sf sf-theme-${store.theme.toLowerCase().replaceAll("_", "-")} ${className}`.trim()} data-theme={store.theme} style={style}>
         <StorefrontPreviewBridge initials={storeInitials(store.name)} />
         <a className="sf-skip" href="#contenu">Aller au contenu</a>
-        <header className="sf-header">
+        <header className={`sf-header${pages.length ? " sf-header-with-menu" : ""}`}>
+          {pages.length > 0 && <StoreMobileMenu pages={pages} storeName={store.name} storeSlug={store.slug} />}
           <Link className="sf-brand" href={home}>
             <span aria-hidden="true" className="sf-logo" data-store-logo="">
               {store.logoUrl ? <StoreImage alt="" height={88} src={store.logoUrl} width={88} /> : storeInitials(store.name)}
@@ -65,6 +70,7 @@ export function StorefrontShell({ children, base, store, pages, chat, isPreview 
               {store.city && <small>{store.city}</small>}
             </span>
           </Link>
+          {pages.length > 0 && <StoreDesktopNav pages={pages} storeSlug={store.slug} />}
           <div className="sf-header-actions">
             <StorefrontHeaderSearch storeSlug={store.slug} />
             {!isPreview && !isPaused && <StorefrontCartLink storeSlug={store.slug} />}
@@ -103,6 +109,7 @@ export function StorefrontShell({ children, base, store, pages, chat, isPreview 
           </small>
         </footer>
         {!isPreview && !isPaused && <StorefrontCartBar storeSlug={store.slug} />}
+        {!isPaused && popup && <StorePopup popup={popup} storeId={store.id} />}
         {!isPaused && chat && <StoreChatWidget config={chat} logoUrl={store.logoUrl} storeInitials={storeInitials(store.name)} storeName={store.name} storeSlug={store.slug} />}
       </div>
     </StoreCartProvider>

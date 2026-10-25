@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { Badge } from "@/components/ui/badge";
@@ -60,8 +61,10 @@ export default async function CustomersPage({ searchParams }: PageProps<"/dashbo
           <h1 className="v-page-title">Mes clients</h1>
           <p className="v-page-subtitle">Votre fichier clients se remplit automatiquement à chaque commande : historique, segments et consentements.</p>
         </div>
-        <div className="v-page-actions">
-          <a className="btn btn-secondary" download href={`/api/dashboard/clients/export?${filters.toString()}`}>Exporter</a>
+        <div className="v-page-actions v-page-actions-inline">
+          <a aria-label="Exporter les clients (fichier CSV)" className="icon-button" download href={`/api/dashboard/clients/export?${filters.toString()}`} title="Exporter les clients (CSV)">
+            <Download aria-hidden="true" size={18} />
+          </a>
           {canManage && <Link className="btn btn-primary" href="/dashboard/clients/nouveau">Ajouter un client</Link>}
         </div>
       </div>

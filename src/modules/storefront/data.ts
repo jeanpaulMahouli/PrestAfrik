@@ -28,7 +28,7 @@ export async function getStorefrontExtras(storeId: string) {
           }),
           prisma.storeChatConfig.findUnique({ where: { storeId } }),
           prisma.storeChatQuickReply.findMany({ where: { storeId, enabled: true }, orderBy: { position: "asc" }, select: { label: true, answer: true } }),
-          prisma.storePage.findMany({ where: { storeId, status: "PUBLISHED" }, orderBy: { createdAt: "asc" }, select: { title: true, slug: true } }),
+          prisma.storePage.findMany({ where: { storeId, status: "PUBLISHED" }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { title: true, slug: true } }),
         ]);
         return {
           store,

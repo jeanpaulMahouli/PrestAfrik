@@ -1,5 +1,6 @@
 "use client";
 
+import { Star } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
@@ -17,6 +18,7 @@ export type ProductListRow = {
   stock: number | null;
   priceXaf: number;
   promotionalPriceXaf: number | null;
+  isFeatured: boolean;
   thumbnail: string | null;
   photoCount: number;
   orderCount: number;
@@ -30,7 +32,7 @@ type ProductListProps = {
   storeSlug: string;
   storePublished: boolean;
   canManage: boolean;
-  actions: { archive: Action; restore: Action; remove: Action; duplicate: Action };
+  actions: { archive: Action; restore: Action; remove: Action; duplicate: Action; feature: Action };
 };
 
 const availabilityBadge = {
@@ -196,6 +198,22 @@ export function ProductList({ rows, tab, storeSlug, storePublished, canManage, a
               <td data-label="Prix">{formatFcfa(row.priceXaf)}</td>
               <td data-label="Prix promo">{row.promotionalPriceXaf === null ? "—" : formatFcfa(row.promotionalPriceXaf)}</td>
               <td className="product-actions">
+                {canManage && row.status !== "ARCHIVED" && (
+                  <form action={actions.feature}>
+                    <input name="onglet" type="hidden" value={tab} />
+                    <input name="productId" type="hidden" value={row.id} />
+                    <input name="featured" type="hidden" value={row.isFeatured ? "0" : "1"} />
+                    <button
+                      aria-label={row.isFeatured ? `Ne plus mettre en avant « ${row.name} »` : `Mettre en avant « ${row.name} » sur l’accueil de la boutique`}
+                      aria-pressed={row.isFeatured}
+                      className={`icon-button icon-button-sm${row.isFeatured ? " is-featured" : ""}`}
+                      title={row.isFeatured ? "Mis en avant : touchez pour retirer" : "Mettre en avant sur l’accueil"}
+                      type="submit"
+                    >
+                      <Star aria-hidden="true" fill={row.isFeatured ? "currentColor" : "none"} size={16} />
+                    </button>
+                  </form>
+                )}
                 {canManage && <Link className="v-link" href={`/dashboard/produits/${row.id}`}>Modifier</Link>}
                 {canManage && (
                   <RowMenu actions={actions} onDelete={() => setDeleting([row])} row={row} storePublished={storePublished} storeSlug={storeSlug} tab={tab} />

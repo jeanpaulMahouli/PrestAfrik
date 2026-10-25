@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { OrderQuickActions } from "@/components/orders/order-sections";
@@ -44,9 +45,9 @@ export default async function OrdersPage({ searchParams }: PageProps<"/dashboard
           <p className="v-page-subtitle">Écrivez au client sur WhatsApp, puis touchez « Valider » quand la commande est payée.</p>
         </div>
         {hasPermission(membership.role, "orders.export") && (
-          <div className="v-page-actions">
-            <a className="btn btn-secondary" download href={`/api/dashboard/commandes/export?onglet=${tab}`}>
-              Exporter
+          <div className="v-page-actions v-page-actions-inline">
+            <a aria-label="Exporter les commandes (fichier CSV)" className="icon-button" download href={`/api/dashboard/commandes/export?onglet=${tab}`} title="Exporter les commandes (CSV)">
+              <Download aria-hidden="true" size={18} />
             </a>
           </div>
         )}

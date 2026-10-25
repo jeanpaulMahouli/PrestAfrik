@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
+import { MarketingTabs } from "@/components/marketing/marketing-tabs";
 import { ActionDialog } from "@/components/ui/action-dialog";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -45,6 +46,7 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
 
   return (
     <VendorShell>
+      <MarketingTabs current="/dashboard/marketing" />
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Marketing</h1>

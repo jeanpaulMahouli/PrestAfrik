@@ -2524,3 +2524,344 @@
   gap: 0.75rem;
   margin-top: 1rem;
 }
+
+/* ---------- Boutons-icônes (importer, exporter, monter, supprimer…) ---------- */
+.icon-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.icon-actions form {
+  display: inline-flex;
+  gap: 0.375rem;
+  margin: 0;
+}
+
+.icon-button {
+  display: inline-grid;
+  width: 2.875rem;
+  height: 2.875rem;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  color: var(--color-text-primary);
+  background: #fff;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.1);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, color 0.15s;
+}
+
+.icon-button:not(:disabled):hover {
+  background: #f6f6f6;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.22);
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.icon-button-sm {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.icon-button.is-on {
+  color: var(--color-success, #1f7a4d);
+  box-shadow: inset 0 0 0 2px rgb(31 122 77 / 0.35);
+}
+
+.icon-button.is-featured {
+  color: #d98200;
+  background: var(--color-brand-primary-soft);
+  box-shadow: inset 0 0 0 2px rgb(255 153 0 / 0.45);
+}
+
+.icon-button-danger {
+  color: var(--color-danger);
+}
+
+.icon-button-danger:not(:disabled):hover {
+  background: var(--color-danger-surface);
+}
+
+/* ---------- Lien au clic, image au format ---------- */
+.link-picker {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.framed-image-input {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+}
+
+.framed-image-drop {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  width: 100%;
+  place-items: center;
+  border: 2px dashed var(--color-border-input);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  cursor: pointer;
+}
+
+.framed-image-drop:focus-within,
+.framed-image-drop:hover {
+  border-color: var(--color-brand-primary);
+}
+
+.framed-image-drop img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.framed-image-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.375rem;
+  padding: 1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.framed-image-empty small {
+  max-width: 22rem;
+  font-weight: 400;
+}
+
+.framed-image-busy {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 0.5rem;
+  color: #fff;
+  background: rgb(0 0 38 / 0.7);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+/* ---------- Bannière ---------- */
+.banner-manager {
+  display: grid;
+  gap: 1rem;
+}
+
+.banner-list {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 900px) {
+  .banner-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.banner-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.banner-card.is-dragging {
+  opacity: 0.5;
+}
+
+.banner-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.banner-card-head strong {
+  flex: 1;
+}
+
+.banner-grip {
+  display: inline-grid;
+  color: var(--color-text-muted);
+  cursor: grab;
+}
+
+.banner-card-form,
+.banner-fields {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.banner-card-form .btn,
+.banner-fields .btn {
+  justify-self: start;
+}
+
+.banner-add {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 900px) {
+  .banner-add {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+/* ---------- Popups ---------- */
+.popup-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.popup-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+}
+
+.popup-item.is-active {
+  box-shadow: inset 0 0 0 2px rgb(31 122 77 / 0.35), var(--shadow-card);
+}
+
+.popup-thumb {
+  position: relative;
+  overflow: hidden;
+  width: 4.5rem;
+  flex: none;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-muted);
+}
+
+.popup-thumb img {
+  object-fit: cover;
+}
+
+.popup-info {
+  display: grid;
+  min-width: 12rem;
+  flex: 1;
+  justify-items: start;
+  gap: 0.25rem;
+}
+
+.popup-info small {
+  color: var(--color-text-secondary);
+}
+
+.popup-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.popup-form .framed-image-input {
+  max-width: 16rem;
+}
+
+.popup-form-fields {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.popup-form-fields .btn {
+  justify-self: start;
+}
+
+@media (min-width: 768px) {
+  .popup-form {
+    grid-template-columns: 15rem minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.v-field-row {
+  display: grid;
+  gap: 0 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Aperçu : un téléphone et un écran d'ordinateur avec le popup ouvert. */
+.popup-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.popup-preview figure {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.popup-preview figcaption {
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+
+.popup-preview-screen {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  place-items: center;
+  border: 6px solid var(--color-brand-secondary, #000026);
+  background: rgb(0 0 38 / 0.55);
+}
+
+.popup-preview-phone {
+  width: 13rem;
+  height: 26rem;
+  padding: 1rem 0.75rem;
+  border-radius: 1.75rem;
+}
+
+.popup-preview-desktop {
+  width: min(26rem, 80vw);
+  height: 16rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+
+.popup-preview .sf-popup-card {
+  width: 100%;
+  max-height: 100%;
+}
+
+.popup-preview-desktop .sf-popup-card {
+  width: auto;
+  height: 100%;
+  aspect-ratio: 4 / 5;
+}
+
+.popup-preview-desktop .sf-popup-media {
+  height: 100%;
+}
+
+/* Pages de la boutique : actions sur une ligne. */
+.page-list .icon-actions .badge {
+  margin-left: 0.25rem;
+}

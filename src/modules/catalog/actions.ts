@@ -19,6 +19,7 @@ import {
   parseJsonField,
   photosSchema,
   productFormSchema,
+  reservedProductSlugs,
   variantsSchema,
   type ProductVariantInput,
 } from "@/modules/catalog/validation";
@@ -74,7 +75,7 @@ async function uniqueSlug(transaction: Prisma.TransactionClient, storeId: string
   for (let attempt = 0; attempt < 50; attempt += 1) {
     const slug = attempt === 0 ? base : `${base}-${attempt + 1}`;
     const taken = await transaction.product.findFirst({ where: { storeId, slug, ...(excludeId ? { id: { not: excludeId } } : {}) }, select: { id: true } });
-    if (!taken) return slug;
+    if (!taken && !reservedProductSlugs.has(slug)) return slug;
   }
   return `${base}-${Date.now().toString(36)}`;
 }
@@ -269,6 +270,19 @@ export async function archiveProducts(formData: FormData) {
   });
   refreshCatalog(store);
   backToList(formData, `succes=archive&n=${result.count}`);
+}
+
+/** Action rapide de la liste : met un produit en avant sur l’accueil de la boutique, ou l’en retire. */
+export async function toggleFeaturedProduct(formData: FormData) {
+  const { store } = await catalogContext().catch(() => redirect("/dashboard/produits?erreur=non-autorise"));
+  const productId = text(formData, "productId");
+  const featured = formData.get("featured") === "1";
+  const result = await prisma.product.updateMany({
+    where: { id: productId, storeId: store.id, status: { not: "ARCHIVED" } },
+    data: { isFeatured: featured },
+  });
+  refreshCatalog(store);
+  backToList(formData, result.count ? `succes=${featured ? "mis-en-avant" : "retire-avant"}` : "erreur=selection-vide");
 }
 
 export async function restoreProducts(formData: FormData) {

@@ -1,10 +1,11 @@
+import { Download, Upload } from "lucide-react";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ProductList } from "@/components/catalog/product-list";
 import { Pagination } from "@/components/ui/pagination";
 import { photoVariant } from "@/lib/product-photos";
 import { hasPermission } from "@/modules/auth/permissions";
-import { archiveProducts, deleteProducts, duplicateProduct, restoreProducts } from "@/modules/catalog/actions";
+import { archiveProducts, deleteProducts, duplicateProduct, restoreProducts, toggleFeaturedProduct } from "@/modules/catalog/actions";
 import { listVendorProducts, parseProductFilters, productTabs, productsPageSize } from "@/modules/catalog/queries";
 import { requireStorePermission } from "@/modules/stores/context";
 
@@ -19,6 +20,10 @@ function successMessage(params: Record<string, string | string[] | undefined>) {
       return "Modifications enregistrées. Vos clients voient déjà les changements.";
     case "archive":
       return `${n} produit${n > 1 ? "s" : ""} archivé${n > 1 ? "s" : ""}. Restaurable à tout moment depuis l’onglet Archivés.`;
+    case "mis-en-avant":
+      return "Produit mis en avant : il apparaît dans « Nos produits mis en avant » sur l’accueil de votre boutique.";
+    case "retire-avant":
+      return "Le produit n’est plus mis en avant.";
     case "restaure":
       return `${n} produit${n > 1 ? "s" : ""} restauré${n > 1 ? "s" : ""} en brouillon.`;
     case "supprime": {
@@ -60,9 +65,13 @@ export default async function ProductsPage({ searchParams }: PageProps<"/dashboa
           </p>
         </div>
         {canManage && (
-          <div className="v-page-actions">
-            <Link className="btn btn-secondary" href="/dashboard/produits/import">Importer (CSV)</Link>
-            <a className="btn btn-secondary" download href="/api/dashboard/produits/export">Exporter</a>
+          <div className="v-page-actions v-page-actions-inline">
+            <Link aria-label="Importer des produits (fichier CSV)" className="icon-button" href="/dashboard/produits/import" title="Importer des produits (CSV)">
+              <Upload aria-hidden="true" size={18} />
+            </Link>
+            <a aria-label="Exporter mes produits (fichier CSV)" className="icon-button" download href="/api/dashboard/produits/export" title="Exporter mes produits (CSV)">
+              <Download aria-hidden="true" size={18} />
+            </a>
             <Link className="btn btn-primary" href="/dashboard/produits/nouveau">+ Ajouter un produit</Link>
           </div>
         )}
@@ -103,7 +112,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/dashboa
 
         {products.length ? (
           <ProductList
-            actions={{ archive: archiveProducts, restore: restoreProducts, remove: deleteProducts, duplicate: duplicateProduct }}
+            actions={{ archive: archiveProducts, restore: restoreProducts, remove: deleteProducts, duplicate: duplicateProduct, feature: toggleFeaturedProduct }}
             canManage={canManage}
             rows={products.map((product) => ({
               id: product.id,
@@ -119,6 +128,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/dashboa
                 : null,
               priceXaf: product.priceXaf,
               promotionalPriceXaf: product.promotionalPriceXaf,
+              isFeatured: product.isFeatured,
               thumbnail: product.images[0] ? photoVariant(product.images[0].url, 320) : null,
               photoCount: product._count.images,
               orderCount: product._count.orderItems,

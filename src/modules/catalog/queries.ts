@@ -58,6 +58,7 @@ export async function listVendorProducts(storeId: string, filters: ProductListFi
         slug: true,
         sku: true,
         status: true,
+        isFeatured: true,
         availability: true,
         trackInventory: true,
         stockQuantity: true,

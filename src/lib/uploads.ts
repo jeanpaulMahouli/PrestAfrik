@@ -34,7 +34,7 @@ export function legacyUploadPath(storeId: string, filename: string) {
 export async function saveStoreImage(
   file: FormDataEntryValue | null,
   storeId: string,
-  options: { maxSide?: number; square?: boolean } = {},
+  options: { maxSide?: number; square?: boolean; /** Recadrage centré à ce format exact (bannière 1920×1080…). */ frame?: { width: number; height: number } } = {},
 ) {
   if (file === null || (file instanceof File && file.size === 0)) return null;
   if (!(file instanceof File)) throw new ImageUploadError("Le fichier image est invalide.");
@@ -61,7 +61,11 @@ export async function saveStoreImage(
   const maxSide = options.maxSide ?? 1600;
   const body = await image
     .rotate()
-    .resize({ width: maxSide, height: maxSide, fit: options.square ? "cover" : "inside", withoutEnlargement: !options.square })
+    .resize(
+      options.frame
+        ? { ...options.frame, fit: "cover", position: "centre" }
+        : { width: maxSide, height: maxSide, fit: options.square ? "cover" : "inside", withoutEnlargement: !options.square },
+    )
     .webp({ quality: 82, effort: 4 })
     .toBuffer();
   const key = uploadKey(storeId, filename);

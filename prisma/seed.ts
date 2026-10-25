@@ -180,6 +180,22 @@ async function placeholderImage(storeId: string, key: string, label: string, col
   return `/media/${storeId}/${filename}`;
 }
 
+/** Visuel d'exemple au format voulu (bannière 1920×1080, popup 1080×1350). */
+async function placeholderVisual(storeId: string, key: string, title: string, subtitle: string, color: string, width: number, height: number) {
+  const filename = `${stableUuid("visual", storeId, key)}.webp`;
+  const directory = join(uploadsRoot, storeId);
+  await mkdir(directory, { recursive: true });
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${color}"/><stop offset="1" stop-color="#000026"/></linearGradient></defs>
+    <rect width="${width}" height="${height}" fill="url(#g)"/>
+    <circle cx="${width * 0.82}" cy="${height * 0.25}" r="${Math.min(width, height) * 0.28}" fill="#ffffff" opacity="0.12"/>
+    <text x="${width * 0.08}" y="${height * 0.48}" font-family="Arial" font-size="${Math.round(width / 14)}" font-weight="700" fill="#ffffff">${title}</text>
+    <text x="${width * 0.08}" y="${height * 0.62}" font-family="Arial" font-size="${Math.round(width / 32)}" fill="#ffffff" opacity="0.9">${subtitle}</text>
+  </svg>`;
+  await sharp(Buffer.from(svg)).webp({ quality: 80 }).toFile(join(directory, filename));
+  return `/media/${storeId}/${filename}`;
+}
+
 function assertSafeTarget() {
   if (process.env.NODE_ENV === "production" || process.env.ALLOW_DEMO_SEED !== "true") {
     throw new Error("Le seed contient uniquement des données fictives. Définissez ALLOW_DEMO_SEED=true hors production.");
@@ -537,10 +553,113 @@ async function main() {
     await prisma.marketingCampaign.create({
       data: { storeId: store.id, createdById: owner.id, name: "Nouveautés du mois", audience: "all", message: "Bonjour ! Découvrez nos nouveautés de la semaine sur notre boutique.", recipientLimit: 50 },
     });
+
+    // Accueil de la première boutique : bannière, promotions, mis en avant, mieux notés, menu et popup.
+    if (storeIndex === 0) {
+      // Quelques produits de plus pour avoir deux pages dans « mis en avant » et « mieux notés ».
+      const extraCategory = Object.values(categories)[0] as { id: string };
+      const extras = [];
+      for (const [extraIndex, name] of ["Bracelet perles wax", "Pochette pagne", "Foulard bogolan", "Bob imprimé"].entries()) {
+        extras.push(
+          await prisma.product.create({
+            data: {
+              storeId: store.id,
+              categoryId: extraCategory.id,
+              name,
+              slug: slugify(name),
+              sku: `${demo.prefix}-X${extraIndex + 1}`,
+              description: `${name}, produit d’exemple pour la démonstration.`,
+              priceXaf: 4000 + extraIndex * 1500,
+              createdAt,
+              images: { create: [{ url: await placeholderImage(store.id, `x${extraIndex}`, name, demo.colors[0]), altText: name, position: 0 }] },
+            },
+          }),
+        );
+      }
+      const live = [...sellable, ...extras].slice(0, 14);
+      // 9 promotions (de -10 % à -50 %) : la rangée en montre 7, puis « Voir toutes les promotions ».
+      for (const [index, product] of live.slice(0, 9).entries()) {
+        const promo = Math.round((product.priceXaf * (90 - index * 5)) / 100 / 100) * 100;
+        await prisma.product.update({ where: { id: product.id }, data: { promotionalPriceXaf: promo } });
+      }
+      // 14 produits mis en avant et notés : deux pages de 12 dans chaque section.
+      await prisma.product.updateMany({ where: { id: { in: live.map((product) => product.id) } }, data: { isFeatured: true } });
+      const reviewers = ["Aïcha", "Brice", "Carine", "Dimitri", "Estelle", "Franck"];
+      for (const [index, product] of live.entries()) {
+        for (let n = 0; n <= index % 3; n += 1) {
+          await prisma.productReview.create({
+            data: {
+              storeId: store.id,
+              productId: product.id,
+              authorName: reviewers[(index + n) % reviewers.length],
+              rating: 5 - ((index + n) % 3),
+              comment: "Très bonne qualité, livraison rapide. Je recommande !",
+              status: "APPROVED",
+              moderatedAt: now,
+              createdAt: new Date(now.getTime() - (index + n) * day),
+            },
+          });
+        }
+      }
+      const firstCategory = Object.values(categories)[0] as { id: string; name: string };
+      const bannerSlides = [
+        { title: "Nouvelle collection", subtitle: `Découvrez ${firstCategory.name}`, linkType: "CATEGORY" as const, categoryId: firstCategory.id },
+        { title: "Coup de cœur", subtitle: live[0].name, linkType: "PRODUCT" as const, productId: live[0].id },
+        { title: "Jusqu’à -50 %", subtitle: "Toutes nos promotions", linkType: "PROMO" as const },
+      ];
+      for (const [position, slide] of bannerSlides.entries()) {
+        await prisma.storeBanner.create({
+          data: {
+            storeId: store.id,
+            position,
+            imageUrl: await placeholderVisual(store.id, `banner-${position}`, slide.title, slide.subtitle, demo.colors[0], 1920, 1080),
+            altText: `${slide.title} : ${slide.subtitle}`,
+            linkType: slide.linkType,
+            categoryId: "categoryId" in slide ? slide.categoryId : null,
+            productId: "productId" in slide ? slide.productId : null,
+          },
+        });
+      }
+      await prisma.storePopup.create({
+        data: {
+          storeId: store.id,
+          title: "Soldes de la semaine",
+          imageUrl: await placeholderVisual(store.id, "popup-0", "-50 %", "Cette semaine seulement", demo.colors[0], 1080, 1350),
+          altText: "Soldes de la semaine : jusqu’à -50 % sur une sélection",
+          linkType: "PROMO",
+          isActive: true,
+        },
+      });
+      await prisma.storePage.createMany({
+        data: [
+          {
+            storeId: store.id,
+            kind: "ABOUT",
+            title: "À propos",
+            slug: "a-propos",
+            status: "PUBLISHED",
+            position: 0,
+            blocks: [
+              { type: "heading", text: "Notre histoire" },
+              { type: "paragraph", text: `${demo.name} vous accueille avec des produits choisis avec soin. Paiement à la livraison.` },
+            ],
+          },
+          {
+            storeId: store.id,
+            kind: "CONTACT",
+            title: "Contact",
+            slug: "contact",
+            status: "PUBLISHED",
+            position: 1,
+            blocks: [{ type: "paragraph", text: "Écrivez-nous sur WhatsApp : nous répondons rapidement." }],
+          },
+        ],
+      });
+    }
   }
 
   console.info(
-    `Données fictives prêtes : 5 boutiques, 10 membres, 1 administrateur, 60 produits, ${customerTotal} clients, ${orderTotal} commandes.`,
+    `Données fictives prêtes : 5 boutiques, 10 membres, 1 administrateur, 64 produits, ${customerTotal} clients, ${orderTotal} commandes.`,
   );
   if (process.env.SEED_DEMO_PASSWORD && isLocal) {
     console.info("Connexion de démonstration : vendeur1@example.test (Mboa Style), admin@prestafrik.example.test, avec SEED_DEMO_PASSWORD.");

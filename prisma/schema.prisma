@@ -289,6 +289,8 @@ model Store {
   pages              StorePage[]
   reviews            ProductReview[]
   slugAliases        StoreSlugAlias[]
+  banners            StoreBanner[]
+  popups             StorePopup[]
 }
 
 model StoreMembership {
@@ -334,15 +336,17 @@ model LocalEmailMessage {
 }
 
 model ProductCategory {
-  id        String    @id @default(cuid())
+  id        String        @id @default(cuid())
   storeId   String
-  name      String    @db.VarChar(80)
-  slug      String    @db.VarChar(90)
-  sortOrder Int       @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  store     Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name      String        @db.VarChar(80)
+  slug      String        @db.VarChar(90)
+  sortOrder Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  store     Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
   products  Product[]
+  banners   StoreBanner[]
+  popups    StorePopup[]
 
   @@unique([storeId, slug])
   @@unique([storeId, name])
@@ -375,6 +379,8 @@ model Product {
   orderItems          OrderItem[]
   reservations        StockReservation[]
   reviews             ProductReview[]
+  banners             StoreBanner[]
+  popups              StorePopup[]
 
   @@unique([storeId, sku])
   @@unique([storeId, slug])
@@ -913,6 +919,8 @@ model StorePage {
   slug      String          @db.VarChar(60)
   status    StorePageStatus @default(DRAFT)
   blocks    Json
+  /// Ordre dans le menu de la boutique (0 = premier après « Boutique »).
+  position  Int             @default(0) @db.SmallInt
   updatedAt DateTime        @updatedAt
   createdAt DateTime        @default(now())
   store     Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
@@ -992,4 +1000,55 @@ model StoreSlugAlias {
   store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@index([storeId])
+}
+
+/// Destination d'une image de bannière ou d'un popup quand le visiteur la touche.
+enum StoreLinkType {
+  NONE
+  CATEGORY
+  PRODUCT
+  PROMO
+}
+
+/// Diaporama sous la recherche de la boutique : 4 images au maximum (vérifié par le serveur).
+model StoreBanner {
+  id         String           @id @default(cuid())
+  storeId    String
+  imageUrl   String
+  altText    String           @db.VarChar(200)
+  /// 0 = première image affichée.
+  position   Int              @db.SmallInt
+  linkType   StoreLinkType    @default(NONE)
+  categoryId String?
+  productId  String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  store      Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category   ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  product    Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([storeId, position])
+}
+
+/// Popup d'accueil de la boutique (Marketing → Popups) : un seul actif à la fois.
+model StorePopup {
+  id         String           @id @default(cuid())
+  storeId    String
+  /// Nom interne, pour que le vendeur s'y retrouve (jamais affiché aux visiteurs).
+  title      String           @db.VarChar(80)
+  imageUrl   String
+  altText    String           @db.VarChar(200)
+  linkType   StoreLinkType    @default(NONE)
+  categoryId String?
+  productId  String?
+  isActive   Boolean          @default(false)
+  startsAt   DateTime?
+  endsAt     DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  store      Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category   ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  product    Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([storeId, isActive])
 }

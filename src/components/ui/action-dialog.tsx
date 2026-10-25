@@ -7,7 +7,9 @@ import { SubmitButton } from "@/components/ui/submit-button";
 type ActionDialogProps = {
   /** Server Action appelée à l'envoi du formulaire. */
   action: (formData: FormData) => void | Promise<void>;
-  triggerLabel: string;
+  triggerLabel: ReactNode;
+  /** Nom lu par les lecteurs d'écran quand le déclencheur n'est qu'une icône. */
+  triggerAriaLabel?: string;
   triggerClassName?: string;
   title: string;
   description?: string;
@@ -23,6 +25,7 @@ type ActionDialogProps = {
 export function ActionDialog({
   action,
   triggerLabel,
+  triggerAriaLabel,
   triggerClassName = "btn btn-secondary",
   title,
   description,
@@ -37,7 +40,7 @@ export function ActionDialog({
 
   return (
     <>
-      <button className={triggerClassName} onClick={() => setOpen(true)} type="button">
+      <button aria-label={triggerAriaLabel} className={triggerClassName} onClick={() => setOpen(true)} title={triggerAriaLabel} type="button">
         {triggerLabel}
       </button>
       <Dialog description={description} onClose={() => setOpen(false)} open={open} size={size} title={title}>

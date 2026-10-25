@@ -9,7 +9,9 @@ import { appBaseUrl, storePublicUrl } from "@/lib/urls";
 import { getStorefrontStore } from "@/modules/catalog/service";
 import { hexColorSchema } from "@/modules/catalog/validation";
 import { getAccessibleTextColor } from "@/modules/stores/appearance";
+import { storeLinkHref } from "@/modules/merchandising/links";
 import { getStorefrontExtras } from "@/modules/storefront/data";
+import { currentPopup, getStorefrontMerchandising } from "@/modules/storefront/merchandising";
 
 function safeColor(value: string, fallback: string) {
   const parsed = hexColorSchema.safeParse(value);
@@ -64,13 +66,14 @@ export default async function PublicStoreLayout({ children, params }: LayoutProp
       />
     );
   }
-  const extras = await getStorefrontExtras(store.id);
+  const [extras, merchandising, base] = await Promise.all([getStorefrontExtras(store.id), getStorefrontMerchandising(store.id), storeBasePath(store.slug)]);
+  const popup = currentPopup(merchandising.popup);
   const primary = safeColor(store.primaryColor, "#FF9900");
   const secondary = safeColor(store.secondaryColor, "#000026");
 
   return (
     <StorefrontShell
-      base={await storeBasePath(store.slug)}
+      base={base}
       chat={
         extras.chat && extras.whatsappNumber
           ? { ...extras.chat, whatsappNumber: extras.whatsappNumber }
@@ -79,6 +82,7 @@ export default async function PublicStoreLayout({ children, params }: LayoutProp
       isPaused={store.subscriptionPaused}
       isPreview={store.isPreview}
       pages={extras.pages}
+      popup={popup ? { id: popup.id, imageUrl: popup.imageUrl, altText: popup.altText, href: storeLinkHref(popup, base) } : null}
       store={{
         id: store.id,
         name: store.name,
