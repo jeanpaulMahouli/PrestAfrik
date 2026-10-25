@@ -1,13 +1,28 @@
-import cameroon from "@/config/geo/CM.json";
+import cm from "@/config/geo/CM.json";
+import ga from "@/config/geo/GA.json";
+import cg from "@/config/geo/CG.json";
+import td from "@/config/geo/TD.json";
+import cf from "@/config/geo/CF.json";
+import gq from "@/config/geo/GQ.json";
+import bj from "@/config/geo/BJ.json";
+import bf from "@/config/geo/BF.json";
+import ci from "@/config/geo/CI.json";
+import gw from "@/config/geo/GW.json";
+import ml from "@/config/geo/ML.json";
+import ne from "@/config/geo/NE.json";
+import sn from "@/config/geo/SN.json";
+import tg from "@/config/geo/TG.json";
 
-// Listes géographiques (brief §6.3) : régions et villes complètes pour le Cameroun ; les autres
-// pays passent en saisie libre tant que leur jeu de données n'est pas fourni. Ajouter un pays =
-// ajouter un fichier `config/geo/<ISO>.json` de même forme et l'enregistrer ici.
+// Listes géographiques (brief §6.3) : les 14 pays du franc CFA (FCFA), régions et principales villes.
+// Afrique centrale (CEMAC) : Cameroun, Gabon, Congo, Tchad, Centrafrique, Guinée équatoriale ;
+// Afrique de l’Ouest (UEMOA) : Bénin, Burkina Faso, Côte d’Ivoire, Guinée-Bissau, Mali, Niger, Sénégal, Togo.
+// Pays, région et ville se choisissent toujours dans ces listes. Ajouter un pays = ajouter un fichier
+// `config/geo/<ISO>.json` de même forme et l’enregistrer ici.
 
 export type GeoRegion = { code: string; name: string; cities: string[] };
 export type GeoCountry = { country: string; regions: GeoRegion[] };
 
-const datasets: Record<string, GeoCountry> = { CM: cameroon };
+const datasets: Record<string, GeoCountry> = { CM: cm, GA: ga, CG: cg, TD: td, CF: cf, GQ: gq, BJ: bj, BF: bf, CI: ci, GW: gw, ML: ml, NE: ne, SN: sn, TG: tg };
 
 /** Recherche insensible aux accents et à la casse. */
 export function normalizeSearch(value: string) {

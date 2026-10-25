@@ -38,6 +38,7 @@ describe("listes géographiques", () => {
     expect(getCities("CM", "LT", "edea")).toEqual(["Edéa"]);
     expect(getCities("CM", "CE")).toContain("Yaoundé");
     expect(normalizeSearch("Ngaoundéré")).toBe("ngaoundere");
-    expect(getRegions("SN")).toEqual([]);
+    expect(getRegions("SN").map((region) => region.name)).toContain("Dakar");
+    expect(getRegions("FR")).toEqual([]);
   });
 });
