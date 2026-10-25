@@ -45,7 +45,7 @@ export const localUploadsRoot = resolve(process.env.UPLOADS_DIR || join(process.
 
 function localPath(key: string) {
   const file = resolve(localUploadsRoot, ...key.split("/"));
-  if (!file.startsWith(localUploadsRoot + sep)) throw new Error("Clé de stockage invalide.");
+  if (!file.startsWith(localUploadsRoot + sep)) throw new Error("Clé de stockage invalide (chemin hors du dossier des images).");
   return file;
 }
 
@@ -237,7 +237,10 @@ function createStorage(): StorageDriver {
   return bucket ? createS3Driver(bucket) : localDriver;
 }
 
-/** Un envoi d'image qui échoue (stockage indisponible, quota…) remonte dans la cloche de l'administration. */
+/**
+ * Un envoi d'image qui échoue (stockage indisponible, quota…) remonte dans la cloche de l'administration,
+ * avec le stockage utilisé, la forme de la clé (identifiants masqués) et le serveur, pour retrouver l'origine.
+ */
 function reportUploadFailures(driver: StorageDriver): StorageDriver {
   return {
     ...driver,
@@ -246,15 +249,43 @@ function reportUploadFailures(driver: StorageDriver): StorageDriver {
         return await driver.put(key, body, contentType);
       } catch (error) {
         const { recordSystemNotification } = await import("@/modules/system/notifications");
-        await recordSystemNotification({ type: "upload", severity: "CRITICAL", message: `Échec d’enregistrement d’une image : ${error instanceof Error ? error.message : String(error)}` });
+        await recordSystemNotification({
+          type: "upload",
+          severity: "CRITICAL",
+          message: `Échec d’enregistrement d’une image (${driver.kind}) : ${error instanceof Error ? error.message : String(error)}`,
+          context: {
+            driver: driver.kind,
+            key: key.replace(/[A-Za-z0-9_-]{16,}/g, "<id>"),
+            environment: process.env.NODE_ENV ?? "inconnu",
+            server: process.env.BETTER_AUTH_URL ?? "non défini",
+          },
+        });
         throw error;
       }
     },
   };
 }
 
+/**
+ * En production, le disque local est perdu à chaque redéploiement : si aucun service de stockage n'est
+ * configuré, l'équipe est prévenue dans la cloche (une fois par démarrage) au lieu d'un repli silencieux.
+ */
+function warnIfEphemeral(driver: StorageDriver) {
+  if (driver.kind === "local" && process.env.NODE_ENV === "production" && !process.env.UPLOADS_DIR) {
+    void import("@/modules/system/notifications").then(({ recordSystemNotification }) =>
+      recordSystemNotification({
+        type: "system",
+        severity: "CRITICAL",
+        message: "Stockage des images : ni Cloudinary ni stockage objet configuré en production. Les images sont écrites sur le disque du serveur et seront perdues au prochain déploiement.",
+        context: { server: process.env.BETTER_AUTH_URL ?? "non défini" },
+      }),
+    );
+  }
+  return driver;
+}
+
 /** Stockage utilisé par l'application (Cloudinary ou stockage objet si configuré, sinon disque local). */
-export const storage: StorageDriver = reportUploadFailures(createStorage());
+export const storage: StorageDriver = reportUploadFailures(warnIfEphemeral(createStorage()));
 
 /** Ancien emplacement (public/uploads), lu en secours pour les toutes premières images. */
 export const legacyUploadsRoot = join(process.cwd(), "public", "uploads");
