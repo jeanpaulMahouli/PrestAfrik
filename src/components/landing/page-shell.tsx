@@ -8,6 +8,8 @@ import { SiteHeader } from "./site-header";
 
 export type PageHeroProps = {
   title: string;
+  /** Petit texte au-dessus du titre (ex. « Erreur 404 »). */
+  kicker?: string;
   subtitle?: string;
   /** Boutons ou contenu supplémentaire sous le sous-titre. */
   actions?: ReactNode;
@@ -50,6 +52,7 @@ export function PageShell({
           <span className="lp-pillar lp-page-hero__pillar lp-page-hero__pillar--3" />
         </div>
         <div className="lp-page-hero__copy">
+          {hero.kicker && <p className="lp-page-hero__kicker lp-intro">{hero.kicker}</p>}
           <h1 className="lp-page-hero__title lp-intro lp-intro--2" id="page-title">
             {hero.title}
           </h1>

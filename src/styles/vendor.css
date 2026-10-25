@@ -2495,3 +2495,32 @@
 .v-page-actions-inline .btn {
   white-space: nowrap;
 }
+
+/* Page introuvable de l'espace vendeur */
+.v-not-found {
+  max-width: 40rem;
+  margin: 2rem auto;
+  padding-block: 3rem;
+}
+
+.v-not-found .v-not-found-code {
+  margin: 0;
+  color: var(--color-brand);
+  font-size: clamp(3.5rem, 12vw, 5.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.v-not-found p:not(.v-not-found-code) {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.v-not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}

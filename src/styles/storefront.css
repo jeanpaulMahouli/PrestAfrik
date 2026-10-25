@@ -2036,3 +2036,42 @@
     font-size: 1.05rem;
   }
 }
+
+/* ---------- Page introuvable dans une boutique ---------- */
+
+.sf-not-found {
+  display: flex;
+  max-width: 36rem;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  padding: clamp(3rem, 10vw, 6rem) 1rem;
+  text-align: center;
+}
+
+.sf-not-found-code {
+  margin: 0;
+  color: var(--store-primary);
+  font-size: clamp(4.5rem, 18vw, 7.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.sf-not-found h1 {
+  margin: 1rem 0 0.5rem;
+  font-size: clamp(1.3rem, 4vw, 1.75rem);
+}
+
+.sf-not-found p:not(.sf-not-found-code) {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.sf-not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}

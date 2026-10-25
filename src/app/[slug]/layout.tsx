@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { cache } from "react";
 import { StoreUnavailable } from "@/components/storefront/store-unavailable";
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { prisma } from "@/lib/prisma";
 import { storeBasePath } from "@/lib/store-links";
-import { storePublicUrl } from "@/lib/urls";
+import { appBaseUrl, storePublicUrl } from "@/lib/urls";
 import { getStorefrontStore } from "@/modules/catalog/service";
 import { hexColorSchema } from "@/modules/catalog/validation";
 import { getAccessibleTextColor } from "@/modules/stores/appearance";
@@ -52,7 +52,10 @@ export default async function PublicStoreLayout({ children, params }: LayoutProp
     if (!existing) {
       // Ancienne adresse d'une boutique renommée : redirection vers son adresse actuelle.
       const alias = await prisma.storeSlugAlias.findUnique({ where: { slug }, select: { store: { select: { slug: true } } } });
-      if (alias) permanentRedirect((await storeBasePath(slug)) === "" ? storePublicUrl(alias.store.slug) : `/${alias.store.slug}`);
+      const onSubdomain = (await storeBasePath(slug)) === "";
+      if (alias) permanentRedirect(onSubdomain ? storePublicUrl(alias.store.slug) : `/${alias.store.slug}`);
+      // Sous-domaine sans boutique : la page introuvable s'affiche sur le domaine principal, où ses liens fonctionnent.
+      if (onSubdomain) redirect(`${appBaseUrl()}/${slug}`);
       notFound();
     }
     return (
