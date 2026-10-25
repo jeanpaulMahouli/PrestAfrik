@@ -11,6 +11,35 @@ import {
   type Permission,
 } from "@/modules/auth/permissions";
 
+// Boutique active : le cookie garde le choix de cet appareil pendant la session en cours ; à une nouvelle
+// connexion (autre session), on reprend la dernière boutique enregistrée sur le compte (User.lastActiveStoreId),
+// quel que soit l'appareil. Une boutique supprimée ou devenue inaccessible renvoie à la première disponible.
+
+export const activeStoreCookie = "prestafrik-store";
+
+export const activeStoreCookieOptions = {
+  httpOnly: true,
+  sameSite: "lax",
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+} as const;
+
+/** Valeur du cookie : « {boutique}:{session} », pour ignorer le choix d'une session précédente. */
+export function activeStoreCookieValue(storeId: string, sessionId: string) {
+  return `${storeId}:${sessionId}`;
+}
+
+function readActiveStoreCookie(value: string | undefined, sessionId: string) {
+  const [storeId, cookieSession] = (value ?? "").split(":");
+  return storeId && cookieSession === sessionId ? storeId : undefined;
+}
+
+/** Retient la boutique choisie : sur cet appareil (cookie) et sur le compte (prochaine connexion). */
+export async function rememberActiveStore(userId: string, sessionId: string, storeId: string) {
+  (await cookies()).set(activeStoreCookie, activeStoreCookieValue(storeId, sessionId), activeStoreCookieOptions);
+  await prisma.user.update({ where: { id: userId }, data: { lastActiveStoreId: storeId } });
+}
+
 /** Contexte vendeur de la requête (mémoïsé : le shell et la page partagent la même lecture). */
 export const getStoreContext = cache(async function getStoreContext() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -18,23 +47,29 @@ export const getStoreContext = cache(async function getStoreContext() {
   if (!session) redirect("/connexion");
 
   const cookieStore = await cookies();
-  const requestedStoreId = cookieStore.get("prestafrik-store")?.value;
-  const memberships = await prisma.storeMembership.findMany({
-    where: { userId: session.user.id },
-    include: { store: true },
-    orderBy: { createdAt: "asc" },
-  });
+  const [memberships, user] = await Promise.all([
+    prisma.storeMembership.findMany({
+      where: { userId: session.user.id },
+      include: { store: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { lastActiveStoreId: true } }),
+  ]);
+  const requestedStoreId =
+    readActiveStoreCookie(cookieStore.get(activeStoreCookie)?.value, session.session.id) ?? user?.lastActiveStoreId ?? undefined;
 
-  const preferredMembership = findAuthorizedMembership(
-    memberships.map(({ storeId, userId, role }) => ({ storeId, userId, role })),
-    session.user.id,
-    requestedStoreId,
-  );
+  const identities = memberships.map(({ storeId, userId, role }) => ({ storeId, userId, role }));
+  const preferredMembership = requestedStoreId ? findAuthorizedMembership(identities, session.user.id, requestedStoreId) : undefined;
   const selected =
     (preferredMembership &&
       memberships.find(({ storeId }) => storeId === preferredMembership.storeId)) ??
     memberships[0];
   if (!selected) redirect("/boutiques/nouvelle");
+
+  // Boutique retenue absente ou inaccessible : la boutique affichée devient la dernière utilisée.
+  if (user?.lastActiveStoreId !== selected.storeId) {
+    await prisma.user.update({ where: { id: session.user.id }, data: { lastActiveStoreId: selected.storeId } }).catch(() => undefined);
+  }
 
   return {
     session,

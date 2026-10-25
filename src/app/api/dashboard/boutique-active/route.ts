@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { appBaseUrl } from "@/lib/urls";
 import { auth } from "@/modules/auth/server";
+import { activeStoreCookie, activeStoreCookieOptions, activeStoreCookieValue } from "@/modules/stores/context";
 
 /**
  * Change la boutique active puis ouvre une page de l'espace vendeur. Sert aux liens qui visent une
@@ -20,12 +21,8 @@ export async function GET(request: NextRequest) {
     ? await prisma.storeMembership.findUnique({ where: { storeId_userId: { storeId, userId: session.user.id } }, select: { storeId: true } })
     : null;
   if (membership) {
-    response.cookies.set("prestafrik-store", membership.storeId, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    });
+    response.cookies.set(activeStoreCookie, activeStoreCookieValue(membership.storeId, session.session.id), activeStoreCookieOptions);
+    await prisma.user.update({ where: { id: session.user.id }, data: { lastActiveStoreId: membership.storeId } });
   }
   return response;
 }

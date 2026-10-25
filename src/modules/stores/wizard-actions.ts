@@ -1,7 +1,6 @@
 "use server";
 
 import { Prisma, StoreTheme } from "@prisma/client";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { colorReadability } from "@/lib/contrast";
@@ -15,6 +14,7 @@ import { photosSchema, parseJsonField } from "@/modules/catalog/validation";
 import { getCities, getRegions, hasGeoData } from "@/modules/geo";
 import { createDraft, draftMissing, findDraft, findOwnedStoreWithSameName, updateDraft, type DraftData, type StoreDraftRecord } from "@/modules/stores/draft";
 import { isPlatformAdmin } from "@/modules/admin/context";
+import { rememberActiveStore } from "@/modules/stores/context";
 import { brandNameMessage, brandSlug, brandSlugMessage, usesBrandName, usesBrandSlug } from "@/modules/stores/brand";
 import { publishStoreIfReady } from "@/modules/stores/publication";
 import { checkSlug, slugMessages, slugify } from "@/modules/stores/slug";
@@ -259,10 +259,6 @@ export async function saveDeliveryStep(_previous: WizardState, formData: FormDat
 
 /* ---------- 9. Création (et publication) de la boutique ---------- */
 
-async function selectStoreCookie(storeId: string) {
-  (await cookies()).set("prestafrik-store", storeId, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/" });
-}
-
 export async function finishWizard(_previous: WizardState, formData: FormData): Promise<WizardState> {
   const { session, draft } = await currentDraft(formData);
   if (!draft) return missingDraft();
@@ -360,7 +356,7 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
     const failed = await moveTemporaryPhotos(storeId, `products/${productId}`, photoKeys);
     if (failed.length) await prisma.productImage.deleteMany({ where: { productId, url: { in: failed } } });
   }
-  await selectStoreCookie(storeId);
+  await rememberActiveStore(session.user.id, session.session.id, storeId);
   invalidateStorefrontCache(storeId, data.slug!);
 
   // Publication immédiate si tout est prêt (l'adresse e-mail est forcément confirmée) ; sinon le vendeur sait quoi faire.

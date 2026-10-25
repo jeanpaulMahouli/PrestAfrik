@@ -10,6 +10,7 @@
 @import "../styles/landing.css";
 @import "../styles/site-pages.css";
 @import "../styles/dashboard-theme.css";
+@import "../styles/dashboard-home.css";
 @import "../styles/admin.css";
 
 * {

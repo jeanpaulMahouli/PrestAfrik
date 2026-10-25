@@ -10,7 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { deleteStoreImage, ImageUploadError, saveStoreImage } from "@/lib/uploads";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { hexColorSchema } from "@/modules/catalog/validation";
-import { requireStorePermission } from "@/modules/stores/context";
+import { activeStoreCookie, rememberActiveStore, requireStorePermission } from "@/modules/stores/context";
 import { storePublicUrl } from "@/lib/urls";
 import { isPlatformAdmin } from "@/modules/admin/context";
 import { brandNameMessage, brandSlug, usesBrandName } from "@/modules/stores/brand";
@@ -234,9 +234,7 @@ export async function deleteStore(_previous: DeleteStoreState, formData: FormDat
 
   // Boutique suivante de l'utilisateur, sinon création d'une nouvelle boutique.
   const next = await prisma.storeMembership.findFirst({ where: { userId: session.user.id }, orderBy: { createdAt: "asc" }, select: { storeId: true } });
-  const { cookies } = await import("next/headers");
-  const jar = await cookies();
-  if (next) jar.set("prestafrik-store", next.storeId, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/" });
-  else jar.delete("prestafrik-store");
+  if (next) await rememberActiveStore(session.user.id, session.session.id, next.storeId);
+  else (await (await import("next/headers")).cookies()).delete(activeStoreCookie);
   redirect(next ? "/dashboard?succes=boutique-supprimee" : "/boutiques/nouvelle?boutique-supprimee=1");
 }

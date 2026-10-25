@@ -1,9 +1,10 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/modules/auth/server";
+import { rememberActiveStore } from "@/modules/stores/context";
 
 export async function selectStore(formData: FormData) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -18,11 +19,6 @@ export async function selectStore(formData: FormData) {
   });
   if (!membership) throw new Error("Cette boutique ne fait pas partie de ton espace.");
 
-  (await cookies()).set("prestafrik-store", membership.storeId, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-  });
+  await rememberActiveStore(session.user.id, session.session.id, membership.storeId);
   redirect("/dashboard");
 }

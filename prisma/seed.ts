@@ -298,6 +298,20 @@ async function main() {
       },
     });
 
+    // Visites de la boutique sur 90 jours (tableau de bord : « Visites de la boutique »).
+    await prisma.storeVisitDay.createMany({
+      data: Array.from({ length: 90 }, (_, index) => {
+        const date = new Date(now.getTime() + 60 * 60 * 1000 - index * day);
+        return { storeId: store.id, day: new Date(`${date.toISOString().slice(0, 10)}T00:00:00.000Z`), visits: 5 + Math.floor(rand() * 40) };
+      }),
+    });
+
+    // Le vendeur de « Mboa Style » gère aussi « Douala Maison » : démonstration du retour dans la dernière boutique.
+    if (storeIndex === 1) {
+      const firstVendor = await prisma.user.findUniqueOrThrow({ where: { email: "vendeur1@example.test" }, select: { id: true } });
+      await prisma.storeMembership.create({ data: { storeId: store.id, userId: firstVendor.id, role: StoreRole.MANAGER } });
+    }
+
     // Abonnements dans des états variés.
     const trialEndsAt = new Date(createdAt.getTime());
     trialEndsAt.setUTCMonth(trialEndsAt.getUTCMonth() + 1);

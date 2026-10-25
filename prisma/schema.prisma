@@ -150,6 +150,9 @@ model User {
   /// Accès suspendu par l'administration : aucune nouvelle session n'est ouverte.
   suspendedAt                DateTime?
   suspensionReason           String?             @db.VarChar(300)
+  /// Dernière boutique ouverte dans le tableau de bord : retrouvée à la prochaine connexion, sur tout appareil.
+  lastActiveStoreId          String?
+  lastActiveStore            Store?              @relation("UserLastActiveStore", fields: [lastActiveStoreId], references: [id], onDelete: SetNull)
   createdAt                  DateTime            @default(now())
   updatedAt                  DateTime            @updatedAt
   accounts                   Account[]
@@ -291,6 +294,8 @@ model Store {
   slugAliases        StoreSlugAlias[]
   banners            StoreBanner[]
   popups             StorePopup[]
+  lastActiveUsers    User[]                 @relation("UserLastActiveStore")
+  visitDays          StoreVisitDay[]
 }
 
 model StoreMembership {
@@ -1052,3 +1057,17 @@ model StorePopup {
 
   @@index([storeId, isActive])
 }
+
+/// Visites de la boutique publique, agrégées par jour (heure de Douala) : aucune donnée sur le visiteur.
+/// Les robots évidents et les membres de la boutique ne sont pas comptés.
+model StoreVisitDay {
+  storeId String
+  /// Jour à minuit (heure de Douala), en UTC.
+  day     DateTime @db.Date
+  visits  Int      @default(0)
+  store   Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@id([storeId, day])
+  @@index([day])
+}
+

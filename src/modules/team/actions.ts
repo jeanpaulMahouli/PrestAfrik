@@ -3,7 +3,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { StoreRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/modules/auth/server";
@@ -17,7 +17,7 @@ import {
   membershipIdSchema,
   updateMemberRoleSchema,
 } from "@/modules/team/validation";
-import { requireStorePermission } from "@/modules/stores/context";
+import { rememberActiveStore, requireStorePermission } from "@/modules/stores/context";
 import {
   assertCanInviteMember,
   SubscriptionLimitError,
@@ -267,12 +267,7 @@ export async function acceptTeamInvitation(formData: FormData) {
   for (const owner of invitation.store.memberships) {
     await sendEmailQuietly("E10", owner.user.email, { membre: session.user.name, boutique: invitation.store.name, role: roleLabel(invitation.role) }, appUrl("/dashboard/equipe"));
   }
-  (await cookies()).set("prestafrik-store", invitation.storeId, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-  });
+  await rememberActiveStore(session.user.id, session.session.id, invitation.storeId);
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }

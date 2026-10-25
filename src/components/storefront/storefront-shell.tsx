@@ -9,6 +9,7 @@ import { StorefrontPreviewBridge } from "@/components/storefront/storefront-prev
 import { StoreLinksProvider } from "@/components/storefront/store-links";
 import { StoreDesktopNav, StoreMobileMenu } from "@/components/storefront/store-menu";
 import { StorePopup, type StorePopupData } from "@/components/storefront/store-popup";
+import { VisitBeacon } from "@/components/storefront/visit-beacon";
 import { StoreImage } from "@/components/ui/store-image";
 import { storeHref } from "@/lib/store-host";
 import { appBaseUrl } from "@/lib/urls";
@@ -109,6 +110,7 @@ export function StorefrontShell({ children, base, store, pages, chat, popup = nu
           </small>
         </footer>
         {!isPreview && !isPaused && <StorefrontCartBar storeSlug={store.slug} />}
+        {!isPreview && <VisitBeacon storeId={store.id} storeSlug={store.slug} />}
         {!isPaused && popup && <StorePopup popup={popup} storeId={store.id} />}
         {!isPaused && chat && <StoreChatWidget config={chat} logoUrl={store.logoUrl} storeInitials={storeInitials(store.name)} storeName={store.name} storeSlug={store.slug} />}
       </div>
