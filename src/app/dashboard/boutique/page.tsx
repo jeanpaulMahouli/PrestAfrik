@@ -9,7 +9,7 @@ import { splitE164 } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { storePublicUrl } from "@/lib/urls";
 import { requireStorePermission } from "@/modules/stores/context";
-import { cameroonCities } from "@/modules/stores/options";
+import { countryCities } from "@/modules/geo";
 import { getPublicationChecklist } from "@/modules/stores/publication";
 import { publishStore, unpublishStore } from "@/modules/stores/settings-actions";
 
@@ -79,7 +79,7 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
 
       <StoreAppearanceForm
         activities={activities}
-        cities={cameroonCities}
+        cities={countryCities(store.country)}
         initialValues={{
           name: store.name,
           slug: store.slug,

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useActionState, useEffect, useRef } from "react";
 import { sendContactMessage, type ContactState } from "@/modules/contact/actions";
 import { contactSubjects, type ContactSubject } from "@/modules/contact/subjects";
+import { phoneDialOptions } from "@/lib/phone";
 
 /** Formulaire de la page /contact. Le sujet peut être présélectionné (?sujet=demo). */
 export function ContactForm({ defaultSubject }: { defaultSubject: ContactSubject }) {
@@ -29,10 +30,18 @@ export function ContactForm({ defaultSubject }: { defaultSubject: ContactSubject
         </label>
       </div>
       <div className="lp-form__row">
-        <label className="lp-field">
-          <span>Téléphone ou WhatsApp</span>
-          <input aria-invalid={invalid("phone")} autoComplete="tel" inputMode="tel" maxLength={30} name="phone" placeholder="+237 6 99 00 00 00" />
-        </label>
+        <div className="lp-field">
+          <span id="contact-phone-label">Téléphone ou WhatsApp</span>
+          {/* Indicatif choisi dans la liste, numéro sans indicatif. */}
+          <span className="lp-phone">
+            <select aria-label="Indicatif du pays" defaultValue="CM" name="phoneCountry">
+              {phoneDialOptions().map((option) => (
+                <option key={option.iso} value={option.iso}>{option.dialCode}</option>
+              ))}
+            </select>
+            <input aria-invalid={invalid("phone")} aria-labelledby="contact-phone-label" autoComplete="tel-national" inputMode="tel" maxLength={20} name="phoneNational" placeholder="6 99 00 00 00" />
+          </span>
+        </div>
         <label className="lp-field">
           <span>Nom de votre boutique</span>
           <input maxLength={80} name="store" placeholder="Facultatif" />

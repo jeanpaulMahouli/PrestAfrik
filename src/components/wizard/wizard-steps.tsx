@@ -217,13 +217,13 @@ type GeoRegion = { code: string; name: string; cities: string[] };
 
 export function LocationStep({ draftId, countries, geo, initial }: { draftId: string; countries: { iso: string; name: string }[]; geo: Record<string, GeoRegion[]>; initial: { country: string; region: string; city: string; neighborhood: string } }) {
   const { update } = useWizardPreview();
-  const [country, setCountry] = useState(initial.country || "CM");
-  const regions = geo[country] ?? null;
-  const [region, setRegion] = useState(() => regions?.find((item) => item.name === initial.region)?.code ?? initial.region);
-  const [city, setCity] = useState(initial.city);
-  const [cityFree, setCityFree] = useState(Boolean(initial.city && regions && !regions.some((item) => item.cities.includes(initial.city))));
+  const [country, setCountry] = useState(() => (countries.some((item) => item.iso === initial.country) ? initial.country : (countries[0]?.iso ?? "CM")));
+  const regions = geo[country] ?? [];
+  const [region, setRegion] = useState(() => regions.find((item) => item.name === initial.region || item.code === initial.region)?.code ?? "");
+  const regionInfo = regions.find((item) => item.code === region);
+  // Ville déjà enregistrée gardée seulement si elle appartient à la liste de sa région.
+  const [city, setCity] = useState(() => (regionInfo?.cities.includes(initial.city) ? initial.city : ""));
   const [notice, setNotice] = useState("");
-  const regionInfo = regions?.find((item) => item.code === region);
   const countryName = countries.find((item) => item.iso === country)?.name ?? country;
 
   useEffect(() => {
@@ -232,11 +232,11 @@ export function LocationStep({ draftId, countries, geo, initial }: { draftId: st
   }, [city, countryName]);
 
   return (
-    <WizardStepForm action={saveLocationStep} backHref={back(draftId, 2)} draftId={draftId} step={3} subtitle="Votre pays, votre région et votre ville nous permettent de proposer les bonnes zones de livraison. Chaque liste s’adapte automatiquement au choix précédent." title="Où se trouve votre boutique ?">
+    <WizardStepForm action={saveLocationStep} backHref={back(draftId, 2)} draftId={draftId} step={3} subtitle="Choisissez votre pays, votre région puis votre ville dans les listes : elles nous permettent de proposer les bonnes zones de livraison." title="Où se trouve votre boutique ?">
       {(fieldError) => (
         <>
           <Combobox
-            help={`Plus de ${Math.floor(countries.length / 10) * 10} pays disponibles. Tapez quelques lettres pour chercher.`}
+            error={fieldError("country")}
             label="Pays"
             name="country"
             onChange={(value) => {
@@ -244,7 +244,6 @@ export function LocationStep({ draftId, countries, geo, initial }: { draftId: st
                 setCountry(value);
                 setRegion("");
                 setCity("");
-                setCityFree(!geo[value]);
                 setNotice("Le pays a changé : choisissez à nouveau la région et la ville.");
               }
             }}
@@ -253,59 +252,32 @@ export function LocationStep({ draftId, countries, geo, initial }: { draftId: st
             value={country}
           />
           {notice && <p className="v-field-help" role="status">{notice}</p>}
-          {regions ? (
-            <>
-              <Combobox
-                error={fieldError("region")}
-                help="Les régions affichées dépendent du pays choisi."
-                label="Région"
-                name="region"
-                onChange={(value) => {
-                  setRegion(value);
-                  setCity("");
-                  setCityFree(false);
-                  setNotice("");
-                }}
-                options={regions.map((item) => ({ value: item.code, label: item.name }))}
-                placeholder="Choisir une région"
-                searchPlaceholder="Rechercher une région…"
-                value={region}
-              />
-              {!cityFree ? (
-                <Combobox
-                  disabled={!regionInfo}
-                  error={fieldError("city")}
-                  label="Ville"
-                  name="city"
-                  notListedLabel="Ma ville n’est pas dans la liste : je la saisis moi-même"
-                  onChange={setCity}
-                  onNotListed={() => {
-                    setCityFree(true);
-                    setCity("");
-                  }}
-                  options={(regionInfo?.cities ?? []).map((item) => ({ value: item, label: item }))}
-                  placeholder={regionInfo ? "Choisir une ville" : "Choisissez d’abord une région"}
-                  searchPlaceholder={`Tapez pour filtrer les villes ${regionInfo ? `du ${regionInfo.name}` : ""}…`}
-                  value={city}
-                />
-              ) : null}
-            </>
-          ) : (
-            <label className="v-field">
-              Région
-              <input maxLength={80} name="region" onChange={(event) => setRegion(event.target.value)} required value={region} />
-              {fieldError("region") && <span className="v-field-error">{fieldError("region")}</span>}
-            </label>
-          )}
-          {cityFree && (
-            <label className="v-field">
-              Ville
-              <input autoFocus maxLength={80} name="city" onChange={(event) => setCity(event.target.value)} required value={city} />
-              <input name="cityFree" type="hidden" value="1" />
-              {fieldError("city") && <span className="v-field-error">{fieldError("city")}</span>}
-              {regions && <button className="v-link-button" onClick={() => setCityFree(false)} type="button">Choisir dans la liste</button>}
-            </label>
-          )}
+          <Combobox
+            error={fieldError("region")}
+            help="Les régions affichées dépendent du pays choisi."
+            label="Région"
+            name="region"
+            onChange={(value) => {
+              setRegion(value);
+              setCity("");
+              setNotice("");
+            }}
+            options={regions.map((item) => ({ value: item.code, label: item.name }))}
+            placeholder="Choisir une région"
+            searchPlaceholder="Rechercher une région…"
+            value={region}
+          />
+          <Combobox
+            disabled={!regionInfo}
+            error={fieldError("city")}
+            label="Ville"
+            name="city"
+            onChange={setCity}
+            options={(regionInfo?.cities ?? []).map((item) => ({ value: item, label: item }))}
+            placeholder={regionInfo ? "Choisir une ville" : "Choisissez d’abord une région"}
+            searchPlaceholder={`Tapez pour filtrer les villes ${regionInfo ? `du ${regionInfo.name}` : ""}…`}
+            value={city}
+          />
           <label className="v-field">
             Quartier (facultatif)
             <input defaultValue={initial.neighborhood} maxLength={80} name="neighborhood" placeholder="Ex. Akwa" />

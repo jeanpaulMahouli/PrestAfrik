@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { countryCities } from "@/modules/geo";
 import { createCustomer } from "@/modules/customers/actions";
 import { requireStorePermission } from "@/modules/stores/context";
 import { BackIcon } from "@/components/ui/icons";
@@ -36,17 +38,19 @@ export default async function NewCustomerPage({
             Nom
             <input autoComplete="name" maxLength={80} minLength={2} name="name" required />
           </label>
-          <label className="v-field">
-            Numéro WhatsApp
-            <input autoComplete="tel" defaultValue="+237 " inputMode="tel" maxLength={30} name="whatsapp" required type="tel" />
-          </label>
+          <PhoneInput label="Numéro WhatsApp" name="whatsapp" />
           <label className="v-field">
             E-mail (facultatif)
             <input autoComplete="email" maxLength={254} name="email" type="email" />
           </label>
           <label className="v-field">
             Ville (facultative)
-            <input autoComplete="address-level2" maxLength={100} name="city" />
+            <select defaultValue="" name="city">
+              <option value="">Non renseignée</option>
+              {countryCities(store.country).map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
           </label>
           <label className="v-field">
             Quartier (facultatif)

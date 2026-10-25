@@ -1284,3 +1284,10 @@
   outline: 3px solid var(--lp-orange);
   outline-offset: 3px;
 }
+
+/* Téléphone du formulaire de contact : indicatif (liste) + numéro. */
+.lp-phone {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 8px;
+}

@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
+import { parsePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { auth } from "@/modules/auth/server";
@@ -17,11 +18,6 @@ const limiter = createRateLimiter({ limit: 5, windowMs: 15 * 60_000 });
 const schema = z.object({
   name: z.string().trim().min(2, "Indiquez votre nom.").max(80, "Votre nom ne peut pas dépasser 80 caractères."),
   email: z.string().trim().toLowerCase().email("Indiquez une adresse e-mail valide.").max(254),
-  phone: z
-    .string()
-    .trim()
-    .max(30, "Le numéro ne peut pas dépasser 30 caractères.")
-    .regex(/^[+\d\s().-]*$/, "Le numéro ne peut contenir que des chiffres, des espaces et « + »."),
   store: z.string().trim().max(80),
   subject: z.string().refine(isContactSubject, "Choisissez un sujet."),
   message: z.string().trim().min(10, "Votre message doit contenir au moins 10 caractères.").max(3000, "Votre message ne peut pas dépasser 3 000 caractères."),
@@ -35,7 +31,6 @@ export async function sendContactMessage(_previous: ContactState, formData: Form
   const parsed = schema.safeParse({
     name: formData.get("name") ?? "",
     email: formData.get("email") ?? "",
-    phone: formData.get("phone") ?? "",
     store: formData.get("store") ?? "",
     subject: formData.get("subject") ?? "",
     message: formData.get("message") ?? "",
@@ -51,12 +46,17 @@ export async function sendContactMessage(_previous: ContactState, formData: Form
   }
 
   const input = parsed.data;
+  // Téléphone facultatif : indicatif choisi dans la liste, numéro vérifié.
+  const national = String(formData.get("phoneNational") ?? "").trim();
+  const phone = national ? parsePhone(String(formData.get("phoneCountry") ?? ""), national) : null;
+  if (phone && !phone.ok) return { ok: false, message: phone.message, field: "phone" };
+  const phoneText = phone?.ok ? phone.e164 : "";
   const subjectLabel = isContactSubject(input.subject) ? contactSubjects[input.subject] : "Autre demande";
   const text = [
     `Sujet : ${subjectLabel}`,
     `Nom : ${input.name}`,
     `E-mail : ${input.email}`,
-    input.phone ? `Téléphone / WhatsApp : ${input.phone}` : null,
+    phoneText ? `Téléphone / WhatsApp : ${phoneText}` : null,
     input.store ? `Boutique : ${input.store}` : null,
     "",
     input.message,
@@ -70,7 +70,7 @@ export async function sendContactMessage(_previous: ContactState, formData: Form
     .create({
       data: {
         subject: `${subjectLabel}${input.store ? ` · ${input.store}` : ""}`.slice(0, 120),
-        message: [input.phone ? `Téléphone / WhatsApp : ${input.phone}` : null, input.message].filter(Boolean).join("\n\n").slice(0, 4000),
+        message: [phoneText ? `Téléphone / WhatsApp : ${phoneText}` : null, input.message].filter(Boolean).join("\n\n").slice(0, 4000),
         requesterName: input.name,
         requesterEmail: input.email,
         requesterId: session?.user.id ?? null,

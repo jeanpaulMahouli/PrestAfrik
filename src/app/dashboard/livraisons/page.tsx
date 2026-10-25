@@ -2,6 +2,7 @@ import { VendorShell } from "@/components/layout/vendor-shell";
 import { ActionDialog } from "@/components/ui/action-dialog";
 import { formatFcfa } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { countryCities } from "@/modules/geo";
 import { createDeliveryZone, updateDeliveryZone } from "@/modules/orders/delivery-actions";
 import { requireStorePermission } from "@/modules/stores/context";
 
@@ -15,6 +16,7 @@ const successMessages: Record<string, string> = {
 /** Zones de livraison avec frais fixes : le client connaît le prix avant de commander (ADR-013). */
 export default async function DeliveriesPage({ searchParams }: PageProps<"/dashboard/livraisons">) {
   const { store } = await requireStorePermission("delivery.manage");
+  const cities = countryCities(store.country);
   const params = await searchParams;
   const zones = await prisma.deliveryZone.findMany({ where: { storeId: store.id }, orderBy: [{ isActive: "desc" }, { city: "asc" }, { name: "asc" }] });
   const error = typeof params.erreur === "string" ? params.erreur : null;
@@ -29,7 +31,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps<"/dashb
         </div>
         <div className="v-page-actions">
           <ActionDialog action={createDeliveryZone} submitLabel="Ajouter la zone" title="Ajouter une zone de livraison" triggerClassName="btn btn-primary" triggerLabel="+ Ajouter une zone">
-            <ZoneFields city={store.city ?? ""} />
+            <ZoneFields cities={cities} city={store.city ?? ""} />
           </ActionDialog>
         </div>
       </div>
@@ -56,7 +58,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps<"/dashb
                   triggerClassName="v-link-button zone-edit"
                   triggerLabel="Modifier"
                 >
-                  <ZoneFields city={zone.city} delay={zone.estimatedDelay} fee={zone.feeXaf} isActive={zone.isActive} name={zone.name} />
+                  <ZoneFields cities={cities} city={zone.city} delay={zone.estimatedDelay} fee={zone.feeXaf} isActive={zone.isActive} name={zone.name} />
                 </ActionDialog>
               </li>
             ))}
@@ -69,7 +71,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps<"/dashb
   );
 }
 
-function ZoneFields({ name = "", city, fee = null, delay = null, isActive }: { name?: string; city: string; fee?: number | null; delay?: string | null; isActive?: boolean }) {
+function ZoneFields({ name = "", city, cities, fee = null, delay = null, isActive }: { name?: string; city: string; cities: string[]; fee?: number | null; delay?: string | null; isActive?: boolean }) {
   return (
     <>
       <label className="v-field">
@@ -78,7 +80,12 @@ function ZoneFields({ name = "", city, fee = null, delay = null, isActive }: { n
       </label>
       <label className="v-field">
         Ville
-        <input defaultValue={city} maxLength={100} name="city" required />
+        <select defaultValue={cities.includes(city) ? city : ""} name="city" required>
+          <option disabled value="">Choisir une ville</option>
+          {cities.map((item) => (
+            <option key={item} value={item}>{item}</option>
+          ))}
+        </select>
       </label>
       <div className="v-grid-2 dialog-grid">
         <label className="v-field">

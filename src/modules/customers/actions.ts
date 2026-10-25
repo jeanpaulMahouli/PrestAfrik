@@ -1,6 +1,8 @@
 "use server";
 
 import { Prisma } from "@prisma/client";
+import { parsePhone } from "@/lib/phone";
+import { isKnownCity } from "@/modules/geo";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -28,7 +30,8 @@ export async function createCustomer(formData: FormData) {
   const parsed = z
     .object({
       name: z.string().trim().min(2).max(80),
-      whatsapp: z.string().trim().min(9).max(30),
+      whatsappCountry: z.string().trim().max(2),
+      whatsappNational: z.string().trim().max(20),
       email: z.union([z.literal(""), z.string().trim().email().max(254)]),
       city: z.string().trim().max(100),
       neighborhood: z.string().trim().max(120),
@@ -38,7 +41,8 @@ export async function createCustomer(formData: FormData) {
     })
     .safeParse({
       name: formData.get("name"),
-      whatsapp: formData.get("whatsapp"),
+      whatsappCountry: formData.get("whatsappCountry") ?? "",
+      whatsappNational: formData.get("whatsappNational") ?? "",
       email: formData.get("email") ?? "",
       city: formData.get("city") ?? "",
       neighborhood: formData.get("neighborhood") ?? "",
@@ -56,7 +60,10 @@ export async function createCustomer(formData: FormData) {
   let whatsapp: string;
   let tags: string[];
   try {
-    whatsapp = normalizeCustomerWhatsapp(parsed.data.whatsapp);
+    // Indicatif choisi dans la liste, puis numéro national.
+    const phone = parsePhone(parsed.data.whatsappCountry, parsed.data.whatsappNational);
+    if (!phone.ok) throw new Error(phone.message);
+    whatsapp = normalizeCustomerWhatsapp(phone.e164);
     tags = parseCustomerTags(parsed.data.tags);
   } catch (error) {
     if (error instanceof Error) reportError("/dashboard/clients/nouveau", error.message);
@@ -67,6 +74,10 @@ export async function createCustomer(formData: FormData) {
   }
 
   const { session, store } = await requireStorePermission("customers.manage");
+  // La ville se choisit dans la liste du pays de la boutique.
+  if (parsed.data.city && !isKnownCity(store.country, parsed.data.city)) {
+    reportError("/dashboard/clients/nouveau", "Choisissez la ville du client dans la liste.");
+  }
   const existing = await prisma.customer.findUnique({
     where: { storeId_whatsapp: { storeId: store.id, whatsapp } },
     select: { id: true },

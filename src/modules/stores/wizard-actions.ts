@@ -106,20 +106,14 @@ export async function saveLocationStep(_previous: WizardState, formData: FormDat
   if (!draft) return missingDraft();
   const parsed = locationSchema.safeParse({ country: text(formData, "country"), region: text(formData, "region"), city: text(formData, "city"), neighborhood: text(formData, "neighborhood") });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Vérifiez la localisation.", String(parsed.error.issues[0]?.path[0] ?? ""));
-  const { country, neighborhood } = parsed.data;
-  let { region, city } = parsed.data;
-  // Liste connue : le code de région est converti en nom, la ville doit appartenir à la région
-  // sauf si le vendeur a choisi « Ma ville n'est pas dans la liste ».
-  if (hasGeoData(country)) {
-    const known = getRegions(country).find((item) => item.code === region || item.name === region);
-    if (!known) return fail("Choisissez une région dans la liste.", "region");
-    region = known.name;
-    const freeCity = formData.get("cityFree") === "1";
-    if (!freeCity && !getCities(country, known.code).includes(city)) {
-      return fail("Cette ville n’est pas dans la liste de la région choisie. Choisissez-la dans la liste, ou touchez « Ma ville n’est pas dans la liste ».", "city");
-    }
-    city = city.slice(0, 80);
-  }
+  const { country, neighborhood, city } = parsed.data;
+  let { region } = parsed.data;
+  // Pays, région et ville viennent toujours des listes : aucune saisie libre n'est acceptée.
+  if (!hasGeoData(country)) return fail("Choisissez un pays dans la liste.", "country");
+  const known = getRegions(country).find((item) => item.code === region || item.name === region);
+  if (!known) return fail("Choisissez une région dans la liste.", "region");
+  region = known.name;
+  if (!getCities(country, known.code).includes(city)) return fail("Choisissez votre ville dans la liste de la région.", "city");
   return saveAndContinue(draft, { country, region, city, neighborhood: neighborhood || null }, 3);
 }
 

@@ -1,6 +1,7 @@
 "use server";
 
 import { StoreTheme } from "@prisma/client";
+import { isKnownCity } from "@/modules/geo";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -96,6 +97,8 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
   }
   const phone = text(formData, "phoneNational") ? parsePhone(text(formData, "phoneCountry"), text(formData, "phoneNational")) : null;
   if (phone && !phone.ok) return { ok: false, field: "phone", message: phone.message };
+  // La ville se choisit toujours dans la liste du pays de la boutique.
+  if (!isKnownCity(store.country, input.city)) return { ok: false, field: "city", message: "Choisissez la ville de votre boutique dans la liste." };
   // Règle : un propriétaire ne peut pas avoir deux boutiques du même nom (d'autres vendeurs, si).
   const owners = await prisma.storeMembership.findMany({ where: { storeId: store.id, role: "OWNER" }, select: { userId: true } });
   for (const owner of owners) {

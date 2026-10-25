@@ -1,4 +1,5 @@
 import { Download } from "lucide-react";
+import { countryCities } from "@/modules/geo";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { Badge } from "@/components/ui/badge";
@@ -93,7 +94,10 @@ export default async function CustomersPage({ searchParams }: PageProps<"/dashbo
                 <option value="">Toutes les catégories achetées</option>
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
               </select>
-              <input aria-label="Ville" defaultValue={city} maxLength={100} name="city" placeholder="Ville" />
+              <select aria-label="Ville" defaultValue={city} name="city">
+                <option value="">Toutes les villes</option>
+                {countryCities(store.country).map((item) => <option key={item} value={item}>{item}</option>)}
+              </select>
               <select aria-label="Consentement marketing" defaultValue={consent ?? ""} name="consent">
                 <option value="">Tous les consentements</option>
                 <option value="accepted">Marketing accepté</option>

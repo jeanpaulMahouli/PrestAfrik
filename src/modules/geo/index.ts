@@ -33,3 +33,17 @@ export function getCities(countryIso: string, regionCode: string, query = ""): s
 export function geoDataset(countryIso: string) {
   return datasets[countryIso] ?? null;
 }
+
+/** Pays proposés partout (assistant, réglages) : seuls ceux dont la liste des villes existe. */
+export const supportedCountries: readonly string[] = Object.keys(datasets);
+
+/** Toutes les villes d'un pays, sans doublon, par ordre alphabétique. */
+export function countryCities(countryIso: string): string[] {
+  const cities = new Set((datasets[countryIso]?.regions ?? []).flatMap((region) => region.cities));
+  return [...cities].sort((a, b) => a.localeCompare(b, "fr"));
+}
+
+/** La ville fait-elle partie de la liste du pays ? (les villes ne se saisissent jamais à la main) */
+export function isKnownCity(countryIso: string, city: string) {
+  return (datasets[countryIso]?.regions ?? []).some((region) => region.cities.includes(city));
+}

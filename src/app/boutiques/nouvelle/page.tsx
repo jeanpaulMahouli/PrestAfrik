@@ -9,7 +9,7 @@ import { formatFcfa } from "@/lib/format";
 import { phoneCountries } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { storeAddressFormat, storeAddressLabel, storePublicUrl } from "@/lib/urls";
-import { geoDataset } from "@/modules/geo";
+import { geoDataset, supportedCountries } from "@/modules/geo";
 import { draftMissing, findDraft, type DraftData } from "@/modules/stores/draft";
 import { getPublicationChecklist } from "@/modules/stores/publication";
 import { findOwnedStore, requireWizardSession, wizardStepCount, wizardSteps } from "@/modules/stores/wizard";
@@ -82,8 +82,9 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
     const activities = await prisma.activity.findMany({ orderBy: { position: "asc" }, select: { id: true, label: true, popular: true } });
     content = <ActivityStep activities={activities} draftId={draft.id} initialId={data.activityId ?? ""} initialOther={data.activityOther ?? ""} />;
   } else if (step === 3) {
-    const countries = phoneCountries().map(({ iso, name }) => ({ iso: iso as string, name }));
-    const geo = Object.fromEntries(["CM"].map((iso) => [iso, geoDataset(iso)?.regions ?? []]));
+    // Seuls les pays dont la liste des régions et des villes existe : rien ne se saisit à la main.
+    const countries = phoneCountries().filter(({ iso }) => supportedCountries.includes(iso)).map(({ iso, name }) => ({ iso: iso as string, name }));
+    const geo = Object.fromEntries(supportedCountries.map((iso) => [iso, geoDataset(iso)?.regions ?? []]));
     content = <LocationStep countries={countries} draftId={draft.id} geo={geo} initial={{ country: data.country ?? "CM", region: data.region ?? "", city: data.city ?? "", neighborhood: data.neighborhood ?? "" }} />;
   } else if (step === 4) {
     content = (

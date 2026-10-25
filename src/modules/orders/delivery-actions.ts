@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
+import { isKnownCity } from "@/modules/geo";
 import { requireStorePermission } from "@/modules/stores/context";
 
 // Zones de livraison : chaque zone a des frais fixes, connus du client avant sa commande
@@ -13,7 +14,7 @@ import { requireStorePermission } from "@/modules/stores/context";
 
 const zoneSchema = z.object({
   name: z.string().trim().min(2, "Donnez un nom à la zone (ex. Akwa).").max(120),
-  city: z.string().trim().min(2, "Indiquez la ville.").max(100),
+  city: z.string().trim().min(2, "Choisissez la ville dans la liste.").max(100),
   fee: z.string().regex(/^\d{1,7}$/, "Indiquez les frais en FCFA (0 si la livraison est gratuite)."),
   estimatedDelay: z.string().trim().max(100),
 });
@@ -40,9 +41,15 @@ function done(store: { id: string; slug: string }, success: string): never {
 
 const duplicate = (error: unknown) => error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 
+/** La ville d'une zone se choisit toujours dans la liste du pays de la boutique. */
+function assertKnownCity(store: { country: string }, city: string) {
+  if (!isKnownCity(store.country, city)) fail("Choisissez la ville de la zone dans la liste.");
+}
+
 export async function createDeliveryZone(formData: FormData) {
   const input = read(formData);
   const { store } = await requireStorePermission("delivery.manage");
+  assertKnownCity(store, input.city);
   try {
     await prisma.deliveryZone.create({
       data: { storeId: store.id, name: input.name, city: input.city, feeXaf: Number(input.fee), requiresConfirmation: false, estimatedDelay: input.estimatedDelay || null },
@@ -60,6 +67,7 @@ export async function updateDeliveryZone(formData: FormData) {
   if (!zoneId.success) redirect(page);
   const input = read(formData);
   const { store } = await requireStorePermission("delivery.manage");
+  assertKnownCity(store, input.city);
   try {
     const updated = await prisma.deliveryZone.updateMany({
       where: { id: zoneId.data, storeId: store.id },

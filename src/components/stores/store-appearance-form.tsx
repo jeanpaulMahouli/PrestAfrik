@@ -3,6 +3,7 @@
 import { StoreTheme } from "@prisma/client";
 import { startTransition, useActionState, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { StoreLivePreview } from "@/components/stores/store-live-preview";
+import { Combobox } from "@/components/ui/combobox";
 import { StoreImage } from "@/components/ui/store-image";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -65,6 +66,8 @@ export function StoreAppearanceForm({
   sideFooter?: ReactNode;
 }) {
   const [values, setValues] = useState(initialValues);
+  // Ville choisie dans la liste (ancienne ville saisie à la main : à choisir de nouveau).
+  const [city, setCity] = useState(cities.includes(initialValues.city) ? initialValues.city : "");
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -283,13 +286,15 @@ export function StoreAppearanceForm({
               Autre activité (si elle n’est pas dans la liste)
               <input defaultValue={values.activityOther} maxLength={80} name="activityOther" />
             </label>
-            <label className="v-field">
-              Ville
-              <input defaultValue={values.city} list="store-cities" maxLength={80} name="city" required />
-              <datalist id="store-cities">
-                {cities.map((city) => <option key={city} value={city} />)}
-              </datalist>
-            </label>
+            <Combobox
+              label="Ville"
+              name="city"
+              onChange={setCity}
+              options={cities.map((item) => ({ value: item, label: item }))}
+              placeholder="Choisir une ville"
+              searchPlaceholder="Tapez pour filtrer les villes…"
+              value={city}
+            />
             <label className="v-field">
               Quartier (facultatif)
               <input defaultValue={values.neighborhood} maxLength={80} name="neighborhood" />
