@@ -22,7 +22,10 @@ enum WhatsappApiStatus {
 
 enum PlatformRole {
   USER
+  /// Accès à l'administration, sans gestion des administrateurs.
   ADMIN
+  /// Administrateur qui peut aussi donner ou retirer les droits d'administration.
+  SUPER_ADMIN
 }
 
 enum StoreRole {
@@ -153,6 +156,11 @@ model User {
   /// Dernière boutique ouverte dans le tableau de bord : retrouvée à la prochaine connexion, sur tout appareil.
   lastActiveStoreId          String?
   lastActiveStore            Store?              @relation("UserLastActiveStore", fields: [lastActiveStoreId], references: [id], onDelete: SetNull)
+  /// Dernière activité dans l'espace vendeur (mise à jour au plus une fois toutes les 5 minutes).
+  lastActiveAt               DateTime?
+  supportTickets             SupportTicket[]     @relation("SupportTicketRequester")
+  assignedTickets            SupportTicket[]     @relation("SupportTicketAssignee")
+  supportReplies             SupportTicketMessage[]
   createdAt                  DateTime            @default(now())
   updatedAt                  DateTime            @updatedAt
   accounts                   Account[]
@@ -1071,3 +1079,66 @@ model StoreVisitDay {
   @@index([day])
 }
 
+enum SystemNotificationSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+/// Notification technique de l'administration (cloche) : erreurs serveur, lenteurs, envois d'e-mails
+/// ou tâches en échec. Les erreurs identiques (même type, même message) sont regroupées.
+model SystemNotification {
+  id          String                     @id @default(cuid())
+  /// Empreinte « type + message » : une seule ligne par erreur identique.
+  fingerprint String                     @unique @db.VarChar(64)
+  type        String                     @db.VarChar(40)
+  severity    SystemNotificationSeverity
+  message     String                     @db.VarChar(500)
+  /// Contexte sans donnée personnelle (route, méthode, durée…).
+  context     Json?
+  occurrences Int                        @default(1)
+  firstSeenAt DateTime                   @default(now())
+  lastSeenAt  DateTime                   @default(now())
+  readAt      DateTime?
+
+  @@index([readAt, lastSeenAt])
+  @@index([lastSeenAt])
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+/// Demande d'aide (formulaire de contact du site) suivie par l'équipe PrestAfrik.
+model SupportTicket {
+  id             String                 @id @default(cuid())
+  subject        String                 @db.VarChar(120)
+  message        String                 @db.VarChar(4000)
+  requesterName  String                 @db.VarChar(120)
+  requesterEmail String                 @db.VarChar(254)
+  requesterId    String?
+  status         SupportTicketStatus    @default(OPEN)
+  assignedToId   String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  requester      User?                  @relation("SupportTicketRequester", fields: [requesterId], references: [id], onDelete: SetNull)
+  assignedTo     User?                  @relation("SupportTicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  replies        SupportTicketMessage[]
+
+  @@index([status, createdAt])
+}
+
+/// Réponse de l'équipe à une demande d'aide (envoyée par e-mail au demandeur).
+model SupportTicketMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  authorId  String?
+  body      String        @db.VarChar(4000)
+  createdAt DateTime      @default(now())
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([ticketId, createdAt])
+}

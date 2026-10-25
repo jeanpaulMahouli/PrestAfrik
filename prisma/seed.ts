@@ -238,8 +238,8 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: "admin@prestafrik.example.test" },
-    update: { platformRole: PlatformRole.ADMIN, emailVerified: true },
-    create: { email: "admin@prestafrik.example.test", name: "Admin PrestAfrik", platformRole: PlatformRole.ADMIN, emailVerified: true },
+    update: { platformRole: PlatformRole.SUPER_ADMIN, emailVerified: true },
+    create: { email: "admin@prestafrik.example.test", name: "Admin PrestAfrik", platformRole: PlatformRole.SUPER_ADMIN, emailVerified: true },
   });
   await demoPasswordAccount(admin.id, isLocal);
 
@@ -671,6 +671,29 @@ async function main() {
       });
     }
   }
+
+  // Administration : compte non confirmé (alerte), demande d'aide (ticket), notifications techniques (cloche).
+  await prisma.user.upsert({
+    where: { email: "prospect@example.test" },
+    update: { emailVerified: false, createdAt: new Date(now.getTime() - 2 * day) },
+    create: { email: "prospect@example.test", name: "Prospect Démo", emailVerified: false, createdAt: new Date(now.getTime() - 2 * day) },
+  });
+  await prisma.supportTicket.deleteMany({ where: { requesterEmail: "estelle@example.test" } });
+  await prisma.supportTicket.create({
+    data: {
+      subject: "Question générale · Mboa Style",
+      message: "Bonjour, comment ajouter une deuxième boutique à mon compte ?",
+      requesterName: "Estelle Ndzi",
+      requesterEmail: "estelle@example.test",
+    },
+  });
+  await prisma.systemNotification.deleteMany({ where: { fingerprint: { startsWith: "seed-" } } });
+  await prisma.systemNotification.createMany({
+    data: [
+      { fingerprint: "seed-email", type: "email", severity: "WARNING", message: "Échec d’envoi de l’e-mail E21 : délai de connexion au serveur SMTP dépassé", occurrences: 3 },
+      { fingerprint: "seed-slow", type: "slow-query", severity: "WARNING", message: "Requête de plus de 2000 ms : SELECT \"public\".\"Order\".\"id\" …", occurrences: 1 },
+    ],
+  });
 
   console.info(
     `Données fictives prêtes : 5 boutiques, 10 membres, 1 administrateur, 64 produits, ${customerTotal} clients, ${orderTotal} commandes.`,

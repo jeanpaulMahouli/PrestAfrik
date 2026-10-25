@@ -6,8 +6,8 @@ const ids = Object.keys(emailTexts) as EmailId[];
 const base = "https://prestafrik.example";
 
 describe("modèles d’e-mails", () => {
-  it("contient les 25 modèles du document", () => {
-    expect(ids).toHaveLength(25);
+  it("contient les 25 modèles du document, plus E26 (droits d’administration) et E27 (réponse du support)", () => {
+    expect(ids).toHaveLength(27);
   });
 
   it.each(ids)("%s : toutes les variables sont remplacées, version texte comprise", (id) => {

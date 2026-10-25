@@ -16,6 +16,7 @@ import {
 // quel que soit l'appareil. Une boutique supprimée ou devenue inaccessible renvoie à la première disponible.
 
 export const activeStoreCookie = "prestafrik-store";
+const activityWriteIntervalMs = 5 * 60 * 1000;
 
 export const activeStoreCookieOptions = {
   httpOnly: true,
@@ -53,7 +54,7 @@ export const getStoreContext = cache(async function getStoreContext() {
       include: { store: true },
       orderBy: { createdAt: "asc" },
     }),
-    prisma.user.findUnique({ where: { id: session.user.id }, select: { lastActiveStoreId: true } }),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { lastActiveStoreId: true, lastActiveAt: true } }),
   ]);
   const requestedStoreId =
     readActiveStoreCookie(cookieStore.get(activeStoreCookie)?.value, session.session.id) ?? user?.lastActiveStoreId ?? undefined;
@@ -67,8 +68,16 @@ export const getStoreContext = cache(async function getStoreContext() {
   if (!selected) redirect("/boutiques/nouvelle");
 
   // Boutique retenue absente ou inaccessible : la boutique affichée devient la dernière utilisée.
-  if (user?.lastActiveStoreId !== selected.storeId) {
-    await prisma.user.update({ where: { id: session.user.id }, data: { lastActiveStoreId: selected.storeId } }).catch(() => undefined);
+  // Dernière activité (administration) : écrite au plus une fois toutes les 5 minutes.
+  const now = new Date();
+  const staleActivity = !user?.lastActiveAt || now.getTime() - user.lastActiveAt.getTime() > activityWriteIntervalMs;
+  if (user?.lastActiveStoreId !== selected.storeId || staleActivity) {
+    await prisma.user
+      .update({
+        where: { id: session.user.id },
+        data: { lastActiveStoreId: selected.storeId, ...(staleActivity ? { lastActiveAt: now } : {}) },
+      })
+      .catch(() => undefined);
   }
 
   return {

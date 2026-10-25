@@ -2,7 +2,9 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { auth } from "@/modules/auth/server";
 import { clientIpFrom } from "@/lib/request-ip";
 import { contactSubjects, isContactSubject } from "@/modules/contact/subjects";
 import { sendEmailQuietly, sendTeamEmail } from "@/modules/email/server";
@@ -62,11 +64,26 @@ export async function sendContactMessage(_previous: ContactState, formData: Form
     .filter((line) => line !== null)
     .join("\n");
 
+  // Demande d'aide suivie dans l'administration (Alertes → Tickets), même si l'e-mail à l'équipe échoue.
+  const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
+  const ticket = await prisma.supportTicket
+    .create({
+      data: {
+        subject: `${subjectLabel}${input.store ? ` · ${input.store}` : ""}`.slice(0, 120),
+        message: [input.phone ? `Téléphone / WhatsApp : ${input.phone}` : null, input.message].filter(Boolean).join("\n\n").slice(0, 4000),
+        requesterName: input.name,
+        requesterEmail: input.email,
+        requesterId: session?.user.id ?? null,
+      },
+      select: { id: true },
+    })
+    .catch(() => null);
+
   try {
     await sendTeamEmail({ subject: `[Contact] ${subjectLabel} · ${input.name}`, text, replyTo: input.email });
   } catch (error) {
     console.error("Échec de l’envoi du message de contact.", error instanceof Error ? error.message : error);
-    return { ok: false, message: "Votre message n’a pas pu partir. Réessayez, ou écrivez-nous directement par e-mail." };
+    if (!ticket) return { ok: false, message: "Votre message n’a pas pu partir. Réessayez, ou écrivez-nous directement par e-mail." };
   }
 
   // E24 : accusé de réception (au mieux : son échec n'empêche pas le message d'être transmis).

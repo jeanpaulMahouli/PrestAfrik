@@ -345,6 +345,31 @@ export const emailTexts = {
     action: { label: "Choisir un nouveau mot de passe" },
     note: "Vous n’avez fait aucune demande ? Répondez à cet e-mail : nous vérifierons votre compte.",
   },
+  E26: {
+    group: "Compte et sécurité",
+    name: "Droits d’administration accordés",
+    subject: "Vous êtes maintenant {{role}} de PrestAfrik",
+    preheader: "Vous avez accès à l’espace d’administration.",
+    title: "Bienvenue dans l’équipe d’administration, {{prenom}} !",
+    blocks: [
+      { type: "p", text: "{{auteur}} vous a donné le rôle de {{role}} de PrestAfrik." },
+      { type: "list", items: ["{{droits}}", "Chacune de vos actions d’administration est enregistrée dans le journal."] },
+      { type: "p", text: "Vous retrouvez l’administration depuis le menu de votre compte, ou avec le bouton ci-dessous." },
+    ],
+    action: { label: "Ouvrir l’administration" },
+    note: "Vous ne vous attendiez pas à ce changement ? Répondez à cet e-mail : nous vérifierons votre compte.",
+  },
+  E27: {
+    group: "Contact",
+    name: "Réponse de l’équipe à une demande d’aide",
+    subject: "Réponse à votre demande : {{sujet}}",
+    preheader: "L’équipe PrestAfrik vous a répondu.",
+    title: "Bonjour {{prenom}}, voici notre réponse",
+    blocks: [
+      { type: "quote", text: "{{reponse}}" },
+      { type: "p", text: "Une autre question ? Répondez simplement à cet e-mail : nous restons à votre écoute." },
+    ],
+  },
 } satisfies Record<string, EmailDefinition>;
 
 export type EmailId = keyof typeof emailTexts;

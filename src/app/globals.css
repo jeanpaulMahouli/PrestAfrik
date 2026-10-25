@@ -12,6 +12,7 @@
 @import "../styles/dashboard-theme.css";
 @import "../styles/dashboard-home.css";
 @import "../styles/admin.css";
+@import "../styles/admin-extra.css";
 
 * {
   box-sizing: border-box;

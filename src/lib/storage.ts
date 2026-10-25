@@ -237,8 +237,24 @@ function createStorage(): StorageDriver {
   return bucket ? createS3Driver(bucket) : localDriver;
 }
 
+/** Un envoi d'image qui échoue (stockage indisponible, quota…) remonte dans la cloche de l'administration. */
+function reportUploadFailures(driver: StorageDriver): StorageDriver {
+  return {
+    ...driver,
+    async put(key, body, contentType) {
+      try {
+        return await driver.put(key, body, contentType);
+      } catch (error) {
+        const { recordSystemNotification } = await import("@/modules/system/notifications");
+        await recordSystemNotification({ type: "upload", severity: "CRITICAL", message: `Échec d’enregistrement d’une image : ${error instanceof Error ? error.message : String(error)}` });
+        throw error;
+      }
+    },
+  };
+}
+
 /** Stockage utilisé par l'application (Cloudinary ou stockage objet si configuré, sinon disque local). */
-export const storage: StorageDriver = createStorage();
+export const storage: StorageDriver = reportUploadFailures(createStorage());
 
 /** Ancien emplacement (public/uploads), lu en secours pour les toutes premières images. */
 export const legacyUploadsRoot = join(process.cwd(), "public", "uploads");

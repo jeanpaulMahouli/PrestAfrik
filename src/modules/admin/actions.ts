@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { computeAlerts, listOpenAlerts } from "@/modules/admin/alerts";
-import { logAdminAction, requirePlatformAdmin } from "@/modules/admin/context";
+import { isAdminRole, logAdminAction, requirePlatformAdmin } from "@/modules/admin/context";
 import { auth } from "@/modules/auth/server";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 import { sendEmailQuietly } from "@/modules/email/server";
@@ -31,12 +31,12 @@ export async function suspendStore(formData: FormData) {
   const admin = await requirePlatformAdmin();
   const storeId = id.safeParse(formData.get("storeId"));
   const motif = reason.safeParse(formData.get("reason"));
-  if (!storeId.success) back(formData, "/admin", "Boutique introuvable.", "erreur");
-  if (!motif.success) back(formData, "/admin", motif.error.issues[0]?.message ?? "Motif invalide.", "erreur");
+  if (!storeId.success) back(formData, "/admin/boutiques","Boutique introuvable.", "erreur");
+  if (!motif.success) back(formData, "/admin/boutiques",motif.error.issues[0]?.message ?? "Motif invalide.", "erreur");
 
   const store = await prisma.store.findUnique({ where: { id: storeId.data }, select: { id: true, name: true, slug: true, suspendedAt: true } });
-  if (!store) back(formData, "/admin", "Boutique introuvable.", "erreur");
-  if (store.suspendedAt) back(formData, "/admin", `${store.name} est déjà suspendue.`, "erreur");
+  if (!store) back(formData, "/admin/boutiques","Boutique introuvable.", "erreur");
+  if (store.suspendedAt) back(formData, "/admin/boutiques",`${store.name} est déjà suspendue.`, "erreur");
 
   await prisma.$transaction(async (tx) => {
     await tx.store.update({ where: { id: store.id }, data: { suspendedAt: new Date(), suspensionReason: motif.data } });
@@ -50,15 +50,15 @@ export async function suspendStore(formData: FormData) {
     await sendEmailQuietly("E20", owner.user.email, { boutique: store.name, motif: motif.data }, appUrl("/dashboard"));
   }
   revalidatePath("/admin", "layout");
-  back(formData, "/admin", `${store.name} est suspendue. Le propriétaire a été prévenu par e-mail.`);
+  back(formData, "/admin/boutiques",`${store.name} est suspendue. Le propriétaire a été prévenu par e-mail.`);
 }
 
 export async function restoreStore(formData: FormData) {
   const admin = await requirePlatformAdmin();
   const storeId = id.safeParse(formData.get("storeId"));
-  if (!storeId.success) back(formData, "/admin", "Boutique introuvable.", "erreur");
+  if (!storeId.success) back(formData, "/admin/boutiques","Boutique introuvable.", "erreur");
   const store = await prisma.store.findUnique({ where: { id: storeId.data }, select: { id: true, name: true, slug: true, suspendedAt: true } });
-  if (!store?.suspendedAt) back(formData, "/admin", "Cette boutique n’est pas suspendue.", "erreur");
+  if (!store?.suspendedAt) back(formData, "/admin/boutiques","Cette boutique n’est pas suspendue.", "erreur");
 
   await prisma.$transaction(async (tx) => {
     await tx.store.update({ where: { id: store.id }, data: { suspendedAt: null, suspensionReason: null } });
@@ -66,7 +66,7 @@ export async function restoreStore(formData: FormData) {
   });
   invalidateStorefrontCache(store.id, store.slug);
   revalidatePath("/admin", "layout");
-  back(formData, "/admin", `${store.name} est rétablie.`);
+  back(formData, "/admin/boutiques",`${store.name} est rétablie.`);
 }
 
 /* ---------- Abonnements ---------- */
@@ -116,7 +116,7 @@ export async function notifyFailedMessages(formData: FormData) {
 async function closeAlerts(adminId: string, keys: string[], status: "RESOLVED" | "IGNORED") {
   const alerts = (await computeAlerts()).filter((alert) => keys.includes(alert.key));
   for (const alert of alerts) {
-    const data = { status, level: alert.level, title: alert.title.slice(0, 200), body: alert.body.slice(0, 500), updatedById: adminId };
+    const data = { status, level: alert.kind, title: alert.title.slice(0, 200), body: alert.body.slice(0, 500), updatedById: adminId };
     await prisma.adminAlertState.upsert({ where: { key: alert.key }, create: { key: alert.key, ...data }, update: data });
     await logAdminAction(adminId, { action: status === "IGNORED" ? "alert.ignore" : "alert.resolve", targetType: "alert", targetId: alert.key.slice(0, 60), details: { key: alert.key } });
   }
@@ -140,6 +140,25 @@ export async function resolveAllAlerts(formData: FormData) {
   const closed = await closeAlerts(admin.id, open.map((alert) => alert.key), "RESOLVED");
   revalidatePath("/admin", "layout");
   back(formData, "/admin/alertes", closed ? `${closed} alerte(s) marquée(s) comme traitée(s).` : "Aucune alerte ouverte.");
+}
+
+/** « Renvoyer l'e-mail de vérification » d'une alerte « e-mail non vérifié » ; l'alerte passe en traitée. */
+export async function resendVerificationEmail(formData: FormData) {
+  const admin = await requirePlatformAdmin();
+  const userId = id.safeParse(formData.get("userId"));
+  if (!userId.success) back(formData, "/admin/alertes", "Compte introuvable.", "erreur");
+  const user = await prisma.user.findUnique({ where: { id: userId.data }, select: { id: true, email: true, emailVerified: true } });
+  if (!user) back(formData, "/admin/alertes", "Compte introuvable.", "erreur");
+  if (user.emailVerified) back(formData, "/admin/alertes", "Cette adresse est déjà confirmée.", "erreur");
+  try {
+    await auth.api.sendVerificationEmail({ body: { email: user.email, callbackURL: "/dashboard" } });
+  } catch {
+    back(formData, "/admin/alertes", "L’e-mail n’a pas pu partir. Vérifiez la configuration des e-mails.", "erreur");
+  }
+  await logAdminAction(admin.id, { action: "user.resend-verification", targetType: "user", targetId: user.id });
+  await closeAlerts(admin.id, [`email-unverified:${user.id}`], "RESOLVED");
+  revalidatePath("/admin", "layout");
+  back(formData, "/admin/alertes", `E-mail de vérification renvoyé à ${user.email}.`);
 }
 
 export async function reopenAlert(formData: FormData) {
@@ -180,7 +199,7 @@ export async function suspendUser(formData: FormData) {
   if (userId.data === admin.id) back(formData, "/admin/utilisateurs", "Vous ne pouvez pas suspendre votre propre compte.", "erreur");
   const user = await prisma.user.findUnique({ where: { id: userId.data }, select: { id: true, name: true, platformRole: true, suspendedAt: true } });
   if (!user) back(formData, "/admin/utilisateurs", "Compte introuvable.", "erreur");
-  if (user.platformRole === "ADMIN") back(formData, "/admin/utilisateurs", "Un administrateur ne peut pas être suspendu depuis cet écran.", "erreur");
+  if (isAdminRole(user.platformRole)) back(formData, "/admin/utilisateurs", "Un administrateur ne peut pas être suspendu depuis cet écran.", "erreur");
   if (user.suspendedAt) back(formData, "/admin/utilisateurs", `${user.name} est déjà suspendu(e).`, "erreur");
 
   await prisma.$transaction(async (tx) => {

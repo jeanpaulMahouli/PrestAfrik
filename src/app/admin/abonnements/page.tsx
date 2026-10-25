@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import Link from "next/link";
 import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";
 import { ActionDialog } from "@/components/ui/action-dialog";
@@ -34,8 +35,16 @@ export default async function AdminSubscriptionsPage({ searchParams }: PageProps
           <h1 className="v-page-title">Abonnements</h1>
           <p className="v-page-subtitle">Suivez les essais et les abonnements de toutes les boutiques, et repérez ceux qui arrivent à échéance.</p>
         </div>
-        <div className="v-page-actions">
-          <a className="btn btn-secondary" download href={`/api/admin/export?type=abonnements${filter === "all" ? "" : `&statut=${filter}`}`}>Exporter</a>
+        <div className="v-page-actions v-page-actions-inline">
+          <a
+            aria-label="Exporter les abonnements (fichier CSV)"
+            className="icon-button"
+            download
+            href={`/api/admin/export?type=abonnements${filter === "all" ? "" : `&statut=${filter}`}`}
+            title="Exporter les abonnements (CSV)"
+          >
+            <Download aria-hidden="true" size={18} />
+          </a>
         </div>
       </div>
       <AdminFeedback params={params} />

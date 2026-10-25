@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import { UserAvatar } from "@/components/account/user-avatar";
 import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";
 import { ReasonDialog } from "@/components/admin/reason-dialog";
@@ -6,7 +7,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { formatDate, formatTime } from "@/lib/format";
 import { restoreUser, sendUserPasswordReset, suspendUser } from "@/modules/admin/actions";
-import { requirePlatformAdmin } from "@/modules/admin/context";
+import { isAdminRole, requirePlatformAdmin } from "@/modules/admin/context";
 import { adminPageSize, listAdminUsers } from "@/modules/admin/queries";
 
 export const metadata = { title: "Utilisateurs" };
@@ -37,8 +38,16 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
           <h1 className="v-page-title">Utilisateurs</h1>
           <p className="v-page-subtitle">Retrouvez les comptes de la plateforme, leurs boutiques et leurs rôles.</p>
         </div>
-        <div className="v-page-actions">
-          <a className="btn btn-secondary" download href={`/api/admin/export?type=utilisateurs${query ? `&q=${encodeURIComponent(query)}` : ""}`}>Exporter</a>
+        <div className="v-page-actions v-page-actions-inline">
+          <a
+            aria-label="Exporter les utilisateurs (fichier CSV)"
+            className="icon-button"
+            download
+            href={`/api/admin/export?type=utilisateurs${query ? `&q=${encodeURIComponent(query)}` : ""}`}
+            title="Exporter les utilisateurs (CSV)"
+          >
+            <Download aria-hidden="true" size={18} />
+          </a>
         </div>
       </div>
       <AdminFeedback params={params} />
@@ -72,7 +81,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                       <UserAvatar image={user.image} name={user.name} size={32} />
                       <span>
                         {user.name}
-                        {user.platformRole === "ADMIN" && <span className="v-cell-sub">Administrateur PrestAfrik</span>}
+                        {isAdminRole(user.platformRole) && (
+                          <span className="v-cell-sub">{user.platformRole === "SUPER_ADMIN" ? "Super administrateur PrestAfrik" : "Administrateur PrestAfrik"}</span>
+                        )}
                       </span>
                     </span>
                   </td>
@@ -101,7 +112,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                           <input name="retour" type="hidden" value={retour} />
                           <SubmitButton className="v-link-button admin-row-action" pendingLabel="Envoi…">Envoyer un lien de réinitialisation</SubmitButton>
                         </form>
-                        {user.id !== admin.id && user.platformRole !== "ADMIN" && (
+                        {user.id !== admin.id && !isAdminRole(user.platformRole) && (
                           <ReasonDialog
                             action={suspendUser}
                             description={`${user.name} sera déconnecté(e) de tous ses appareils et ne pourra plus se connecter. Ses boutiques restent en ligne.`}

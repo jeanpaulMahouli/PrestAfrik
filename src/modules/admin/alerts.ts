@@ -1,145 +1,132 @@
 import "server-only";
 
-import { billingEnabled, freePlan } from "@/config/billing";
-import { formatDate, formatNumber } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
-import { classifyFailure, failureReasonLabels } from "@/modules/admin/display";
-import { daysUntil, startOfUtcMonth } from "@/modules/subscriptions/dates";
+import { buildWaMeUrl } from "@/modules/whatsapp/wa-me";
 
-export type AlertLevel = "urgent" | "important" | "info";
+// Onglet Alertes de l'administration : e-mails non vérifiés et suspicions de spam (calculés à partir des
+// données), plus les demandes d'aide (tickets, voir support.ts). Les messages WhatsApp échoués ont leur
+// propre page et ne sont plus des alertes.
+
+export type AlertKind = "email" | "spam";
 export type AdminAlert = {
-  /** Clé stable : une même situation, le même jour, garde la même clé (ignorée ou traitée une seule fois). */
+  /** Clé stable : une même situation garde la même clé (traitée ou ignorée une seule fois). */
   key: string;
-  level: AlertLevel;
+  kind: AlertKind;
   title: string;
   body: string;
-  action: { label: string; href: string };
+  /** Compte concerné (e-mail non vérifié). */
+  userId?: string;
+  /** Boutique concernée (spam), pour « Contacter » et « Suspendre ». */
+  store?: { id: string; name: string; slug: string; suspended: boolean; contactUrl: string | null };
 };
 
-export const alertLevelLabels: Record<AlertLevel, string> = { urgent: "Urgent", important: "Important", info: "Information" };
-const levelOrder: Record<AlertLevel, number> = { urgent: 0, important: 1, info: 2 };
-const day = 86_400_000;
+export const alertKindLabels: Record<AlertKind, string> = { email: "E-mail non vérifié", spam: "Suspicion de spam" };
+
+const hour = 3_600_000;
+const day = 24 * hour;
 const dayKey = (date: Date) => date.toISOString().slice(0, 10);
 
-/** Seuil de messages échoués en 24 h qui déclenche une alerte pour une boutique. */
-const failedMessagesThreshold = 3;
-/** Commandes nouvelles restées sans réponse depuis plus de 3 jours. */
-const staleOrdersThreshold = 3;
+/** Seuils de suspicion de spam (sur les dernières 24 heures). */
+export const spamThresholds = {
+  /** Produits créés en 24 h par une même boutique. */
+  productsPerDay: 50,
+  /** Produits portant exactement le même nom dans une boutique. */
+  duplicateNames: 10,
+  /** Descriptions de produits contenant un lien externe. */
+  productsWithLinks: 3,
+};
+const linkPattern = /(https?:\/\/|www\.|bit\.ly|tinyurl|t\.me\/|wa\.me\/)/i;
 
-/** Calcule les situations qui demandent l'attention de l'équipe, à partir des données réelles. */
 export async function computeAlerts(now = new Date()): Promise<AdminAlert[]> {
   const alerts: AdminAlert[] = [];
-  const today = dayKey(now);
-
-  const [apiFailures, failedEvents, staleOrders] = await Promise.all([
-    prisma.whatsappSettings.findMany({
-      where: { mode: "CLOUD_API", apiStatus: "FAILED" },
-      select: { storeId: true, apiLastCheckedAt: true, store: { select: { name: true, slug: true } } },
+  const [unverified, recentProducts, duplicates] = await Promise.all([
+    // Adresses non confirmées depuis plus d'une heure (le temps de recevoir l'e-mail).
+    prisma.user.findMany({
+      where: { emailVerified: false, suspendedAt: null, createdAt: { lt: new Date(now.getTime() - hour) } },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      select: { id: true, name: true, email: true, createdAt: true },
     }),
-    prisma.outboxEvent.findMany({
-      where: { processedAt: null, lastError: { not: null }, createdAt: { gte: new Date(now.getTime() - day) } },
-      select: { storeId: true, lastError: true, store: { select: { name: true, slug: true } } },
-      take: 2000,
+    prisma.product.findMany({
+      where: { createdAt: { gte: new Date(now.getTime() - day) } },
+      select: { storeId: true, description: true },
+      take: 20_000,
     }),
-    prisma.order.groupBy({
-      by: ["storeId"],
-      where: { processingStatus: "TO_REVIEW", createdAt: { lt: new Date(now.getTime() - 3 * day) } },
-      _count: { _all: true },
-    }),
+    prisma.product.groupBy({ by: ["storeId", "name"], where: { status: { not: "ARCHIVED" } }, _count: { _all: true }, having: { name: { _count: { gte: spamThresholds.duplicateNames } } } }),
   ]);
 
-  for (const settings of apiFailures) {
+  for (const user of unverified) {
     alerts.push({
-      key: `wa-api:${settings.storeId}:${settings.apiLastCheckedAt ? dayKey(settings.apiLastCheckedAt) : today}`,
-      level: "urgent",
-      title: "Connexion WhatsApp API en échec",
-      body: `${settings.store.name} : Meta refuse la connexion${settings.apiLastCheckedAt ? ` depuis le ${formatDate(settings.apiLastCheckedAt)}` : ""}. Les confirmations automatiques ne partent plus.`,
-      action: { label: "Vérifier la boutique", href: `/admin?q=${encodeURIComponent(settings.store.slug)}` },
+      key: `email-unverified:${user.id}`,
+      kind: "email",
+      title: `${user.name} n’a pas confirmé son adresse e-mail`,
+      body: `${user.email}, inscrit le ${user.createdAt.toLocaleDateString("fr-FR", { timeZone: "Africa/Douala" })}. Sans confirmation, sa boutique ne peut pas être publiée.`,
+      userId: user.id,
     });
   }
 
-  const failedByStore = new Map<string, { name: string; slug: string; reasons: string[] }>();
-  for (const event of failedEvents) {
-    const entry = failedByStore.get(event.storeId) ?? { name: event.store.name, slug: event.store.slug, reasons: [] };
-    entry.reasons.push(failureReasonLabels[classifyFailure(event.lastError)]);
-    failedByStore.set(event.storeId, entry);
+  const suspicions = new Map<string, string[]>();
+  const add = (storeId: string, reason: string) => suspicions.set(storeId, [...(suspicions.get(storeId) ?? []), reason]);
+  const perStore = new Map<string, { count: number; links: number }>();
+  for (const product of recentProducts) {
+    const entry = perStore.get(product.storeId) ?? { count: 0, links: 0 };
+    entry.count += 1;
+    if (product.description && linkPattern.test(product.description)) entry.links += 1;
+    perStore.set(product.storeId, entry);
   }
-  for (const [storeId, entry] of failedByStore) {
-    if (entry.reasons.length < failedMessagesThreshold) continue;
-    const frequent = [...new Set(entry.reasons)].sort((a, b) => entry.reasons.filter((r) => r === b).length - entry.reasons.filter((r) => r === a).length)[0];
-    alerts.push({
-      key: `failed:${storeId}:${today}`,
-      level: "important",
-      title: `${entry.reasons.length} messages échoués en 24 h`,
-      body: `${entry.name} : raison la plus fréquente, « ${frequent.toLocaleLowerCase("fr-FR")} ».`,
-      action: { label: "Aider le vendeur", href: `/admin/messages?q=${encodeURIComponent(entry.slug)}` },
-    });
+  for (const [storeId, entry] of perStore) {
+    if (entry.count >= spamThresholds.productsPerDay) add(storeId, `${entry.count} produits créés en 24 h`);
+    if (entry.links >= spamThresholds.productsWithLinks) add(storeId, `${entry.links} descriptions avec des liens externes`);
   }
+  for (const row of duplicates) add(row.storeId, `${row._count._all} produits nommés « ${row.name} »`);
 
-  if (staleOrders.length) {
-    const stores = await prisma.store.findMany({ where: { id: { in: staleOrders.map((row) => row.storeId) } }, select: { id: true, name: true, slug: true } });
-    const byId = new Map(stores.map((store) => [store.id, store]));
-    for (const row of staleOrders) {
-      const store = byId.get(row.storeId);
-      if (!store || row._count._all < staleOrdersThreshold) continue;
+  if (suspicions.size) {
+    const stores = await prisma.store.findMany({
+      where: { id: { in: [...suspicions.keys()] } },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        suspendedAt: true,
+        phoneE164: true,
+        memberships: { where: { role: "OWNER" }, take: 1, select: { user: { select: { name: true, email: true } } } },
+      },
+    });
+    for (const store of stores) {
+      const reasons = suspicions.get(store.id) ?? [];
+      const owner = store.memberships[0]?.user;
+      const greeting = `Bonjour${owner ? ` ${owner.name.split(/\s+/)[0]}` : ""}, c’est l’équipe PrestAfrik. Nous avons remarqué une activité inhabituelle sur votre boutique « ${store.name} ». Pouvez-vous nous en dire plus ?`;
       alerts.push({
-        key: `stale-orders:${store.id}:${today}`,
-        level: "info",
-        title: `${row._count._all} commandes sans réponse depuis plus de 3 jours`,
-        body: `${store.name} n’a ni validé ni annulé ces commandes. Le vendeur a peut-être besoin d’aide pour prendre en main son espace.`,
-        action: { label: "Voir la boutique", href: `/admin?q=${encodeURIComponent(store.slug)}` },
+        key: `spam:${store.id}:${dayKey(now)}`,
+        kind: "spam",
+        title: `Activité inhabituelle : ${store.name}`,
+        body: reasons.join(" · "),
+        store: {
+          id: store.id,
+          name: store.name,
+          slug: store.slug,
+          suspended: Boolean(store.suspendedAt),
+          contactUrl: store.phoneE164 ? buildWaMeUrl(store.phoneE164, greeting) : owner ? `mailto:${owner.email}?subject=${encodeURIComponent("Votre boutique PrestAfrik")}&body=${encodeURIComponent(greeting)}` : null,
+        },
       });
     }
   }
 
-  // Échéances et quotas : seulement quand les abonnements payants sont actifs (ADR-014).
-  if (billingEnabled) {
-    const subscriptions = await prisma.subscription.findMany({
-      where: { OR: [{ status: "TRIAL", trialEndsAt: { gt: now, lte: new Date(now.getTime() + 2 * day) } }, { status: { in: ["TRIAL", "ACTIVE"] } }] },
-      select: { storeId: true, status: true, trialEndsAt: true, plan: true, store: { select: { name: true, slug: true } } },
-    });
-    const monthStart = startOfUtcMonth(now);
-    const [orderUsage, campaignUsage] = await Promise.all([
-      prisma.outboxEvent.groupBy({ by: ["storeId"], where: { type: "ORDER_CONFIRMATION_REQUESTED", processedAt: { gte: monthStart }, lastError: null }, _count: { _all: true } }),
-      prisma.marketingCampaign.findMany({ where: { recipients: { some: { simulatedAt: { gte: monthStart } } } }, select: { storeId: true, _count: { select: { recipients: { where: { simulatedAt: { gte: monthStart } } } } } } }),
-    ]);
-    const usage = new Map<string, number>();
-    for (const row of orderUsage) usage.set(row.storeId, (usage.get(row.storeId) ?? 0) + row._count._all);
-    for (const row of campaignUsage) usage.set(row.storeId, (usage.get(row.storeId) ?? 0) + row._count.recipients);
-
-    for (const subscription of subscriptions) {
-      const remaining = daysUntil(subscription.trialEndsAt, now);
-      if (subscription.status === "TRIAL" && remaining >= 0 && remaining <= 1) {
-        alerts.push({
-          key: `trial-end:${subscription.storeId}:${dayKey(subscription.trialEndsAt)}`,
-          level: "important",
-          title: remaining === 0 ? "Essai qui se termine aujourd’hui" : "Essai qui se termine demain",
-          body: `${subscription.store.name} : aucune offre choisie pour le moment.`,
-          action: { label: "Voir l’abonnement", href: `/admin/abonnements?q=${encodeURIComponent(subscription.store.slug)}` },
-        });
-      }
-      const quota = freePlan(subscription.plan).monthlyMessageQuota;
-      const used = usage.get(subscription.storeId) ?? 0;
-      if (quota > 0 && used / quota >= 0.9) {
-        alerts.push({
-          key: `quota:${subscription.storeId}:${dayKey(monthStart)}`,
-          level: "info",
-          title: `Quota de messages à ${Math.min(100, Math.floor((used / quota) * 100))} %`,
-          body: `${subscription.store.name} a utilisé ${formatNumber(used)} messages sur ${formatNumber(quota)} ce mois-ci.`,
-          action: { label: "Voir l’abonnement", href: `/admin/abonnements?q=${encodeURIComponent(subscription.store.slug)}` },
-        });
-      }
-    }
-  }
-
-  return alerts.sort((a, b) => levelOrder[a.level] - levelOrder[b.level]);
+  // Spam d'abord : c'est le plus urgent.
+  return alerts.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "spam" ? -1 : 1));
 }
 
-/** Alertes ouvertes : celles qui n'ont été ni traitées ni ignorées. */
+/** Alertes nouvelles : celles qui n'ont été ni traitées ni ignorées. */
 export async function listOpenAlerts(now = new Date()) {
   const alerts = await computeAlerts(now);
   if (!alerts.length) return [];
   const decided = await prisma.adminAlertState.findMany({ where: { key: { in: alerts.map((alert) => alert.key) } }, select: { key: true } });
   const closed = new Set(decided.map((state) => state.key));
   return alerts.filter((alert) => !closed.has(alert.key));
+}
+
+/** Pastille du menu : alertes nouvelles + demandes d'aide ouvertes. */
+export async function countOpenAlerts() {
+  const [alerts, tickets] = await Promise.all([listOpenAlerts(), prisma.supportTicket.count({ where: { status: "OPEN" } })]);
+  return alerts.length + tickets;
 }

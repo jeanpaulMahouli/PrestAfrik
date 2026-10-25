@@ -171,4 +171,6 @@ export const sampleEmailVariables: Record<EmailId, EmailVariables> = {
   E23: { pourcentage: "90", boutique: "Mboa Style", utilises: "900", quota: "1 000" },
   E24: { prenom: "Estelle", message: "Bonjour, comment ajouter ma deuxième boutique ?" },
   E25: {},
+  E26: { prenom: "Awa", auteur: "Jean-Paul", role: "administratrice", droits: "Vous pouvez superviser les boutiques, les utilisateurs, les alertes et les demandes d’aide." },
+  E27: { prenom: "Estelle", sujet: "Ajouter une deuxième boutique", reponse: "Bonjour Estelle, ouvrez le menu de votre boutique puis « Créer une boutique »." },
 };

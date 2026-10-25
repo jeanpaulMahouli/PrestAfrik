@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { formatDate } from "@/lib/format";
 import { isPlatformAdmin, logAdminAction } from "@/modules/admin/context";
 import { storeStateDisplay } from "@/modules/admin/display";
+import { listProspects, parseProspectionFilters, prospectStatus } from "@/modules/admin/prospection";
 import { listAdminStores, listAdminSubscriptions, listAdminUsers, subscriptionFilters, type SubscriptionFilter } from "@/modules/admin/queries";
 import { auth } from "@/modules/auth/server";
 import { safeCsvCell } from "@/modules/catalog/validation";
@@ -37,6 +38,24 @@ export async function GET(request: Request) {
     rows = [
       ["nom", "email", "email_confirme", "boutiques_et_roles", "derniere_connexion", "statut", "inscrit_le"],
       ...users.map((user) => [user.name, user.email, user.emailVerified ? "oui" : "non", user.memberships.map((m) => `${m.store.name} (${roleLabels[m.role]})`).join("; "), user.lastSeenAt ? formatDate(user.lastSeenAt) : "", user.suspendedAt ? "Suspendu" : "Actif", formatDate(user.createdAt)]),
+    ];
+  } else if (type === "prospection") {
+    const filters = parseProspectionFilters(params.getAll("filtre"));
+    const { rows: prospects } = await listProspects({ filters, query });
+    rows = [
+      ["nom", "email", "telephone", "ville", "pays", "boutiques", "statut", "inscrit_le", "derniere_activite", "a_aider"],
+      ...prospects.map((row) => [
+        row.name,
+        row.email,
+        row.phoneDigits ? `+${row.phoneDigits}` : "",
+        row.city ?? "",
+        row.country ?? "",
+        row.storeCount,
+        prospectStatus(row).label,
+        formatDate(row.createdAt),
+        row.lastActivity ? formatDate(row.lastActivity) : "",
+        row.missing.join(" ; "),
+      ]),
     ];
   } else {
     return new NextResponse("Export inconnu.", { status: 400 });

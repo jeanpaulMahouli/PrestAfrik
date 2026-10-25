@@ -98,6 +98,9 @@ export async function sendEmailQuietly(id: EmailId, to: string, variables: Email
     return await sendEmail(id, to, variables, actionUrl);
   } catch (error) {
     console.error(`Échec de l’envoi de l’e-mail ${id}.`, error instanceof Error ? error.message : error);
+    // Cloche de l'administration (sans l'adresse du destinataire).
+    const { recordSystemNotification } = await import("@/modules/system/notifications");
+    await recordSystemNotification({ type: "email", severity: "WARNING", message: `Échec d’envoi de l’e-mail ${id} : ${error instanceof Error ? error.message : String(error)}`, context: { email: id } });
     return null;
   }
 }
