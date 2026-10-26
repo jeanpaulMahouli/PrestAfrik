@@ -7,7 +7,7 @@ export type TemplateVariable = (typeof templateVariables)[number];
 export const defaultCustomerTemplate =
   "Bonjour {boutique}, voici ma commande {reference} : {articles}. Montant : {montant}. Livraison : {livraison}.";
 export const defaultStoreTemplate =
-  "Bonjour {prenom}, merci pour votre commande {reference} chez {boutique} ! Articles : {articles}. Montant : {montant}. Livraison : {livraison}.";
+  "Bonjour {prenom}, merci pour votre commande {reference} chez {boutique} ! Articles : {articles}. Montant : {montant}. Livraison : {livraison}. . Confirmez-vous votre commande et ce lieu de livraison ?";
 
 // Anciens textes par défaut (avec demande de confirmation), remplacés à la lecture.
 const legacyDefaults: Record<string, string> = {
