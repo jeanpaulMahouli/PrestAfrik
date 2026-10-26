@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useRestorableValue } from "@/components/ui/use-form-persistence";
 import { uuid } from "@/lib/uuid";
@@ -241,8 +242,8 @@ export function PhotoManager({ initialPhotos, error, uploadUrl = "/api/dashboard
                   value={photo.alt}
                 />
                 <span>
-                  <button aria-label={`Monter la photo ${index + 1}`} disabled={index === 0} onClick={() => move(index, index - 1)} type="button">←</button>
-                  <button aria-label={`Descendre la photo ${index + 1}`} disabled={index === photos.length - 1} onClick={() => move(index, index + 1)} type="button">→</button>
+                  <button aria-label={`Monter la photo ${index + 1}`} disabled={index === 0} onClick={() => move(index, index - 1)} type="button"><ChevronLeft aria-hidden="true" size={16} /></button>
+                  <button aria-label={`Descendre la photo ${index + 1}`} disabled={index === photos.length - 1} onClick={() => move(index, index + 1)} type="button"><ChevronRight aria-hidden="true" size={16} /></button>
                 </span>
               </div>
             )}

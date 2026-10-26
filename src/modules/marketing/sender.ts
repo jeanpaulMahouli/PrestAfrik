@@ -20,7 +20,7 @@ export type CampaignSender =
  */
 export async function getCampaignSender(storeId: string): Promise<CampaignSender> {
   const settings = await prisma.whatsappSettings.findUnique({ where: { storeId } });
-  const configure = "Configurez-la dans Ma boutique → Messages WhatsApp → API WhatsApp.";
+  const configure = "Configurez-la dans Ma boutique, rubrique Messages WhatsApp, onglet API WhatsApp.";
   if (!settings || !settings.apiPhoneNumberId || !settings.apiAccessTokenEncrypted) {
     return {
       ok: false,
@@ -43,7 +43,7 @@ export async function getCampaignSender(storeId: string): Promise<CampaignSender
     return {
       ok: false,
       reason:
-        "Aucun modèle de message n’est indiqué : WhatsApp n’autorise l’envoi de campagnes qu’avec un modèle approuvé par Meta (avec une variable {{1}}). Indiquez son nom dans Ma boutique → Messages WhatsApp → API WhatsApp.",
+        "Aucun modèle de message n’est indiqué : WhatsApp n’autorise l’envoi de campagnes qu’avec un modèle approuvé par Meta (avec une variable {{1}}). Indiquez son nom dans Ma boutique, rubrique Messages WhatsApp, onglet API WhatsApp.",
     };
   }
   let accessToken: string;

@@ -10,9 +10,6 @@
 
 .auth-brand {
   display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-lg);
-  background: white;
 }
 
 .auth-brand img {

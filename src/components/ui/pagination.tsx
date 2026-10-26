@@ -33,10 +33,10 @@ export function Pagination({ page, pageSize, total, href }: PaginationProps) {
         </span>
         {page < pages ? (
           <Link className="btn btn-secondary btn-sm" href={href(page + 1)} rel="next">
-            Suivant →
+            Suivant
           </Link>
         ) : (
-          <span aria-disabled="true" className="btn btn-secondary btn-sm">Suivant →</span>
+          <span aria-disabled="true" className="btn btn-secondary btn-sm">Suivant</span>
         )}
       </div>
     </nav>

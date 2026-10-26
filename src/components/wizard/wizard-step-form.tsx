@@ -60,7 +60,7 @@ export function WizardStepForm({ action, draftId, step, title, subtitle, backHre
         <span className="wizard-actions-end">
           {secondary}
           <button className="btn btn-primary wizard-continue" disabled={pending} type="submit">
-            {pending ? "Enregistrement…" : `${submitLabel} →`}
+            {pending ? "Enregistrement…" : submitLabel}
           </button>
         </span>
       </div>

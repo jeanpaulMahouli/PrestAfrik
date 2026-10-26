@@ -8,22 +8,19 @@ export function NavigationLoadingIndicator() {
   const searchParams = useSearchParams();
   const routeKey = `${pathname}?${searchParams.toString()}`;
   const [visible, setVisible] = useState(false);
-  const timer = useRef<number | null>(null);
   const hideTimer = useRef<number | null>(null);
 
   useEffect(() => {
     setVisible(false);
-    if (timer.current !== null) window.clearTimeout(timer.current);
     if (hideTimer.current !== null) window.clearTimeout(hideTimer.current);
-    timer.current = null;
     hideTimer.current = null;
   }, [routeKey]);
 
   useEffect(() => {
-    function showAfterDelay() {
-      if (timer.current !== null) window.clearTimeout(timer.current);
+    // Affiché dès le clic : la barre répond tout de suite, le voile n'apparaît (en CSS) que si l'attente dure.
+    function show() {
       if (hideTimer.current !== null) window.clearTimeout(hideTimer.current);
-      timer.current = window.setTimeout(() => setVisible(true), 120);
+      setVisible(true);
       hideTimer.current = window.setTimeout(() => setVisible(false), 15_000);
     }
 
@@ -50,7 +47,7 @@ export function NavigationLoadingIndicator() {
       if (destination.origin !== window.location.origin) return;
       if (destination.pathname === window.location.pathname && destination.search === window.location.search) return;
 
-      showAfterDelay();
+      show();
     }
 
     function handleSubmit(event: SubmitEvent) {
@@ -65,7 +62,7 @@ export function NavigationLoadingIndicator() {
       if ((form.getAttribute("method") ?? "get").toLowerCase() === "get" || action.pathname.startsWith("/api/")) {
         // Le gestionnaire React s'exécute après cet écouteur : on vérifie ensuite s'il a annulé l'envoi.
         window.setTimeout(() => {
-          if (!event.defaultPrevented) showAfterDelay();
+          if (!event.defaultPrevented) show();
         }, 0);
       }
     }
@@ -75,7 +72,6 @@ export function NavigationLoadingIndicator() {
     return () => {
       document.removeEventListener("click", handleClick, true);
       document.removeEventListener("submit", handleSubmit, true);
-      if (timer.current !== null) window.clearTimeout(timer.current);
       if (hideTimer.current !== null) window.clearTimeout(hideTimer.current);
     };
   }, []);
@@ -84,6 +80,7 @@ export function NavigationLoadingIndicator() {
 
   return (
     <div aria-busy="true" aria-live="polite" className="app-loading" role="status">
+      <span aria-hidden="true" className="app-loading-veil" />
       <span aria-hidden="true" className="loading-spinner loading-spinner-page" />
       <p>Chargement en cours...</p>
     </div>

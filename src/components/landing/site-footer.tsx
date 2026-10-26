@@ -43,7 +43,11 @@ export function SiteFooter() {
       <p className="lp-footer__copyright">
         {footer.copyright}
         <br />
-        Conçu avec <Image alt="amour" className="lp-footer__heart" height={20} src="/landing/emoji/coeur.webp" width={20} /> par {footer.madeBy}.
+        Conçu avec <Image alt="amour" className="lp-footer__heart" height={20} src="/landing/emoji/coeur.webp" width={20} /> par{" "}
+        <a className="lp-footer__credit" href={footer.madeByHref} rel="noopener" target="_blank">
+          {footer.madeBy}
+        </a>
+        .
       </p>
     </footer>
   );

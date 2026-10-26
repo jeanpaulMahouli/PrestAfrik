@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Lightbulb } from "lucide-react";
+import { ArrowLeft, Lightbulb } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -96,7 +96,6 @@ export default async function BlogArticlePage({ params }: PageProps<"/blog/[arti
                 <Link href={`/blog/${item.slug}`}>
                   <span className="lp-post__tag">{item.category}</span>
                   <strong>{item.title}</strong>
-                  <ArrowRight aria-hidden="true" size={18} />
                 </Link>
               </li>
             ))}

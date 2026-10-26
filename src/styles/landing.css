@@ -629,13 +629,6 @@
   margin: 0;
 }
 
-.lp-hero__quote-cursor {
-  position: absolute;
-  left: 0;
-  top: 0.2cqw;
-  width: 2.34cqw;
-}
-
 .lp-hero__quote-photo {
   position: absolute;
   left: 3.2cqw;
@@ -1314,6 +1307,18 @@
   grid-column: 1;
   margin: 0;
   font: 300 clamp(0.95rem, 1.25vw, 1.5rem) / 1.5 var(--lp-text);
+}
+
+.lp-footer__credit {
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: rgb(255 153 0 / 0.5);
+  text-underline-offset: 0.18em;
+  transition: color 0.2s ease;
+}
+
+.lp-footer__credit:hover {
+  color: var(--lp-orange-hover);
 }
 
 .lp-footer__heart {

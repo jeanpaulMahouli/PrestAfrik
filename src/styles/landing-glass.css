@@ -1,0 +1,166 @@
+/* =============================================================================
+   Site public : design system « Club des 1000 » des tableaux de bord (glass.css).
+   Chargé après landing.css et site-pages.css. Reprend la police unique (Poppins), le bleu nuit,
+   les surfaces de verre à bord blanc, les ombres chaudes, les boutons et les champs.
+   Les fonds (page, héros, colonnes, halos, cartes illustrées en dégradé) ne changent pas.
+   ========================================================================== */
+
+/* ---------- 1. Jetons ---------- */
+.lp {
+  --lp-ink: #000026;
+  --lp-ink-soft: rgb(0 0 38 / 0.58);
+  --lp-ink-faint: rgb(0 0 38 / 0.3);
+  --lp-line: rgb(0 0 38 / 0.1);
+  --lp-shadow-float: 0 18px 46px rgb(170 96 10 / 0.14), 0 2px 6px rgb(0 0 38 / 0.06);
+
+  /* Une seule police, comme les tableaux de bord. */
+  --lp-text: var(--lp-font-ui), "Poppins", system-ui, sans-serif;
+  --lp-display: var(--lp-font-ui), "Poppins", system-ui, sans-serif;
+
+  --lp-glass-surface: rgb(255 255 255 / 0.72);
+  --lp-glass-surface-strong: rgb(255 255 255 / 0.86);
+  --lp-glass-edge: rgb(255 255 255 / 0.9);
+  --lp-glass-line: rgb(214 170 110 / 0.22);
+  --lp-glass-shadow: 0 1px 1px rgb(255 255 255 / 0.8) inset, 0 10px 30px rgb(170 96 10 / 0.07), 0 1px 3px rgb(0 0 38 / 0.04);
+  --lp-glass-shadow-raised: 0 18px 46px rgb(170 96 10 / 0.14), 0 2px 6px rgb(0 0 38 / 0.06);
+  --lp-glass-blur: blur(18px) saturate(150%);
+  --lp-ring: 0 0 0 3px rgb(255 153 0 / 0.22);
+}
+
+/* ---------- 2. Titres : fins avec un mot fort, bleu nuit ---------- */
+.lp :is(.lp-hero__title, .lp-title, .lp-title--display, .lp-page-hero__title, .lp-article__cta h2) {
+  color: var(--lp-ink);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.lp :is(.lp-feature__title, .lp-card__title, .lp-split__title, .lp-steps__item h3, .lp-compare h3, .lp-post__title, .lp-article__content h2) {
+  color: var(--lp-ink);
+  letter-spacing: -0.01em;
+}
+
+/* ---------- 3. Surfaces de verre ---------- */
+.lp :is(
+    .lp-nav,
+    .lp-feature,
+    .lp-quote:not(.is-current),
+    .lp-card,
+    .lp-steps__item,
+    .lp-compare__col--before,
+    .lp-post,
+    .lp-article__more li a,
+    .lp-contact__form,
+    .lp-contact__card,
+    .lp-dashboard__frame,
+    .lp-player
+  ) {
+  border: 1px solid var(--lp-glass-edge);
+  background: var(--lp-glass-surface);
+  box-shadow: var(--lp-glass-shadow);
+}
+
+.lp .lp-nav {
+  background: var(--lp-glass-surface-strong);
+}
+
+/* Survol : la carte se pose au-dessus du fond. */
+.lp :is(.lp-feature, .lp-card, .lp-post, .lp-contact__card):hover {
+  background: #fff;
+  box-shadow: var(--lp-glass-shadow-raised);
+}
+
+.lp .lp-article__more li a:hover {
+  background: #fff;
+}
+
+/* Carte sélectionnée : liseré orange par-dessus l'ombre de verre. */
+.lp .lp-feature.is-active {
+  box-shadow:
+    0 0 0 2px rgb(255 153 0 / 0.75),
+    var(--lp-glass-shadow-raised);
+}
+
+/* Cartes en dégradé pêche (témoignage courant, questions, comparaison) : bord blanc et ombre chaude. */
+.lp :is(.lp-quote.is-current, .lp-faq__item) {
+  border: 1px solid var(--lp-glass-edge);
+  box-shadow: var(--lp-glass-shadow);
+}
+
+.lp .lp-compare__col--after {
+  border: 1px solid var(--lp-glass-edge);
+  box-shadow:
+    inset 0 0 0 2px rgb(255 153 0 / 0.45),
+    var(--lp-glass-shadow);
+}
+
+/* Éléments flottants du héros : verre presque opaque (sans flou, pour la fluidité). */
+.lp :is(.lp-tile, .lp-hero__community, .lp-hero__quote figcaption) {
+  border: 1px solid var(--lp-glass-edge);
+  background: var(--lp-glass-surface-strong);
+  box-shadow: var(--lp-glass-shadow-raised);
+}
+
+/* ---------- 4. Boutons ---------- */
+.lp :is(.lp-btn--secondary, .lp-nav__btn--outline, .lp-nav__burger, .lp-arrow) {
+  border: 1px solid var(--lp-glass-edge);
+  background: var(--lp-glass-surface-strong);
+  box-shadow: var(--lp-glass-shadow);
+}
+
+.lp :is(.lp-btn--secondary, .lp-nav__btn--outline, .lp-nav__burger, .lp-arrow):hover {
+  background: #fff;
+  box-shadow: var(--lp-glass-shadow-raised);
+}
+
+/* Principal : ombre orangée des tableaux de bord au lieu de l'ombre noire. */
+.lp .lp-btn--primary {
+  box-shadow:
+    0 8px 20px rgb(255 153 0 / 0.28),
+    inset 0 0 0 1px rgb(255 255 255 / 0.5);
+}
+
+.lp .lp-btn--primary:hover {
+  box-shadow:
+    0 14px 30px rgb(255 153 0 / 0.36),
+    inset 0 0 0 1px rgb(255 255 255 / 0.5);
+}
+
+.lp .lp-nav__btn--solid,
+.lp .lp-menu .lp-menu__cta,
+.lp .lp-form__submit {
+  box-shadow: 0 8px 20px rgb(255 153 0 / 0.28);
+}
+
+/* ---------- 5. Couches flottantes : vrai verre dépoli ---------- */
+.lp .lp-menu {
+  border: 1px solid var(--lp-glass-edge);
+  background: rgb(255 251 245 / 0.82);
+  box-shadow: var(--lp-glass-shadow-raised);
+  -webkit-backdrop-filter: var(--lp-glass-blur);
+  backdrop-filter: var(--lp-glass-blur);
+}
+
+/* ---------- 6. Champs : blancs et nets, anneau orange au focus ---------- */
+.lp .lp-field :is(input, select, textarea) {
+  background-color: rgb(255 255 255 / 0.92);
+  box-shadow: inset 0 0 0 1px var(--lp-glass-line);
+}
+
+.lp .lp-field :is(input, select, textarea):focus {
+  box-shadow:
+    inset 0 0 0 1.5px var(--lp-orange),
+    var(--lp-ring);
+}
+
+.lp .lp-field [aria-invalid="true"] {
+  box-shadow: inset 0 0 0 2px #c2410c;
+}
+
+/* Le flou est désactivé si l'appareil le demande. */
+@media (prefers-reduced-transparency: reduce) {
+  .lp .lp-menu {
+    background: #fffaf3;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

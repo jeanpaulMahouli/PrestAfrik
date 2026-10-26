@@ -211,7 +211,7 @@ export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
       {error && <p className="auth-alert" role="alert">{error}</p>}
 
       <SubmitButton aria-describedby={canSubmit ? undefined : `${ids.help}-missing`} className="auth-submit" disabled={!canSubmit} loading={pending} pendingLabel={isSignUp ? t.signUp.pending : t.signIn.pending}>
-        {isSignUp ? t.signUp.submit : t.signIn.submit} <span aria-hidden="true">→</span>
+        {isSignUp ? t.signUp.submit : t.signIn.submit}
       </SubmitButton>
       {!canSubmit && (
         <p aria-live="polite" className="auth-submit-hint" id={`${ids.help}-missing`}>

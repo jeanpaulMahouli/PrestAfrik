@@ -166,6 +166,76 @@ select:not([multiple]):not([size])::-ms-expand {
   font-size: 1rem;
 }
 
+/* ---------- Changement de page ---------- */
+/* Barre orange affichée dès le clic (retour immédiat), puis voile en fondu si l'attente se prolonge. */
+
+.app-loading {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1rem;
+  color: var(--color-text-primary);
+  pointer-events: none;
+}
+
+.app-loading::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--color-brand-primary);
+  box-shadow: 0 0 10px rgb(255 153 0 / 0.6);
+  transform-origin: 0 50%;
+  animation: prestafrik-progress 8s cubic-bezier(0.1, 0.8, 0.2, 1) both;
+}
+
+.app-loading-veil {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgb(255 252 247 / 0.94);
+}
+
+.app-loading-veil,
+.app-loading > :not(.app-loading-veil) {
+  animation: prestafrik-fade-in 180ms ease 350ms both;
+}
+
+.app-loading p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+@keyframes prestafrik-progress {
+  from {
+    transform: scaleX(0.08);
+  }
+  to {
+    transform: scaleX(0.92);
+  }
+}
+
+@keyframes prestafrik-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-loading::before {
+    animation: none;
+    transform: scaleX(0.6);
+  }
+}
+
 /* ---------- Indicateur de chargement (boutons « Envoi… ») ---------- */
 
 .loading-spinner {

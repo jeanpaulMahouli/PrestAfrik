@@ -101,7 +101,7 @@ export function PasswordResetRequestForm() {
       </div>
       {error && <p className="auth-alert" role="alert">{error}</p>}
       <SubmitButton className="auth-submit" disabled={!valid || unknown} loading={pending} pendingLabel={texts.common.loading}>
-        {t.reset.requestSubmit} <span aria-hidden="true">→</span>
+        {t.reset.requestSubmit}
       </SubmitButton>
     </form>
   );

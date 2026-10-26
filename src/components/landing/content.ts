@@ -259,4 +259,5 @@ export const footer = {
   ],
   copyright: "© 2026 PrestAfrik. Tous droits réservés.",
   madeBy: "Zalam",
+  madeByHref: "https://zalam.fr",
 };

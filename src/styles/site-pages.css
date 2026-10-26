@@ -1286,7 +1286,7 @@
 }
 
 /* Téléphone du formulaire de contact : indicatif (liste) + numéro. */
-.lp-phone {
+.lp-phone-field {
   display: grid;
   grid-template-columns: 7rem minmax(0, 1fr);
   gap: 8px;

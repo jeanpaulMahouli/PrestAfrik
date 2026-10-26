@@ -33,7 +33,7 @@ export function ContactForm({ defaultSubject }: { defaultSubject: ContactSubject
         <div className="lp-field">
           <span id="contact-phone-label">Téléphone ou WhatsApp</span>
           {/* Indicatif choisi dans la liste, numéro sans indicatif. */}
-          <span className="lp-phone">
+          <span className="lp-phone-field">
             <select aria-label="Indicatif du pays" defaultValue="CM" name="phoneCountry">
               {phoneDialOptions().map((option) => (
                 <option key={option.iso} value={option.iso}>{option.dialCode}</option>

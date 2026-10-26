@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BlogCover, formatPostDate } from "@/components/landing/blog-cover";
@@ -31,7 +30,7 @@ export default async function BlogPage() {
             <h2 className="lp-post__title">{featured.title}</h2>
             <p className="lp-post__excerpt">{featured.excerpt}</p>
             <span className="lp-post__more">
-              Lire l’article <ArrowRight aria-hidden="true" size={18} />
+              Lire l’article
             </span>
           </div>
         </Link>
@@ -48,7 +47,7 @@ export default async function BlogPage() {
                   <h2 className="lp-post__title">{post.title}</h2>
                   <p className="lp-post__excerpt">{post.excerpt}</p>
                   <span className="lp-post__more">
-                    Lire l’article <ArrowRight aria-hidden="true" size={18} />
+                    Lire l’article
                   </span>
                 </div>
               </Link>

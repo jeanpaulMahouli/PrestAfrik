@@ -64,7 +64,7 @@ export function PasswordResetForm({ token }: { token: string }) {
       </div>
       {error && <p className="auth-alert" role="alert">{error}</p>}
       <SubmitButton className="auth-submit" disabled={!valid} loading={pending} pendingLabel={texts.common.saving}>
-        {t.reset.newSubmit} <span aria-hidden="true">→</span>
+        {t.reset.newSubmit}
       </SubmitButton>
     </form>
   );

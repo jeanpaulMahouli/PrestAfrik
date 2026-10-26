@@ -47,7 +47,6 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
           <Image alt="" height={36} src="/landing/icons/sac-argent.svg" width={36} />
         </div>
         <figure className="lp-float lp-float--late lp-hero__quote">
-          <Image alt="" className="lp-hero__quote-cursor" height={18} src="/landing/icons/curseur.svg" width={20} />
           <Image alt="" className="lp-hero__quote-photo" height={68} src={hero.quote.photo} width={68} />
           <figcaption>
             <strong>{hero.quote.name}</strong>

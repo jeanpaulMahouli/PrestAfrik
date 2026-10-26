@@ -28,7 +28,7 @@ function summary(block: PageBlock) {
     case "list":
       return block.items.filter(Boolean).join(" · ") || "(vide)";
     case "button":
-      return `« ${block.label} » → ${buttonTargets[block.target]}`;
+      return `« ${block.label} » : ${buttonTargets[block.target]}`;
     case "qa":
       return block.question || "(question vide)";
     case "contact":
