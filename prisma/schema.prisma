@@ -38,6 +38,15 @@ enum StoreTheme {
   CATALOGUE_EXPRESS
   MODE_BEAUTE
   BOUTIQUE_MARQUE
+  GRAND_MARCHE
+}
+
+/// Présentation de la rangée « Promotions » de la vitrine (Ma boutique → Apparence).
+enum StorePromoStyle {
+  CLASSIQUE
+  VENTE_FLASH
+  OFFRES_DU_JOUR
+  ECLAT
 }
 
 enum ProductStatus {
@@ -267,6 +276,7 @@ model Store {
   /// Avis clients sur les fiches produit (le vendeur peut les désactiver).
   reviewsEnabled     Boolean                @default(true)
   theme              StoreTheme             @default(CATALOGUE_EXPRESS)
+  promoStyle         StorePromoStyle        @default(CLASSIQUE)
   isPublished        Boolean                @default(false)
   description        String?                @db.VarChar(2000)
   logoUrl            String?

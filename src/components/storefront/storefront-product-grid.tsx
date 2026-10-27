@@ -11,7 +11,12 @@ type StoreProduct = {
   priceXaf: number;
   promotionalPriceXaf: number | null;
   images: { url: string; altText: string | null }[];
+  /** Produits en promotion : stock réellement disponible quand le vendeur le suit (sinon absent ou null). */
+  stockLeft?: number | null;
 };
+
+/** En dessous de ce stock, la carte d'une promotion affiche « Plus que N en stock » et sa jauge. */
+const lowStockThreshold = 10;
 
 type Ratings = Record<string, { average: number; count: number }> | null;
 
@@ -24,13 +29,17 @@ export function ProductPrice({ priceXaf, promotionalPriceXaf }: { priceXaf: numb
   );
 }
 
-/** Carte d'un produit ; `discountBadge` ajoute « -15 % » en haut à gauche de la photo. */
+/**
+ * Carte d'un produit ; `discountBadge` ajoute « -15 % » en haut à gauche de la photo.
+ * `promo` ajoute l'économie réalisée et le stock restant : chaque style de promotion (sf-promo-…) choisit ce qu'il montre.
+ */
 export function ProductCard({
   base,
   product,
   ratings = null,
   priority = false,
   discountBadge = false,
+  promo = false,
   className = "sf-card",
 }: {
   base: string;
@@ -38,9 +47,12 @@ export function ProductCard({
   ratings?: Ratings;
   priority?: boolean;
   discountBadge?: boolean;
+  promo?: boolean;
   className?: string;
 }) {
-  const discount = discountBadge ? discountPercent(product) : 0;
+  const discount = discountBadge || promo ? discountPercent(product) : 0;
+  const saving = promo && discount > 0 ? product.priceXaf - (product.promotionalPriceXaf ?? product.priceXaf) : 0;
+  const stockLeft = promo && product.stockLeft != null && product.stockLeft > 0 && product.stockLeft <= lowStockThreshold ? product.stockLeft : null;
   return (
     <li className={className}>
       <Link className="sf-card-link" href={storeHref(base, product.slug)}>
@@ -57,6 +69,7 @@ export function ProductCard({
           ) : (
             <span aria-hidden="true" className="sf-card-placeholder" />
           )}
+          {promo && <span aria-hidden="true" className="sf-card-shine" />}
           {discount > 0 && (
             <span className="sf-discount-badge">
               -{discount} %<span className="visually-hidden"> de réduction</span>
@@ -72,6 +85,15 @@ export function ProductCard({
             </span>
           )}
           <ProductPrice priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} />
+          {saving > 0 && <span className="sf-promo-saving">Économisez {formatXaf(saving)}</span>}
+          {stockLeft !== null && (
+            <span className="sf-promo-stock">
+              <span aria-hidden="true" className="sf-promo-stock-bar">
+                <span style={{ width: `${Math.max(12, (stockLeft / lowStockThreshold) * 100)}%` }} />
+              </span>
+              <small>Plus que {stockLeft} en stock</small>
+            </span>
+          )}
         </span>
       </Link>
     </li>
@@ -87,6 +109,7 @@ export function StorefrontProductGrid({
   products,
   ratings = null,
   discountBadge = false,
+  promo = false,
   eager = 4,
 }: {
   /** Début des liens de la boutique (storeBasePath). */
@@ -94,13 +117,15 @@ export function StorefrontProductGrid({
   products: StoreProduct[];
   ratings?: Ratings;
   discountBadge?: boolean;
+  /** Cartes de promotion (voir ProductCard). */
+  promo?: boolean;
   /** Nombre de premières photos chargées sans attendre (0 pour une grille plus bas dans la page). */
   eager?: number;
 }) {
   return (
     <ul className="sf-grid">
       {products.map((product, index) => (
-        <ProductCard base={base} discountBadge={discountBadge} key={product.id} priority={index < eager} product={product} ratings={ratings} />
+        <ProductCard base={base} discountBadge={discountBadge} key={product.id} promo={promo} priority={index < eager} product={product} ratings={ratings} />
       ))}
     </ul>
   );

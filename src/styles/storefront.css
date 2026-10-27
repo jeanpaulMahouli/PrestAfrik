@@ -448,17 +448,18 @@
   text-decoration: none;
 }
 
+/* Photos produits : cadre carré 1:1, photo entière visible (jamais recadrée ni agrandie). */
 .sf-card-media {
   display: block;
   aspect-ratio: 1;
-  background: #dde5df;
+  background: var(--color-surface);
 }
 
 .sf-card-media img {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .sf-card-placeholder {
@@ -550,7 +551,7 @@
 .sf-gallery {
   position: relative;
   aspect-ratio: 1;
-  background: #dde5df;
+  background: var(--color-surface);
 }
 
 .sf-gallery-track {
@@ -568,7 +569,7 @@
 .sf-gallery-track img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 /* Flèches précédente / suivante : cercles sombres qui apparaissent au survol de la photo (ou au clavier). */
@@ -1400,7 +1401,7 @@
 }
 
 .sf-theme-mode-beaute .sf-card-media {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1;
 }
 
 .sf-theme-mode-beaute .sf-card-body {
@@ -1969,7 +1970,7 @@
 .sf-theme-boutique-marque .sf-card-media img,
 .sf-theme-boutique-marque .sf-card-placeholder {
   aspect-ratio: 1;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .sf-theme-boutique-marque .sf-card-body {

@@ -1,0 +1,741 @@
+/* Vitrines : thème « Grand marché » et styles de la rangée « Promotions » (Ma boutique → Apparence).
+   Touche PrestAfrik : la « bande pagne », fine frise aux trois couleurs de la boutique (style Éclat).
+   Toutes les animations s'arrêtent si le visiteur a réduit les animations de son appareil. */
+
+.sf {
+  --sf-pagne: repeating-linear-gradient(
+    90deg,
+    var(--store-primary) 0 18px,
+    var(--store-accent) 18px 26px,
+    var(--store-secondary) 26px 34px,
+    var(--store-accent) 34px 42px
+  );
+  --sf-gold: linear-gradient(100deg, #f5d27a 0%, #fff3c4 22%, #e0a93b 45%, #fff3c4 68%, #f5d27a 100%);
+  --sf-night: #0b0b2e;
+  --sf-deal-red: #d92d20;
+}
+
+/* ======================================================================
+   Thème « Grand marché » (GRAND_MARCHE)
+   Inspiré des supermarchés en ligne : en-tête sombre avec la recherche intégrée, sections en panneaux
+   blancs, cartes compactes et prix bien visibles, engagements de la boutique en bandeau.
+   ====================================================================== */
+
+.sf-theme-grand-marche {
+  --sf-page: #eef0f2;
+  --sf-radius: 0.5rem;
+}
+
+.sf-theme-grand-marche .sf-header {
+  border-bottom: 0;
+  color: var(--store-on-secondary);
+  background: var(--store-secondary);
+}
+
+.sf-theme-grand-marche .sf-brand-text small {
+  color: color-mix(in srgb, var(--store-on-secondary) 75%, transparent);
+}
+
+.sf-theme-grand-marche :is(.sf-header-actions .sf-cart-icon, .sf-menu-button) {
+  color: var(--store-on-secondary);
+  background: color-mix(in srgb, var(--store-on-secondary) 12%, transparent);
+}
+
+.sf-theme-grand-marche .sf-logo {
+  background: color-mix(in srgb, var(--store-on-secondary) 14%, transparent);
+  color: var(--store-on-secondary);
+}
+
+@media (min-width: 768px) {
+  .sf-theme-grand-marche .sf-nav a:not([aria-current="page"]) {
+    color: var(--store-on-secondary);
+  }
+
+  .sf-theme-grand-marche .sf-nav a:not([aria-current="page"]):hover {
+    background: color-mix(in srgb, var(--store-on-secondary) 12%, transparent);
+  }
+}
+
+/* Recherche dans la continuité de l'en-tête, comme sur les grands sites marchands. */
+.sf-theme-grand-marche .sf-home > .sf-search {
+  margin: 0;
+  padding: 0.25rem 1rem 1rem;
+  background: var(--store-secondary);
+}
+
+.sf-theme-grand-marche .sf-home > .sf-search svg {
+  transform: translateY(calc(-50% - 0.375rem));
+  left: 1.875rem;
+}
+
+.sf-theme-grand-marche .sf-home > .sf-search input {
+  border: 2px solid var(--store-primary);
+  border-radius: var(--sf-radius);
+}
+
+/* Description dans le bandeau sombre, juste au-dessus de la recherche. */
+.sf-theme-grand-marche .sf-home > .sf-description {
+  margin: 0;
+  padding: 0.75rem 1rem 0.5rem;
+  color: color-mix(in srgb, var(--store-on-secondary) 80%, transparent);
+  background: var(--store-secondary);
+}
+
+@media (min-width: 1024px) {
+  /* Bandeau prolongé jusqu'aux bords de l'écran, au-delà de la colonne centrale. */
+  .sf-theme-grand-marche .sf-home > :is(.sf-description, .sf-search) {
+    padding-right: 2rem;
+    padding-left: 2rem;
+    box-shadow: 0 0 0 100vmax var(--store-secondary);
+    clip-path: inset(0 -100vmax);
+  }
+
+  .sf-theme-grand-marche .sf-home > .sf-search svg {
+    left: 2.875rem;
+  }
+}
+
+.sf-theme-grand-marche .sf-chips {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-divider);
+  background: var(--color-surface);
+}
+
+.sf-theme-grand-marche .sf-chips :is(a, button) {
+  border-radius: 0.375rem;
+}
+
+.sf-theme-grand-marche .sf-home-section {
+  margin-top: 0.75rem;
+  padding: 1rem 0;
+  background: var(--color-surface);
+}
+
+.sf-theme-grand-marche .sf-grid {
+  gap: 0.625rem;
+}
+
+.sf-theme-grand-marche .sf-card {
+  border: 1px solid #e3e6e6;
+  box-shadow: none;
+}
+
+.sf-theme-grand-marche .sf-card-media {
+  background: #f7f8f8;
+}
+
+.sf-theme-grand-marche .sf-card-body {
+  padding: 0.625rem;
+}
+
+.sf-theme-grand-marche .sf-card-body > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.875rem;
+  font-weight: 500;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.sf-theme-grand-marche .sf-card-body .sf-price {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+/* Ancien prix sur sa propre ligne : il ne se coupe pas dans les cartes étroites. */
+.sf-theme-grand-marche .sf-card-body .sf-price del {
+  display: block;
+  margin-left: 0;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .sf-theme-grand-marche .sf-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .sf-theme-grand-marche .sf-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: 0 2rem;
+  }
+}
+
+/* Engagements de la boutique : visibles avec ce thème seulement. */
+.sf-trust {
+  display: none;
+}
+
+.sf-theme-grand-marche .sf-trust {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  margin: 0.75rem 0 0;
+  padding: 0 1rem;
+  list-style: none;
+  scrollbar-width: none;
+}
+
+.sf-theme-grand-marche .sf-trust li {
+  display: flex;
+  min-width: 13rem;
+  flex: 1 0 auto;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #e3e6e6;
+  border-radius: var(--sf-radius);
+  background: var(--color-surface);
+}
+
+.sf-theme-grand-marche .sf-trust svg {
+  box-sizing: content-box;
+  flex: none;
+  padding: 0.4rem;
+  border-radius: 50%;
+  color: var(--store-primary);
+  background: color-mix(in srgb, var(--store-primary) 12%, transparent);
+}
+
+.sf-theme-grand-marche .sf-trust span {
+  display: grid;
+  line-height: 1.25;
+}
+
+.sf-theme-grand-marche .sf-trust strong {
+  font-size: 0.85rem;
+}
+
+.sf-theme-grand-marche .sf-trust small {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+@media (min-width: 1024px) {
+  .sf-theme-grand-marche .sf-trust {
+    padding: 0 2rem;
+  }
+}
+
+/* ======================================================================
+   Rangée « Promotions » : éléments communs
+   ====================================================================== */
+
+.sf-promo-head {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.sf-promo-heading {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 0.125rem;
+}
+
+.sf-promo-head :is(h1, h2) {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.sf-promo-sub {
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+
+.sf-promo-all {
+  flex: none;
+}
+
+/* Un seul libellé et une seule icône : ceux du style choisi. */
+.sf-promo-label,
+.sf-promo-icon,
+.sf-promo-icon svg {
+  display: none;
+}
+
+.sf-promo-classique .sf-promo-label-classique,
+.sf-promo-vente-flash .sf-promo-label-vente-flash,
+.sf-promo-offres-du-jour .sf-promo-label-offres-du-jour,
+.sf-promo-eclat .sf-promo-label-eclat {
+  display: inline;
+}
+
+.sf-promo-vente-flash :is(.sf-promo-icon, .sf-promo-icon-vente-flash),
+.sf-promo-offres-du-jour :is(.sf-promo-icon, .sf-promo-icon-offres-du-jour),
+.sf-promo-eclat :is(.sf-promo-icon, .sf-promo-icon-eclat) {
+  display: grid;
+}
+
+.sf-promo-icon {
+  flex: none;
+  place-items: center;
+}
+
+/* Économie et stock : montrés selon le style. */
+.sf-promo-saving,
+.sf-promo-stock,
+.sf-card-shine {
+  display: none;
+}
+
+.sf-promo-saving {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.sf-promo-stock {
+  gap: 0.25rem;
+  margin-top: 0.125rem;
+}
+
+.sf-promo-stock small {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.sf-promo-stock-bar {
+  display: block;
+  overflow: hidden;
+  height: 0.375rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--sf-deal-red) 14%, transparent);
+}
+
+.sf-promo-stock-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f59e0b, var(--sf-deal-red));
+  transform-origin: left;
+  animation: sf-promo-fill 1s 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* ======================================================================
+   Style « Vente flash » (VENTE_FLASH)
+   Bandeau aux couleurs de la boutique avec rayures qui défilent, éclair qui clignote,
+   badges de réduction qui battent, jauge « Plus que N en stock » (stock réel).
+   ====================================================================== */
+
+.sf-promo-vente-flash .sf-promo-section {
+  overflow: hidden;
+  margin: 1.75rem 0.75rem 0;
+  padding: 0 0 0.75rem;
+  border-radius: var(--sf-radius);
+  background: var(--color-surface);
+  box-shadow: 0 4px 18px rgb(23 37 31 / 0.1);
+}
+
+.sf-promo-vente-flash .sf-promo-head {
+  position: relative;
+  margin: 0 0 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--store-on-primary);
+  background:
+    repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.1) 0 12px, transparent 12px 24px),
+    linear-gradient(100deg, var(--store-primary), color-mix(in srgb, var(--store-primary) 62%, var(--sf-deal-red)));
+  background-size: 34px 34px, 100% 100%;
+  animation: sf-promo-stripes 1.6s linear infinite;
+}
+
+.sf-promo-vente-flash .sf-promo-head :is(h1, h2) {
+  font-size: 1.25rem;
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.sf-promo-vente-flash .sf-promo-sub {
+  color: inherit;
+  opacity: 0.92;
+}
+
+.sf-promo-vente-flash .sf-promo-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  color: #1a1200;
+  background: #ffd400;
+  box-shadow: 0 0 0 0 rgb(255 212 0 / 0.6);
+  animation: sf-promo-ping 1.8s ease-out infinite;
+}
+
+.sf-promo-vente-flash .sf-promo-icon svg {
+  fill: currentColor;
+  animation: sf-promo-flash 1.8s ease-in-out infinite;
+}
+
+.sf-promo-vente-flash .sf-promo-all {
+  padding: 0.375rem 0.875rem;
+  border-radius: 999px;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  text-decoration: none;
+}
+
+.sf-promo-vente-flash .sf-promo-section .sf-home-section-lead {
+  margin-top: 0;
+}
+
+.sf-promo-vente-flash .sf-discount-badge {
+  color: #fff;
+  background: var(--sf-deal-red);
+  animation: sf-promo-beat 2.4s ease-in-out infinite;
+}
+
+.sf-promo-vente-flash .sf-promo-stock {
+  display: grid;
+}
+
+.sf-promo-vente-flash .sf-promo-stock small {
+  color: var(--sf-deal-red);
+}
+
+/* Prix en rouge dans la rangée promo seulement (pas dans « Mis en avant » ni le catalogue). */
+.sf-promo-vente-flash .sf-promo-section .sf-price {
+  color: var(--sf-deal-red);
+}
+
+.sf-promo-vente-flash .sf-promo-section .sf-price del {
+  color: var(--color-text-muted);
+}
+
+/* ======================================================================
+   Style « Offres du jour » (OFFRES_DU_JOUR)
+   Lecture rapide façon grand site marchand : badge rouge rectangulaire, prix en grand,
+   ancien prix sur sa ligne, économie en rouge, jauge de stock fine.
+   ====================================================================== */
+
+.sf-promo-offres-du-jour .sf-promo-section {
+  margin-top: 1.25rem;
+  padding: 1rem 0 0.75rem;
+  border-top: 1px solid var(--color-divider);
+  border-bottom: 1px solid var(--color-divider);
+  background: var(--color-surface);
+}
+
+.sf-promo-offres-du-jour .sf-promo-head :is(h1, h2) {
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.sf-promo-offres-du-jour .sf-promo-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  color: #fff;
+  background: var(--sf-deal-red);
+}
+
+.sf-promo-offres-du-jour .sf-promo-sub strong {
+  color: var(--sf-deal-red);
+}
+
+.sf.sf-promo-offres-du-jour .sf-promo-section .sf-card {
+  border-radius: var(--sf-radius);
+  background: transparent;
+  box-shadow: none;
+}
+
+.sf-promo-offres-du-jour .sf-promo-section .sf-card-media {
+  border-radius: var(--sf-radius);
+  background: #f5f6f6;
+}
+
+.sf-promo-offres-du-jour .sf-promo-section .sf-card-body {
+  padding: 0.5rem 0.125rem 0.25rem;
+}
+
+.sf-promo-offres-du-jour .sf-discount-badge {
+  border-radius: 0.25rem;
+  color: #fff;
+  background: var(--sf-deal-red);
+}
+
+.sf-promo-offres-du-jour .sf-promo-section .sf-price {
+  display: grid;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.sf-promo-offres-du-jour .sf-promo-section .sf-price del {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.sf-promo-offres-du-jour :is(.sf-promo-saving, .sf-promo-stock) {
+  display: grid;
+}
+
+.sf-promo-offres-du-jour .sf-promo-saving {
+  color: var(--sf-deal-red);
+}
+
+.sf-promo-offres-du-jour .sf-promo-stock small {
+  color: var(--color-text-secondary);
+}
+
+.sf-promo-offres-du-jour .sf-promo-stock-bar {
+  height: 0.25rem;
+}
+
+/* ======================================================================
+   Style « Éclat » (ECLAT) — le « blin-blin » PrestAfrik
+   Écrin nuit aux lueurs des couleurs de la boutique, étoiles qui scintillent, titre en or animé,
+   reflet qui traverse les photos, médaillon doré pour la réduction, bande pagne en haut.
+   ====================================================================== */
+
+.sf-promo-eclat .sf-promo-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 1.75rem 0.75rem 0;
+  padding: 1.25rem 0 1rem;
+  border-radius: calc(var(--sf-radius) + 0.25rem);
+  color: #fff;
+  background:
+    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--store-primary) 45%, transparent), transparent 55%),
+    radial-gradient(circle at 95% 100%, color-mix(in srgb, var(--store-accent) 35%, transparent), transparent 50%),
+    var(--sf-night);
+  box-shadow: 0 10px 30px rgb(11 11 46 / 0.35);
+}
+
+.sf-promo-eclat .sf-promo-section::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  background: var(--sf-pagne);
+  content: "";
+}
+
+/* Étoiles : quelques points lumineux qui scintillent derrière le contenu. */
+.sf-promo-eclat .sf-promo-section::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    radial-gradient(circle at 8% 22%, #fff3c4 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 28% 12%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 46% 30%, #f5d27a 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 67% 10%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 26%, #fff3c4 0 2px, transparent 3px),
+    radial-gradient(circle at 93% 64%, #fff 0 1px, transparent 2px),
+    radial-gradient(circle at 4% 78%, #f5d27a 0 1.5px, transparent 2.5px);
+  content: "";
+  animation: sf-promo-twinkle 3.2s ease-in-out infinite alternate;
+}
+
+.sf-promo-eclat .sf-promo-head :is(h1, h2) {
+  color: transparent;
+  background: var(--sf-gold);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  font-size: 1.4rem;
+  font-weight: 800;
+  animation: sf-promo-gold 4s linear infinite;
+}
+
+.sf-promo-eclat .sf-promo-sub {
+  color: rgb(255 255 255 / 0.78);
+}
+
+.sf-promo-eclat .sf-promo-sub strong {
+  color: #f5d27a;
+}
+
+.sf-promo-eclat .sf-promo-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  color: #2a1a00;
+  background: var(--sf-gold);
+  box-shadow: 0 0 18px rgb(245 210 122 / 0.55);
+}
+
+.sf-promo-eclat .sf-promo-icon svg {
+  animation: sf-promo-sparkle 2.6s ease-in-out infinite;
+}
+
+.sf-promo-eclat .sf-promo-all {
+  padding: 0.375rem 0.875rem;
+  border-radius: 999px;
+  color: #2a1a00;
+  background: var(--sf-gold);
+  background-size: 220% 100%;
+  text-decoration: none;
+  animation: sf-promo-gold 4s linear infinite;
+}
+
+.sf-promo-eclat .sf-promo-section .sf-home-section-lead {
+  color: rgb(255 255 255 / 0.75);
+}
+
+/* Blanc plein : la surface « verre » du thème par défaut (blanc translucide) paraîtrait grise sur le fond nuit.
+   « .sf » en tête : plus prioritaire que les règles du thème Catalogue express. */
+.sf.sf-promo-eclat .sf-promo-section :is(.sf-card, .sf-card-media) {
+  background: #fff;
+}
+
+.sf.sf-promo-eclat .sf-promo-section .sf-card {
+  color: var(--color-text-primary);
+  box-shadow: 0 0 0 1px rgb(245 210 122 / 0.55), 0 8px 22px rgb(0 0 0 / 0.35);
+}
+
+.sf-promo-eclat .sf-card-shine {
+  position: absolute;
+  z-index: 1;
+  display: block;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / 0.55) 50%, transparent 65%);
+  pointer-events: none;
+  transform: translateX(-120%);
+  animation: sf-promo-shine 4.5s ease-in-out infinite;
+}
+
+.sf-promo-eclat li:nth-child(2n) .sf-card-shine {
+  animation-delay: 1.2s;
+}
+
+.sf-promo-eclat li:nth-child(3n) .sf-card-shine {
+  animation-delay: 2.4s;
+}
+
+.sf-promo-eclat .sf-discount-badge {
+  z-index: 2;
+  border-radius: 999px;
+  color: #2a1a00;
+  background: var(--sf-gold);
+  background-size: 220% 100%;
+  box-shadow: 0 2px 10px rgb(224 169 59 / 0.6);
+  transform: rotate(-6deg);
+  animation: sf-promo-gold 4s linear infinite;
+}
+
+.sf-promo-eclat :is(.sf-promo-saving, .sf-promo-stock) {
+  display: grid;
+}
+
+.sf-promo-eclat .sf-promo-saving {
+  color: #a8670a;
+}
+
+.sf-promo-eclat .sf-promo-stock small {
+  color: #a8670a;
+}
+
+.sf-promo-eclat .sf-promo-stock-bar {
+  background: rgb(224 169 59 / 0.2);
+}
+
+.sf-promo-eclat .sf-promo-stock-bar span {
+  background: linear-gradient(90deg, #f5d27a, #e0a93b);
+}
+
+.sf-promo-eclat .sf-rail-more a {
+  color: #2a1a00;
+  background: var(--sf-gold);
+  background-size: 220% 100%;
+  animation: sf-promo-gold 4s linear infinite;
+}
+
+.sf-promo-eclat .sf-pagination ol a:not([aria-current="page"]) {
+  border-color: rgb(255 255 255 / 0.3);
+}
+
+@media (hover: hover) {
+  .sf.sf-promo-eclat .sf-promo-section .sf-card:hover {
+    box-shadow: 0 0 0 2px #f5d27a, 0 0 26px rgb(245 210 122 / 0.45), 0 10px 26px rgb(0 0 0 / 0.4);
+  }
+}
+
+/* ---------- Grands écrans ---------- */
+
+@media (min-width: 1024px) {
+  .sf-promo-vente-flash .sf-promo-section,
+  .sf-promo-eclat .sf-promo-section {
+    margin-right: 2rem;
+    margin-left: 2rem;
+  }
+
+  .sf-promo-vente-flash .sf-promo-head {
+    padding: 0.875rem 2rem;
+  }
+
+  .sf-promo-offres-du-jour .sf-promo-section .sf-grid,
+  .sf-promo-eclat .sf-promo-section .sf-grid,
+  .sf-promo-vente-flash .sf-promo-section .sf-grid {
+    padding: 0 2rem;
+  }
+}
+
+/* ---------- Animations ---------- */
+
+@keyframes sf-promo-stripes {
+  to { background-position: 34px 0, 0 0; }
+}
+
+@keyframes sf-promo-ping {
+  0% { box-shadow: 0 0 0 0 rgb(255 212 0 / 0.6); }
+  70%, 100% { box-shadow: 0 0 0 12px rgb(255 212 0 / 0); }
+}
+
+@keyframes sf-promo-flash {
+  0%, 60%, 100% { opacity: 1; transform: none; }
+  70% { opacity: 0.35; transform: scale(0.9); }
+  80% { opacity: 1; transform: scale(1.12); }
+}
+
+@keyframes sf-promo-beat {
+  0%, 80%, 100% { transform: none; }
+  88% { transform: scale(1.1); }
+}
+
+@keyframes sf-promo-fill {
+  from { transform: scaleX(0); }
+}
+
+@keyframes sf-promo-gold {
+  to { background-position: -220% 0; }
+}
+
+@keyframes sf-promo-twinkle {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+
+@keyframes sf-promo-sparkle {
+  0%, 100% { transform: rotate(0) scale(1); }
+  50% { transform: rotate(18deg) scale(1.15); }
+}
+
+@keyframes sf-promo-shine {
+  0%, 55% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-promo-vente-flash .sf-promo-head,
+  .sf-promo-vente-flash .sf-promo-icon,
+  .sf-promo-vente-flash .sf-promo-icon svg,
+  .sf-promo-vente-flash .sf-discount-badge,
+  .sf-promo-stock-bar span,
+  .sf-promo-eclat .sf-promo-section::after,
+  .sf-promo-eclat .sf-promo-head :is(h1, h2),
+  .sf-promo-eclat .sf-promo-icon svg,
+  .sf-promo-eclat .sf-promo-all,
+  .sf-promo-eclat .sf-discount-badge,
+  .sf-promo-eclat .sf-rail-more a {
+    animation: none;
+  }
+
+  .sf-promo-eclat .sf-card-shine {
+    display: none;
+  }
+}

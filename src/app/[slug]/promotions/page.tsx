@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PromoHeading } from "@/components/storefront/promo-heading";
 import { StorePagination } from "@/components/storefront/store-pagination";
 import { StorefrontProductGrid } from "@/components/storefront/storefront-product-grid";
 import { BackIcon } from "@/components/ui/icons";
 import { storeHref } from "@/lib/store-host";
 import { storeBasePath } from "@/lib/store-links";
+import { discountPercent } from "@/modules/catalog/format";
 import { getStorefrontStore } from "@/modules/catalog/service";
 import { getRatingSummaries } from "@/modules/reviews/queries";
 import { getStorefrontMerchandising, homeSectionPageSize, pageSlice, readPage } from "@/modules/storefront/merchandising";
@@ -33,14 +35,12 @@ export default async function StorePromotionsPage({ params, searchParams }: Page
     <main className="sf-home sf-promotions">
       <div className="sf-page-head sf-home-page-head">
         <Link aria-label="Retour à la boutique" className="sf-back" href={storeHref(base)}><BackIcon size={18} /></Link>
-        <h1>Promotions</h1>
       </div>
       {promotions.length ? (
-        <section aria-label="Produits en promotion" className="sf-home-section">
-          <p className="sf-home-section-lead">
-            {promotions.length} produit{promotions.length > 1 ? "s" : ""} à prix réduit, des plus fortes réductions aux plus petites. Profitez-en !
-          </p>
-          <StorefrontProductGrid base={base} discountBadge products={pageSlice(promotions, page)} ratings={ratings} />
+        <section aria-labelledby="sf-promo-title" className="sf-home-section sf-promo-section">
+          <PromoHeading count={promotions.length} id="sf-promo-title" level={1} maxDiscount={discountPercent(promotions[0])} />
+          <p className="sf-home-section-lead">Des plus fortes réductions aux plus petites. Profitez-en !</p>
+          <StorefrontProductGrid base={base} discountBadge products={pageSlice(promotions, page)} promo ratings={ratings} />
           <StorePagination
             href={(value) => (value > 1 ? `${listHref}?page=${value}` : listHref)}
             label="Promotions"

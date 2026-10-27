@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { StoreTheme } from "@prisma/client";
+import type { StorePromoStyle, StoreTheme } from "@prisma/client";
 import type { CSSProperties, ReactNode } from "react";
 import { StoreChatWidget, type ChatWidgetConfig } from "@/components/storefront/store-chat-widget";
 import { StorefrontCartBar, StorefrontCartLink } from "@/components/storefront/storefront-cart-link";
@@ -25,6 +25,8 @@ type StorefrontShellProps = {
     city: string | null;
     logoUrl: string | null;
     theme: StoreTheme;
+    /** Présentation de la rangée « Promotions » (classe sf-promo-…). */
+    promoStyle: StorePromoStyle;
     colors: { primary: string; onPrimary: string; secondary: string; onSecondary: string; accent: string };
   };
   pages: { title: string; slug: string }[];
@@ -36,6 +38,8 @@ type StorefrontShellProps = {
   /** Classes supplémentaires (polices du thème). */
   className?: string;
 };
+
+const cssName = (value: string) => value.toLowerCase().replaceAll("_", "-");
 
 export function storeInitials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr-FR")).join("") || "B";
@@ -57,7 +61,11 @@ export function StorefrontShell({ children, base, store, pages, chat, popup = nu
   return (
     <StoreLinksProvider base={base}>
     <StoreCartProvider storeId={store.id}>
-      <div className={`sf sf-theme-${store.theme.toLowerCase().replaceAll("_", "-")} ${className}`.trim()} data-theme={store.theme} style={style}>
+      <div
+        className={`sf sf-theme-${cssName(store.theme)} sf-promo-${cssName(store.promoStyle)} ${className}`.trim()}
+        data-theme={store.theme}
+        style={style}
+      >
         <StorefrontPreviewBridge initials={storeInitials(store.name)} />
         <a className="sf-skip" href="#contenu">Aller au contenu</a>
         <header className={`sf-header${pages.length ? " sf-header-with-menu" : ""}`}>

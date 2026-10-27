@@ -16,7 +16,7 @@ import { findOwnedStore, requireWizardSession, wizardStepCount, wizardSteps } fr
 
 export const metadata: Metadata = { title: "Créer ma boutique" };
 
-const themeNames = { CATALOGUE_EXPRESS: "Catalogue express", MODE_BEAUTE: "Mode et beauté", BOUTIQUE_MARQUE: "Galerie" } as const;
+const themeNames = { CATALOGUE_EXPRESS: "Catalogue express", MODE_BEAUTE: "Mode et beauté", BOUTIQUE_MARQUE: "Galerie", GRAND_MARCHE: "Grand marché" } as const;
 const defaultColors = { primaryColor: "#FF9900", secondaryColor: "#000026", accentColor: "#EF765E" };
 
 /**

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 export type LivePreviewValues = {
   name: string;
   theme: string;
+  promoStyle: string;
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;

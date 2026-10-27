@@ -10,6 +10,7 @@ import { Testimonials } from "@/components/landing/testimonials";
 
 export const metadata: Metadata = {
   title: { absolute: "À propos · PrestAfrik" },
+  alternates: { canonical: "/a-propos" },
   description:
     "PrestAfrik donne à chaque commerçant africain une boutique en ligne professionnelle, simple et gratuite pour démarrer. Notre mission, nos valeurs et nos engagements.",
 };

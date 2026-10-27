@@ -1,6 +1,6 @@
 "use server";
 
-import { StoreTheme } from "@prisma/client";
+import { StorePromoStyle, StoreTheme } from "@prisma/client";
 import { isKnownCity } from "@/modules/geo";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -44,6 +44,7 @@ const settingsSchema = z.object({
   pickupAddress: z.string().trim().max(200),
   pickupHours: z.string().trim().max(120),
   theme: z.nativeEnum(StoreTheme),
+  promoStyle: z.nativeEnum(StorePromoStyle),
   primaryColor: hexColorSchema,
   secondaryColor: hexColorSchema,
   accentColor: hexColorSchema,
@@ -77,6 +78,7 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
     pickupAddress: text(formData, "pickupAddress"),
     pickupHours: text(formData, "pickupHours"),
     theme: text(formData, "theme"),
+    promoStyle: text(formData, "promoStyle"),
     primaryColor: text(formData, "primaryColor").toUpperCase(),
     secondaryColor: text(formData, "secondaryColor").toUpperCase(),
     accentColor: text(formData, "accentColor").toUpperCase(),
@@ -140,6 +142,7 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
       pickupAddress: input.pickupAddress || input.address || null,
       pickupHours: input.pickupHours || null,
       theme: input.theme,
+      promoStyle: input.promoStyle,
       primaryColor: input.primaryColor,
       secondaryColor: input.secondaryColor,
       accentColor: input.accentColor,

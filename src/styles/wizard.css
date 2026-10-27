@@ -369,6 +369,20 @@
   background: #cfd8d1;
 }
 
+/* Grand marché : bandeau sombre en haut, cartes blanches bordées. */
+.wizard-theme-mock-grand_marche span {
+  border: 1px solid #e3e6e6;
+  background: #fff;
+}
+
+.wizard-theme-mock-grand_marche span:first-child {
+  grid-column: 1 / -1;
+  height: 0.875rem;
+  border: 0;
+  border-bottom: 3px solid #ff9900;
+  background: #22304a;
+}
+
 /* Aperçu en direct */
 
 .wizard-preview {

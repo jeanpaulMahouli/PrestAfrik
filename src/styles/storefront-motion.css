@@ -1,0 +1,165 @@
+/* Animations des vitrines : apparitions douces et survols discrets.
+   Survols réservés aux écrans avec souris (hover: hover) ; tout est coupé si le visiteur réduit les animations. */
+
+:root {
+  --sf-motion-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --sf-motion-shadow: 0 6px 18px rgb(23 37 31 / 0.1);
+}
+
+/* ---------- Apparition des pages ---------- */
+
+/* Opacité seulement sur la page : une transformation y casserait les éléments fixes (panier, assistant). */
+:is(.sf-home, .sf-page, .sf-product-page, .sf-not-found) {
+  animation: sf-motion-fade 0.35s ease-out both;
+}
+
+.sf-home-section-head,
+.sf-description,
+.sf-search,
+.sf-chips {
+  animation: sf-motion-rise 0.45s var(--sf-motion-ease) both;
+}
+
+/* Cartes produits : montée légère, l'une après l'autre (les 12 premières, les suivantes arrivent ensemble). */
+:is(.sf-grid, .sf-rail-list) > li {
+  animation: sf-motion-rise 0.5s var(--sf-motion-ease) both;
+}
+
+:is(.sf-grid, .sf-rail-list) > li:nth-child(2) { animation-delay: 40ms; }
+:is(.sf-grid, .sf-rail-list) > li:nth-child(3) { animation-delay: 80ms; }
+:is(.sf-grid, .sf-rail-list) > li:nth-child(4) { animation-delay: 120ms; }
+:is(.sf-grid, .sf-rail-list) > li:nth-child(5) { animation-delay: 160ms; }
+:is(.sf-grid, .sf-rail-list) > li:nth-child(6) { animation-delay: 200ms; }
+:is(.sf-grid, .sf-rail-list) > li:nth-child(7) { animation-delay: 240ms; }
+:is(.sf-grid, .sf-rail-list) > li:nth-child(8) { animation-delay: 280ms; }
+:is(.sf-grid, .sf-rail-list) > li:nth-child(n + 9) { animation-delay: 320ms; }
+
+@keyframes sf-motion-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sf-motion-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Transitions ---------- */
+
+.sf-card,
+.sf-rail-card {
+  transition: transform 0.25s var(--sf-motion-ease), box-shadow 0.25s var(--sf-motion-ease);
+}
+
+.sf-card-media {
+  overflow: hidden;
+}
+
+.sf-card-media img {
+  transition: transform 0.45s var(--sf-motion-ease);
+}
+
+.sf-btn,
+.sf-chips a,
+.sf-chips button,
+.sf-pagination ol a,
+.sf-cart-icon,
+.sf-rail-more a {
+  transition: transform 0.18s ease, filter 0.18s ease, border-color 0.18s ease, background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sf-search input {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sf-search input:focus {
+  border-color: var(--store-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--store-primary) 18%, transparent);
+}
+
+.sf-home-section-head a,
+.sf-footer a {
+  transition: text-underline-offset 0.2s ease, opacity 0.2s ease;
+}
+
+/* Appui : léger enfoncement, aussi sur téléphone. */
+.sf-btn:not(:disabled, [aria-disabled="true"]):active,
+.sf-chips :is(a, button):not(:disabled):active {
+  transform: scale(0.97);
+}
+
+/* ---------- Survols (souris uniquement) ---------- */
+
+@media (hover: hover) {
+  .sf-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--sf-motion-shadow);
+  }
+
+  /* Zoom très léger : la photo reste entière (cadre carré, voir storefront.css). */
+  .sf-card:hover .sf-card-media img {
+    transform: scale(1.03);
+  }
+
+  .sf-btn:not(:disabled, [aria-disabled="true"]):hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+  }
+
+  .sf-btn-secondary:hover {
+    border-color: var(--store-primary);
+  }
+
+  .sf-chips :is(a, button):not(:disabled, [aria-current="page"], [aria-pressed="true"]):hover {
+    border-color: var(--store-primary);
+    transform: translateY(-1px);
+  }
+
+  .sf-pagination ol a:not([aria-current="page"]):hover {
+    border-color: var(--store-primary);
+  }
+
+  .sf-cart-icon:hover {
+    background: color-mix(in srgb, var(--store-primary) 12%, transparent);
+  }
+
+  .sf-rail-more a:hover {
+    filter: brightness(1.05);
+  }
+
+  .sf-home-section-head a:hover {
+    text-underline-offset: 5px;
+  }
+
+  .sf-footer a:hover {
+    opacity: 0.75;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.sf-home, .sf-page, .sf-product-page, .sf-not-found),
+  .sf-home-section-head,
+  .sf-description,
+  .sf-search,
+  .sf-chips,
+  :is(.sf-grid, .sf-rail-list) > li {
+    animation: none;
+  }
+
+  .sf-card,
+  .sf-btn,
+  .sf-chips a,
+  .sf-chips button {
+    transition: none;
+  }
+
+  .sf-card:hover,
+  .sf-card:hover .sf-card-media img,
+  .sf-btn:hover,
+  .sf-btn:active,
+  .sf-chips :is(a, button):hover,
+  .sf-chips :is(a, button):active {
+    transform: none;
+  }
+}

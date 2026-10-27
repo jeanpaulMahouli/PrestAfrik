@@ -8,6 +8,7 @@ import { Testimonials } from "@/components/landing/testimonials";
 
 export const metadata: Metadata = {
   title: { absolute: "Démo · PrestAfrik" },
+  alternates: { canonical: "/demo" },
   description: "Découvrez PrestAfrik en vidéo : créer sa boutique, gérer ses produits, recevoir ses commandes sur WhatsApp.",
 };
 

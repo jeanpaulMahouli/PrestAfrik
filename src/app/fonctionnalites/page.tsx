@@ -8,6 +8,7 @@ import { isSignedIn, PageShell } from "@/components/landing/page-shell";
 
 export const metadata: Metadata = {
   title: { absolute: "Fonctionnalités · PrestAfrik" },
+  alternates: { canonical: "/fonctionnalites" },
   description:
     "Boutique en ligne, commandes WhatsApp, paiement à la livraison, fichier clients, campagnes et équipe : tout ce qu’il faut pour vendre en ligne au Cameroun, dans un seul espace.",
 };

@@ -321,13 +321,14 @@ const themes = [
   { id: "CATALOGUE_EXPRESS", name: "Catalogue express", detail: "Simple et rapide, idéal pour beaucoup de produits" },
   { id: "MODE_BEAUTE", name: "Mode et beauté", detail: "Grandes photos, ambiance soignée" },
   { id: "BOUTIQUE_MARQUE", name: "Galerie", detail: "Grandes photos bord à bord, angles droits, deux produits par ligne" },
+  { id: "GRAND_MARCHE", name: "Grand marché", detail: "Style supermarché en ligne : en-tête coloré, cartes compactes, prix bien visibles" },
 ] as const;
 
 export function ThemeStep({ draftId, initialTheme }: { draftId: string; initialTheme: (typeof themes)[number]["id"] }) {
   const { update } = useWizardPreview();
   const [theme, setTheme] = useState(initialTheme);
   return (
-    <WizardStepForm action={saveThemeStep} backHref={back(draftId, 4)} draftId={draftId} step={5} subtitle="Les trois thèmes offrent exactement les mêmes fonctions. Seule la mise en page change. Vous pourrez en changer plus tard sans perdre vos produits ni vos commandes." title="Choisissez le style de votre boutique">
+    <WizardStepForm action={saveThemeStep} backHref={back(draftId, 4)} draftId={draftId} step={5} subtitle="Les quatre thèmes offrent exactement les mêmes fonctions. Seule la mise en page change. Vous pourrez en changer plus tard sans perdre vos produits ni vos commandes." title="Choisissez le style de votre boutique">
       {() => (
         <div className="wizard-themes" role="radiogroup">
           {themes.map((item) => (

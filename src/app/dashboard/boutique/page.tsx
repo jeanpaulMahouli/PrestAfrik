@@ -97,6 +97,7 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
           pickupHours: store.pickupHours ?? "",
           logoUrl: store.logoUrl,
           theme: store.theme,
+          promoStyle: store.promoStyle,
           primaryColor: store.primaryColor,
           secondaryColor: store.secondaryColor,
           accentColor: store.accentColor,

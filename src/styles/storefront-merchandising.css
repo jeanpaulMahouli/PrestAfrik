@@ -206,13 +206,13 @@
   scroll-snap-align: start;
 }
 
-/* Cartes portrait : photo plus haute que large. */
+/* Même cadre carré que la grille : photo entière visible. */
 .sf-rail-card .sf-card-media {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1;
 }
 
 .sf-rail-card .sf-card-media img {
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .sf-rail-more a {

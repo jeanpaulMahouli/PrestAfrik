@@ -1,5 +1,7 @@
 import "@/styles/storefront.css";
 import "@/styles/storefront-merchandising.css";
+import "@/styles/storefront-motion.css";
+import "@/styles/storefront-promo.css";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { cache } from "react";
@@ -92,6 +94,7 @@ export default async function PublicStoreLayout({ children, params }: LayoutProp
         city: store.city,
         logoUrl: store.logoUrl,
         theme: store.theme,
+        promoStyle: store.promoStyle,
         colors: {
           primary,
           onPrimary: getAccessibleTextColor(primary),

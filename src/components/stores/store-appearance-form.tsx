@@ -1,6 +1,6 @@
 "use client";
 
-import { StoreTheme } from "@prisma/client";
+import { StorePromoStyle, StoreTheme } from "@prisma/client";
 import { startTransition, useActionState, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { StoreLivePreview } from "@/components/stores/store-live-preview";
 import { Combobox } from "@/components/ui/combobox";
@@ -29,6 +29,7 @@ export type StoreSettingsValues = {
   pickupHours: string;
   logoUrl: string | null;
   theme: StoreTheme;
+  promoStyle: StorePromoStyle;
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
@@ -38,6 +39,14 @@ const themes: { id: StoreTheme; name: string; detail: string }[] = [
   { id: "CATALOGUE_EXPRESS", name: "Catalogue express", detail: "Simple et rapide" },
   { id: "MODE_BEAUTE", name: "Mode et beauté", detail: "Photos en grand" },
   { id: "BOUTIQUE_MARQUE", name: "Galerie", detail: "Grandes photos, angles droits" },
+  { id: "GRAND_MARCHE", name: "Grand marché", detail: "Style supermarché, prix bien visibles" },
+];
+
+const promoStyles: { id: StorePromoStyle; name: string; detail: string }[] = [
+  { id: "CLASSIQUE", name: "Classique", detail: "Sobre, aux couleurs de la boutique" },
+  { id: "VENTE_FLASH", name: "Vente flash", detail: "Bandeau éclair, stock restant" },
+  { id: "OFFRES_DU_JOUR", name: "Offres du jour", detail: "Économies mises en avant" },
+  { id: "ECLAT", name: "Éclat", detail: "Fond nuit, reflets dorés animés" },
 ];
 
 const colorFields = [
@@ -124,12 +133,13 @@ export function StoreAppearanceForm({
     () => ({
       name: values.name,
       theme: values.theme,
+      promoStyle: values.promoStyle,
       primaryColor: values.primaryColor,
       secondaryColor: values.secondaryColor,
       accentColor: values.accentColor,
       logoUrl: logoPreview ?? values.logoUrl,
     }),
-    [values.name, values.theme, values.primaryColor, values.secondaryColor, values.accentColor, values.logoUrl, logoPreview],
+    [values.name, values.theme, values.promoStyle, values.primaryColor, values.secondaryColor, values.accentColor, values.logoUrl, logoPreview],
   );
 
   return (
@@ -220,6 +230,23 @@ export function StoreAppearanceForm({
             ))}
           </div>
           <p className="v-field-help">Changer de thème n’efface rien : produits, commandes, clients et pages sont conservés.</p>
+
+          <h3 className="v-card-subtitle" id="style-promotions">Style des promotions</h3>
+          <p className="v-small v-muted">La rangée « Promotions » de l’accueil et la page « Toutes les promotions ». Elle apparaît dès qu’un produit a un prix promotionnel.</p>
+          <div aria-labelledby="style-promotions" className="theme-tiles" role="radiogroup">
+            {promoStyles.map((style) => (
+              <label className={`theme-tile ${values.promoStyle === style.id ? "is-selected" : ""}`} key={style.id}>
+                <input checked={values.promoStyle === style.id} className="visually-hidden" name="promoStyle" onChange={() => set("promoStyle", style.id)} type="radio" value={style.id} />
+                <span aria-hidden="true" className={`promo-tile-thumb promo-tile-thumb-${style.id.toLowerCase()}`}>
+                  <span />
+                  <span />
+                  <span />
+                </span>
+                <strong>{style.name}</strong>
+                <small>{style.detail}</small>
+              </label>
+            ))}
+          </div>
         </section>
 
         <section className="v-card">

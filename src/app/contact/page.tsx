@@ -8,6 +8,7 @@ import { isContactSubject } from "@/modules/contact/subjects";
 
 export const metadata: Metadata = {
   title: { absolute: "Contact · PrestAfrik" },
+  alternates: { canonical: "/contact" },
   description: "Une question, une démo personnalisée ou besoin d’aide pour votre boutique ? Écrivez à l’équipe PrestAfrik : une vraie personne vous répond.",
 };
 

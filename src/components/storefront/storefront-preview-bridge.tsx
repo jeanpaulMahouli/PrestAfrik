@@ -4,9 +4,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { textColorFor } from "@/lib/contrast";
 
-type PreviewValues = { name: string; theme: string; primaryColor: string; secondaryColor: string; accentColor: string; logoUrl: string | null };
+type PreviewValues = { name: string; theme: string; promoStyle: string; primaryColor: string; secondaryColor: string; accentColor: string; logoUrl: string | null };
 
 const themeClass = (theme: string) => `sf-theme-${theme.toLowerCase().replaceAll("_", "-")}`;
+const promoClass = (style: string) => `sf-promo-${style.toLowerCase().replaceAll("_", "-")}`;
 const hex = /^#[\da-f]{6}$/i;
 
 /**
@@ -36,6 +37,7 @@ export function StorefrontPreviewBridge({ initials }: { initials: string }) {
       if (hex.test(values.secondaryColor)) root.style.setProperty("--store-on-secondary", textColorFor(values.secondaryColor));
       root.className = root.className.replace(/sf-theme-[a-z-]+/, themeClass(values.theme));
       root.dataset.theme = values.theme;
+      if (values.promoStyle) root.className = root.className.replace(/sf-promo-[a-z-]+/, promoClass(values.promoStyle));
       const name = values.name.trim() || "Ma boutique";
       root.querySelectorAll<HTMLElement>("[data-store-name]").forEach((element) => (element.textContent = name));
       root.querySelectorAll<HTMLElement>("[data-store-logo]").forEach((element) => {

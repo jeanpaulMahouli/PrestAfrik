@@ -107,6 +107,88 @@
   background: linear-gradient(90deg, #cfd8d1 0 calc(50% - 1px), #fff calc(50% - 1px) calc(50% + 1px), #cfd8d1 calc(50% + 1px));
 }
 
+/* Grand marché : en-tête sombre, frise pagne, cartes blanches compactes. */
+.theme-tile-thumb-grand_marche {
+  background:
+    linear-gradient(#22304a, #22304a) top / 100% 1.25rem no-repeat,
+    repeating-linear-gradient(90deg, #ff9900 0 10px, #ef765e 10px 14px, #22304a 14px 18px) 0 1.25rem / 100% 3px no-repeat,
+    repeating-linear-gradient(90deg, #fff 0 22%, #eef0f2 22% 26%) bottom 0.5rem left 0.5rem / calc(100% - 1rem) 2.5rem no-repeat,
+    #eef0f2;
+}
+
+.v-card-subtitle {
+  margin: 1.5rem 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Styles des promotions : miniature de la rangée (titre + trois cartes). */
+.promo-tile-thumb {
+  display: grid;
+  height: 5rem;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: 0.25rem;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  padding: 0.375rem;
+  border-radius: var(--radius-xs);
+  background: #ecf0eb;
+}
+
+.promo-tile-thumb::before {
+  grid-column: 1 / -1;
+  font-size: 0.625rem;
+  font-weight: 800;
+  line-height: 1.2;
+  content: "Promotions";
+}
+
+.promo-tile-thumb span {
+  border-radius: 0.25rem;
+  background: #fff;
+}
+
+.promo-tile-thumb-vente_flash {
+  background: linear-gradient(100deg, #ff9900, #e8542e);
+}
+
+.promo-tile-thumb-vente_flash::before {
+  color: #fff;
+  font-style: italic;
+  text-transform: uppercase;
+  content: "⚡ Ventes flash";
+}
+
+.promo-tile-thumb-offres_du_jour {
+  border: 1px solid var(--color-border);
+  background: #fff;
+}
+
+.promo-tile-thumb-offres_du_jour::before {
+  content: "Offres du jour";
+}
+
+.promo-tile-thumb-offres_du_jour span {
+  background: linear-gradient(#f2f3f3 0 72%, #d92d20 72% 80%, #f2f3f3 80%);
+}
+
+.promo-tile-thumb-eclat {
+  background: radial-gradient(circle at 15% 0%, rgb(255 153 0 / 0.5), transparent 60%), #0b0b2e;
+}
+
+.promo-tile-thumb-eclat::before {
+  color: transparent;
+  background: linear-gradient(100deg, #f5d27a, #fff3c4, #e0a93b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  content: "✦ Promos en or";
+}
+
+.promo-tile-thumb-eclat span {
+  box-shadow: 0 0 0 1px #f5d27a, 0 0 8px rgb(245 210 122 / 0.5);
+}
+
 .color-list {
   display: grid;
   gap: 0.5rem;

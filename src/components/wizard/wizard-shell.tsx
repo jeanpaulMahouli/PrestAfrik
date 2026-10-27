@@ -12,14 +12,14 @@ export type PreviewDraft = {
   name: string;
   activity: string;
   location: string;
-  theme: "CATALOGUE_EXPRESS" | "MODE_BEAUTE" | "BOUTIQUE_MARQUE";
+  theme: "CATALOGUE_EXPRESS" | "MODE_BEAUTE" | "BOUTIQUE_MARQUE" | "GRAND_MARCHE";
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
   logoUrl: string | null;
 };
 
-const themeNames = { CATALOGUE_EXPRESS: "Catalogue express", MODE_BEAUTE: "Mode et beauté", BOUTIQUE_MARQUE: "Galerie" } as const;
+const themeNames = { CATALOGUE_EXPRESS: "Catalogue express", MODE_BEAUTE: "Mode et beauté", BOUTIQUE_MARQUE: "Galerie", GRAND_MARCHE: "Grand marché" } as const;
 
 const PreviewContext = createContext<{ draft: PreviewDraft; update: (patch: Partial<PreviewDraft>) => void } | null>(null);
 

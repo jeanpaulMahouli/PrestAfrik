@@ -25,6 +25,16 @@ const productCardSelect = {
 
 export type StoreCardProduct = Prisma.ProductGetPayload<{ select: typeof productCardSelect }>;
 
+/** Produit en promotion : `stockLeft` est le stock réellement disponible quand le vendeur suit son stock, sinon null. */
+export type StorePromoProduct = StoreCardProduct & { stockLeft: number | null };
+
+const promoCardSelect = {
+  ...productCardSelect,
+  trackInventory: true,
+  stockQuantity: true,
+  reservedQuantity: true,
+} satisfies Prisma.ProductSelect;
+
 const visibleProducts = (storeId: string): Prisma.ProductWhereInput => ({
   storeId,
   status: "ACTIVE",
@@ -45,7 +55,7 @@ export function getStorefrontMerchandising(storeId: string) {
         }),
         prisma.product.findMany({
           where: { ...visibleProducts(storeId), promotionalPriceXaf: { not: null } },
-          select: productCardSelect,
+          select: promoCardSelect,
           take: 500,
         }),
         prisma.product.findMany({
@@ -71,7 +81,10 @@ export function getStorefrontMerchandising(storeId: string) {
         .map((product) => ({ product, discount: discountPercent(product) }))
         .filter((entry) => entry.discount > 0)
         .sort((a, b) => b.discount - a.discount || a.product.name.localeCompare(b.product.name, "fr"))
-        .map((entry) => entry.product);
+        .map(({ product: { trackInventory, stockQuantity, reservedQuantity, ...product } }): StorePromoProduct => ({
+          ...product,
+          stockLeft: trackInventory && stockQuantity !== null ? Math.max(0, stockQuantity - reservedQuantity) : null,
+        }));
 
       // Mieux notés : note moyenne, puis nombre d'avis (au moins un avis publié).
       const ranked = ratings

@@ -193,7 +193,8 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps<"/legal/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  return { title: isAvailable(slug) ? legalPages[slug].title : "Informations légales" };
+  if (!isAvailable(slug)) return { title: "Informations légales" };
+  return { title: legalPages[slug].title, alternates: { canonical: `/legal/${slug}` } };
 }
 
 export default async function LegalDocumentPage({ params }: PageProps<"/legal/[slug]">) {

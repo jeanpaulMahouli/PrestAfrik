@@ -5,6 +5,7 @@ import { formatPhone } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { storeHref } from "@/lib/store-host";
 import { storeBasePath } from "@/lib/store-links";
+import { storePublicUrl } from "@/lib/urls";
 import { getStorefrontStore } from "@/modules/catalog/service";
 import { blocksSchema, pageKinds, type PageBlock } from "@/modules/pages/blocks";
 import { getStorefrontExtras, type StorefrontExtras } from "@/modules/storefront/data";
@@ -24,7 +25,12 @@ async function loadPage(slug: string, pageSlug: string) {
 export async function generateMetadata({ params }: PageProps<"/[slug]/page/[pageSlug]">) {
   const { slug, pageSlug } = await params;
   const loaded = await loadPage(slug, pageSlug);
-  return { title: loaded ? `${loaded.page.title} · ${loaded.store.name}` : "Page introuvable" };
+  if (!loaded) return { title: "Page introuvable" };
+  return {
+    title: `${loaded.page.title} · ${loaded.store.name}`,
+    alternates: { canonical: `${storePublicUrl(loaded.store.slug)}/page/${pageSlug}` },
+    ...(loaded.store.isPreview ? { robots: { index: false, follow: false } } : {}),
+  };
 }
 
 /** Page éditoriale publique : uniquement des blocs validés, jamais de HTML stocké (brief §6.5). */

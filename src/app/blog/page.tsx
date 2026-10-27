@@ -6,6 +6,7 @@ import { isSignedIn, PageShell } from "@/components/landing/page-shell";
 
 export const metadata: Metadata = {
   title: { absolute: "Blog · PrestAfrik" },
+  alternates: { canonical: "/blog" },
   description: "Conseils concrets pour vendre plus en ligne : WhatsApp, livraison, paiement à la livraison et fidélisation de vos clients.",
 };
 
