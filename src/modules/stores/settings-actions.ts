@@ -19,6 +19,7 @@ import { findOwnedStoreWithSameName } from "@/modules/stores/draft";
 import { isSlugTaken } from "@/modules/stores/slug-availability";
 import { slugForRenamedStore, type SlugProposal } from "@/modules/stores/slug-rename";
 import { publishStoreIfReady } from "@/modules/stores/publication";
+import { isAccountVerified } from "@/modules/auth/phone-account";
 
 const settingsPath = "/dashboard/boutique";
 
@@ -199,7 +200,7 @@ export async function removeStoreLogo() {
 
 export async function publishStore() {
   const { session, store } = await requireStorePermission("store.manage");
-  const result = await publishStoreIfReady(store.id, session.user.emailVerified);
+  const result = await publishStoreIfReady(store.id, isAccountVerified(session.user));
   if (!result.ok) fail(`Avant de publier : ${result.missing.map((item) => item.label.toLowerCase()).join(", ")}.`);
   revalidateStore(store);
   redirect(`${settingsPath}?succes=publication`);

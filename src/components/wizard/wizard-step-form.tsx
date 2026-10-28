@@ -8,6 +8,14 @@ import { useFormPersistence } from "@/components/ui/use-form-persistence";
 
 type Action = (previous: WizardState, formData: FormData) => Promise<WizardState>;
 
+/** Étapes 1 à 4 : nécessaires pour créer la boutique. 5 à 8 : valeurs par défaut, modifiables ensuite. */
+export const optionalWizardSteps = new Set([5, 6, 7, 8]);
+
+function wizardRequirement(step: number): "required" | "optional" | undefined {
+  if (step >= 1 && step <= 4) return "required";
+  return optionalWizardSteps.has(step) ? "optional" : undefined;
+}
+
 type WizardStepFormProps = {
   action: Action;
   /** Boutique en cours de création (null avant la première étape). */
@@ -20,11 +28,13 @@ type WizardStepFormProps = {
   submitLabel?: string;
   /** Bouton secondaire (ex. « Passer cette étape »). */
   secondary?: ReactNode;
+  /** « Obligatoire » ou « Facultatif » au-dessus du titre (rien pour le récapitulatif). */
+  requirement?: "required" | "optional";
   children: (fieldError: (field: string) => string | undefined, pending: boolean) => ReactNode;
 };
 
 /** Carte d'étape de l'assistant : envoi sans perte de saisie, erreurs sous les champs, Retour / Continuer. */
-export function WizardStepForm({ action, draftId, step, title, subtitle, backHref, submitLabel = "Continuer", secondary, children }: WizardStepFormProps) {
+export function WizardStepForm({ action, draftId, step, title, subtitle, backHref, submitLabel = "Continuer", secondary, requirement = wizardRequirement(step), children }: WizardStepFormProps) {
   const [state, dispatch, pending] = useActionState<WizardState, FormData>(action, null);
   const fieldError = (field: string) => (state && !state.ok && state.field === field ? state.message : undefined);
   const formRef = useRef<HTMLFormElement>(null);
@@ -44,6 +54,11 @@ export function WizardStepForm({ action, draftId, step, title, subtitle, backHre
       ref={formRef}
     >
       {draftId && <input name="draftId" type="hidden" value={draftId} />}
+      {requirement && (
+        <p className={`wizard-requirement wizard-requirement-${requirement}`}>
+          {requirement === "required" ? "Étape obligatoire" : "Étape facultative : vous pourrez la faire plus tard"}
+        </p>
+      )}
       <h1>{title}</h1>
       <p className="wizard-subtitle">{subtitle}</p>
       {state && !state.ok && (

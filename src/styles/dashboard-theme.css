@@ -49,9 +49,9 @@
   --dt-active: linear-gradient(98.7deg, #ffdeae, rgb(255 174 73 / 0.16));
   --dt-ring: 0 0 0 3px rgb(255 153 0 / 0.22);
   --dt-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --dt-font-text: var(--lp-font-text), "DM Sans", system-ui, sans-serif;
+  --dt-font-text: var(--lp-font-ui), "Poppins", system-ui, sans-serif;
   --dt-font-ui: var(--lp-font-ui), "Poppins", system-ui, sans-serif;
-  --dt-font-display: var(--lp-font-display), "Inter", system-ui, sans-serif;
+  --dt-font-display: var(--lp-font-ui), "Poppins", system-ui, sans-serif;
 }
 
 .vendor-shell {
@@ -831,7 +831,7 @@
   top: 9px;
   left: 30px;
   color: #111;
-  font: 600 13px/1 system-ui, sans-serif;
+  font: 600 13px/1 var(--dt-font-ui);
 }
 
 .live-preview-phone iframe {

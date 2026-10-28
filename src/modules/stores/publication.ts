@@ -10,7 +10,7 @@ import { isStoreSubscriptionPaused } from "@/modules/subscriptions/service";
 
 export type PublicationItem = { key: string; label: string; done: boolean; href: string };
 
-export async function getPublicationChecklist(storeId: string, emailVerified: boolean): Promise<PublicationItem[]> {
+export async function getPublicationChecklist(storeId: string, accountVerified: boolean): Promise<PublicationItem[]> {
   const [store, activeProducts, activeZones, subscription] = await Promise.all([
     prisma.store.findUniqueOrThrow({
       where: { id: storeId },
@@ -26,7 +26,7 @@ export async function getPublicationChecklist(storeId: string, emailVerified: bo
     { key: "location", label: "Ville de la boutique", done: Boolean(store.city), href: "/dashboard/boutique#informations" },
     { key: "phone", label: "Téléphone de la boutique", done: Boolean(store.phoneE164 || store.contactPhone), href: "/dashboard/boutique#informations" },
     { key: "theme", label: "Thème", done: Boolean(store.theme), href: "/dashboard/boutique#apparence" },
-    { key: "email", label: "Adresse e-mail du compte confirmée", done: emailVerified, href: "/dashboard/profil" },
+    { key: "email", label: "Compte confirmé (numéro WhatsApp ou adresse e-mail)", done: accountVerified, href: "/dashboard/profil" },
     { key: "subscription", label: "Essai ou abonnement en cours", done: Boolean(subscription) && !isStoreSubscriptionPaused(subscription), href: "/dashboard/abonnement" },
     { key: "product", label: "Au moins un produit actif", done: activeProducts > 0, href: "/dashboard/produits/nouveau" },
     { key: "delivery", label: "Une zone de livraison avec ses frais, ou le retrait en boutique", done: activeZones > 0 || store.pickupEnabled, href: "/dashboard/livraisons" },
@@ -36,12 +36,12 @@ export async function getPublicationChecklist(storeId: string, emailVerified: bo
 }
 
 /** Publie la boutique si toutes les conditions sont remplies (dont une zone à frais fixes ou le retrait). */
-export async function publishStoreIfReady(storeId: string, emailVerified: boolean) {
+export async function publishStoreIfReady(storeId: string, accountVerified: boolean) {
   const suspended = await prisma.store.findUnique({ where: { id: storeId }, select: { suspendedAt: true } });
   if (suspended?.suspendedAt) {
     return { ok: false as const, missing: [{ key: "suspended", label: "Boutique suspendue par l’administration PrestAfrik", done: false, href: "/dashboard/boutique" }] };
   }
-  const checklist = await getPublicationChecklist(storeId, emailVerified);
+  const checklist = await getPublicationChecklist(storeId, accountVerified);
   const missing = checklist.filter((item) => !item.done);
   if (missing.length) return { ok: false as const, missing };
   const before = await prisma.store.findUniqueOrThrow({ where: { id: storeId }, select: { publishedAt: true } });

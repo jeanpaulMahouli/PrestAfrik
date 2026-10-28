@@ -89,15 +89,32 @@ export function useFormPersistence(formRef: RefObject<HTMLFormElement | null>, s
       }
     };
 
+    // La saisie n'est effacée qu'une fois l'envoi abouti (le formulaire disparaît : étape suivante, autre page).
+    // Envoi refusé, coupure réseau ou actualisation pendant l'envoi : tout ce qui a été tapé est gardé.
+    // Adresse au moment de l'envoi : si le formulaire disparaît sans que l'adresse change (écran d'erreur
+    // après une coupure réseau), la saisie est gardée.
+    let submitted: string | null = null;
+    const onSubmit = () => {
+      save();
+      submitted = window.location.href;
+    };
+    const onEdit = () => {
+      submitted = null;
+      save();
+    };
+
     void restore();
-    form.addEventListener("input", save);
-    form.addEventListener("change", save);
-    form.addEventListener("submit", clear);
+    form.addEventListener("input", onEdit);
+    form.addEventListener("change", onEdit);
+    form.addEventListener("submit", onSubmit);
     return () => {
       cancelled = true;
-      form.removeEventListener("input", save);
-      form.removeEventListener("change", save);
-      form.removeEventListener("submit", clear);
+      form.removeEventListener("input", onEdit);
+      form.removeEventListener("change", onEdit);
+      form.removeEventListener("submit", onSubmit);
+      const sentFrom = submitted;
+      // L'adresse est relue juste après la navigation (étape suivante, ?succes=…) pour savoir si l'envoi a abouti.
+      if (sentFrom) window.setTimeout(() => window.location.href !== sentFrom && clear(), 0);
     };
   }, [formRef, storageKey]);
 }

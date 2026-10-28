@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { CreatedScreen, PublishedScreen, PublishStep } from "@/components/wizard/wizard-publish";
+import { PublishStep } from "@/components/wizard/wizard-publish";
 import { DeliveryStep } from "@/components/wizard/wizard-delivery-step";
 import { EmailVerificationGate } from "@/components/wizard/wizard-email-gate";
 import { WizardShell, type PreviewDraft } from "@/components/wizard/wizard-shell";
@@ -8,11 +8,11 @@ import { ActivityStep, BrandingStep, ContactStep, LocationStep, NameStep, Produc
 import { formatFcfa } from "@/lib/format";
 import { phoneCountries } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
-import { storeAddressFormat, storeAddressLabel, storePublicUrl } from "@/lib/urls";
+import { storeAddressFormat, storeAddressLabel } from "@/lib/urls";
 import { geoDataset, supportedCountries } from "@/modules/geo";
 import { draftMissing, findDraft, type DraftData } from "@/modules/stores/draft";
-import { getPublicationChecklist } from "@/modules/stores/publication";
-import { findOwnedStore, requireWizardSession, wizardStepCount, wizardSteps } from "@/modules/stores/wizard";
+import { requireWizardSession, wizardStepCount, wizardSteps } from "@/modules/stores/wizard";
+import { isAccountVerified } from "@/modules/auth/phone-account";
 
 export const metadata: Metadata = { title: "Créer ma boutique" };
 
@@ -32,32 +32,12 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
   const value = (key: string) => (typeof params[key] === "string" ? (params[key] as string) : undefined);
   const requested = value("etape");
 
-  // Écran final : la boutique existe.
-  if (value("boutique")) {
-    const store = await findOwnedStore(session.user.id, value("boutique")!);
-    if (!store) redirect("/dashboard");
-    const preview = previewOfStore(store);
-    if (requested === "publiee" && store.isPublished) {
-      return (
-        <WizardShell current={wizardStepCount + 1} draftId={null} initialDraft={preview} reached={wizardStepCount + 1} showThemeLabel steps={wizardSteps}>
-          <PublishedScreen storeName={store.name} storeUrl={storePublicUrl(store.slug)} />
-        </WizardShell>
-      );
-    }
-    if (requested === "creee" && !store.isPublished) {
-      const checklist = await getPublicationChecklist(store.id, session.user.emailVerified);
-      const missing = checklist.filter((item) => !item.done && item.key !== "email").map((item) => ({ label: item.label, href: item.href }));
-      return (
-        <WizardShell current={wizardStepCount + 1} draftId={null} initialDraft={preview} reached={wizardStepCount + 1} showThemeLabel steps={wizardSteps}>
-          <CreatedScreen email={session.user.email} emailVerified={session.user.emailVerified} missing={missing} storeName={store.name} storeUrl={storePublicUrl(store.slug)} />
-        </WizardShell>
-      );
-    }
-    redirect("/dashboard/boutique");
-  }
+  // Anciens liens de fin d'assistant : la boutique créée s'ouvre désormais dans le tableau de bord.
+  if (value("boutique")) redirect("/dashboard");
 
-  // Adresse e-mail à confirmer avant toute création de boutique : on demande de consulter sa boîte de réception.
-  if (!session.user.emailVerified) {
+  // Ancien compte par e-mail, adresse pas encore confirmée : on demande de consulter sa boîte de réception.
+  // (Les comptes créés par WhatsApp sont confirmés dès l'inscription, par le code reçu.)
+  if (!isAccountVerified(session.user)) {
     return (
       <WizardShell current={1} draftId={null} initialDraft={previewOfDraft({})} reached={1} showThemeLabel={false} steps={wizardSteps}>
         <EmailVerificationGate email={session.user.email} />
@@ -80,7 +60,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
     content = <NameStep address={storeAddressFormat()} city={data.city ?? null} draftId={draftId} initialName={data.name ?? ""} initialSlug={data.slug ?? ""} />;
   } else if (step === 2) {
     const activities = await prisma.activity.findMany({ orderBy: { position: "asc" }, select: { id: true, label: true, popular: true } });
-    content = <ActivityStep activities={activities} draftId={draft.id} initialId={data.activityId ?? ""} initialOther={data.activityOther ?? ""} />;
+    content = <ActivityStep activities={activities} draftId={draft.id} initialDescription={data.description ?? ""} initialId={data.activityId ?? ""} initialOther={data.activityOther ?? ""} />;
   } else if (step === 3) {
     // Seuls les pays dont la liste des régions et des villes existe : rien ne se saisit à la main.
     const countries = phoneCountries().filter(({ iso }) => supportedCountries.includes(iso)).map(({ iso, name }) => ({ iso: iso as string, name }));
@@ -141,6 +121,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
     const recap = [
       { label: "Nom et adresse", value: data.name ? `${data.name} · ${storeAddressLabel(data.slug ?? "")}` : "À préciser", step: 1, done: Boolean(data.name && data.slug) },
       { label: "Activité", value: data.activityLabel ?? data.activityOther ?? "À préciser", step: 2, done: Boolean(data.activityId || data.activityOther) },
+      { label: "Description", value: data.description ? (data.description.length > 90 ? `${data.description.slice(0, 90)}…` : data.description) : "Aucune (facultatif, vous pourrez l’ajouter ensuite)", step: 2, done: Boolean(data.description) },
       { label: "Localisation", value: [data.city, data.region].filter(Boolean).join(", ") || "À préciser", step: 3, done: Boolean(data.city) },
       { label: "Coordonnées", value: phone ? phone.replace(/(\+\d{3})(\d)\d+(\d{2})$/, "$1 $2 •• •• •• $3") : "À préciser", step: 4, done: Boolean(phone) },
       { label: "Thème", value: themeNames[data.theme ?? "CATALOGUE_EXPRESS"], step: 5, done: true },
@@ -164,7 +145,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
         done: Boolean(data.deliveryZones?.length || (data.pickupEnabled && data.pickupAddress)),
       },
     ];
-    content = <PublishStep draftId={draft.id} missing={draftMissing(data)} recap={recap} />;
+    content = <PublishStep draftId={draft.id} hasProduct={Boolean(data.product)} missing={draftMissing(data)} recap={recap} />;
   }
 
   return (
@@ -188,18 +169,5 @@ function previewOfDraft(data: DraftData): PreviewDraft {
     secondaryColor: data.secondaryColor ?? defaultColors.secondaryColor,
     accentColor: data.accentColor ?? defaultColors.accentColor,
     logoUrl: data.logoUrl ?? null,
-  };
-}
-
-function previewOfStore(store: NonNullable<Awaited<ReturnType<typeof findOwnedStore>>>): PreviewDraft {
-  return {
-    name: store.name,
-    activity: "",
-    location: store.city ? `${store.city}${store.country === "CM" ? ", Cameroun" : ""}` : "",
-    theme: store.theme,
-    primaryColor: store.primaryColor,
-    secondaryColor: store.secondaryColor,
-    accentColor: store.accentColor,
-    logoUrl: store.logoUrl,
   };
 }

@@ -2865,3 +2865,140 @@
 .page-list .icon-actions .badge {
   margin-left: 0.25rem;
 }
+
+/* Fenêtre « Boutique créée » (accueil, juste après l'assistant). */
+.store-created {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.store-created-next {
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.store-created-next h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.store-created-next li > span:not(.onboarding-dot) {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.25rem 0;
+}
+
+.store-created-next small {
+  font-size: 0.8rem;
+}
+
+.store-created-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+  .store-created-actions .btn {
+    width: 100%;
+  }
+}
+
+/* Actions en icône (liste des commandes) : infobulle au survol et au clavier, légende sur écran tactile. */
+.icon-action {
+  position: relative;
+  display: inline-grid;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: 0.75rem;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.icon-action-primary {
+  border-color: var(--color-brand-primary);
+  color: #000026;
+  background: var(--color-brand-primary);
+}
+
+.icon-action:hover:not(:disabled) {
+  border-color: var(--color-brand-primary);
+}
+
+.icon-action-secondary:hover {
+  background: rgb(255 153 0 / 0.08);
+}
+
+.icon-action:focus-visible {
+  outline: 3px solid rgb(255 153 0 / 0.45);
+  outline-offset: 2px;
+}
+
+.icon-action:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.icon-action-caption {
+  display: none;
+}
+
+@media (hover: hover) {
+  .icon-action::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    left: 50%;
+    z-index: 20;
+    padding: 0.375rem 0.625rem;
+    border-radius: 0.5rem;
+    color: #fff;
+    background: #000026;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 0.25rem);
+    transition: opacity 120ms ease, transform 120ms ease;
+  }
+
+  .icon-action:is(:hover, :focus-visible)::after {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Écrans tactiles : pas de survol possible, la fonction est écrite en petit sous l'icône. */
+@media (hover: none) {
+  .icon-action {
+    gap: 0.125rem;
+    padding: 0.375rem 0.5rem;
+  }
+
+  .icon-action-caption {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 500;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+}
+
+.recoverable-error {
+  max-width: 36rem;
+  margin: 2rem auto;
+}
+
+.recoverable-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}

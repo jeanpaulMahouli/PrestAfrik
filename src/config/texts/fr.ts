@@ -62,6 +62,7 @@ export const fr = {
       ],
       title: "Créez votre compte",
       subtitle: "Bienvenue ! Il ne faut que quelques secondes pour commencer votre essai gratuit d’un mois.",
+      whatsappSubtitle: "Trois informations suffisent. Vous recevrez ensuite un code sur WhatsApp pour confirmer votre numéro.",
       name: "Votre nom",
       namePlaceholder: "Awa Ngono",
       emailHelp: "Nous vous enverrons un lien pour confirmer cette adresse.",
@@ -92,7 +93,7 @@ export const fr = {
     },
     reset: {
       requestTitle: "Mot de passe oublié ?",
-      requestSubtitle: "Indiquez votre adresse e-mail : nous vous enverrons un lien pour choisir un nouveau mot de passe.",
+      requestSubtitle: "Indiquez le numéro WhatsApp de votre compte : nous vous enverrons un code pour choisir un nouveau mot de passe.",
       requestSubmit: "Recevoir le lien",
       requestSentTitle: "Vérifiez votre boîte e-mail",
       requestSent:

@@ -158,8 +158,21 @@ export function NameStep({
 
 /* ---------- 2. Activité ---------- */
 
-export function ActivityStep({ draftId, activities, initialId, initialOther }: { draftId: string; activities: { id: string; label: string; popular: boolean }[]; initialId: string; initialOther: string }) {
+export function ActivityStep({
+  draftId,
+  activities,
+  initialId,
+  initialOther,
+  initialDescription,
+}: {
+  draftId: string;
+  activities: { id: string; label: string; popular: boolean }[];
+  initialId: string;
+  initialOther: string;
+  initialDescription: string;
+}) {
   const { update } = useWizardPreview();
+  const [description, setDescription] = useState(initialDescription);
   const [activityId, setActivityId] = useState(initialId);
   const [other, setOther] = useState(initialOther);
   const [freeText, setFreeText] = useState(!initialId && Boolean(initialOther));
@@ -205,6 +218,27 @@ export function ActivityStep({ draftId, activities, initialId, initialOther }: {
               <button className="v-link-button" onClick={() => setFreeText(false)} type="button">Choisir dans la liste</button>
             </label>
           )}
+          <label className="v-field">
+            <span>
+              Description de la boutique <span className="wizard-optional">(facultatif)</span>
+            </span>
+            <textarea
+              aria-describedby="wizard-description-help"
+              aria-invalid={Boolean(fieldError("description")) || undefined}
+              maxLength={2000}
+              name="description"
+              onChange={(event) => {
+                setDescription(event.target.value);
+                update({ description: event.target.value });
+              }}
+              placeholder="Ex. Pagnes, robes et accessoires faits main à Douala. Livraison rapide dans toute la ville."
+              rows={3}
+              value={description}
+            />
+            <span className={fieldError("description") ? "v-field-error" : "v-field-help"} id="wizard-description-help">
+              {fieldError("description") ?? `En une ou deux phrases : ce que vous vendez et ce qui vous rend unique. Elle s’affiche en haut de votre boutique. ${description.length} / 2000`}
+            </span>
+          </label>
         </>
       )}
     </WizardStepForm>

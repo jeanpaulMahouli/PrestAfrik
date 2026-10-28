@@ -448,9 +448,12 @@
   text-decoration: none;
 }
 
-/* Photos produits : cadre carré 1:1, photo entière visible (jamais recadrée ni agrandie). */
+/* Photos des cartes produits (grilles et rangées, tous les thèmes) : cadre carré 1:1 entièrement rempli,
+   photo centrée, sans déformation ni bandes vides. La fiche produit (galerie, plein écran) garde la photo
+   entière : c'est là que le client regarde le produit en détail. */
 .sf-card-media {
   display: block;
+  overflow: hidden;
   aspect-ratio: 1;
   background: var(--color-surface);
 }
@@ -459,7 +462,8 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center;
 }
 
 .sf-card-placeholder {
@@ -1464,6 +1468,12 @@
     padding-left: 2rem;
   }
 
+  /* Ordinateur : les rayons passent à la ligne au lieu d'être coupés au bord de la page. */
+  .sf-chips {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
   .sf-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1.25rem;
@@ -1529,7 +1539,7 @@
   place-items: center;
   padding: 24px 16px;
   background: linear-gradient(180deg, var(--color-page-background-alt), var(--color-surface));
-  font-family: var(--font-sans, "Poppins", system-ui, sans-serif);
+  font-family: var(--font-body);
 }
 
 .sf-unavailable-card {
@@ -1970,7 +1980,7 @@
 .sf-theme-boutique-marque .sf-card-media img,
 .sf-theme-boutique-marque .sf-card-placeholder {
   aspect-ratio: 1;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .sf-theme-boutique-marque .sf-card-body {
@@ -1978,12 +1988,13 @@
 }
 
 @media (min-width: 1024px) {
+  /* Ordinateur : trois colonnes alignées sur les autres blocs (2rem de marge, comme la recherche et les rayons). */
   .sf-theme-boutique-marque .sf-grid,
   .sf-theme-boutique-marque .sf-similar .sf-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-    padding-right: 15px;
-    padding-left: 15px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    padding-right: 2rem;
+    padding-left: 2rem;
   }
 
   .sf-theme-boutique-marque .sf-card-body {
@@ -2032,4 +2043,9 @@
   justify-content: center;
   gap: 0.75rem;
   margin-top: 1.75rem;
+}
+
+/* Aperçu de l'assistant de création (/apercu-boutique) : vitrine affichée telle quelle, rien n'est cliquable. */
+.sf-draft-preview :is(a, button, input, form, select, textarea) {
+  pointer-events: none;
 }

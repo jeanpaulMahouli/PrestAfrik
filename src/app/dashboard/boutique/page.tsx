@@ -12,6 +12,7 @@ import { requireStorePermission } from "@/modules/stores/context";
 import { countryCities } from "@/modules/geo";
 import { getPublicationChecklist } from "@/modules/stores/publication";
 import { publishStore, unpublishStore } from "@/modules/stores/settings-actions";
+import { isAccountVerified } from "@/modules/auth/phone-account";
 
 export const metadata = { title: "Ma boutique" };
 
@@ -28,7 +29,7 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
   const params = await searchParams;
   const [activities, checklist, counts] = await Promise.all([
     prisma.activity.findMany({ orderBy: { position: "asc" }, select: { id: true, label: true } }),
-    getPublicationChecklist(store.id, session.user.emailVerified),
+    getPublicationChecklist(store.id, isAccountVerified(session.user)),
     prisma.store.findUniqueOrThrow({ where: { id: store.id }, select: { _count: { select: { orders: true, products: true } } } }),
   ]);
   const missing = checklist.filter((item) => !item.done && item.key !== "delivery");

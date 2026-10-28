@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { textColorFor } from "@/lib/contrast";
 
-type PreviewValues = { name: string; theme: string; promoStyle: string; primaryColor: string; secondaryColor: string; accentColor: string; logoUrl: string | null };
+type PreviewValues = { name: string; theme: string; promoStyle: string; primaryColor: string; secondaryColor: string; accentColor: string; logoUrl: string | null; description?: string; city?: string };
 
 const themeClass = (theme: string) => `sf-theme-${theme.toLowerCase().replaceAll("_", "-")}`;
 const promoClass = (style: string) => `sf-promo-${style.toLowerCase().replaceAll("_", "-")}`;
@@ -38,6 +38,15 @@ export function StorefrontPreviewBridge({ initials }: { initials: string }) {
       root.className = root.className.replace(/sf-theme-[a-z-]+/, themeClass(values.theme));
       root.dataset.theme = values.theme;
       if (values.promoStyle) root.className = root.className.replace(/sf-promo-[a-z-]+/, promoClass(values.promoStyle));
+      if (values.description !== undefined) {
+        root.querySelectorAll<HTMLElement>("[data-store-description]").forEach((element) => {
+          element.textContent = values.description ?? "";
+          element.hidden = !values.description?.trim();
+        });
+      }
+      if (values.city !== undefined) {
+        root.querySelectorAll<HTMLElement>(".sf-brand-text small").forEach((element) => (element.textContent = values.city ?? ""));
+      }
       const name = values.name.trim() || "Ma boutique";
       root.querySelectorAll<HTMLElement>("[data-store-name]").forEach((element) => (element.textContent = name));
       root.querySelectorAll<HTMLElement>("[data-store-logo]").forEach((element) => {

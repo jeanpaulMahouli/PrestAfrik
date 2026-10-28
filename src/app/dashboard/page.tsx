@@ -1,5 +1,6 @@
 import { Eye, Hourglass, ShoppingBag, ShoppingCart, Wallet } from "lucide-react";
 import Link from "next/link";
+import { StoreCreatedDialog } from "@/components/dashboard/store-created-dialog";
 import { TimeSeriesChart } from "@/components/dashboard/time-series-chart";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ShareStoreButton } from "@/components/shared/share-store-button";
@@ -14,6 +15,7 @@ import { photoVariant } from "@/lib/product-photos";
 import { storePublicUrl } from "@/lib/urls";
 import { hasPermission } from "@/modules/auth/permissions";
 import { getDashboardOverview } from "@/modules/dashboard/service";
+import { setupChecklist } from "@/modules/dashboard/setup-checklist";
 import { getDashboardStats } from "@/modules/dashboard/stats";
 import { getStoreContext } from "@/modules/stores/context";
 import { findDraft } from "@/modules/stores/draft";
@@ -45,17 +47,14 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
     { count: overview.customersToRecontact, label: (n: number) => `${plural(n, "client")} à recontacter`, action: "Ouvrir la liste", href: "/dashboard/clients?segment=to-recontact", show: can("customers.read") },
   ].filter((task) => task.show && task.count > 0);
 
-  const checklist = [
-    { label: "Créer ma boutique", done: true, href: "/dashboard/boutique" },
-    { label: "Ajouter mon premier produit", done: overview.activeProducts > 0, href: "/dashboard/produits/nouveau" },
-    { label: "Régler mes zones de livraison", done: overview.activeZones > 0, href: "/dashboard/livraisons" },
-    { label: "Connecter WhatsApp", done: overview.whatsappConnected, href: "/dashboard/boutique/whatsapp" },
-    { label: "Partager ma boutique", done: store.isPublished, href: "/dashboard/boutique" },
-  ];
+  const checklist = setupChecklist({ store, activeProducts: overview.activeProducts, activeZones: overview.activeZones, whatsappNumber: overview.whatsappConnected });
   const doneSteps = checklist.filter((step) => step.done).length;
+  // Arrivée juste après l'assistant de création : fenêtre « Boutique créée » (une seule fois).
+  const justCreated = params.bienvenue === store.id;
 
   return (
     <VendorShell>
+      {justCreated && <StoreCreatedDialog published={store.isPublished} steps={checklist} storeId={store.id} storeName={store.name} storeUrl={publicUrl} />}
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Bonjour {firstName} !</h1>
@@ -233,7 +232,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
             </p>
             <ul className="onboarding-list">
               {checklist.map((step) => (
-                <li className={step.done ? "is-done" : ""} key={step.label}>
+                <li className={step.done ? "is-done" : ""} key={step.key}>
                   <span aria-hidden="true" className="onboarding-dot" />
                   {step.done ? (
                     <span>

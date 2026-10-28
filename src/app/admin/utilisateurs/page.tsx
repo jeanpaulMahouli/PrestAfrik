@@ -9,6 +9,7 @@ import { formatDate, formatTime } from "@/lib/format";
 import { restoreUser, sendUserPasswordReset, suspendUser } from "@/modules/admin/actions";
 import { isAdminRole, requirePlatformAdmin } from "@/modules/admin/context";
 import { adminPageSize, listAdminUsers } from "@/modules/admin/queries";
+import { accountContact, isAccountVerified } from "@/modules/auth/phone-account";
 
 export const metadata = { title: "Utilisateurs" };
 
@@ -66,7 +67,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
             <thead>
               <tr>
                 <th scope="col">Nom</th>
-                <th scope="col">E-mail</th>
+                <th scope="col">Contact</th>
                 <th scope="col">Boutiques et rôles</th>
                 <th scope="col">Dernière connexion</th>
                 <th scope="col">Statut</th>
@@ -87,9 +88,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                       </span>
                     </span>
                   </td>
-                  <td data-label="E-mail">
-                    {user.email}
-                    {!user.emailVerified && <span className="v-cell-sub">Adresse non confirmée</span>}
+                  <td data-label="Contact">
+                    {accountContact(user)}
+                    {!isAccountVerified(user) && <span className="v-cell-sub">Compte non confirmé</span>}
                   </td>
                   <td data-label="Boutiques et rôles">
                     {user.memberships.length ? user.memberships.map((membership) => `${membership.store.name} (${roleLabels[membership.role]})`).join(", ") : "—"}

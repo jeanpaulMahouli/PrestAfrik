@@ -5,6 +5,7 @@ import { PageEditor } from "@/components/pages/page-editor";
 import { StoreSectionNav } from "@/components/stores/store-section-nav";
 import { ActionDialog } from "@/components/ui/action-dialog";
 import { Badge } from "@/components/ui/badge";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { prisma } from "@/lib/prisma";
 import { createStorePage, deleteStorePage, moveStorePage, setStorePageVisibility } from "@/modules/pages/actions";
 import { blocksSchema, pageKindKeys, pageKinds, type PageKind } from "@/modules/pages/blocks";
@@ -60,24 +61,24 @@ export default async function StorePagesPage({ searchParams }: PageProps<"/dashb
                 <span className="icon-actions">
                   <form action={moveStorePage}>
                     <input name="kind" type="hidden" value={page.kind} />
-                    <button aria-label={`Monter « ${pageKinds[page.kind].label} » dans le menu`} className="icon-button" disabled={index === 0} name="direction" title="Monter dans le menu" type="submit" value="up">
+                    <SubmitButton aria-label={`Monter « ${pageKinds[page.kind].label} » dans le menu`} className="icon-button" disabled={index === 0} name="direction" pendingLabel="" title="Monter dans le menu" value="up">
                       <ArrowUp aria-hidden="true" size={15} />
-                    </button>
-                    <button aria-label={`Descendre « ${pageKinds[page.kind].label} » dans le menu`} className="icon-button" disabled={index === pages.length - 1} name="direction" title="Descendre dans le menu" type="submit" value="down">
+                    </SubmitButton>
+                    <SubmitButton aria-label={`Descendre « ${pageKinds[page.kind].label} » dans le menu`} className="icon-button" disabled={index === pages.length - 1} name="direction" pendingLabel="" title="Descendre dans le menu" value="down">
                       <ArrowDown aria-hidden="true" size={15} />
-                    </button>
+                    </SubmitButton>
                   </form>
                   <form action={setStorePageVisibility}>
                     <input name="kind" type="hidden" value={page.kind} />
                     <input name="visible" type="hidden" value={page.status === "PUBLISHED" ? "0" : "1"} />
-                    <button
+                    <SubmitButton
                       aria-label={page.status === "PUBLISHED" ? `Masquer « ${pageKinds[page.kind].label} » du menu` : `Afficher « ${pageKinds[page.kind].label} » dans le menu`}
                       className={`icon-button${page.status === "PUBLISHED" ? " is-on" : ""}`}
+                      pendingLabel=""
                       title={page.status === "PUBLISHED" ? "Visible dans le menu : touchez pour masquer" : "Masquée : touchez pour l’afficher dans le menu"}
-                      type="submit"
                     >
                       {page.status === "PUBLISHED" ? <Eye aria-hidden="true" size={15} /> : <EyeOff aria-hidden="true" size={15} />}
-                    </button>
+                    </SubmitButton>
                   </form>
                   <Badge tone={page.status === "PUBLISHED" ? "success" : "neutral"}>{page.status === "PUBLISHED" ? "Publiée" : "Brouillon"}</Badge>
                 </span>
