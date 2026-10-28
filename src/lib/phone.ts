@@ -69,7 +69,9 @@ export function parsePhone(countryIso: string, national: string): PhoneResult {
   const digits = national.replace(/[\s().-]/g, "");
   const country = phoneCountries().find((item) => item.iso === countryIso);
   if (!digits) return { ok: false, message: "Indiquez votre numéro WhatsApp, sans l’indicatif." };
-  if (!/^\+?\d{4,17}$/.test(digits)) return { ok: false, message: "Le numéro ne doit contenir que des chiffres." };
+  if (!/^\+?\d+$/.test(digits)) return { ok: false, message: "Le numéro ne doit contenir que des chiffres." };
+  if (digits.replace(/^\+/, "").length < 6) return { ok: false, message: `Ce numéro est trop court pour l’indicatif ${country?.dialCode ?? ""} : vérifiez qu’il est complet.` };
+  if (digits.length > 17) return { ok: false, message: "Ce numéro est trop long : saisissez-le sans l’indicatif du pays." };
   // Le numéro est relu au format international : pour un indicatif partagé (+1, +7…), le pays exact
   // est déduit du numéro lui-même.
   const international = digits.startsWith("+") ? digits : `+${getCountryCallingCode(countryIso)}${digits.replace(/^0+(?=\d{6})/, "")}`;

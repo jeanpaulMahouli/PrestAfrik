@@ -11,6 +11,9 @@ export type LivePreviewValues = {
   secondaryColor: string;
   accentColor: string;
   logoUrl: string | null;
+  /** Assistant de création : description et ville saisies, appliquées sans attendre l'enregistrement. */
+  description?: string;
+  city?: string;
 };
 
 // Écran de 390 × 780 px (téléphone courant), plus le cadre (2 × 10 px) et la barre d'état (34 px) : voir dashboard-theme.css.
@@ -66,7 +69,7 @@ export function StoreLivePreview({ storePath, values, reloadKey }: { storePath: 
           key={reloadKey}
           onLoad={() => setLoaded(true)}
           ref={frameRef}
-          src={`${storePath}?apercu=1`}
+          src={`${storePath}${storePath.includes("?") ? "&" : "?"}apercu=1`}
           title="Aperçu de votre boutique telle que vos clients la verront"
         />
       </div>

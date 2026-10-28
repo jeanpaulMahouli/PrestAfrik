@@ -153,37 +153,41 @@ enum SubscriptionPaymentStatus {
 }
 
 model User {
-  id                         String              @id @default(cuid())
+  id                         String                 @id @default(cuid())
   name                       String
-  email                      String              @unique
-  emailVerified              Boolean             @default(false)
+  /// Comptes créés par WhatsApp : adresse technique en « .invalid » (aucun e-mail n'y est envoyé).
+  email                      String                 @unique
+  emailVerified              Boolean                @default(false)
+  /// Numéro WhatsApp du compte (E.164), confirmé par un code reçu sur WhatsApp à l'inscription.
+  phoneNumber                String?                @unique @db.VarChar(20)
+  phoneNumberVerified        Boolean                @default(false)
   image                      String?
-  platformRole               PlatformRole        @default(USER)
+  platformRole               PlatformRole           @default(USER)
   /// Accès suspendu par l'administration : aucune nouvelle session n'est ouverte.
   suspendedAt                DateTime?
-  suspensionReason           String?             @db.VarChar(300)
+  suspensionReason           String?                @db.VarChar(300)
   /// Dernière boutique ouverte dans le tableau de bord : retrouvée à la prochaine connexion, sur tout appareil.
   lastActiveStoreId          String?
-  lastActiveStore            Store?              @relation("UserLastActiveStore", fields: [lastActiveStoreId], references: [id], onDelete: SetNull)
+  lastActiveStore            Store?                 @relation("UserLastActiveStore", fields: [lastActiveStoreId], references: [id], onDelete: SetNull)
   /// Dernière activité dans l'espace vendeur (mise à jour au plus une fois toutes les 5 minutes).
   lastActiveAt               DateTime?
-  supportTickets             SupportTicket[]     @relation("SupportTicketRequester")
-  assignedTickets            SupportTicket[]     @relation("SupportTicketAssignee")
+  supportTickets             SupportTicket[]        @relation("SupportTicketRequester")
+  assignedTickets            SupportTicket[]        @relation("SupportTicketAssignee")
   supportReplies             SupportTicketMessage[]
-  createdAt                  DateTime            @default(now())
-  updatedAt                  DateTime            @updatedAt
+  createdAt                  DateTime               @default(now())
+  updatedAt                  DateTime               @updatedAt
   accounts                   Account[]
   sessions                   Session[]
   memberships                StoreMembership[]
-  invitations                StoreInvitation[]   @relation("InvitationSender")
-  acceptedInvites            StoreInvitation[]   @relation("InvitationRecipient")
+  invitations                StoreInvitation[]      @relation("InvitationSender")
+  acceptedInvites            StoreInvitation[]      @relation("InvitationRecipient")
   authoredPayments           Payment[]
-  authoredCustomerNotes      CustomerNote[]      @relation("CustomerNoteAuthor")
-  authoredCustomerReminders  CustomerReminder[]  @relation("CustomerReminderAuthor")
-  authoredMarketingCampaigns MarketingCampaign[] @relation("MarketingCampaignAuthor")
+  authoredCustomerNotes      CustomerNote[]         @relation("CustomerNoteAuthor")
+  authoredCustomerReminders  CustomerReminder[]     @relation("CustomerReminderAuthor")
+  authoredMarketingCampaigns MarketingCampaign[]    @relation("MarketingCampaignAuthor")
   storeDrafts                StoreDraft[]
-  auditLogs                  AuditLog[]          @relation("AuditLogActor")
-  adminAlertStates           AdminAlertState[]   @relation("AdminAlertStateAuthor")
+  auditLogs                  AuditLog[]             @relation("AuditLogActor")
+  adminAlertStates           AdminAlertState[]      @relation("AdminAlertStateAuthor")
 }
 
 model Account {
@@ -229,6 +233,41 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@index([identifier])
+}
+
+enum PhoneVerificationPurpose {
+  SIGN_UP
+  PASSWORD_RESET
+}
+
+/// Code à usage unique envoyé sur WhatsApp (inscription, mot de passe oublié). Une seule ligne par numéro
+/// et par usage : recommencer ou actualiser la page réutilise la même demande, sans doublon.
+/// Le code n'est jamais stocké en clair (HMAC), le mot de passe d'inscription est déjà haché.
+model PhoneVerification {
+  id              String                   @id @default(cuid())
+  purpose         PhoneVerificationPurpose
+  phoneNumber     String                   @db.VarChar(20)
+  /// Inscription : nom et mot de passe haché, utilisés à la création du compte une fois le code vérifié.
+  name            String?                  @db.VarChar(80)
+  passwordHash    String?
+  codeHash        String                   @db.VarChar(64)
+  expiresAt       DateTime
+  /// Codes faux saisis pour le code en cours (remis à zéro à chaque nouveau code).
+  attempts        Int                      @default(0)
+  /// Codes envoyés depuis windowStartedAt (limite par 24 h).
+  sendCount       Int                      @default(1)
+  windowStartedAt DateTime                 @default(now())
+  lastSentAt      DateTime                 @default(now())
+  consumedAt      DateTime?
+  /// Identifiant du message chez Meta (wamid) : le webhook y rattache le statut de distribution.
+  messageId       String?                  @db.VarChar(128)
+  deliveryStatus  String?                  @db.VarChar(20)
+  deliveryError   String?                  @db.VarChar(200)
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  @@unique([purpose, phoneNumber])
+  @@index([messageId])
 }
 
 /// Boutique en cours de création (assistant). Aucune boutique n'existe tant que l'assistant n'est pas terminé :

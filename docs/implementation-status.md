@@ -6,6 +6,11 @@ Ce document distingue le code disponible des intégrations réelles. Une fonctio
 
 Référence : `PrestAfrik maquettes UX UI/PRESTAFRIK-BRIEF-CLAUDE-CODE.md`. Inventaire écran par écran : `docs/design/INVENTAIRE.md`. Décisions : `docs/decisions.md`.
 
+### Octobre 2026 — inscription WhatsApp et création de boutique (ADR-029)
+
+- Vérifié en local (base PostgreSQL locale, envoi WhatsApp en mode développement) : inscription par numéro WhatsApp avec code, connexion et mot de passe oublié par numéro, webhook Meta (vérification et signature), création de boutique sans faux « adresse prise », description facultative, saisie gardée après actualisation ou coupure réseau, fenêtre « Boutique créée », aperçu de l'assistant identique à « Ma boutique », Grand marché corrigé sur ordinateur, Poppins partout, actions en icônes dans Commandes.
+- **Pas encore opérationnel** : l'envoi réel des codes tant que l'application Meta, le numéro, le modèle et les variables ne sont pas configurés et testés (`docs/whatsapp-meta.md`, étape 9).
+
 ### Terminé et vérifié (planche maquette / application, tests)
 
 - Étape 0 : 53 écrans extraits (captures, textes, structures) dans `docs/design/reference/`.

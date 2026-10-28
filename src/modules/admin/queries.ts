@@ -191,7 +191,7 @@ export async function listFailedMessages(hours: number, reason?: FailureReason) 
 
 export async function listAdminUsers({ query = "", page = 1, take = adminPageSize }: { query?: string; page?: number; take?: number }) {
   const where: Prisma.UserWhereInput = query
-    ? { OR: [{ name: { contains: query, mode: "insensitive" } }, { email: { contains: query, mode: "insensitive" } }] }
+    ? { OR: [{ name: { contains: query, mode: "insensitive" } }, { email: { contains: query, mode: "insensitive" } }, { phoneNumber: { contains: query.replace(/[^\d+]/g, "") || query } }] }
     : {};
   const [total, users] = await Promise.all([
     prisma.user.count({ where }),
@@ -207,6 +207,8 @@ export async function listAdminUsers({ query = "", page = 1, take = adminPageSiz
         email: true,
         image: true,
         emailVerified: true,
+        phoneNumber: true,
+        phoneNumberVerified: true,
         platformRole: true,
         suspendedAt: true,
         createdAt: true,

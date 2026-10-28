@@ -42,7 +42,7 @@ export async function computeAlerts(now = new Date()): Promise<AdminAlert[]> {
   const [unverified, recentProducts, duplicates] = await Promise.all([
     // Adresses non confirmées depuis plus d'une heure (le temps de recevoir l'e-mail).
     prisma.user.findMany({
-      where: { emailVerified: false, suspendedAt: null, createdAt: { lt: new Date(now.getTime() - hour) } },
+      where: { emailVerified: false, phoneNumberVerified: false, suspendedAt: null, createdAt: { lt: new Date(now.getTime() - hour) } },
       orderBy: { createdAt: "desc" },
       take: 200,
       select: { id: true, name: true, email: true, createdAt: true },

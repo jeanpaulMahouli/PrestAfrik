@@ -26,9 +26,9 @@
   --lp-section-gap: clamp(72px, 7.7vw, 148px);
   --lp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
-  --lp-text: var(--lp-font-text), "DM Sans", system-ui, sans-serif;
+  --lp-text: var(--lp-font-ui), "Poppins", system-ui, sans-serif;
   --lp-ui: var(--lp-font-ui), "Poppins", system-ui, sans-serif;
-  --lp-display: var(--lp-font-display), "Inter", system-ui, sans-serif;
+  --lp-display: var(--lp-font-ui), "Poppins", system-ui, sans-serif;
 
   position: relative;
   display: flow-root; /* évite que la marge du héros « sorte » de la page */

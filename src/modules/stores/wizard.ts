@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/modules/auth/server";
+import { isAccountVerified } from "@/modules/auth/phone-account";
 
 export const wizardSteps = [
   "Nom",
@@ -27,12 +28,13 @@ export async function requireWizardSession() {
 }
 
 /**
- * Session avec adresse e-mail confirmée : obligatoire pour enregistrer une étape ou créer la boutique.
+ * Session d'un compte confirmé (numéro WhatsApp vérifié à l'inscription, ou adresse e-mail confirmée pour
+ * les anciens comptes) : obligatoire pour enregistrer une étape ou créer la boutique.
  * Sans confirmation, l'assistant affiche l'écran « Confirmez votre adresse e-mail ».
  */
 export async function requireVerifiedWizardSession() {
   const session = await requireWizardSession();
-  if (!session.user.emailVerified) redirect("/boutiques/nouvelle");
+  if (!isAccountVerified(session.user)) redirect("/boutiques/nouvelle");
   return session;
 }
 

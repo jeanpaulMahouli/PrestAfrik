@@ -9,6 +9,8 @@ export const demoAdmin = "admin@prestafrik.example.test";
 /** Connexion par le formulaire ; le bouton reste désactivé tant que la page n'est pas prête. */
 export async function signIn(page: Page, email: string, next = "/dashboard") {
   await page.goto(`/connexion?next=${encodeURIComponent(next)}`);
+  // Les comptes de démonstration ont une adresse e-mail : la connexion par numéro WhatsApp est proposée d'abord.
+  await page.getByRole("button", { name: "Adresse e-mail", exact: true }).click();
   const button = page.getByRole("button", { name: "Me connecter" });
   await expect(async () => {
     await page.getByLabel("Adresse e-mail").fill(email);

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthHeading, AuthShell } from "@/components/auth/auth-shell";
-import { PasswordResetRequestForm } from "@/components/auth/password-reset-request-form";
+import { PasswordResetChooser } from "@/components/auth/whatsapp-password-reset";
 import { texts } from "@/config/texts";
 
 const t = texts.auth;
@@ -12,7 +12,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthShell>
       <AuthHeading subtitle={t.reset.requestSubtitle} title={t.reset.requestTitle} />
-      <PasswordResetRequestForm />
+      <PasswordResetChooser />
       <p className="auth-switch">
         <Link href="/connexion">{t.reset.backToSignIn}</Link>
       </p>

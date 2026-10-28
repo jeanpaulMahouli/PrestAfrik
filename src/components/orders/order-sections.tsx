@@ -11,6 +11,8 @@ import { canCancel, canValidate, orderStage } from "@/modules/orders/state-machi
 import { renderTemplate } from "@/modules/whatsapp/templates";
 import { buildWaMeUrl } from "@/modules/whatsapp/wa-me";
 import { CheckIcon } from "@/components/ui/icons";
+import { IconLink, IconSubmit } from "@/components/ui/icon-action";
+import { CircleCheck, Eye } from "lucide-react";
 
 export type QuickOrder = {
   id: string;
@@ -90,15 +92,24 @@ export function OrderQuickActions({
         <form action={validateOrder}>
           <input name="orderId" type="hidden" value={order.id} />
           <input name="returnTo" type="hidden" value={returnTo} />
-          <SubmitButton aria-label={`Marquer la commande ${order.reference} validée`} className={`btn btn-primary${size}`} pendingLabel="Validation…">
-            <CheckIcon /> Valider
-          </SubmitButton>
+          {compact ? (
+            // Liste : icône seule, avec infobulle (ordinateur) ou légende (écran tactile).
+            <IconSubmit
+              caption="Valider"
+              hint="Valider (commande payée)"
+              icon={<CircleCheck aria-hidden="true" size={20} />}
+              label={`Valider la commande ${order.reference} : elle est payée, son montant est compté dans l’argent reçu`}
+              pendingLabel="Validation…"
+            />
+          ) : (
+            <SubmitButton aria-label={`Marquer la commande ${order.reference} validée`} className={`btn btn-primary${size}`} pendingLabel="Validation…">
+              <CheckIcon /> Valider
+            </SubmitButton>
+          )}
         </form>
       )}
       {compact && (
-        <Link aria-label={`Voir la commande ${order.reference}`} className={`btn btn-secondary${size}`} href={`/dashboard/commandes/${order.id}`}>
-          Voir
-        </Link>
+        <IconLink caption="Voir" hint="Voir le détail" href={`/dashboard/commandes/${order.id}`} icon={<Eye aria-hidden="true" size={20} />} label={`Voir le détail de la commande ${order.reference}`} />
       )}
       {showCancel && canCancel(stage) && hasPermission(role, "orders.manage") && (
         <ActionDialog

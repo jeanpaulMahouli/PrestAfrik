@@ -9,12 +9,16 @@ import { texts } from "@/config/texts";
 import { authClient } from "@/modules/auth/client";
 import { checkPassword, passwordStrength } from "@/modules/auth/password-policy";
 import { CheckIcon } from "@/components/ui/icons";
+import { AuthPhoneField, callWhatsappAuth } from "@/components/auth/auth-phone-field";
+import { parsePhone, splitE164 } from "@/lib/phone";
 
 type AuthFormProps = {
   mode: "sign-in" | "sign-up";
   invitationToken?: string;
   /** Chemin interne vers lequel revenir après la connexion. */
   next?: string;
+  /** Numéro WhatsApp à préremplir (E.164), ex. après « un compte existe déjà ». */
+  initialPhone?: string;
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -24,10 +28,18 @@ function safeInternalPath(path: string | undefined) {
   return path && path.startsWith("/") && !path.startsWith("//") && !path.includes("\\") ? path : null;
 }
 
-export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
+export function AuthForm({ mode, invitationToken, next, initialPhone }: AuthFormProps) {
   const router = useRouter();
-  const ids = { name: useId(), email: useId(), password: useId(), help: useId() };
+  const ids = { name: useId(), email: useId(), phone: useId(), password: useId(), help: useId() };
   const isSignUp = mode === "sign-up";
+  // Connexion : numéro WhatsApp par défaut ; e-mail pour les comptes créés avant l'inscription par WhatsApp
+  // et pour les invitations (liées à une adresse e-mail).
+  const [method, setMethod] = useState<"whatsapp" | "email">(isSignUp || invitationToken ? "email" : "whatsapp");
+  const initial = splitE164(initialPhone);
+  const [phoneCountry, setPhoneCountry] = useState<string>(initial.country);
+  const [phoneNational, setPhoneNational] = useState(initial.national);
+  const byPhone = !isSignUp && method === "whatsapp";
+  const phone = parsePhone(phoneCountry, phoneNational);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,14 +59,14 @@ export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
   // Le bouton reste désactivé tant que les conditions ne sont pas remplies.
   const missing = isSignUp
     ? [!nameValid && "votre nom", !emailValid && "une adresse e-mail valide", passwordIssue && "un mot de passe de 8 caractères minimum", !acceptedTerms && "l’acceptation des conditions"].filter(Boolean)
-    : [!emailValid && "une adresse e-mail valide", !password && "votre mot de passe"].filter(Boolean);
+    : [byPhone ? !phone.ok && "un numéro WhatsApp valide" : !emailValid && "une adresse e-mail valide", !password && "votre mot de passe"].filter(Boolean);
   const canSubmit = missing.length === 0;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setTouched({ name: true, email: true, password: true, terms: true });
+    setTouched({ name: true, email: true, phone: true, password: true, terms: true });
     setError("");
-    if (!emailValid || (isSignUp && (!nameValid || passwordIssue || !acceptedTerms))) return;
+    if (byPhone ? !phone.ok || !password : !emailValid || (isSignUp && (!nameValid || passwordIssue || !acceptedTerms))) return;
 
     setPending(true);
     const callbackURL = validInvitation
@@ -63,6 +75,16 @@ export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
     const normalizedEmail = email.trim().toLowerCase();
 
     try {
+      if (byPhone && phone.ok) {
+        const signedIn = await callWhatsappAuth("sign-in", { phoneNumber: phone.e164, password, rememberMe });
+        if (!signedIn.ok) {
+          setError(signedIn.code === "RATE_LIMITED" ? t.signIn.tooManyAttempts : signedIn.message);
+          return;
+        }
+        router.push(callbackURL);
+        router.refresh();
+        return;
+      }
       const result = isSignUp
         ? await authClient.signUp.email({ name: name.trim(), email: normalizedEmail, password, callbackURL })
         : await authClient.signIn.email({ email: normalizedEmail, password, rememberMe, callbackURL });
@@ -120,6 +142,25 @@ export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
         </div>
       )}
 
+      {!isSignUp && !validInvitation && (
+        <div aria-label="Se connecter avec" className="auth-method" role="group">
+          <button aria-pressed={method === "whatsapp"} onClick={() => setMethod("whatsapp")} type="button">Numéro WhatsApp</button>
+          <button aria-pressed={method === "email"} onClick={() => setMethod("email")} type="button">Adresse e-mail</button>
+        </div>
+      )}
+
+      {byPhone ? (
+        <AuthPhoneField
+          country={phoneCountry}
+          id={ids.phone}
+          label="Numéro WhatsApp"
+          national={phoneNational}
+          onBlur={() => setTouched((value) => ({ ...value, phone: true }))}
+          onCountryChange={setPhoneCountry}
+          onNationalChange={setPhoneNational}
+          showError={Boolean(touched.phone)}
+        />
+      ) : (
       <div className="auth-field">
         <label htmlFor={ids.email}>{t.fields.email}</label>
         <div className={`auth-input ${emailValid ? "is-valid" : ""} ${showEmailError ? "is-invalid" : ""}`}>
@@ -151,6 +192,7 @@ export function AuthForm({ mode, invitationToken, next }: AuthFormProps) {
           {showEmailError ? t.fields.emailInvalid : emailValid ? (isSignUp ? t.signUp.emailHelp : t.fields.emailValid) : ""}
         </p>
       </div>
+      )}
 
       <div className="auth-field">
         <label htmlFor={ids.password}>{t.fields.password}</label>

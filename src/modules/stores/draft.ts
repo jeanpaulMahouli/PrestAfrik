@@ -15,6 +15,8 @@ export type DraftData = {
   activityId?: string | null;
   activityOther?: string | null;
   activityLabel?: string;
+  /** Description de la boutique (facultative), affichée en haut de la vitrine. */
+  description?: string | null;
   country?: string;
   region?: string;
   city?: string;

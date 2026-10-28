@@ -95,14 +95,21 @@
   }
 }
 
+/* Rayons posés directement sur le fond de page (sans bandeau blanc), alignés sur les autres blocs. */
 .sf-theme-grand-marche .sf-chips {
-  padding: 0.875rem 1rem;
-  border-bottom: 1px solid var(--color-divider);
-  background: var(--color-surface);
+  padding: 0.875rem 1rem 0.25rem;
+  background: transparent;
 }
 
 .sf-theme-grand-marche .sf-chips :is(a, button) {
+  border-color: #dfe3e6;
   border-radius: 0.375rem;
+}
+
+@media (min-width: 1024px) {
+  .sf-theme-grand-marche .sf-chips {
+    padding: 1rem 2rem 0.25rem;
+  }
 }
 
 .sf-theme-grand-marche .sf-home-section {
@@ -160,6 +167,11 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
     padding: 0 2rem;
   }
+}
+
+/* Bandeau « Livraison… » retiré de ce thème (aussi dans l'aperçu en direct, avant l'enregistrement). */
+.sf-theme-grand-marche .sf-info {
+  display: none;
 }
 
 /* Engagements de la boutique : visibles avec ce thème seulement. */

@@ -33,8 +33,9 @@ export async function sendEmail(id: EmailId, to: string, variables: EmailVariabl
   if (actionUrl) assertSafeLink(actionUrl);
   const email = renderEmail(id, variables, { baseUrl: applicationOrigin(), actionUrl, contactEmail: site.email });
 
-  // Données de démonstration et tests : jamais d'envoi réel (document des modèles, §3).
-  if (/\.test$/i.test(to.trim())) {
+  // Données de démonstration et tests : jamais d'envoi réel (document des modèles, §3). Les comptes
+  // créés par WhatsApp ont une adresse technique en « .invalid » : rien n'y est envoyé non plus.
+  if (/\.(test|invalid)$/i.test(to.trim())) {
     if (process.env.NODE_ENV !== "production") console.info(`[e-mail ${id} non envoyé : adresse de test] ${email.subject}`);
     return { sent: false, reason: "test-address" };
   }

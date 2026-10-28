@@ -206,13 +206,13 @@
   scroll-snap-align: start;
 }
 
-/* Même cadre carré que la grille : photo entière visible. */
+/* Même cadre carré, rempli, que la grille. */
 .sf-rail-card .sf-card-media {
   aspect-ratio: 1;
 }
 
 .sf-rail-card .sf-card-media img {
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .sf-rail-more a {
@@ -265,9 +265,26 @@
 }
 
 @media (min-width: 1024px) {
+  /* Ordinateur : les cartes de la rangée ont exactement la largeur des colonnes de la grille du thème. */
+  .sf {
+    --sf-columns: 4;
+    --sf-gap: 1.25rem;
+  }
+
+  .sf-theme-mode-beaute,
+  .sf-theme-boutique-marque {
+    --sf-columns: 3;
+    --sf-gap: 1rem;
+  }
+
+  .sf-theme-grand-marche {
+    --sf-columns: 5;
+    --sf-gap: 0.625rem;
+  }
+
   .sf-rail-list {
-    grid-auto-columns: calc((100% - 4rem - 2 * 1.25rem) / 3.3);
-    gap: 1.25rem;
+    grid-auto-columns: calc((100% - (var(--sf-columns) - 1) * var(--sf-gap)) / var(--sf-columns));
+    gap: var(--sf-gap);
     padding-right: 2rem;
     padding-left: 2rem;
     scroll-padding-inline: 2rem;

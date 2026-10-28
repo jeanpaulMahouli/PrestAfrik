@@ -19,8 +19,9 @@ import { brandNameMessage, brandSlug, brandSlugMessage, usesBrandName, usesBrand
 import { publishStoreIfReady } from "@/modules/stores/publication";
 import { checkSlug, slugMessages, slugify } from "@/modules/stores/slug";
 import { isSlugTaken } from "@/modules/stores/slug-availability";
-import { requireVerifiedWizardSession, wizardStepHref } from "@/modules/stores/wizard";
+import { findOwnedStore, requireVerifiedWizardSession, wizardStepHref } from "@/modules/stores/wizard";
 import { addCalendarPeriod } from "@/modules/subscriptions/dates";
+import { isAccountVerified } from "@/modules/auth/phone-account";
 
 // Assistant de création (/boutiques/nouvelle). Chaque étape enregistre ses réponses dans un brouillon
 // (StoreDraft) : AUCUNE boutique n'est créée avant la dernière étape. Voir src/modules/stores/draft.ts.
@@ -81,15 +82,20 @@ export async function saveActivityStep(_previous: WizardState, formData: FormDat
   if (!draft) return missingDraft();
   const activityId = text(formData, "activityId");
   const activityOther = text(formData, "activityOther");
+  // Description de la boutique (facultative) : même règle que dans « Ma boutique ».
+  const description = text(formData, "description").replace(/\r\n/g, "\n");
+  if (description.length > 2000) return fail("La description ne peut pas dépasser 2 000 caractères.", "description");
+  if (/<[a-z/!]/i.test(description)) return fail("La description est un texte simple, sans balises HTML.", "description");
+  const descriptionPatch = { description: description || null };
   if (activityId) {
     const activity = await prisma.activity.findUnique({ where: { id: activityId }, select: { id: true, label: true } });
     if (!activity) return fail("Cette activité n’existe pas dans la liste. Choisissez-en une autre, ou précisez la vôtre.", "activityId");
-    return saveAndContinue(draft, { activityId: activity.id, activityOther: null, activityLabel: activity.label }, 2);
+    return saveAndContinue(draft, { activityId: activity.id, activityOther: null, activityLabel: activity.label, ...descriptionPatch }, 2);
   }
   if (activityOther.length < 2 || activityOther.length > 80) {
     return fail("Choisissez une activité dans la liste, ou décrivez la vôtre en quelques mots (2 à 80 caractères).", activityOther ? "activityOther" : "activityId");
   }
-  return saveAndContinue(draft, { activityId: null, activityOther, activityLabel: activityOther }, 2);
+  return saveAndContinue(draft, { activityId: null, activityOther, activityLabel: activityOther, ...descriptionPatch }, 2);
 }
 
 /* ---------- 3. Localisation ---------- */
@@ -236,6 +242,13 @@ export async function saveDeliveryStep(_previous: WizardState, formData: FormDat
     if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Vérifiez vos zones de livraison.", "zones");
     zones.push({ name: parsed.data.name, feeXaf: parsed.data.feeXaf, estimatedDelay: parsed.data.estimatedDelay || null });
   }
+  // Deux zones du même nom ne peuvent pas coexister (contrainte d'unicité par ville) : on le dit ici, avant la création.
+  const seen = new Set<string>();
+  for (const zone of zones) {
+    const key = zone.name.toLocaleLowerCase("fr-FR");
+    if (seen.has(key)) return fail(`La zone « ${zone.name} » apparaît deux fois. Gardez une seule ligne par zone.`, "zones");
+    seen.add(key);
+  }
   if (zones.length > 20) return fail("Vous pouvez ajouter jusqu’à 20 zones ici ; les autres se règlent ensuite dans « Livraisons ».", "zones");
 
   const pickupEnabled = formData.get("pickupEnabled") === "on";
@@ -255,7 +268,12 @@ export async function saveDeliveryStep(_previous: WizardState, formData: FormDat
 
 export async function finishWizard(_previous: WizardState, formData: FormData): Promise<WizardState> {
   const { session, draft } = await currentDraft(formData);
-  if (!draft) return missingDraft();
+  if (!draft) {
+    // Second envoi (double appui, réseau lent qui renvoie la requête) : la boutique existe déjà.
+    const created = await findOwnedStore(session.user.id, text(formData, "draftId"));
+    if (created) redirect(createdHref(created.id));
+    return missingDraft();
+  }
   const data = draft.data;
   const missing = draftMissing(data);
   if (missing.length) return fail(`Il manque encore ${missing.map((item) => item.label).join(", ")}. Touchez « Modifier » sur la ligne concernée pour compléter.`);
@@ -299,6 +317,7 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
           phoneE164: data.phone?.e164 ?? null,
           contactPhone: data.phone?.e164 ?? null,
           contactEmail: data.contactEmail ?? null,
+          description: data.description ?? null,
           ...(data.theme ? { theme: data.theme } : {}),
           ...(data.primaryColor ? { primaryColor: data.primaryColor, secondaryColor: data.secondaryColor, accentColor: data.accentColor } : {}),
           logoUrl: data.logoUrl ?? null,
@@ -316,6 +335,8 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
       });
       if (data.deliveryZones?.length) {
         await transaction.deliveryZone.createMany({
+          // Brouillons enregistrés avant le contrôle des doublons : une zone en double est ignorée.
+          skipDuplicates: true,
           data: data.deliveryZones.map((zone) => ({ storeId, city: data.city ?? "", name: zone.name, feeXaf: zone.feeXaf, estimatedDelay: zone.estimatedDelay, isActive: true })),
         });
       }
@@ -338,10 +359,20 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
         if (rows.length) await transaction.productImage.createMany({ data: rows });
       }
       await transaction.storeDraft.delete({ where: { id: draft.id } });
-    });
+      // Base distante (latence de plusieurs centaines de ms par requête) : le délai par défaut de 5 s est trop court.
+    }, { maxWait: 10_000, timeout: 30_000 });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-      return fail(`L’adresse ${storeAddressLabel(data.slug!)} vient d’être prise par une autre boutique. Revenez à l’étape 1 pour en choisir une autre.`);
+      // Seul un conflit sur l'adresse est présenté comme tel (avant, toute contrainte d'unicité l'était).
+      const target = uniqueTarget(error);
+      if (target.includes("slug")) {
+        return fail(`L’adresse ${storeAddressLabel(data.slug!)} vient d’être prise par une autre boutique. Revenez à l’étape 1 pour en choisir une autre.`);
+      }
+      // Même brouillon envoyé deux fois en même temps : la première demande a créé la boutique.
+      const created = await findOwnedStore(session.user.id, storeId);
+      if (created) redirect(createdHref(created.id));
+      console.error("[assistant] Création de boutique refusée par une contrainte d’unicité", target);
+      return fail("La boutique n’a pas pu être créée à cause d’une information en double. Vérifiez vos zones de livraison (étape 8), puis réessayez.");
     }
     throw error;
   }
@@ -353,9 +384,20 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
   await rememberActiveStore(session.user.id, session.session.id, storeId);
   invalidateStorefrontCache(storeId, data.slug!);
 
-  // Publication immédiate si tout est prêt (l'adresse e-mail est forcément confirmée) ; sinon le vendeur sait quoi faire.
-  const result = await publishStoreIfReady(storeId, session.user.emailVerified);
-  redirect(`/boutiques/nouvelle?boutique=${storeId}&etape=${result.ok ? "publiee" : "creee"}`);
+  // Publication immédiate si tout est prêt (le compte est forcément confirmé) ; sinon la fenêtre « Boutique créée »
+  // du tableau de bord liste ce qu'il reste à faire.
+  await publishStoreIfReady(storeId, isAccountVerified(session.user));
+  redirect(createdHref(storeId));
+}
+
+/** Tableau de bord, avec la fenêtre « Boutique créée » (affichée une seule fois). */
+const createdHref = (storeId: string) => `/dashboard?bienvenue=${encodeURIComponent(storeId)}`;
+
+/** Colonnes d'une violation d'unicité Prisma (ex. ["slug"], ["storeId", "city", "name"]). */
+function uniqueTarget(error: Prisma.PrismaClientKnownRequestError): string[] {
+  const target = error.meta?.target;
+  if (Array.isArray(target)) return target.map(String);
+  return typeof target === "string" ? target.split(/[_,\s]+/) : [];
 }
 
 /** Abandonne une boutique en cours de création (brouillon, logo et photos provisoires). */

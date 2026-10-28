@@ -9,6 +9,13 @@
   box-sizing: border-box;
 }
 
+/* Une seule police, Poppins (src/lib/fonts.ts) : les anciennes variables « texte » et « grands titres »
+   la désignent aussi, pour que toutes les feuilles de style l'utilisent. */
+:root {
+  --lp-font-text: var(--lp-font-ui);
+  --lp-font-display: var(--lp-font-ui);
+}
+
 html {
   min-height: 100%;
   background: var(--color-page-background);
@@ -25,7 +32,9 @@ body {
 
 button,
 input,
-select {
+select,
+textarea,
+optgroup {
   font: inherit;
 }
 

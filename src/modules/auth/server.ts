@@ -8,6 +8,7 @@ import { texts } from "@/config/texts";
 import { checkPassword, passwordMaxLength, passwordMinLength } from "@/modules/auth/password-policy";
 import { getSmtpConfig } from "@/modules/email/config";
 import { sendEmail, sendEmailQuietly } from "@/modules/email/server";
+import { whatsappAuth } from "@/modules/auth/whatsapp-plugin";
 import { formatDate, formatTime } from "@/lib/format";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -83,6 +84,8 @@ export const auth = betterAuth({
   ],
   secret: authSecret ?? "prestafrik-local-development-only-secret-0001",
   database: prismaAdapter(prisma, { provider: "postgresql" }),
+  // Inscription et connexion avec le numéro WhatsApp (code de vérification envoyé par PrestAfrik).
+  plugins: [whatsappAuth()],
   session: {
     // « Rester connecté 30 jours » ; sans la case, le cookie disparaît à la fermeture du navigateur.
     expiresIn: 60 * 60 * 24 * 30,

@@ -121,7 +121,8 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
         </nav>
       )}
 
-      <p className="sf-info">{deliverySummary(extras, formatXaf)}</p>
+      {/* « Grand marché » : les engagements ci-dessous disent déjà l'essentiel, sans ce bandeau. */}
+      {store.theme !== "GRAND_MARCHE" && <p className="sf-info">{deliverySummary(extras, formatXaf)}</p>}
 
       {/* Engagements (thème « Grand marché ») : uniquement des faits vrais pour toute boutique PrestAfrik. */}
       {!filtering && (

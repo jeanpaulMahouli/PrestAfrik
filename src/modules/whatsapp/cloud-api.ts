@@ -1,11 +1,12 @@
 import "server-only";
 
 // Adaptateur WhatsApp Business Cloud API (Meta) : vérification des identifiants et envoi de modèles
-// de messages (campagnes marketing). Les webhooks de statut seront ajoutés avec le worker d'envoi.
+// de messages (campagnes marketing des boutiques, codes de vérification de PrestAfrik).
+// Les statuts de distribution arrivent par le webhook /api/webhooks/whatsapp.
 
 const defaultGraphApiVersion = "v23.0";
 
-function graphApiBaseUrl() {
+export function graphApiBaseUrl() {
   const configured = process.env.WHATSAPP_GRAPH_API_VERSION?.trim();
   const version = configured && /^v\d+\.\d+$/.test(configured) ? configured : defaultGraphApiVersion;
   return `https://graph.facebook.com/${version}`;
@@ -65,7 +66,7 @@ export async function verifyCloudApiCredentials({
 export type SendTemplateResult = { ok: true; messageId: string | null } | { ok: false; error: string; fatal: boolean };
 
 /** Erreurs Meta les plus courantes, expliquées au vendeur. « fatal » : inutile d'essayer les destinataires suivants. */
-function explainSendError(status: number, code: number | null, details: string): { error: string; fatal: boolean } {
+export function explainSendError(status: number, code: number | null, details: string): { error: string; fatal: boolean } {
   if (status === 401 || code === 190) return { error: "Le jeton d’accès WhatsApp est invalide ou a expiré.", fatal: true };
   if (code === 132001) return { error: "Le modèle de message est introuvable ou n’est pas approuvé dans cette langue.", fatal: true };
   if (code === 132000) return { error: "Le modèle de message doit contenir une variable {{1}} dans son texte.", fatal: true };

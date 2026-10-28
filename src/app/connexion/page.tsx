@@ -27,7 +27,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/connexion
       <AuthHeading subtitle={t.subtitle} title={t.title} />
       {notice && <p className="auth-notice" role="status">{notice}</p>}
       {error && <p className="auth-alert" role="alert">{error}</p>}
-      <AuthForm invitationToken={value("invitation")} mode="sign-in" next={value("next")} />
+      <AuthForm initialPhone={value("telephone")} invitationToken={value("invitation")} mode="sign-in" next={value("next")} />
     </AuthShell>
   );
 }

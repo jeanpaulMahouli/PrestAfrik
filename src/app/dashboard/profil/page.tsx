@@ -2,6 +2,7 @@ import { AvatarForm } from "@/components/account/avatar-form";
 import { NameForm } from "@/components/account/name-form";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { getStoreContext } from "@/modules/stores/context";
+import { formatPhoneForDisplay, isPlaceholderEmail } from "@/modules/auth/phone-account";
 
 const roleLabels = {
   OWNER: "Propriétaire",
@@ -29,10 +30,18 @@ export default async function ProfilePage() {
       <section aria-label="Informations du profil" className="surface-card profile-card">
         <AvatarForm image={session.user.image ?? null} name={session.user.name} />
         <NameForm name={session.user.name} />
-        <div>
-          <span>Adresse e-mail</span>
-          <strong>{session.user.email}</strong>
-        </div>
+        {session.user.phoneNumber && (
+          <div>
+            <span>Numéro WhatsApp du compte</span>
+            <strong>{formatPhoneForDisplay(session.user.phoneNumber)}{session.user.phoneNumberVerified ? " · confirmé" : ""}</strong>
+          </div>
+        )}
+        {!isPlaceholderEmail(session.user.email) && (
+          <div>
+            <span>Adresse e-mail</span>
+            <strong>{session.user.email}</strong>
+          </div>
+        )}
         <div>
           <span>Rôle dans {store.name}</span>
           <strong>{roleLabels[membership.role]}</strong>
