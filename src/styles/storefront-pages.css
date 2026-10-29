@@ -1,0 +1,409 @@
+/* Vitrines : l'apparence choisie (thème et style des promotions) sur toutes les pages de la boutique,
+   pas seulement l'accueil — fiche produit, panier, commande, suivi, pages et promotions.
+   Chaque thème garde la même signature partout : Catalogue express (net et simple), Mode et beauté
+   (doux, arrondi, photos en grand), Galerie (angles droits, titres espacés) et Grand marché (bandeau
+   sombre, panneaux blancs, prix bien visibles). */
+
+/* ======================================================================
+   Commun à tous les thèmes
+   ====================================================================== */
+
+/* Titre des pages intérieures : souligné par la « bande pagne » aux couleurs de la boutique. */
+.sf-page-head {
+  position: relative;
+  padding-bottom: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.sf-page-head::after {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 4.5rem;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--sf-pagne);
+  content: "";
+}
+
+.sf-page h1,
+.sf-product-copy h1 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
+}
+
+/* Panneaux du panier, de la commande et du suivi : même surface que les cartes de l'accueil. */
+.sf :is(.sf-lines, .sf-sums, .sf-panel, .sf-empty, .sf-order-thanks) {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--sf-radius);
+  box-shadow: 0 1px 2px rgb(0 0 38 / 0.04);
+}
+
+.sf-sums-total,
+.sf-sums div:last-child dd {
+  color: var(--color-text-primary);
+}
+
+/* Boutons : couleur de la boutique, léger relief au survol. */
+.sf-btn {
+  transition: transform 120ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+@media (hover: hover) {
+  .sf-btn-primary:not(:disabled):hover {
+    box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--store-primary) 70%, transparent);
+    transform: translateY(-1px);
+  }
+}
+
+.sf-btn:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+/* Fiche produit : prix mis en valeur, réduction et engagements de la boutique. */
+.sf-product-copy > .sf-price del {
+  margin-left: 0.375rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.sf-product-deal {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin: -0.25rem 0 1.25rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--sf-radius);
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--store-primary) 12%, var(--color-surface));
+}
+
+.sf-product-deal-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 0.0625rem;
+  font-size: 0.85rem;
+}
+
+.sf-product-deal-text strong {
+  font-size: 0.9rem;
+}
+
+.sf-product-deal-badge {
+  flex: none;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  color: var(--store-on-primary);
+  background: var(--store-primary);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.sf-product-deal .sf-promo-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+
+.sf-assurances {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.875rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-assurances li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--color-divider);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.sf-assurances svg {
+  color: var(--store-primary);
+}
+
+/* Produits similaires : sur ordinateur, une rangée qui occupe toute la largeur (espacement du thème). */
+@media (min-width: 1024px) {
+  .sf .sf-similar .sf-grid {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-template-columns: repeat(var(--sf-similar-columns, 4), minmax(0, 1fr));
+    gap: var(--sf-gap, 1.25rem);
+    overflow: visible;
+  }
+
+  .sf .sf-similar .sf-card-body {
+    padding: 0.75rem;
+  }
+
+  .sf .sf-similar .sf-card-body > strong {
+    font-size: 0.9rem;
+  }
+}
+
+/* Apparition de la fiche : la colonne de droite monte doucement après la photo. */
+@media (prefers-reduced-motion: no-preference) {
+  .sf-product-copy > * {
+    animation: sf-page-rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .sf-product-copy > :nth-child(2) { animation-delay: 40ms; }
+  .sf-product-copy > :nth-child(3) { animation-delay: 80ms; }
+  .sf-product-copy > :nth-child(4) { animation-delay: 120ms; }
+  .sf-product-copy > :nth-child(n + 5) { animation-delay: 160ms; }
+}
+
+@keyframes sf-page-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* ======================================================================
+   Style des promotions sur la fiche produit (mêmes codes que la rangée de l'accueil)
+   ====================================================================== */
+
+.sf-promo-vente-flash .sf-product-deal {
+  color: #fff;
+  background:
+    repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.08) 0 10px, transparent 10px 20px),
+    linear-gradient(90deg, var(--sf-deal-red), #f97316);
+  background-size: 28px 28px, auto;
+  animation: sf-promo-stripes 1.2s linear infinite;
+}
+
+.sf-promo-vente-flash .sf-product-deal .sf-promo-icon {
+  color: var(--sf-deal-red);
+  background: #fff;
+}
+
+.sf-promo-vente-flash .sf-product-deal-badge {
+  color: var(--sf-deal-red);
+  background: #fff;
+}
+
+.sf-promo-vente-flash .sf-product-copy > .sf-price {
+  color: var(--sf-deal-red);
+}
+
+.sf-promo-offres-du-jour .sf-product-deal {
+  border: 1.5px dashed color-mix(in srgb, #15803d 55%, transparent);
+  background: #ecfdf3;
+}
+
+.sf-promo-offres-du-jour .sf-product-deal .sf-promo-icon {
+  color: #fff;
+  background: #15803d;
+}
+
+.sf-promo-offres-du-jour .sf-product-deal-text span {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.sf-promo-offres-du-jour .sf-product-deal-badge {
+  color: #fff;
+  background: #15803d;
+}
+
+.sf-promo-eclat .sf-product-deal {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--store-primary) 45%, transparent), transparent 60%),
+    var(--sf-night);
+}
+
+.sf-promo-eclat .sf-product-deal::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgb(255 243 196 / 0.28) 50%, transparent 65%);
+  background-size: 250% 100%;
+  content: "";
+  animation: sf-promo-gold 3.5s linear infinite;
+  pointer-events: none;
+}
+
+.sf-promo-eclat .sf-product-deal .sf-promo-icon,
+.sf-promo-eclat .sf-product-deal-badge {
+  color: var(--sf-night);
+  background: var(--sf-gold);
+}
+
+.sf-promo-eclat .sf-product-deal-text strong {
+  color: transparent;
+  background: var(--sf-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-promo-vente-flash .sf-product-deal,
+  .sf-promo-eclat .sf-product-deal::after {
+    animation: none;
+  }
+}
+
+/* ======================================================================
+   Mode et beauté : douceur, arrondis généreux, accents de la couleur secondaire
+   ====================================================================== */
+
+.sf-theme-mode-beaute .sf-gallery {
+  overflow: hidden;
+  border-radius: var(--sf-radius);
+}
+
+.sf-theme-mode-beaute :is(.sf-btn, .sf-stepper, .sf-chips-options button) {
+  border-radius: 999px;
+}
+
+.sf-theme-mode-beaute .sf-product-copy h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.sf-theme-mode-beaute :is(.sf-lines, .sf-sums, .sf-panel, .sf-empty, .sf-order-thanks) {
+  border-color: transparent;
+  box-shadow: 0 12px 32px -20px color-mix(in srgb, var(--store-accent) 60%, rgb(0 0 38 / 0.4));
+}
+
+.sf-theme-mode-beaute .sf-page-head::after {
+  width: 3rem;
+  background: linear-gradient(90deg, var(--store-primary), var(--store-accent));
+}
+
+/* ======================================================================
+   Galerie : angles droits, titres en capitales espacées, sobriété noir et blanc
+   ====================================================================== */
+
+.sf-theme-boutique-marque :is(.sf-page h1, .sf-product-copy h1, .sf-section-head h2) {
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sf-theme-boutique-marque .sf-product-copy h1 {
+  font-size: 1.5rem;
+}
+
+.sf-theme-boutique-marque :is(.sf-lines, .sf-sums, .sf-panel, .sf-empty, .sf-order-thanks, .sf-product-deal, .sf-assurances li, .sf-product-deal-badge, .sf-back) {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.sf-theme-boutique-marque .sf-btn-primary {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sf-theme-boutique-marque .sf-page-head::after {
+  width: 100%;
+  height: 1px;
+  border-radius: 0;
+  background: var(--color-text-primary);
+}
+
+/* ======================================================================
+   Grand marché : bandeau sombre sous l'en-tête, panneaux blancs, prix bien visibles
+   ====================================================================== */
+
+/* Le bandeau de l'en-tête se prolonge derrière le titre des pages intérieures. */
+.sf-theme-grand-marche .sf-page {
+  max-width: none;
+  padding: 0 0 2rem;
+}
+
+.sf-theme-grand-marche .sf-page > :not(.sf-page-head) {
+  width: calc(100% - 2rem);
+  max-width: 38rem;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.sf-theme-grand-marche .sf-page-head {
+  margin-bottom: 1.25rem;
+  padding: 0.75rem max(1rem, calc((100% - 40rem) / 2 + 1rem)) 1.25rem;
+  color: var(--store-on-secondary);
+  background: var(--store-secondary);
+}
+
+.sf-theme-grand-marche {
+  --sf-similar-columns: 5;
+}
+
+@media (min-width: 1024px) {
+  /* Bandeau prolongé jusqu'aux bords de l'écran, comme sur l'accueil. */
+  .sf-theme-grand-marche .sf-page-head {
+    box-shadow: 0 0 0 100vmax var(--store-secondary);
+    clip-path: inset(0 -100vmax);
+  }
+}
+
+.sf-theme-grand-marche .sf-page-head::after {
+  right: 0;
+  width: auto;
+  border-radius: 0;
+}
+
+.sf-theme-grand-marche .sf-page-head h1 {
+  color: inherit;
+}
+
+.sf-theme-grand-marche .sf-page-head .sf-back {
+  box-shadow: none;
+}
+
+.sf-theme-grand-marche :is(.sf-lines, .sf-sums, .sf-panel, .sf-empty, .sf-order-thanks) {
+  border-color: #dfe3e6;
+  box-shadow: none;
+}
+
+.sf-theme-grand-marche .sf-product-copy {
+  border: 1px solid #dfe3e6;
+  border-radius: var(--sf-radius);
+  background: var(--color-surface);
+}
+
+.sf-theme-grand-marche .sf-product-copy > .sf-price {
+  font-size: 1.6rem;
+}
+
+.sf-theme-grand-marche .sf-product-copy > .sf-price del {
+  display: block;
+  margin: 0.125rem 0 0;
+}
+
+.sf-theme-grand-marche .sf-assurances {
+  justify-content: flex-start;
+}
+
+.sf-theme-grand-marche .sf-assurances li {
+  border-color: #dfe3e6;
+  border-radius: 0.375rem;
+}
+
+.sf-theme-grand-marche .sf-similar {
+  padding: 1rem;
+  border-radius: var(--sf-radius);
+  background: var(--color-surface);
+}
+
+@media (min-width: 1024px) {
+  .sf-theme-grand-marche .sf-product-copy {
+    align-self: start;
+    padding: 1.5rem;
+  }
+}

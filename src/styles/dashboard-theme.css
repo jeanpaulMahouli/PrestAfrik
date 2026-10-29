@@ -438,7 +438,7 @@
   color: var(--color-text-primary);
 }
 
-.email-banner button:hover {
+.email-banner :is(button, a):hover {
   color: var(--color-text-primary);
 }
 

@@ -384,14 +384,14 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
   await rememberActiveStore(session.user.id, session.session.id, storeId);
   invalidateStorefrontCache(storeId, data.slug!);
 
-  // Publication immédiate si tout est prêt (le compte est forcément confirmé) ; sinon la fenêtre « Boutique créée »
-  // du tableau de bord liste ce qu'il reste à faire.
+  // Publication immédiate si tout est prêt (le compte est forcément confirmé) ; sinon l'écran « Boutique créée »
+  // liste ce qu'il reste à faire.
   await publishStoreIfReady(storeId, isAccountVerified(session.user));
   redirect(createdHref(storeId));
 }
 
-/** Tableau de bord, avec la fenêtre « Boutique créée » (affichée une seule fois). */
-const createdHref = (storeId: string) => `/dashboard?bienvenue=${encodeURIComponent(storeId)}`;
+/** Écran final de l'assistant : « Boutique publiée » ou « Boutique créée » selon son état. */
+const createdHref = (storeId: string) => `/boutiques/nouvelle?boutique=${encodeURIComponent(storeId)}`;
 
 /** Colonnes d'une violation d'unicité Prisma (ex. ["slug"], ["storeId", "city", "name"]). */
 function uniqueTarget(error: Prisma.PrismaClientKnownRequestError): string[] {

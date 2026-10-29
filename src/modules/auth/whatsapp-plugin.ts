@@ -173,14 +173,8 @@ const phoneTaken = () =>
 export const whatsappAuth = () =>
   ({
     id: "whatsapp-auth",
-    schema: {
-      user: {
-        fields: {
-          phoneNumber: { type: "string", required: false, unique: true, returned: true, input: false },
-          phoneNumberVerified: { type: "boolean", required: false, returned: true, input: false, defaultValue: false },
-        },
-      },
-    },
+    // Les champs User.phoneNumber et User.phoneNumberVerified sont déclarés dans la configuration principale
+    // (user.additionalFields) : ils servent aussi quand ce plugin est désactivé.
     endpoints: {
       whatsappSignUpStart: createAuthEndpoint("/whatsapp/sign-up/start", { method: "POST", body: z.object({ name: z.string(), phoneNumber: z.string(), password: z.string() }) }, async (ctx) => {
         const input = parseBody(z.object({ name: nameSchema, phoneNumber: phoneSchema, password: passwordSchema }), ctx.body);

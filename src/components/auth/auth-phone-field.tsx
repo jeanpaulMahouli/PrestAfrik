@@ -18,7 +18,7 @@ type AuthPhoneFieldProps = {
   disabled?: boolean;
 };
 
-/** Numéro WhatsApp des écrans de connexion : indicatif (Cameroun par défaut) et numéro, validés au fil de la saisie. */
+/** Numéro WhatsApp de l'inscription : indicatif (Cameroun par défaut) et numéro, validés au fil de la saisie. */
 export function AuthPhoneField({ id, label, country, national, onCountryChange, onNationalChange, onBlur, showError, help, disabled }: AuthPhoneFieldProps) {
   const options = useMemo(() => phoneDialOptions(), []);
   const result = parsePhone(country, national);
@@ -60,26 +60,4 @@ export function AuthPhoneField({ id, label, country, national, onCountryChange, 
       </p>
     </div>
   );
-}
-
-/** Appel d'un point d'accès WhatsApp de l'authentification (/api/auth/whatsapp/…). */
-export async function callWhatsappAuth<T = Record<string, unknown>>(path: string, body: Record<string, unknown>) {
-  const response = await fetch(`/api/auth/whatsapp/${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    credentials: "same-origin",
-  });
-  const data = (await response.json().catch(() => null)) as (T & { code?: string; message?: string; retryAfterSeconds?: number }) | null;
-  if (!response.ok) {
-    const code = data?.code ?? (response.status === 429 ? "RATE_LIMITED" : "UNKNOWN");
-    const message =
-      data?.message && code !== "RATE_LIMITED"
-        ? data.message
-        : response.status === 429
-          ? "Trop de tentatives. Patientez quelques minutes avant de réessayer."
-          : "Une erreur est survenue. Vos informations sont conservées. Réessayez dans un instant.";
-    return { ok: false as const, code, message, retryAfterSeconds: data?.retryAfterSeconds };
-  }
-  return { ok: true as const, data: data as T };
 }

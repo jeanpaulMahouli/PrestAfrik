@@ -158,7 +158,8 @@ model User {
   /// Comptes créés par WhatsApp : adresse technique en « .invalid » (aucun e-mail n'y est envoyé).
   email                      String                 @unique
   emailVerified              Boolean                @default(false)
-  /// Numéro WhatsApp du compte (E.164), confirmé par un code reçu sur WhatsApp à l'inscription.
+  /// Numéro WhatsApp du compte (E.164), demandé à l'inscription. phoneNumberVerified : confirmé par un code
+  /// WhatsApp (inscription par WhatsApp, désactivée pour le moment).
   phoneNumber                String?                @unique @db.VarChar(20)
   phoneNumberVerified        Boolean                @default(false)
   image                      String?

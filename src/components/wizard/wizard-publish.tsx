@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { SocialShare } from "@/components/shared/social-share";
+import { CopyButton } from "@/components/ui/copy-button";
 import { WizardStepForm } from "@/components/wizard/wizard-step-form";
 import { finishWizard } from "@/modules/stores/wizard-actions";
 import { CheckIcon } from "@/components/ui/icons";
@@ -53,12 +55,77 @@ export function PublishStep({ draftId, recap, missing, hasProduct }: { draftId: 
               </p>
             ) : (
               <p className="v-banner v-banner-info">
-                Votre boutique sera créée tout de suite. Pour la mettre en ligne, il faudra ajouter au moins un produit : votre tableau de bord vous indiquera
+                Votre boutique sera créée tout de suite. Pour la mettre en ligne, il faudra ajouter au moins un produit : l’écran suivant vous indiquera
                 comment, en quelques secondes.
               </p>
             ))}
         </>
       )}
     </WizardStepForm>
+  );
+}
+
+/** Lien de la boutique à copier ; « Voir ma boutique » sur la même ligne une fois la boutique en ligne. */
+function StoreLink({ storeUrl, showView = false }: { storeUrl: string; showView?: boolean }) {
+  const display = storeUrl.replace(/^https?:\/\//, "");
+  return (
+    <label className="v-field">
+      Le lien de votre boutique
+      <span className="share-link-row">
+        <input readOnly value={display} />
+        <CopyButton label="Copier" value={storeUrl} />
+        {showView && (
+          <a className="btn btn-primary" href={storeUrl} rel="noopener noreferrer" target="_blank">
+            Voir ma boutique
+          </a>
+        )}
+      </span>
+    </label>
+  );
+}
+
+/** Écran « Boutique publiée » : lien (copier, voir), partage sur les réseaux, prochaines étapes. */
+export function PublishedScreen({ storeName, storeUrl }: { storeName: string; storeUrl: string }) {
+  return (
+    <section aria-labelledby="published-title" className="wizard-card wizard-published">
+      <span aria-hidden="true" className="wizard-published-icon"><CheckIcon size={24} /></span>
+      <h1 id="published-title">Félicitations, votre boutique prend vie !</h1>
+      <p className="wizard-subtitle">
+        Elle est maintenant visible par vos clients. Partagez-la sans attendre : le premier client est peut-être déjà en train de la chercher.
+      </p>
+      <StoreLink showView storeUrl={storeUrl} />
+      <SocialShare text={`Découvrez ma boutique ${storeName}`} title={storeName} url={storeUrl} />
+      <div className="wizard-next wizard-next-pair">
+        <Link className="btn btn-secondary" href="/dashboard/produits/nouveau">Ajouter d’autres produits</Link>
+        <Link className="btn btn-primary" href="/dashboard">Aller à mon tableau de bord</Link>
+      </div>
+    </section>
+  );
+}
+
+/** Écran « Boutique créée » : elle existe mais n'est pas encore en ligne (produit à ajouter…). */
+export function CreatedScreen({ storeName, storeUrl, missing }: { storeName: string; storeUrl: string; missing: { label: string; href: string }[] }) {
+  return (
+    <section aria-labelledby="created-title" className="wizard-card wizard-published">
+      <span aria-hidden="true" className="wizard-published-icon"><CheckIcon size={24} /></span>
+      <h1 id="created-title">Votre boutique « {storeName} » est créée !</h1>
+      <p className="wizard-subtitle">
+        Elle n’est pas encore visible par vos clients. Il reste {missing.length > 1 ? "quelques étapes" : "une étape"} avant de la mettre en ligne, à faire quand vous voulez :
+      </p>
+      {missing.length > 0 && (
+        <ul className="publish-missing-list">
+          {missing.map((item) => (
+            <li key={item.label}>
+              <Link href={item.href}>{item.label}</Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      <StoreLink storeUrl={storeUrl} />
+      <div className="wizard-next wizard-next-pair">
+        <Link className="btn btn-secondary" href="/dashboard/produits/nouveau">Ajouter des produits</Link>
+        <Link className="btn btn-primary" href="/dashboard">Aller à mon tableau de bord</Link>
+      </div>
+    </section>
   );
 }

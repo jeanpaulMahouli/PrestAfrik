@@ -65,7 +65,8 @@ export const getStoreContext = cache(async function getStoreContext() {
     (preferredMembership &&
       memberships.find(({ storeId }) => storeId === preferredMembership.storeId)) ??
     memberships[0];
-  if (!selected) redirect("/boutiques/nouvelle");
+  // Aucune boutique : l'accueil du tableau de bord propose de la créer (sans y obliger).
+  if (!selected) redirect("/dashboard");
 
   // Boutique retenue absente ou inaccessible : la boutique affichée devient la dernière utilisée.
   // Dernière activité (administration) : écrite au plus une fois toutes les 5 minutes.

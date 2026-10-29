@@ -6,7 +6,12 @@ Ce document distingue le code disponible des intégrations réelles. Une fonctio
 
 Référence : `PrestAfrik maquettes UX UI/PRESTAFRIK-BRIEF-CLAUDE-CODE.md`. Inventaire écran par écran : `docs/design/INVENTAIRE.md`. Décisions : `docs/decisions.md`.
 
-### Octobre 2026 — inscription WhatsApp et création de boutique (ADR-029)
+### Octobre 2026 — inscription par e-mail avec code, Google, apparences (ADR-030)
+
+- Vérifié en local : inscription nom, e-mail, numéro WhatsApp obligatoire, mot de passe ; code à 6 chiffres reçu par e-mail (faux code, code réutilisé, adresse ou numéro déjà pris, nouvelle tentative, actualisation) ; connexion d'un compte non confirmé ; accueil sans boutique avec confettis et « Créer ma boutique maintenant » ; assistant jusqu'à l'écran « Boutique créée » ; thème et style des promotions sur la fiche produit, le panier et la commande (4 thèmes, 1280 et 390 px).
+- **Pas encore opérationnel** : Google, tant que `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` ne sont pas renseignées et testées (`docs/google-oauth.md`).
+
+### Octobre 2026 — inscription WhatsApp et création de boutique (ADR-029, inscription WhatsApp désactivée depuis l'ADR-030)
 
 - Vérifié en local (base PostgreSQL locale, envoi WhatsApp en mode développement) : inscription par numéro WhatsApp avec code, connexion et mot de passe oublié par numéro, webhook Meta (vérification et signature), création de boutique sans faux « adresse prise », description facultative, saisie gardée après actualisation ou coupure réseau, fenêtre « Boutique créée », aperçu de l'assistant identique à « Ma boutique », Grand marché corrigé sur ordinateur, Poppins partout, actions en icônes dans Commandes.
 - **Pas encore opérationnel** : l'envoi réel des codes tant que l'application Meta, le numéro, le modèle et les variables ne sont pas configurés et testés (`docs/whatsapp-meta.md`, étape 9).

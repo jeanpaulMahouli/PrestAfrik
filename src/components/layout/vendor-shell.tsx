@@ -46,7 +46,7 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
         />
         <UserMenu adminLink={showAdminLink} userEmail={accountContact(session.user)} userImage={session.user.image ?? null} userName={session.user.name} />
       </header>
-      {!isAccountVerified(session.user) && <EmailVerificationBanner email={session.user.email} />}
+      {!isAccountVerified(session.user) && <EmailVerificationBanner />}
       {store.suspendedAt && (
         <p className="v-banner v-banner-danger vendor-suspension-banner" role="alert">
           <strong>{store.name} est suspendue par l’équipe PrestAfrik.</strong> Vos clients ne la voient plus. Motif : {store.suspensionReason ?? "non précisé"}. Répondez à l’e-mail reçu pour la rétablir.

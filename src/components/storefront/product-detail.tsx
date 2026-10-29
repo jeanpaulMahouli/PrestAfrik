@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, ShieldCheck, Sparkles, Tag, Truck, X, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -198,6 +198,7 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
           </a>
         )}
         {variant?.priceXaf ? <span className="sf-price">{new Intl.NumberFormat("fr-FR").format(variant.priceXaf)} FCFA</span> : <ProductPrice priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} />}
+        {!variant?.priceXaf && <ProductDeal priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} />}
 
         {canOrder && product.variants.length > 0 && (
           <fieldset className="sf-options">
@@ -257,7 +258,11 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
                 Une question ? Écrire à la boutique sur WhatsApp
               </a>
             )}
-            <p className="sf-muted">Paiement à la livraison. Aucun compte à créer.</p>
+            <ul className="sf-assurances">
+              <li><Truck aria-hidden="true" size={18} /> Paiement à la livraison</li>
+              <li><MessageCircle aria-hidden="true" size={18} /> Suivi sur WhatsApp</li>
+              <li><ShieldCheck aria-hidden="true" size={18} /> Aucun compte à créer</li>
+            </ul>
           </div>
         ) : (
           <p className="sf-notice">La commande sera possible après la publication de la boutique.</p>
@@ -266,5 +271,39 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
     </div>
     {children}
     </main>
+  );
+}
+
+const dealLabels = [
+  { style: "classique", text: "Promotion" },
+  { style: "vente-flash", text: "Vente flash" },
+  { style: "offres-du-jour", text: "Offre du jour" },
+  { style: "eclat", text: "Promo en or" },
+] as const;
+
+/**
+ * Bandeau de la réduction sur la fiche produit, au style des promotions choisi dans « Apparence » (classe
+ * sf-promo-… de la vitrine) : le même que la rangée « Promotions » de l'accueil.
+ */
+function ProductDeal({ priceXaf, promotionalPriceXaf }: { priceXaf: number; promotionalPriceXaf: number | null }) {
+  if (!promotionalPriceXaf || promotionalPriceXaf >= priceXaf) return null;
+  const discount = Math.round((1 - promotionalPriceXaf / priceXaf) * 100);
+  return (
+    <p className="sf-product-deal">
+      <span aria-hidden="true" className="sf-promo-icon">
+        <Zap className="sf-promo-icon-vente-flash" size={18} strokeWidth={2.4} />
+        <Tag className="sf-promo-icon-offres-du-jour" size={16} strokeWidth={2.4} />
+        <Sparkles className="sf-promo-icon-eclat" size={18} strokeWidth={2.2} />
+      </span>
+      <span className="sf-product-deal-text">
+        {dealLabels.map((label) => (
+          <strong className={`sf-promo-label sf-promo-label-${label.style}`} key={label.style}>
+            {label.text}
+          </strong>
+        ))}
+        <span>Vous économisez {new Intl.NumberFormat("fr-FR").format(priceXaf - promotionalPriceXaf)} FCFA</span>
+      </span>
+      <span className="sf-product-deal-badge">-{discount} %</span>
+    </p>
   );
 }

@@ -2,46 +2,66 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useState, type FormEvent } from "react";
+import { AuthPhoneField } from "@/components/auth/auth-phone-field";
+import { EmailCodeStep, emailCodeResendDelayMs } from "@/components/auth/email-code-step";
+import { GoogleButton } from "@/components/auth/google-button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { texts } from "@/config/texts";
+import { parsePhone } from "@/lib/phone";
 import { authClient } from "@/modules/auth/client";
 import { checkPassword, passwordStrength } from "@/modules/auth/password-policy";
 import { CheckIcon } from "@/components/ui/icons";
-import { AuthPhoneField, callWhatsappAuth } from "@/components/auth/auth-phone-field";
-import { parsePhone, splitE164 } from "@/lib/phone";
 
 type AuthFormProps = {
   mode: "sign-in" | "sign-up";
   invitationToken?: string;
   /** Chemin interne vers lequel revenir après la connexion. */
   next?: string;
-  /** Numéro WhatsApp à préremplir (E.164), ex. après « un compte existe déjà ». */
-  initialPhone?: string;
+  /** Bouton « Continuer avec Google » (identifiants OAuth configurés sur le serveur). */
+  googleEnabled?: boolean;
 };
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const t = texts.auth;
+/** Accueil du tableau de bord après l'inscription : félicitations et première étape. */
+export const welcomeHref = "/dashboard?bienvenue=1";
+// Inscription en attente du code : gardée pendant l'onglet (actualisation) ; jamais le mot de passe.
+const pendingKey = "prestafrik:inscription-code";
+
+type Pending = { email: string; name: string; country: string; national: string; resendAt: number };
+
+function readPending(): Pending | null {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(pendingKey) ?? "null") as Pending | null;
+    return value?.email ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function writePending(value: Pending | null) {
+  try {
+    if (value) sessionStorage.setItem(pendingKey, JSON.stringify(value));
+    else sessionStorage.removeItem(pendingKey);
+  } catch {
+    // Stockage indisponible (navigation privée) : l'inscription fonctionne quand même.
+  }
+}
 
 function safeInternalPath(path: string | undefined) {
   return path && path.startsWith("/") && !path.startsWith("//") && !path.includes("\\") ? path : null;
 }
 
-export function AuthForm({ mode, invitationToken, next, initialPhone }: AuthFormProps) {
+export function AuthForm({ mode, invitationToken, next, googleEnabled = false }: AuthFormProps) {
   const router = useRouter();
   const ids = { name: useId(), email: useId(), phone: useId(), password: useId(), help: useId() };
   const isSignUp = mode === "sign-up";
-  // Connexion : numéro WhatsApp par défaut ; e-mail pour les comptes créés avant l'inscription par WhatsApp
-  // et pour les invitations (liées à une adresse e-mail).
-  const [method, setMethod] = useState<"whatsapp" | "email">(isSignUp || invitationToken ? "email" : "whatsapp");
-  const initial = splitE164(initialPhone);
-  const [phoneCountry, setPhoneCountry] = useState<string>(initial.country);
-  const [phoneNational, setPhoneNational] = useState(initial.national);
-  const byPhone = !isSignUp && method === "whatsapp";
-  const phone = parsePhone(phoneCountry, phoneNational);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [country, setCountry] = useState("CM");
+  const [national, setNational] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -49,61 +69,87 @@ export function AuthForm({ mode, invitationToken, next, initialPhone }: AuthForm
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [resetSignal, setResetSignal] = useState(0);
+  /** Code envoyé par e-mail : l'écran de saisie remplace le formulaire. */
+  const [codeStep, setCodeStep] = useState<{ email: string; resendAt: number } | null>(null);
 
   const validInvitation = invitationToken && /^[A-Za-z0-9_-]{43}$/.test(invitationToken) ? invitationToken : null;
   const emailValid = emailPattern.test(email.trim());
   const nameValid = name.trim().length >= 2 && name.trim().length <= 80;
+  const phone = parsePhone(country, national);
   const passwordIssue = checkPassword(password, isSignUp ? { email, name } : {});
   const strength = passwordStrength(password);
   const strengthLabel = t.fields.strength[strength];
   // Le bouton reste désactivé tant que les conditions ne sont pas remplies.
   const missing = isSignUp
-    ? [!nameValid && "votre nom", !emailValid && "une adresse e-mail valide", passwordIssue && "un mot de passe de 8 caractères minimum", !acceptedTerms && "l’acceptation des conditions"].filter(Boolean)
-    : [byPhone ? !phone.ok && "un numéro WhatsApp valide" : !emailValid && "une adresse e-mail valide", !password && "votre mot de passe"].filter(Boolean);
+    ? [
+        !nameValid && "votre nom",
+        !emailValid && "une adresse e-mail valide",
+        !phone.ok && "votre numéro WhatsApp",
+        passwordIssue && "un mot de passe de 8 caractères minimum",
+        !acceptedTerms && "l’acceptation des conditions",
+      ].filter(Boolean)
+    : [!emailValid && "une adresse e-mail valide", !password && "votre mot de passe"].filter(Boolean);
   const canSubmit = missing.length === 0;
+  const destination = validInvitation
+    ? `/invitations/accepter?token=${encodeURIComponent(validInvitation)}`
+    : (safeInternalPath(next) ?? (isSignUp ? welcomeHref : "/dashboard"));
+
+  // Reprise après une actualisation : l'écran du code s'affiche de nouveau (inscription seulement).
+  useEffect(() => {
+    if (!isSignUp) return;
+    const saved = readPending();
+    if (!saved) return;
+    setName(saved.name);
+    setEmail(saved.email);
+    setCountry(saved.country);
+    setNational(saved.national);
+    setCodeStep({ email: saved.email, resendAt: saved.resendAt });
+  }, [isSignUp]);
+
+  function showCodeStep(address: string) {
+    const resendAt = Date.now() + emailCodeResendDelayMs;
+    setCodeStep({ email: address, resendAt });
+    if (isSignUp) writePending({ email: address, name: name.trim(), country, national, resendAt });
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setTouched({ name: true, email: true, phone: true, password: true, terms: true });
     setError("");
-    if (byPhone ? !phone.ok || !password : !emailValid || (isSignUp && (!nameValid || passwordIssue || !acceptedTerms))) return;
+    if (!canSubmit || pending) return;
 
     setPending(true);
-    const callbackURL = validInvitation
-      ? `/invitations/accepter?token=${encodeURIComponent(validInvitation)}`
-      : safeInternalPath(next) ?? (isSignUp ? "/boutiques/nouvelle" : "/dashboard");
     const normalizedEmail = email.trim().toLowerCase();
 
     try {
-      if (byPhone && phone.ok) {
-        const signedIn = await callWhatsappAuth("sign-in", { phoneNumber: phone.e164, password, rememberMe });
-        if (!signedIn.ok) {
-          setError(signedIn.code === "RATE_LIMITED" ? t.signIn.tooManyAttempts : signedIn.message);
-          return;
-        }
-        router.push(callbackURL);
-        router.refresh();
-        return;
-      }
       const result = isSignUp
-        ? await authClient.signUp.email({ name: name.trim(), email: normalizedEmail, password, callbackURL })
-        : await authClient.signIn.email({ email: normalizedEmail, password, rememberMe, callbackURL });
+        ? await authClient.signUp.email({ name: name.trim(), email: normalizedEmail, password, phoneNumber: phone.ok ? phone.e164 : "", callbackURL: destination })
+        : await authClient.signIn.email({ email: normalizedEmail, password, rememberMe, callbackURL: destination });
 
       if (result.error) {
         const status = result.error.status;
         const code = "code" in result.error ? result.error.code : undefined;
+        // Compte dont l'adresse n'est pas encore confirmée : un nouveau code vient de partir par e-mail.
+        if (!isSignUp && code === "EMAIL_NOT_VERIFIED") {
+          showCodeStep(normalizedEmail);
+          return;
+        }
         setError(
           status === 429
             ? t.signIn.tooManyAttempts
             : !isSignUp && (status === 401 || status === 403)
               ? t.signIn.invalidCredentials
-              : isSignUp && (code === "USER_ALREADY_EXISTS" || status === 422)
+              : isSignUp && (code === "EMAIL_TAKEN" || code === "USER_ALREADY_EXISTS" || status === 422)
                 ? t.signUp.emailTaken
-                : result.error.message ?? texts.common.genericError,
+                : (result.error.message ?? texts.common.genericError),
         );
         return;
       }
-      router.push(callbackURL);
+      if (isSignUp) {
+        showCodeStep(normalizedEmail);
+        return;
+      }
+      router.push(destination);
       router.refresh();
     } catch {
       setError(texts.common.networkError);
@@ -113,12 +159,44 @@ export function AuthForm({ mode, invitationToken, next, initialPhone }: AuthForm
     }
   }
 
+  if (codeStep) {
+    return (
+      <EmailCodeStep
+        email={codeStep.email}
+        intro={isSignUp ? undefined : "Votre adresse e-mail n’est pas encore confirmée."}
+        onChangeEmail={() => {
+          writePending(null);
+          setCodeStep(null);
+          setPassword("");
+        }}
+        onResent={(resendAt) => {
+          setCodeStep({ ...codeStep, resendAt });
+          if (isSignUp) writePending({ email: codeStep.email, name: name.trim(), country, national, resendAt });
+        }}
+        onVerified={() => {
+          writePending(null);
+          router.push(destination);
+          router.refresh();
+        }}
+        resendAt={codeStep.resendAt}
+        submitLabel={isSignUp ? "Valider et terminer mon inscription" : "Valider et me connecter"}
+      />
+    );
+  }
+
   const showNameError = isSignUp && touched.name && !nameValid;
   const showEmailError = touched.email && email.length > 0 && !emailValid;
   const showPasswordError = isSignUp && touched.password && password.length > 0 && passwordIssue;
 
   return (
     <form aria-busy={pending} className="auth-form" noValidate onSubmit={submit}>
+      {googleEnabled && !validInvitation && (
+        <>
+          <GoogleButton callbackURL={safeInternalPath(next) ?? "/dashboard"} newUserCallbackURL={welcomeHref} />
+          <p aria-hidden="true" className="auth-divider"><span>{t.signIn.or}</span></p>
+        </>
+      )}
+
       {isSignUp && (
         <div className="auth-field">
           <label htmlFor={ids.name}>{t.signUp.name}</label>
@@ -142,25 +220,6 @@ export function AuthForm({ mode, invitationToken, next, initialPhone }: AuthForm
         </div>
       )}
 
-      {!isSignUp && !validInvitation && (
-        <div aria-label="Se connecter avec" className="auth-method" role="group">
-          <button aria-pressed={method === "whatsapp"} onClick={() => setMethod("whatsapp")} type="button">Numéro WhatsApp</button>
-          <button aria-pressed={method === "email"} onClick={() => setMethod("email")} type="button">Adresse e-mail</button>
-        </div>
-      )}
-
-      {byPhone ? (
-        <AuthPhoneField
-          country={phoneCountry}
-          id={ids.phone}
-          label="Numéro WhatsApp"
-          national={phoneNational}
-          onBlur={() => setTouched((value) => ({ ...value, phone: true }))}
-          onCountryChange={setPhoneCountry}
-          onNationalChange={setPhoneNational}
-          showError={Boolean(touched.phone)}
-        />
-      ) : (
       <div className="auth-field">
         <label htmlFor={ids.email}>{t.fields.email}</label>
         <div className={`auth-input ${emailValid ? "is-valid" : ""} ${showEmailError ? "is-invalid" : ""}`}>
@@ -192,6 +251,19 @@ export function AuthForm({ mode, invitationToken, next, initialPhone }: AuthForm
           {showEmailError ? t.fields.emailInvalid : emailValid ? (isSignUp ? t.signUp.emailHelp : t.fields.emailValid) : ""}
         </p>
       </div>
+
+      {isSignUp && (
+        <AuthPhoneField
+          country={country}
+          help={t.signUp.phoneHelp}
+          id={ids.phone}
+          label={t.signUp.phone}
+          national={national}
+          onBlur={() => setTouched((value) => ({ ...value, phone: true }))}
+          onCountryChange={setCountry}
+          onNationalChange={setNational}
+          showError={Boolean(touched.phone)}
+        />
       )}
 
       <div className="auth-field">

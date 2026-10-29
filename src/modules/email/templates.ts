@@ -146,7 +146,7 @@ ${escapeHtml(emailLayoutTexts.tagline)}<br>
 
 /** Données d'exemple : aperçu de développement et tests (aucune donnée réelle). */
 export const sampleEmailVariables: Record<EmailId, EmailVariables> = {
-  E01: { prenom: "Awa" },
+  E01: { prenom: "Awa", code: "482913" },
   E02: { prenom: "Awa" },
   E03: { prenom: "Awa" },
   E04: { email: "awa@example.test" },

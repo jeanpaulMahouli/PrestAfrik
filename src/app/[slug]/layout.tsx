@@ -2,6 +2,7 @@ import "@/styles/storefront.css";
 import "@/styles/storefront-merchandising.css";
 import "@/styles/storefront-motion.css";
 import "@/styles/storefront-promo.css";
+import "@/styles/storefront-pages.css";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { cache } from "react";

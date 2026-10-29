@@ -19,8 +19,7 @@ export const vendorTexts = {
     signOutError: "La déconnexion n’a pas abouti. Réessayez.",
     mainNavigation: "Navigation principale",
     emailBanner: "Confirmez votre adresse e-mail pour pouvoir publier votre boutique.",
-    emailBannerAction: "Renvoyer le lien",
-    emailBannerSent: "Lien envoyé. Consultez votre boîte de réception.",
+    emailBannerAction: "Confirmer mon adresse",
     roles: { OWNER: "Propriétaire", MANAGER: "Gestionnaire", ORDER_PREPARER: "Préparateur de commandes" },
     /** Phrases des e-mails d'équipe (E09, E12), cohérentes avec la matrice de permissions. */
     roleDescriptions: {

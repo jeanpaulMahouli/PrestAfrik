@@ -26,16 +26,15 @@ export type EmailDefinition = {
 export const emailTexts = {
   E01: {
     group: "Compte et sécurité",
-    name: "Confirmation de l’adresse e-mail (inscription)",
-    subject: "Confirmez votre adresse e-mail pour activer votre compte PrestAfrik",
-    preheader: "Un clic suffit pour finaliser votre inscription.",
+    name: "Code de confirmation de l’adresse e-mail (inscription)",
+    subject: "{{code}} est votre code de confirmation PrestAfrik",
+    preheader: "Saisissez ce code pour finaliser votre inscription.",
     title: "Bienvenue, {{prenom}} !",
     blocks: [
-      { type: "p", text: "Merci d’avoir créé votre compte PrestAfrik. Pour finaliser votre inscription et sécuriser votre compte, nous avons simplement besoin de vérifier que cette adresse e-mail est bien la vôtre." },
-      { type: "p", text: "Il vous suffit de cliquer sur le bouton ci-dessous." },
+      { type: "p", text: "Merci d’avoir créé votre compte PrestAfrik. Pour finaliser votre inscription, saisissez ce code à 6 chiffres sur la page d’inscription :" },
+      { type: "highlight", text: "{{code}}" },
     ],
-    action: { label: "Confirmer mon adresse e-mail" },
-    note: "Ce lien est valable 48 heures et ne peut être utilisé qu’une seule fois. Vous n’êtes pas à l’origine de cette inscription ? Ignorez simplement ce message : aucun compte ne sera activé.",
+    note: "Ce code est valable 10 minutes et ne peut être utilisé qu’une seule fois. Ne le communiquez à personne : l’équipe PrestAfrik ne vous le demandera jamais. Vous n’êtes pas à l’origine de cette inscription ? Ignorez simplement ce message.",
   },
   E02: {
     group: "Compte et sécurité",

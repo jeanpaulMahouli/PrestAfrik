@@ -383,47 +383,14 @@
   font-size: 1rem;
 }
 
-/* Choix « Numéro WhatsApp / Adresse e-mail » (connexion, mot de passe oublié). */
-.auth-method {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  border-radius: 999px;
-  background: var(--color-surface-muted);
-}
-
-.auth-method button {
-  min-height: 2.5rem;
-  border: 0;
-  border-radius: 999px;
-  color: var(--color-text-secondary);
-  background: transparent;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.auth-method button[aria-pressed="true"] {
-  color: var(--color-text-primary);
-  background: var(--color-surface);
-  box-shadow: 0 1px 3px rgb(0 0 38 / 0.12);
-  font-weight: 600;
-}
-
-.auth-method button:focus-visible {
-  outline: 2px solid var(--color-brand-primary);
-  outline-offset: 2px;
-}
-
-/* Saisie du code reçu sur WhatsApp. */
+/* Saisie du code à 6 chiffres reçu par e-mail. */
 .auth-otp-intro {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
   padding: 0.875rem 1rem;
   border-radius: var(--radius-sm);
-  background: rgb(37 211 102 / 0.1);
+  background: rgb(255 153 0 / 0.1);
 }
 
 .auth-otp-intro p {
@@ -439,8 +406,8 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
-  color: #fff;
-  background: #25d366;
+  color: var(--color-text-primary);
+  background: var(--color-brand-primary);
 }
 
 .auth-otp-input input {
@@ -464,14 +431,57 @@
   text-decoration: none;
 }
 
-.auth-terms-note {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: 0.82rem;
-  line-height: 1.5;
-  text-align: center;
-}
-
 .auth-otp-intro strong {
   white-space: nowrap;
+}
+
+/* « Continuer avec Google » et séparateur « ou ». */
+.auth-google {
+  display: inline-flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0 1rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.auth-google:hover:not(:disabled) {
+  border-color: var(--color-text-secondary);
+  box-shadow: 0 1px 4px rgb(0 0 38 / 0.1);
+}
+
+.auth-google:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
+}
+
+.auth-google:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.auth-divider {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+  content: "";
 }

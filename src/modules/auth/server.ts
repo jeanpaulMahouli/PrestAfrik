@@ -1,13 +1,16 @@
 import "server-only";
 
 import { betterAuth } from "better-auth";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { emailOTP } from "better-auth/plugins";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/prisma";
 import { texts } from "@/config/texts";
 import { checkPassword, passwordMaxLength, passwordMinLength } from "@/modules/auth/password-policy";
 import { getSmtpConfig } from "@/modules/email/config";
 import { sendEmail, sendEmailQuietly } from "@/modules/email/server";
+import { googleSignInEnabled } from "@/modules/auth/google";
 import { whatsappAuth } from "@/modules/auth/whatsapp-plugin";
 import { formatDate, formatTime } from "@/lib/format";
 
@@ -15,6 +18,36 @@ const isProduction = process.env.NODE_ENV === "production";
 const isProductionBuild = process.env.NEXT_PHASE === "phase-production-build";
 const shouldValidateProductionConfig = isProduction && !isProductionBuild;
 const authSecret = process.env.BETTER_AUTH_SECRET;
+const whatsappSignUpEnabled = process.env.WHATSAPP_SIGNUP_ENABLED === "true";
+/** Durée de validité du code de confirmation envoyé par e-mail (10 minutes). */
+const emailCodeTtlSeconds = 10 * 60;
+// Connexion avec Google : active seulement quand les identifiants OAuth sont renseignés (docs/google-oauth.md).
+const googleProvider = googleSignInEnabled()
+  ? { clientId: process.env.GOOGLE_CLIENT_ID!, clientSecret: process.env.GOOGLE_CLIENT_SECRET!, prompt: "select_account" as const }
+  : null;
+/** Points d'accès du plugin de code par e-mail inutilisés : connexion sans mot de passe, changement d'adresse… */
+const disabledEmailOtpPaths = new Set([
+  "/sign-in/email-otp",
+  "/email-otp/request-password-reset",
+  "/forget-password/email-otp",
+  "/email-otp/reset-password",
+  "/email-otp/request-email-change",
+  "/email-otp/change-email",
+  "/email-otp/create-verification-otp",
+  "/email-otp/get-verification-otp",
+]);
+const unconfirmedSelect = { id: true, emailVerified: true, phoneNumberVerified: true, createdAt: true, _count: { select: { memberships: true } } } as const;
+
+/**
+ * Supprime une inscription jamais confirmée (aucun code saisi, aucune boutique, moins de 7 jours) pour
+ * laisser recommencer. Renvoie false si le compte est réel : l'adresse ou le numéro est alors bien pris.
+ */
+async function releaseUnconfirmedAccount(user: { id: string; emailVerified: boolean; phoneNumberVerified: boolean; createdAt: Date; _count: { memberships: number } }) {
+  const recent = Date.now() - user.createdAt.getTime() < 7 * 86_400_000;
+  if (user.emailVerified || user.phoneNumberVerified || user._count.memberships > 0 || !recent) return false;
+  return prisma.user.delete({ where: { id: user.id } }).then(() => true, () => false);
+}
+
 const authBaseUrl =
   process.env.BETTER_AUTH_URL ?? (isProduction ? "" : "http://localhost:3000");
 
@@ -84,8 +117,39 @@ export const auth = betterAuth({
   ],
   secret: authSecret ?? "prestafrik-local-development-only-secret-0001",
   database: prismaAdapter(prisma, { provider: "postgresql" }),
-  // Inscription et connexion avec le numéro WhatsApp (code de vérification envoyé par PrestAfrik).
-  plugins: [whatsappAuth()],
+  plugins: [
+    // Inscription : code à 6 chiffres envoyé par e-mail pour confirmer l'adresse (remplace le lien de confirmation).
+    emailOTP({
+      otpLength: 6,
+      expiresIn: emailCodeTtlSeconds,
+      allowedAttempts: 5,
+      storeOTP: "hashed",
+      disableSignUp: true,
+      overrideDefaultEmailVerification: true,
+      rateLimit: { window: 60, max: 5 },
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        if (type !== "email-verification") return;
+        const user = await prisma.user.findUnique({ where: { email }, select: { name: true } });
+        const firstName = user?.name.trim().split(/\s+/)[0] || email.split("@")[0];
+        await sendEmail("E01", email, { prenom: firstName, code: otp });
+      },
+    }),
+    // Inscription par numéro WhatsApp avec code envoyé par l'API Meta : désactivée pour le moment
+    // (WHATSAPP_SIGNUP_ENABLED="true" pour la réactiver, voir docs/whatsapp-meta.md).
+    ...(whatsappSignUpEnabled ? [whatsappAuth()] : []),
+  ],
+  user: {
+    additionalFields: {
+      // Numéro WhatsApp du vendeur : obligatoire à l'inscription par e-mail (contrôlé dans hooks.before).
+      phoneNumber: { type: "string", required: false, unique: true, returned: true, input: true },
+      phoneNumberVerified: { type: "boolean", required: false, returned: true, input: false, defaultValue: false },
+    },
+  },
+  socialProviders: googleProvider ? { google: googleProvider } : {},
+  account: {
+    // Un compte Google dont l'adresse est déjà inscrite rejoint ce compte (adresse confirmée par Google).
+    accountLinking: { enabled: true, trustedProviders: ["google"] },
+  },
   session: {
     // « Rester connecté 30 jours » ; sans la case, le cookie disparaît à la fermeture du navigateur.
     expiresIn: 60 * 60 * 24 * 30,
@@ -100,6 +164,7 @@ export const auth = betterAuth({
       "/sign-up/email": { window: 15 * 60, max: 10 },
       "/request-password-reset": { window: 15 * 60, max: 5 },
       "/send-verification-email": { window: 15 * 60, max: 5 },
+      "/email-otp/send-verification-otp": { window: 15 * 60, max: 6 },
     },
   },
   databaseHooks: {
@@ -116,18 +181,40 @@ export const auth = betterAuth({
     },
   },
   hooks: {
-    // La politique de mot de passe partagée fait foi côté serveur (brief §6.1).
+    // Politique de mot de passe partagée (brief §6.1) et numéro WhatsApp : contrôlés côté serveur.
     before: createAuthMiddleware(async (ctx) => {
-      if (ctx.path !== "/sign-up/email" && ctx.path !== "/reset-password") return;
-      const body = (ctx.body ?? {}) as { password?: unknown; newPassword?: unknown; email?: unknown; name?: unknown };
-      const password = typeof body.password === "string" ? body.password : body.newPassword;
-      if (typeof password !== "string") return;
-      const issue = checkPassword(password, {
-        email: typeof body.email === "string" ? body.email : undefined,
-        name: typeof body.name === "string" ? body.name : undefined,
-      });
-      if (issue === "tooCommon") {
-        throw new APIError("BAD_REQUEST", { message: texts.auth.fields.passwordTooCommon });
+      if (disabledEmailOtpPaths.has(ctx.path)) throw new APIError("NOT_FOUND");
+      const body = (ctx.body ?? {}) as { password?: unknown; newPassword?: unknown; email?: unknown; name?: unknown; phoneNumber?: unknown };
+
+      if (ctx.path === "/sign-up/email" || ctx.path === "/reset-password") {
+        const password = typeof body.password === "string" ? body.password : body.newPassword;
+        const issue =
+          typeof password === "string"
+            ? checkPassword(password, { email: typeof body.email === "string" ? body.email : undefined, name: typeof body.name === "string" ? body.name : undefined })
+            : null;
+        if (issue === "tooCommon") throw new APIError("BAD_REQUEST", { message: texts.auth.fields.passwordTooCommon });
+      }
+
+      // Numéro WhatsApp : obligatoire à l'inscription, au format international, un seul compte par numéro.
+      if (ctx.path === "/sign-up/email" || (ctx.path === "/update-user" && body.phoneNumber !== undefined)) {
+        const raw = typeof body.phoneNumber === "string" ? body.phoneNumber.trim() : "";
+        const parsed = /^\+\d{8,15}$/.test(raw) ? parsePhoneNumberFromString(raw) : undefined;
+        if (!parsed?.isValid()) throw new APIError("BAD_REQUEST", { code: "INVALID_PHONE", message: "Indiquez un numéro WhatsApp valide, avec l’indicatif du pays." });
+        const phoneNumber = parsed.number;
+        const session = ctx.path === "/update-user" ? await getSessionFromCtx(ctx) : null;
+        if (ctx.path === "/sign-up/email") {
+          // Nouvelle tentative (actualisation, adresse corrigée) : l'inscription non confirmée précédente est remplacée.
+          const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+          const sameEmail = email ? await prisma.user.findUnique({ where: { email }, select: unconfirmedSelect }) : null;
+          if (sameEmail && !(await releaseUnconfirmedAccount(sameEmail))) {
+            throw new APIError("CONFLICT", { code: "EMAIL_TAKEN", message: texts.auth.signUp.emailTaken });
+          }
+        }
+        const owner = await prisma.user.findUnique({ where: { phoneNumber }, select: unconfirmedSelect });
+        if (owner && owner.id !== session?.user.id && (ctx.path !== "/sign-up/email" || !(await releaseUnconfirmedAccount(owner)))) {
+          throw new APIError("CONFLICT", { code: "PHONE_TAKEN", message: texts.auth.signUp.phoneTaken });
+        }
+        return { context: { body: { ...body, phoneNumber } } };
       }
     }),
   },
@@ -135,8 +222,8 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: passwordMinLength,
     maxPasswordLength: passwordMaxLength,
-    // Le compte est utilisable avant la vérification ; la publication de boutique l'exige.
-    requireEmailVerification: false,
+    // L'inscription se termine par le code reçu par e-mail : pas de connexion avant (un nouveau code part alors).
+    requireEmailVerification: true,
     autoSignIn: true,
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true,
@@ -151,13 +238,10 @@ export const auth = betterAuth({
     },
   },
   emailVerification: {
+    // E01 — code de confirmation (plugin emailOTP ci-dessus), à l'inscription et à la connexion d'un compte non confirmé.
     sendOnSignUp: true,
+    sendOnSignIn: true,
     autoSignInAfterVerification: true,
-    // E01 — confirmation de l'adresse (le premier prénom sert de salutation).
-    sendVerificationEmail: async ({ user, url }) => {
-      const firstName = user.name?.trim().split(/\s+/)[0] || user.email.split("@")[0];
-      await sendEmail("E01", user.email, { prenom: firstName }, url);
-    },
     // E02 — bienvenue, une fois l'adresse confirmée.
     afterEmailVerification: async (user) => {
       const firstName = user.name?.trim().split(/\s+/)[0] || user.email.split("@")[0];

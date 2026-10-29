@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { PublishStep } from "@/components/wizard/wizard-publish";
+import { CreatedScreen, PublishedScreen, PublishStep } from "@/components/wizard/wizard-publish";
 import { DeliveryStep } from "@/components/wizard/wizard-delivery-step";
 import { EmailVerificationGate } from "@/components/wizard/wizard-email-gate";
 import { WizardShell, type PreviewDraft } from "@/components/wizard/wizard-shell";
@@ -8,10 +8,11 @@ import { ActivityStep, BrandingStep, ContactStep, LocationStep, NameStep, Produc
 import { formatFcfa } from "@/lib/format";
 import { phoneCountries } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
-import { storeAddressFormat, storeAddressLabel } from "@/lib/urls";
+import { storeAddressFormat, storeAddressLabel, storePublicUrl } from "@/lib/urls";
 import { geoDataset, supportedCountries } from "@/modules/geo";
 import { draftMissing, findDraft, type DraftData } from "@/modules/stores/draft";
-import { requireWizardSession, wizardStepCount, wizardSteps } from "@/modules/stores/wizard";
+import { getPublicationChecklist } from "@/modules/stores/publication";
+import { findOwnedStore, requireWizardSession, wizardStepCount, wizardSteps } from "@/modules/stores/wizard";
 import { isAccountVerified } from "@/modules/auth/phone-account";
 
 export const metadata: Metadata = { title: "Créer ma boutique" };
@@ -24,7 +25,7 @@ const defaultColors = { primaryColor: "#FF9900", secondaryColor: "#000026", acce
  * la boutique n'est créée qu'à la dernière étape (voir src/modules/stores/draft.ts).
  *   ?brouillon=…&etape=N   reprise d'un brouillon
  *   ?nouvelle=1            nouveau brouillon (même si un autre est en cours)
- *   ?boutique=…&etape=publiee|creee   écran final, une fois la boutique créée
+ *   ?boutique=…            écran final, une fois la boutique créée (publiée ou non)
  */
 export default async function NewStorePage({ searchParams }: PageProps<"/boutiques/nouvelle">) {
   const session = await requireWizardSession();
@@ -32,8 +33,26 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
   const value = (key: string) => (typeof params[key] === "string" ? (params[key] as string) : undefined);
   const requested = value("etape");
 
-  // Anciens liens de fin d'assistant : la boutique créée s'ouvre désormais dans le tableau de bord.
-  if (value("boutique")) redirect("/dashboard");
+  // Écran final : la boutique existe.
+  if (value("boutique")) {
+    const store = await findOwnedStore(session.user.id, value("boutique")!);
+    if (!store) redirect("/dashboard");
+    const preview = previewOfStore(store);
+    if (store.isPublished) {
+      return (
+        <WizardShell current={wizardStepCount + 1} draftId={null} initialDraft={preview} previewPath={`/${store.slug}`} reached={wizardStepCount + 1} showThemeLabel steps={wizardSteps}>
+          <PublishedScreen storeName={store.name} storeUrl={storePublicUrl(store.slug)} />
+        </WizardShell>
+      );
+    }
+    const checklist = await getPublicationChecklist(store.id, isAccountVerified(session.user));
+    const missing = checklist.filter((item) => !item.done && item.key !== "email").map((item) => ({ label: item.label, href: item.href }));
+    return (
+      <WizardShell current={wizardStepCount + 1} draftId={null} initialDraft={preview} previewPath={`/${store.slug}`} reached={wizardStepCount + 1} showThemeLabel steps={wizardSteps}>
+        <CreatedScreen missing={missing} storeName={store.name} storeUrl={storePublicUrl(store.slug)} />
+      </WizardShell>
+    );
+  }
 
   // Ancien compte par e-mail, adresse pas encore confirmée : on demande de consulter sa boîte de réception.
   // (Les comptes créés par WhatsApp sont confirmés dès l'inscription, par le code reçu.)
@@ -52,8 +71,6 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
   const asked = Number(requested);
   const step = draft ? (Number.isInteger(asked) && asked >= 1 && asked <= reached ? asked : reached) : 1;
   const draftId = draft?.id ?? null;
-  // Sans boutique, le tableau de bord renverrait ici : on quitte l'assistant vers l'accueil.
-  const hasStore = (await prisma.storeMembership.count({ where: { userId: session.user.id } })) > 0;
 
   let content: React.ReactNode = null;
   if (!draft || step === 1) {
@@ -149,7 +166,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
   }
 
   return (
-    <WizardShell current={step} draftId={draftId} exitHref={hasStore ? "/dashboard" : "/"} initialDraft={previewOfDraft(data)} reached={reached} showThemeLabel={step >= 5} steps={wizardSteps}>
+    <WizardShell current={step} draftId={draftId} initialDraft={previewOfDraft(data)} reached={reached} showThemeLabel={step >= 5} steps={wizardSteps}>
       {content}
     </WizardShell>
   );
@@ -169,5 +186,18 @@ function previewOfDraft(data: DraftData): PreviewDraft {
     secondaryColor: data.secondaryColor ?? defaultColors.secondaryColor,
     accentColor: data.accentColor ?? defaultColors.accentColor,
     logoUrl: data.logoUrl ?? null,
+  };
+}
+
+function previewOfStore(store: NonNullable<Awaited<ReturnType<typeof findOwnedStore>>>): PreviewDraft {
+  return {
+    name: store.name,
+    activity: "",
+    location: store.city ? `${store.city}${store.country === "CM" ? ", Cameroun" : ""}` : "",
+    theme: store.theme,
+    primaryColor: store.primaryColor,
+    secondaryColor: store.secondaryColor,
+    accentColor: store.accentColor,
+    logoUrl: store.logoUrl,
   };
 }

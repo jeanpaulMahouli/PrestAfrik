@@ -6,7 +6,6 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from "re
 import { StoreLivePreview, type LivePreviewValues } from "@/components/stores/store-live-preview";
 import { CheckIcon } from "@/components/ui/icons";
 import { WizardPauseDialog } from "@/components/wizard/wizard-pause-dialog";
-import { optionalWizardSteps } from "@/components/wizard/wizard-step-form";
 
 export type PreviewDraft = {
   name: string;
@@ -38,15 +37,17 @@ type WizardShellProps = {
   reached: number;
   /** Boutique en cours de création (null avant la première étape, ou une fois la boutique créée). */
   draftId: string | null;
-  /** Où aller en quittant l'assistant : le tableau de bord, ou l'accueil si l'utilisateur n'a encore aucune boutique. */
+  /** Où aller en quittant l'assistant (le tableau de bord, qui propose aussi de créer la boutique plus tard). */
   exitHref?: string;
+  /** Page affichée dans l'aperçu (par défaut, le brouillon) : la vraie boutique une fois créée. */
+  previewPath?: string;
   initialDraft: PreviewDraft;
   showThemeLabel: boolean;
   children: ReactNode;
 };
 
 /** Mise en page de l'assistant de création (maquettes « Assistant · 1 à 8 »). */
-export function WizardShell({ steps, current, reached, draftId, exitHref = "/dashboard", initialDraft, showThemeLabel, children }: WizardShellProps) {
+export function WizardShell({ steps, current, reached, draftId, exitHref = "/dashboard", previewPath, initialDraft, showThemeLabel, children }: WizardShellProps) {
   const [draft, setDraft] = useState(initialDraft);
   const update = (patch: Partial<PreviewDraft>) => setDraft((value) => ({ ...value, ...patch }));
   const liveValues = useMemo<LivePreviewValues>(
@@ -98,10 +99,7 @@ export function WizardShell({ steps, current, reached, draftId, exitHref = "/das
                 const content = (
                   <>
                     <span aria-hidden="true" className="wizard-step-dot">{done ? <CheckIcon size={11} /> : step}</span>
-                    <span className="wizard-step-label">
-                      {label}
-                      {optionalWizardSteps.has(step) && <small>Facultatif</small>}
-                    </span>
+                    {label}
                     {done && <span className="visually-hidden"> (terminée)</span>}
                   </>
                 );
@@ -119,7 +117,7 @@ export function WizardShell({ steps, current, reached, draftId, exitHref = "/das
           <details className="wizard-preview" open>
             <summary>Aperçu de votre boutique, en direct</summary>
             {/* Même aperçu que « Ma boutique » : la vraie vitrine (composants et styles publics) dans un cadre de téléphone. */}
-            <StoreLivePreview reloadKey={current} storePath={`/apercu-boutique/${draftId ?? "nouvelle"}`} values={liveValues} />
+            <StoreLivePreview reloadKey={current} storePath={previewPath ?? `/apercu-boutique/${draftId ?? "nouvelle"}`} values={liveValues} />
             {showThemeLabel && <p className="wizard-preview-theme">Thème : {themeNames[draft.theme]}</p>}
           </details>
         </div>

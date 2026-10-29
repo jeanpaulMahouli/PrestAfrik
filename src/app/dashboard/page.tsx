@@ -1,6 +1,8 @@
 import { Eye, Hourglass, ShoppingBag, ShoppingCart, Wallet } from "lucide-react";
+import { headers } from "next/headers";
 import Link from "next/link";
-import { StoreCreatedDialog } from "@/components/dashboard/store-created-dialog";
+import { redirect } from "next/navigation";
+import { WelcomeNoStore } from "@/components/dashboard/welcome-no-store";
 import { TimeSeriesChart } from "@/components/dashboard/time-series-chart";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ShareStoreButton } from "@/components/shared/share-store-button";
@@ -14,6 +16,9 @@ import { formatDateTime, formatFcfa, formatReference, plural } from "@/lib/forma
 import { photoVariant } from "@/lib/product-photos";
 import { storePublicUrl } from "@/lib/urls";
 import { hasPermission } from "@/modules/auth/permissions";
+import { auth } from "@/modules/auth/server";
+import { isPlatformAdmin } from "@/modules/admin/context";
+import { prisma } from "@/lib/prisma";
 import { getDashboardOverview } from "@/modules/dashboard/service";
 import { setupChecklist } from "@/modules/dashboard/setup-checklist";
 import { getDashboardStats } from "@/modules/dashboard/stats";
@@ -25,8 +30,28 @@ export const metadata = { title: "Accueil" };
 const stageOrder = ["NEW", "VALIDATED", "CANCELLED"] as const;
 
 export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
-  const { session, store, membership } = await getStoreContext();
   const params = await searchParams;
+  // Compte sans boutique (juste après l'inscription, ou boutique pas encore créée) : une seule prochaine étape.
+  const account = await auth.api.getSession({ headers: await headers() });
+  if (!account) redirect("/connexion");
+  const hasStore = await prisma.storeMembership.findFirst({ where: { userId: account.user.id }, select: { id: true } });
+  if (!hasStore) {
+    const [pendingDraft, adminLink] = await Promise.all([findDraft(account.user.id), isPlatformAdmin(account.user.id)]);
+    return (
+      <WelcomeNoStore
+        adminLink={adminLink}
+        createHref={pendingDraft ? `/boutiques/nouvelle?brouillon=${pendingDraft.id}&etape=${pendingDraft.step}` : "/boutiques/nouvelle"}
+        emailVerified={account.user.emailVerified}
+        firstName={account.user.name.trim().split(/\s+/)[0] || account.user.name}
+        justSignedUp={params.bienvenue === "1"}
+        userEmail={account.user.email}
+        userImage={account.user.image ?? null}
+        userName={account.user.name}
+      />
+    );
+  }
+
+  const { session, store, membership } = await getStoreContext();
   const period = resolveDashboardPeriod(params.periode);
   const [stats, overview, draft] = await Promise.all([
     getDashboardStats(store.id, period),
@@ -49,12 +74,9 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   const checklist = setupChecklist({ store, activeProducts: overview.activeProducts, activeZones: overview.activeZones, whatsappNumber: overview.whatsappConnected });
   const doneSteps = checklist.filter((step) => step.done).length;
-  // Arrivée juste après l'assistant de création : fenêtre « Boutique créée » (une seule fois).
-  const justCreated = params.bienvenue === store.id;
 
   return (
     <VendorShell>
-      {justCreated && <StoreCreatedDialog published={store.isPublished} steps={checklist} storeId={store.id} storeName={store.name} storeUrl={publicUrl} />}
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Bonjour {firstName} !</h1>

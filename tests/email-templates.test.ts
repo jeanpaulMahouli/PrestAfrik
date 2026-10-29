@@ -26,8 +26,8 @@ describe("modèles d’e-mails", () => {
   });
 
   it("refuse un bouton sans lien ou avec un lien non HTTP", () => {
-    expect(() => renderEmail("E01", { prenom: "Awa" }, { baseUrl: base })).toThrow(EmailVariableError);
-    expect(() => renderEmail("E01", { prenom: "Awa" }, { baseUrl: base, actionUrl: "javascript:alert(1)" })).toThrow(EmailVariableError);
+    expect(() => renderEmail("E02", { prenom: "Awa" }, { baseUrl: base })).toThrow(EmailVariableError);
+    expect(() => renderEmail("E02", { prenom: "Awa" }, { baseUrl: base, actionUrl: "javascript:alert(1)" })).toThrow(EmailVariableError);
   });
 
   it("échappe le contenu saisi par les utilisateurs", () => {

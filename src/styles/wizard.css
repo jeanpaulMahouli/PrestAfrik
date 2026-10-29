@@ -901,37 +901,6 @@
   margin-top: 1rem;
 }
 
-/* Étapes obligatoires et facultatives : dites clairement, pour savoir ce qu'il reste à faire. */
-.wizard-requirement {
-  display: inline-flex;
-  width: fit-content;
-  margin: 0 0 0.5rem;
-  padding: 0.2rem 0.625rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.wizard-requirement-required {
-  color: #8a4b00;
-  background: rgb(255 153 0 / 0.16);
-}
-
-.wizard-requirement-optional {
-  color: var(--color-text-secondary);
-  background: var(--color-surface-muted);
-}
-
-.wizard-step-label {
-  display: grid;
-}
-
-.wizard-step-label small {
-  color: var(--color-text-secondary);
-  font-size: 0.7rem;
-  font-weight: 400;
-}
-
 .wizard-optional {
   color: var(--color-text-secondary);
   font-weight: 400;
