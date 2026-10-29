@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description:
     "PrestAfrik : une boutique en ligne gratuite, professionnelle et prête en 5 minutes. Les commandes arrivent sur WhatsApp, le paiement se fait à la livraison.",
   alternates: { canonical: "/" },
+  // Vérification du domaine dans Meta Business (WhatsApp Business, application Meta).
+  other: { "facebook-domain-verification": "8vvpr2rgpc7l5hw1ml7itmdhaxx01i" },
 };
 
 // Fiche d'identité lue par Google : nom du site dans les résultats, logo et coordonnées de PrestAfrik.
