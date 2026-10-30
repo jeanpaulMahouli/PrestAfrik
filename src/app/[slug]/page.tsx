@@ -67,6 +67,14 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
   const slides = merchandising.banners.map((banner) => ({ id: banner.id, imageUrl: banner.imageUrl, altText: banner.altText, href: storeLinkHref(banner, base) }));
   const promotions = merchandising.promotions;
   const topRated = store.reviewsEnabled ? merchandising.topRated : [];
+  // Photos chargées en priorité (LCP mobile) : celles de la première grille visible, sous la bannière et
+  // la rangée Promotions quand elles existent (elles ont alors leurs propres photos prioritaires).
+  const firstGrid =
+    filtering ? "all"
+    : slides.length > 0 || promotions.length > 0 ? null
+    : merchandising.featured.length > 0 ? "featured"
+    : topRated.length > 0 ? "top"
+    : "all";
   const featuredPage = readPage(query.featured, merchandising.featured.length);
   const topPage = readPage(query.top, topRated.length);
   const pagesOf = (total: number) => Math.ceil(total / homeSectionPageSize);
@@ -170,7 +178,7 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
           <header className="sf-home-section-head">
             <h2 id="sf-featured-title">Nos produits mis en avant</h2>
           </header>
-          <StorefrontProductGrid base={base} eager={0} products={pageSlice(merchandising.featured, featuredPage)} ratings={ratings} />
+          <StorefrontProductGrid base={base} eager={firstGrid === "featured" ? 4 : 0} products={pageSlice(merchandising.featured, featuredPage)} ratings={ratings} />
           <StorePagination href={sectionHref("featured")} label="Nos produits mis en avant" page={featuredPage} pages={pagesOf(merchandising.featured.length)} />
         </section>
       )}
@@ -180,7 +188,7 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
           <header className="sf-home-section-head">
             <h2 id="sf-top-title">Les mieux notés</h2>
           </header>
-          <StorefrontProductGrid base={base} eager={0} products={pageSlice(topRated, topPage)} ratings={ratings} />
+          <StorefrontProductGrid base={base} eager={firstGrid === "top" ? 4 : 0} products={pageSlice(topRated, topPage)} ratings={ratings} />
           <StorePagination href={sectionHref("top")} label="Les mieux notés" page={topPage} pages={pagesOf(topRated.length)} />
         </section>
       )}
@@ -190,7 +198,7 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
           <header className="sf-home-section-head">
             <h2 id="sf-all-title">{filtering ? `${products.length} produit${products.length > 1 ? "s" : ""} trouvé${products.length > 1 ? "s" : ""}` : "Tous nos produits"}</h2>
           </header>
-          <StorefrontProductGrid base={base} eager={filtering || slides.length === 0 ? 4 : 0} products={products} ratings={ratings} />
+          <StorefrontProductGrid base={base} eager={firstGrid === "all" ? 4 : 0} products={products} ratings={ratings} />
         </section>
       ) : (
         <section className="sf-empty">

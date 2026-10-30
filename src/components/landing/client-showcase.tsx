@@ -9,9 +9,16 @@ import { Reveal } from "./reveal";
 /** « Côté client » : chaque étape affiche l'écran correspondant dans le téléphone (clic, clavier ou glissé sur mobile). */
 export function ClientShowcase({ signedIn }: { signedIn: boolean }) {
   const [active, setActive] = useState(0);
+  // Écrans téléchargés : l'écran affiché et le suivant (les autres arrivent quand on avance) ; auparavant
+  // les quatre captures partaient d'emblée sur mobile.
+  const [loaded, setLoaded] = useState(1);
   const touchX = useRef(0);
   const steps = clientSide.steps;
-  const go = (i: number) => setActive(Math.max(0, Math.min(steps.length - 1, i)));
+  const go = (i: number) => {
+    const next = Math.max(0, Math.min(steps.length - 1, i));
+    setActive(next);
+    setLoaded((value) => Math.max(value, next + 1));
+  };
 
   return (
     <section aria-labelledby="client-title" className="lp-section lp-client" id="demo">
@@ -61,7 +68,7 @@ export function ClientShowcase({ signedIn }: { signedIn: boolean }) {
           <span aria-hidden="true" className="lp-client__square lp-client__square--1" />
           <span aria-hidden="true" className="lp-client__square lp-client__square--2" />
           <span aria-hidden="true" className="lp-client__square lp-client__square--3" />
-          {steps.map((step, i) => (
+          {steps.slice(0, loaded + 1).map((step, i) => (
             <Image
               alt={i === active ? `Écran « ${step.label} » sur téléphone` : ""}
               className={`lp-client__phone${i === active ? " is-active" : ""}`}
