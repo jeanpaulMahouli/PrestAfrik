@@ -82,7 +82,7 @@ export const emailTexts = {
     preheader: "Si ce n’était pas vous, agissez dès maintenant.",
     title: "Votre mot de passe a bien été modifié",
     blocks: [
-      { type: "p", text: "Le {{date}} à {{heure}} (heure du Cameroun), le mot de passe de votre compte PrestAfrik a été modifié." },
+      { type: "p", text: "Le {{date}} à {{heure}} (heure d’Afrique centrale), le mot de passe de votre compte PrestAfrik a été modifié." },
       { type: "p", text: "Par mesure de sécurité, nous vous avons déconnecté de tous vos appareils. Il vous suffit de vous reconnecter avec votre nouveau mot de passe." },
     ],
     action: { label: "Me connecter" },
@@ -377,7 +377,7 @@ export const emailLayoutTexts = {
   signature: ["À très bientôt,", "L’équipe PrestAfrik"],
   buttonFallback: "Le bouton ne fonctionne pas ? Copiez ce lien dans votre navigateur :",
   help: "Besoin d’aide ? Répondez à cet e-mail ou écrivez à {{contact}}.",
-  tagline: "PrestAfrik · La boutique en ligne pensée pour les commerçants camerounais",
+  tagline: "PrestAfrik · La boutique en ligne pensée pour les commerçants d’Afrique centrale",
   terms: "Conditions d’utilisation",
   privacy: "Confidentialité",
 } as const;

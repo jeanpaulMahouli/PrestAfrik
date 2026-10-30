@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { LandingButton } from "./buttons";
 import { hero } from "./content";
-import { VendorSearch } from "@/components/marketplace/vendor-search";
 import { DemoVideoButton } from "./demo-video-button";
 import { SiteHeader } from "./site-header";
 
@@ -22,8 +21,6 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
           <LandingButton href={primaryHref}>{signedIn ? "Aller à mon espace" : hero.primaryCta.label}</LandingButton>
           <DemoVideoButton fallbackHref={hero.secondaryCta.href} label={hero.secondaryCta.label} />
         </div>
-        {/* Marketplace : trouver un vendeur (suggestions pendant la saisie, résultats sur /recherche). */}
-        <VendorSearch className="lp-intro lp-intro--3" />
       </div>
 
       {/* Scène illustrée : les positions sont exprimées en % de sa largeur (unités cqw), elle s'adapte donc à tout écran. */}

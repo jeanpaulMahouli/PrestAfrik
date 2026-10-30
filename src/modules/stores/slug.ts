@@ -16,7 +16,7 @@ export const reservedSlugs = new Set([
   "icon", "apple-icon", "robots", "sitemap", "manifest", "next", "tarifs", "prix", "fonctionnalites",
   "a-propos", "demo", "equipe", "recherche", "panier", "nouvelle", "parametres", "messages", "marketing",
   "livraisons", "produits", "clients", "argent", "mentions-legales", "conditions-generales",
-  "politique-de-confidentialite", "conditions-de-vente", "apercu-boutique", "apercu", "confirmer-adresse", "pays", "aide", "tarifs",
+  "politique-de-confidentialite", "conditions-de-vente", "apercu-boutique", "apercu", "confirmer-adresse", "pays", "aide", "tarifs", "nos-boutiques",
 ]);
 
 export function slugify(value: string) {

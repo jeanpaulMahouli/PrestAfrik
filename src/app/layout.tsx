@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: "%s | PrestAfrik",
   },
   description:
-    "PrestAfrik : créez gratuitement votre boutique en ligne en 5 minutes. Commandes sur WhatsApp, paiement à la livraison, au Cameroun et en Afrique.",
+    "PrestAfrik : créez gratuitement votre boutique en ligne en 5 minutes. Commandes sur WhatsApp, paiement à la livraison, dans toute la zone CEMAC.",
   applicationName: "PrestAfrik",
   // Application installable (PWA) : public/manifest.webmanifest, ouverte sur le tableau de bord.
   manifest: "/manifest.webmanifest",

@@ -82,6 +82,12 @@ export const pricingPlans: PricingPlan[] = [
   },
 ];
 
+/**
+ * Vente des offres ouverte ? Tant que non (par défaut), les offres sont présentées mais pas sélectionnables
+ * (« Bientôt disponible »). PRICING_SALES_OPEN="true" les ouvre, sans modifier le code.
+ */
+export const pricingSalesOpen = () => process.env.PRICING_SALES_OPEN === "true";
+
 /** Essai offert sur l'offre Démarrage. */
 export const trialLabel = "1 mois d’essai offert sur l’offre Démarrage";
 

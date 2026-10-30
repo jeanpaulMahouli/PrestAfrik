@@ -179,3 +179,23 @@ export async function getTopProducts(storeId: string, take = 4): Promise<TopProd
     };
   });
 }
+
+/**
+ * Top des boutiques (page « Nos boutiques ») : les mieux notées par leurs clients (avis approuvés : moyenne,
+ * pondérée par le nombre d'avis), puis celles qui ont le plus de produits en ligne. Aucune note inventée.
+ */
+export async function getTopStores(take = 10): Promise<SearchableStore[]> {
+  const stores = await loadIndex();
+  if (!stores.length) return [];
+  const ids = stores.map((store) => store.id);
+  const [reviews, products] = await Promise.all([
+    prisma.productReview.groupBy({ by: ["storeId"], where: { storeId: { in: ids }, status: "APPROVED" }, _avg: { rating: true }, _count: { _all: true } }),
+    prisma.product.groupBy({ by: ["storeId"], where: { storeId: { in: ids }, status: "ACTIVE", archivedAt: null }, _count: { _all: true } }),
+  ]);
+  const ratingScore = new Map(reviews.map((row) => [row.storeId, (row._avg.rating ?? 0) * Math.log2(1 + row._count._all)]));
+  const productCount = new Map(products.map((row) => [row.storeId, row._count._all]));
+  return stores
+    .filter((store) => (productCount.get(store.id) ?? 0) > 0)
+    .sort((a, b) => (ratingScore.get(b.id) ?? 0) - (ratingScore.get(a.id) ?? 0) || (productCount.get(b.id) ?? 0) - (productCount.get(a.id) ?? 0) || a.createdAt.getTime() - b.createdAt.getTime())
+    .slice(0, take);
+}

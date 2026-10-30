@@ -17,6 +17,7 @@ const sitePages: { path: string; priority: number; changeFrequency: "daily" | "w
   { path: "/fonctionnalites", priority: 0.8, changeFrequency: "monthly" },
   { path: "/tarifs", priority: 0.8, changeFrequency: "monthly" },
   { path: "/aide", priority: 0.6, changeFrequency: "monthly" },
+  { path: "/nos-boutiques", priority: 0.8, changeFrequency: "daily" },
   { path: "/demo", priority: 0.7, changeFrequency: "monthly" },
   { path: "/blog", priority: 0.7, changeFrequency: "weekly" },
   { path: "/a-propos", priority: 0.6, changeFrequency: "monthly" },

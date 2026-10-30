@@ -18,7 +18,7 @@ import { auth } from "@/modules/auth/server";
 export const metadata: Metadata = {
   title: { absolute: "Créer une boutique en ligne gratuite et vendre sur WhatsApp | PrestAfrik" },
   description:
-    "Créez gratuitement votre boutique en ligne en 5 minutes : vos clients commandent, vous confirmez sur WhatsApp, ils paient à la livraison. Cameroun, Côte d’Ivoire, Sénégal et toute l’Afrique francophone.",
+    "Créez gratuitement votre boutique en ligne en 5 minutes : vos clients commandent, vous confirmez sur WhatsApp, ils paient à la livraison. Partout dans la zone CEMAC.",
   alternates: { canonical: "/" },
   // Vérification du domaine dans Meta Business (WhatsApp Business, application Meta).
   other: { "facebook-domain-verification": "8vvpr2rgpc7l5hw1ml7itmdhaxx01i" },

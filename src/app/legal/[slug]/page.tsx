@@ -136,8 +136,8 @@ const legalPages = {
         <p>
           L’accès est limité aux personnes habilitées et aux prestataires techniques nécessaires au
           service : hébergement, base de données, stockage des images, envoi d’e-mails et sécurité du
-          réseau. Certains de ces prestataires peuvent héberger ou traiter des données hors du
-          Cameroun. PrestAfrik ne vend pas vos données.
+          réseau. Certains de ces prestataires peuvent héberger ou traiter des données hors de votre
+          pays. PrestAfrik ne vend pas vos données.
         </p>
         <h2>Vos droits et la sécurité</h2>
         <p>

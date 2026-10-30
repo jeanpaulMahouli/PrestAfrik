@@ -180,7 +180,7 @@ function previewOfDraft(data: DraftData): PreviewDraft {
   return {
     name: data.name ?? "",
     activity: data.activityLabel ?? data.activityOther ?? "",
-    location: data.city ? `${data.city}${(data.country ?? "CM") === "CM" ? ", Cameroun" : ""}` : "",
+    location: data.city ?? "",
     theme: data.theme ?? "CATALOGUE_EXPRESS",
     primaryColor: data.primaryColor ?? defaultColors.primaryColor,
     secondaryColor: data.secondaryColor ?? defaultColors.secondaryColor,
@@ -193,7 +193,7 @@ function previewOfStore(store: NonNullable<Awaited<ReturnType<typeof findOwnedSt
   return {
     name: store.name,
     activity: "",
-    location: store.city ? `${store.city}${store.country === "CM" ? ", Cameroun" : ""}` : "",
+    location: store.city ?? "",
     theme: store.theme,
     primaryColor: store.primaryColor,
     secondaryColor: store.secondaryColor,

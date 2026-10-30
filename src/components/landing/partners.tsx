@@ -1,4 +1,5 @@
 import { getSocialProof } from "@/modules/marketplace/social-proof";
+import { LandingButton } from "./buttons";
 import { partners } from "./content";
 
 /**
@@ -7,7 +8,7 @@ import { partners } from "./content";
  */
 export async function Partners() {
   const { stores, counters } = await getSocialProof().catch(() => ({ stores: [], counters: [] }));
-  if (!stores.length && !counters.length) return null;
+  const proof = stores.length > 0 || counters.length > 0;
 
   const row = (reverse: boolean) => (
     <div className={`lp-marquee${reverse ? " lp-marquee--reverse" : ""}`}>
@@ -27,10 +28,12 @@ export async function Partners() {
   );
 
   return (
-    <section aria-labelledby="partners-title" className="lp-partners">
-      <h2 className="lp-partners__title" id="partners-title">
-        {partners.title}
-      </h2>
+    <section aria-labelledby={proof ? "partners-title" : "find-stores-title"} className="lp-partners">
+      {proof && (
+        <h2 className="lp-partners__title" id="partners-title">
+          {partners.title}
+        </h2>
+      )}
       {counters.length > 0 && (
         <ul aria-label="PrestAfrik en chiffres" className="lp-counters">
           {counters.map((counter) => (
@@ -47,6 +50,11 @@ export async function Partners() {
           <div className="lp-partners__second">{row(true)}</div>
         </>
       )}
+      <div className="lp-find-stores">
+        <h2 id="find-stores-title">{partners.findTitle}</h2>
+        <p>{partners.findText}</p>
+        <LandingButton href="/nos-boutiques">{partners.findCta}</LandingButton>
+      </div>
     </section>
   );
 }

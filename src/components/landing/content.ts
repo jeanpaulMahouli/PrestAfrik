@@ -91,6 +91,9 @@ export const demoPage = {
 
 export const partners = {
   title: "Ces boutiques vendent déjà avec PrestAfrik",
+  findTitle: "Vous cherchez une boutique ? Consultez nos vendeurs",
+  findText: "Mode, beauté, maison, alimentation… Trouvez un vendeur près de chez vous et commandez sur WhatsApp.",
+  findCta: "Voir toutes nos boutiques",
   // Logos et compteurs : de vraies boutiques publiées, lues en base (modules/marketplace/social-proof.ts).
 };
 
@@ -247,7 +250,7 @@ export const footer = {
       links: [
         { label: "Centre d’aide", href: "/aide" },
         { label: "Tarifs", href: "/tarifs" },
-        { label: "Rechercher un vendeur", href: "/recherche" },
+        { label: "Nos boutiques", href: "/nos-boutiques" },
         { label: "Blog", href: "/blog" },
         { label: "Démo guidée", href: "/demo" },
         { label: "Fonctionnalités", href: "/fonctionnalites" },

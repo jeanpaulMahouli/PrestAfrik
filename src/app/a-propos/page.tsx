@@ -1,8 +1,8 @@
-import { Globe, HeartHandshake, Lock, MessageCircle, Rocket, Smartphone, Sparkles, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Lock, MessageCircle, Rocket, Smartphone, TrendingUp } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { FeatureGrid, SectionHead, Steps } from "@/components/landing/blocks";
+import { FeatureGrid, SectionHead } from "@/components/landing/blocks";
 import { LandingButton } from "@/components/landing/buttons";
 import { disabledPages } from "@/components/landing/content";
 import { isSignedIn, PageShell } from "@/components/landing/page-shell";
@@ -14,6 +14,12 @@ export const metadata: Metadata = {
   description:
     "PrestAfrik donne à chaque commerçant africain une boutique en ligne professionnelle, simple et gratuite pour démarrer. Notre mission, nos valeurs et nos engagements.",
 };
+
+const journey = [
+  { icon: Rocket, phase: "Semaine 1", title: "Lancez-vous", text: "Boutique créée gratuitement, premiers produits en ligne, lien partagé dans vos statuts." },
+  { icon: LayoutDashboard, phase: "Mois 1", title: "Structurez", text: "Zones de livraison, fichier clients, argent reçu : votre activité devient lisible." },
+  { icon: TrendingUp, phase: "Ensuite", title: "Développez", text: "Campagnes, équipe, pages de marque : de vendeur à entreprise, sans changer d’outil." },
+];
 
 export default async function AboutPage() {
   // Page en attente de sa maquette (voir disabledPages dans content.ts).
@@ -33,10 +39,10 @@ export default async function AboutPage() {
         <div className="lp-story">
           <div className="lp-story__copy">
             <h2 className="lp-split__title" id="mission-title">
-              Transformer chaque vendeur WhatsApp en marque professionnelle
+              Transformer chaque vendeur en marque professionnelle
             </h2>
             <p className="lp-split__text">
-              Au Cameroun comme ailleurs sur le continent, des milliers de commerçants vendent chaque jour sur WhatsApp, Facebook ou dans leur quartier. Ils ont le produit, la clientèle et
+              Dans toute l’Afrique centrale, des milliers de commerçants vendent chaque jour sur WhatsApp, Facebook ou dans leur quartier. Ils ont le produit, la clientèle et
               l’énergie. Mais les commandes se perdent dans les discussions, les totaux se calculent de tête et les clients fidèles se noient dans les contacts.
             </p>
             <p className="lp-split__text">
@@ -54,19 +60,6 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section aria-labelledby="valeurs-title" className="lp-section">
-        <SectionHead id="valeurs-title" lead="Quatre principes guident chacune de nos décisions produit." title="Ce en quoi nous croyons" />
-        <FeatureGrid
-          columns={4}
-          items={[
-            { icon: Sparkles, title: "La simplicité d’abord", text: "Si une fonctionnalité demande une formation, c’est qu’elle n’est pas terminée. Trois boutons valent mieux que trente." },
-            { icon: HeartHandshake, title: "La confiance", text: "Paiement à la livraison, total connu d’avance, suivi sans compte : chaque détail rassure vos clients." },
-            { icon: Globe, title: "Fait pour l’Afrique", text: "Mobile money, quartiers et points de repère, WhatsApp, connexions modestes : nous partons de vos réalités." },
-            { icon: Rocket, title: "Accessible à tous", text: "Une boutique gratuite pour démarrer, sans engagement et sans compétence technique." },
-          ]}
-        />
-      </section>
-
       <section aria-labelledby="engagements-title" className="lp-section">
         <SectionHead id="engagements-title" title="Ce que nous vous promettons" />
         <FeatureGrid
@@ -78,36 +71,37 @@ export default async function AboutPage() {
         />
       </section>
 
-      <section aria-labelledby="chemin-title" className="lp-section">
-        <SectionHead id="chemin-title" lead="De la première commande à la marque reconnue, PrestAfrik grandit avec vous." title="Commencer petit, voir grand" />
-        <Steps
-          items={[
-            { title: "Lancez-vous", text: "Créez votre boutique gratuitement, ajoutez vos premiers produits et partagez votre lien dans vos statuts." },
-            { title: "Structurez", text: "Zones de livraison, fichier clients, argent reçu : votre activité devient lisible et vous prenez de meilleures décisions." },
-            { title: "Développez", text: "Campagnes, équipe, pages de marque : vous passez de vendeur à entreprise, sans changer d’outil." },
-          ]}
-        />
-        <div className="lp-center lp-center--tight">
-          <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Rejoindre PrestAfrik"}</LandingButton>
+      <section aria-labelledby="chemin-title" className="lp-section lp-journey">
+        <div className="lp-journey__panel">
+          <span aria-hidden="true" className="lp-journey__glow" />
+          <header className="lp-journey__head">
+            <p className="lp-journey__kicker">Votre parcours avec PrestAfrik</p>
+            <h2 id="chemin-title">Commencer petit, voir grand</h2>
+            <p>De la première commande à la marque reconnue, PrestAfrik grandit avec vous.</p>
+          </header>
+          <ol className="lp-journey__steps">
+            {journey.map(({ icon: Icon, phase, title, text }, index) => (
+              <li className="lp-journey__step" key={title}>
+                <span aria-hidden="true" className="lp-journey__number">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span aria-hidden="true" className="lp-journey__icon">
+                  <Icon size={26} strokeWidth={1.8} />
+                </span>
+                <p className="lp-journey__phase">{phase}</p>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="lp-journey__cta">
+            <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Rejoindre PrestAfrik"}</LandingButton>
+          </div>
         </div>
       </section>
 
       <Testimonials />
 
-      <section aria-labelledby="ambition-title" className="lp-section">
-        <div className="lp-banner">
-          <TrendingUp aria-hidden="true" className="lp-banner__icon" size={40} strokeWidth={1.6} />
-          <div>
-            <h2 className="lp-banner__title" id="ambition-title">
-              Notre ambition
-            </h2>
-            <p>
-              Que chaque commerçant africain qui le souhaite puisse vendre en ligne aussi professionnellement qu’une grande enseigne, sans en avoir les moyens ni les équipes. Votre réussite est
-              notre seul indicateur.
-            </p>
-          </div>
-        </div>
-      </section>
     </PageShell>
   );
 }

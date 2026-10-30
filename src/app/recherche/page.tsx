@@ -1,15 +1,13 @@
-import { MapPin, Star, Store } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LandingButton } from "@/components/landing/buttons";
 import { isSignedIn, PageShell } from "@/components/landing/page-shell";
 import { VendorSearch } from "@/components/marketplace/vendor-search";
-import { formatXaf } from "@/modules/catalog/format";
-import { countryName, getTopProducts, parseSearchQuery, searchStores, type SearchableStore } from "@/modules/marketplace/search";
-import { storePublicUrl } from "@/lib/urls";
+import { StoreCard } from "@/components/marketplace/store-card";
+import { getTopProducts, parseSearchQuery, searchStores } from "@/modules/marketplace/search";
 
 const pageSize = 8;
-const popularCities = ["Douala", "Yaoundé", "Bafoussam", "Abidjan", "Dakar", "Libreville"];
+const popularCities = ["Douala", "Yaoundé", "Libreville", "Brazzaville", "N’Djamena", "Bangui"];
 const popularActivities = ["Mode", "Beauté", "Alimentation", "Maison", "Électronique"];
 
 type Params = { q?: string | string[]; ville?: string | string[]; activite?: string | string[]; page?: string | string[] };
@@ -127,53 +125,5 @@ function Suggestions() {
         </Link>
       ))}
     </div>
-  );
-}
-
-function StoreCard({ store, products }: { store: SearchableStore; products: Awaited<ReturnType<typeof getTopProducts>> }) {
-  const url = storePublicUrl(store.slug);
-  const initials = store.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr-FR")).join("");
-  return (
-    <article className="search-card">
-      <header className="search-card-head">
-        <span aria-hidden="true" className="search-card-logo">
-          {/* Logo et miniatures déjà optimisés (WebP) : affichés tels quels. */}
-          {store.logoUrl ? <img alt="" height={56} loading="lazy" src={store.logoUrl} width={56} /> : initials || <Store size={22} />}
-        </span>
-        <div>
-          <h2>{store.name}</h2>
-          <p className="search-card-place">
-            <MapPin aria-hidden="true" size={14} /> {[store.city, countryName(store.country)].filter(Boolean).join(", ")}
-            {store.activity ? ` · ${store.activity}` : ""}
-          </p>
-        </div>
-      </header>
-      {store.description && <p className="search-card-description">{store.description}</p>}
-      {products.length > 0 ? (
-        <ul aria-label={`Produits de ${store.name}`} className="search-card-products">
-          {products.map((product) => (
-            <li key={product.slug}>
-              <a href={`${url}/${product.slug}`}>
-                <span className="search-card-photo">
-                  {product.imageUrl ? <img alt="" height={160} loading="lazy" src={product.imageUrl} width={160} /> : <span aria-hidden="true">{product.name.slice(0, 2).toUpperCase()}</span>}
-                </span>
-                <span className="search-card-name">{product.name}</span>
-                <span className="search-card-price">{formatXaf(product.promotionalPriceXaf ?? product.priceXaf)}</span>
-                {product.rating !== null && (
-                  <span className="search-card-rating">
-                    <Star aria-hidden="true" fill="currentColor" size={12} /> {product.rating.toLocaleString("fr-FR")} ({product.reviewCount} avis)
-                  </span>
-                )}
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="search-card-empty">La boutique prépare son catalogue.</p>
-      )}
-      <a className="lp-btn lp-btn--primary search-card-cta" href={url}>
-        Découvrir la boutique
-      </a>
-    </article>
   );
 }

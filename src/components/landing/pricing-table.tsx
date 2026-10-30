@@ -8,7 +8,7 @@ import { pricingCriteria, yearlySaving, type PricingPlan } from "@/config/pricin
 const fcfa = (amount: number) => `${new Intl.NumberFormat("fr-FR").format(amount)} FCFA`;
 
 /** Offres avec bascule Mensuel / Annuel et économie de l'annuel ; comparatif détaillé en dessous. */
-export function PricingTable({ plans, signupHref }: { plans: PricingPlan[]; signupHref: string }) {
+export function PricingTable({ plans, signupHref, salesOpen }: { plans: PricingPlan[]; signupHref: string; salesOpen: boolean }) {
   const [yearly, setYearly] = useState(false);
 
   return (
@@ -51,9 +51,15 @@ export function PricingTable({ plans, signupHref }: { plans: PricingPlan[]; sign
                   );
                 })}
               </ul>
-              <Link className={`lp-btn ${plan.recommended ? "lp-btn--primary" : "lp-btn--secondary"} pricing-cta`} href={signupHref}>
-                Choisir {plan.name}
-              </Link>
+              {salesOpen ? (
+                <Link className={`lp-btn ${plan.recommended ? "lp-btn--primary" : "lp-btn--secondary"} pricing-cta`} href={signupHref}>
+                  Choisir {plan.name}
+                </Link>
+              ) : (
+                <button aria-describedby="pricing-soon" className="lp-btn lp-btn--secondary pricing-cta" disabled type="button">
+                  Bientôt disponible
+                </button>
+              )}
             </li>
           );
         })}
