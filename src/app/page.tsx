@@ -2,21 +2,23 @@ import "@/styles/landing-site.css";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { ClientShowcase } from "@/components/landing/client-showcase";
+import { Comparison } from "@/components/landing/comparison";
 import { DashboardShowcase } from "@/components/landing/dashboard-showcase";
 import { Faq } from "@/components/landing/faq";
 import { FinalCta } from "@/components/landing/final-cta";
 import { Hero } from "@/components/landing/hero";
 import { Partners } from "@/components/landing/partners";
 import { SiteFooter } from "@/components/landing/site-footer";
+import { SupportWhatsapp } from "@/components/landing/support-whatsapp";
 import { Testimonials } from "@/components/landing/testimonials";
 import { site } from "@/config/site";
 import { absoluteUrl, jsonLd, sharePreviewImage } from "@/lib/seo";
 import { auth } from "@/modules/auth/server";
 
 export const metadata: Metadata = {
-  title: { absolute: "PrestAfrik — Votre commerce mérite une vitrine à sa hauteur" },
+  title: { absolute: "Créer une boutique en ligne gratuite et vendre sur WhatsApp | PrestAfrik" },
   description:
-    "PrestAfrik : une boutique en ligne gratuite, professionnelle et prête en 5 minutes. Les commandes arrivent sur WhatsApp, le paiement se fait à la livraison.",
+    "Créez gratuitement votre boutique en ligne en 5 minutes : vos clients commandent, vous confirmez sur WhatsApp, ils paient à la livraison. Cameroun, Côte d’Ivoire, Sénégal et toute l’Afrique francophone.",
   alternates: { canonical: "/" },
   // Vérification du domaine dans Meta Business (WhatsApp Business, application Meta).
   other: { "facebook-domain-verification": "8vvpr2rgpc7l5hw1ml7itmdhaxx01i" },
@@ -44,6 +46,12 @@ const structuredData = {
       url: absoluteUrl("/"),
       inLanguage: "fr",
       publisher: { "@id": absoluteUrl("/#organisation") },
+      // Champ de recherche du site dans les résultats Google : la recherche de vendeurs.
+      potentialAction: {
+        "@type": "SearchAction",
+        target: { "@type": "EntryPoint", urlTemplate: `${absoluteUrl("/recherche")}?q={search_term_string}` },
+        "query-input": "required name=search_term_string",
+      },
     },
   ],
 };
@@ -63,12 +71,14 @@ export default async function LandingPage() {
       <main id="contenu">
         <Partners />
         <DashboardShowcase />
+        <Comparison />
         <ClientShowcase signedIn={signedIn} />
         <Testimonials />
         <Faq />
         <FinalCta signedIn={signedIn} />
       </main>
       <SiteFooter />
+      <SupportWhatsapp />
     </div>
   );
 }

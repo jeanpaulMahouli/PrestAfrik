@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   // Application installable (PWA) : public/manifest.webmanifest, ouverte sur le tableau de bord.
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "PrestAfrik", statusBarStyle: "default" },
-  keywords: ["PrestAfrik", "boutique en ligne", "créer une boutique en ligne", "vendre sur WhatsApp", "e-commerce Cameroun", "paiement à la livraison", "Afrique", "Douala", "Yaoundé"],
   // Aperçu des liens partagés (WhatsApp, Facebook, LinkedIn…) ; une boutique ou un produit le remplace par ses images.
   openGraph: {
     type: "website",

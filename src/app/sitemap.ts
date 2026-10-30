@@ -15,6 +15,8 @@ const maxProducts = 45_000;
 const sitePages: { path: string; priority: number; changeFrequency: "daily" | "weekly" | "monthly" | "yearly" }[] = [
   { path: "/", priority: 1, changeFrequency: "weekly" },
   { path: "/fonctionnalites", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/tarifs", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/aide", priority: 0.6, changeFrequency: "monthly" },
   { path: "/demo", priority: 0.7, changeFrequency: "monthly" },
   { path: "/blog", priority: 0.7, changeFrequency: "weekly" },
   { path: "/a-propos", priority: 0.6, changeFrequency: "monthly" },
