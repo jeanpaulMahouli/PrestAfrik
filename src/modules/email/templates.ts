@@ -119,7 +119,7 @@ export function renderEmail(id: EmailId, variables: EmailVariables, { baseUrl, a
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(preheader)}&#8199;&#65279;&#847;&#8199;&#65279;&#847;</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${colors.page}" style="background:${colors.page};">
 <tr><td align="center" style="padding:32px 12px;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:${colors.surface};border:1px solid ${colors.border};border-top:5px solid ${colors.orange};border-radius:12px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:${colors.surface};border:1px solid ${colors.border};border-radius:12px;">
 <tr><td style="padding:28px 32px 8px;">
 <img src="${escapeHtml(origin)}/brand/logo-prestafrik.png" width="88" height="48" alt="PrestAfrik" style="display:block;border:0;height:auto;font-family:${font};font-size:18px;font-weight:700;color:${colors.ink};">
 </td></tr>

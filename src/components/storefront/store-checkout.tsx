@@ -58,7 +58,6 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
       : []),
     { label: "suivi WhatsApp", done: consent },
   ];
-  const done = required.filter((field) => field.done).length;
   const missing = required.filter((field) => !field.done).map((field) => field.label);
   const valid = missing.length === 0 && total !== null && lines.length > 0 && !loading && Boolean(idempotencyKey);
 
@@ -115,14 +114,6 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
         <h1>Finaliser ma commande</h1>
       </div>
       <p className="sf-muted">Aucun compte à créer.</p>
-
-      <div aria-live="polite" className="sf-progress">
-        <span>
-          {done} sur {required.length} champs obligatoires remplis
-          <strong>{missing.length ? "Presque…" : "Tout est prêt !"}</strong>
-        </span>
-        <span aria-hidden="true" className="sf-progress-bar"><span style={{ width: `${(done / required.length) * 100}%` }} /></span>
-      </div>
 
       <form
         className="sf-form"

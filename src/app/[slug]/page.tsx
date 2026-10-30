@@ -107,7 +107,6 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
     <main className="sf-home">
       {!store.isPreview && <script dangerouslySetInnerHTML={jsonLd(structuredData)} type="application/ld+json" />}
       <h1 className="visually-hidden" data-store-name="">{store.name}</h1>
-      {store.description && <p className="sf-description sf-home-description">{store.description}</p>}
 
       <form action={home} className="sf-search" role="search">
         <label className="visually-hidden" htmlFor="sf-search">Rechercher un produit</label>

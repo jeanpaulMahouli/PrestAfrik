@@ -516,16 +516,6 @@
   box-shadow: 0 10px 30px rgb(11 11 46 / 0.35);
 }
 
-.sf-promo-eclat .sf-promo-section::before {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 4px;
-  background: var(--sf-pagne);
-  content: "";
-}
-
 /* Étoiles : quelques points lumineux qui scintillent derrière le contenu. */
 .sf-promo-eclat .sf-promo-section::after {
   position: absolute;

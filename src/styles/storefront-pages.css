@@ -8,22 +8,9 @@
    Commun à tous les thèmes
    ====================================================================== */
 
-/* Titre des pages intérieures : souligné par la « bande pagne » aux couleurs de la boutique. */
+/* Titre des pages intérieures (sans filet décoratif). */
 .sf-page-head {
-  position: relative;
-  padding-bottom: 0.875rem;
   margin-bottom: 1rem;
-}
-
-.sf-page-head::after {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 4.5rem;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--sf-pagne);
-  content: "";
 }
 
 .sf-page h1,
@@ -280,10 +267,6 @@
   box-shadow: 0 12px 32px -20px color-mix(in srgb, var(--store-accent) 60%, rgb(0 0 38 / 0.4));
 }
 
-.sf-theme-mode-beaute .sf-page-head::after {
-  width: 3rem;
-  background: linear-gradient(90deg, var(--store-primary), var(--store-accent));
-}
 
 /* ======================================================================
    Galerie : angles droits, titres en capitales espacées, sobriété noir et blanc
@@ -309,12 +292,6 @@
   text-transform: uppercase;
 }
 
-.sf-theme-boutique-marque .sf-page-head::after {
-  width: 100%;
-  height: 1px;
-  border-radius: 0;
-  background: var(--color-text-primary);
-}
 
 /* ======================================================================
    Grand marché : bandeau sombre sous l'en-tête, panneaux blancs, prix bien visibles
@@ -352,11 +329,6 @@
   }
 }
 
-.sf-theme-grand-marche .sf-page-head::after {
-  right: 0;
-  width: auto;
-  border-radius: 0;
-}
 
 .sf-theme-grand-marche .sf-page-head h1 {
   color: inherit;
