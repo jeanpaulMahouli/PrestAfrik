@@ -168,6 +168,11 @@ export type ShopHome = {
 let homeCache: { at: number; value: ShopHome } | null = null;
 const homeTtlMs = 60_000;
 
+/** Après une modification de l'administration : la marketplace est recalculée à la visite suivante. */
+export function clearShopCache() {
+  homeCache = null;
+}
+
 /** Toutes les rubriques de l'accueil de la marketplace (gardées une minute en mémoire). */
 export async function getShopHome(): Promise<ShopHome> {
   if (homeCache && Date.now() - homeCache.at < homeTtlMs) return homeCache.value;

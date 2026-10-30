@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { logAdminAction, requirePlatformAdmin } from "@/modules/admin/context";
+import { clearShopCache } from "@/modules/marketplace/shop";
 
 // Administration → Marketplace : ventes flash, offres exclusives et boutiques à la une de
 // shop.prestafrik.com. Seule l'administration choisit ; les prix restent ceux fixés par les vendeurs.
@@ -20,6 +21,7 @@ function back(message: string, kind: "succes" | "erreur" = "succes"): never {
 }
 
 function refresh() {
+  clearShopCache();
   revalidatePath(listPath);
   revalidatePath("/nos-boutiques");
 }

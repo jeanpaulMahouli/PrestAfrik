@@ -114,7 +114,9 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
                 })}
               </ul>
             ) : (
-              <p className="v-muted">Rien pour l’instant : cette rubrique est masquée sur la marketplace.</p>
+              <p className="v-muted">
+                {section === "FEATURED_STORE" ? "Aucune sélection : la marketplace montre les boutiques les mieux notées." : "Rien pour l’instant : cette rubrique est masquée sur la marketplace."}
+              </p>
             )}
 
             <form action={addMarketplacePick} className="admin-announce-form">
