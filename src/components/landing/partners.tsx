@@ -1,15 +1,25 @@
-import Image from "next/image";
+import { getSocialProof } from "@/modules/marketplace/social-proof";
 import { partners } from "./content";
 
-/** Logos des boutiques partenaires qui défilent en continu (deux rangées en sens inverse sur mobile). */
-export function Partners() {
+/**
+ * Boutiques qui vendent déjà avec PrestAfrik : de vraies boutiques publiées (logo et lien), qui défilent en
+ * continu ; compteurs réels en dessous. Rien ne s'affiche tant que les chiffres sont trop faibles.
+ */
+export async function Partners() {
+  const { stores, counters } = await getSocialProof().catch(() => ({ stores: [], counters: [] }));
+  if (!stores.length && !counters.length) return null;
+
   const row = (reverse: boolean) => (
     <div className={`lp-marquee${reverse ? " lp-marquee--reverse" : ""}`}>
-      {/* La liste est doublée pour que le défilement boucle sans saut. */}
+      {/* La liste est doublée pour que le défilement boucle sans saut ; la copie est ignorée des lecteurs d'écran. */}
       <ul className="lp-marquee__track">
-        {[...partners.logos, ...partners.logos].map((logo, i) => (
-          <li aria-hidden={i >= partners.logos.length} key={i}>
-            <Image alt={i < partners.logos.length ? logo.alt : ""} height={logo.height} src={logo.src} width={logo.width} />
+        {[...stores, ...stores].map((store, i) => (
+          <li aria-hidden={i >= stores.length} key={i}>
+            <a className="lp-partner" href={store.href} tabIndex={i >= stores.length ? -1 : undefined}>
+              {/* Logo déjà optimisé (WebP carré) : affiché tel quel. */}
+              <img alt="" height={40} loading="lazy" src={store.logoUrl} width={40} />
+              <span>{store.name}</span>
+            </a>
           </li>
         ))}
       </ul>
@@ -21,8 +31,22 @@ export function Partners() {
       <h2 className="lp-partners__title" id="partners-title">
         {partners.title}
       </h2>
-      {row(false)}
-      <div className="lp-partners__second">{row(true)}</div>
+      {counters.length > 0 && (
+        <ul aria-label="PrestAfrik en chiffres" className="lp-counters">
+          {counters.map((counter) => (
+            <li key={counter.id}>
+              <strong>{new Intl.NumberFormat("fr-FR").format(counter.value)}</strong>
+              <span>{counter.label}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {stores.length > 0 && (
+        <>
+          {row(false)}
+          <div className="lp-partners__second">{row(true)}</div>
+        </>
+      )}
     </section>
   );
 }

@@ -1707,3 +1707,53 @@
     padding-inline: 2.2em;
   }
 }
+
+/* Vraies boutiques (logo et nom, lien vers la boutique) et compteurs réels de l'accueil. */
+.lp-partner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--lp-ink);
+  font: 600 clamp(0.95rem, 1.2vw, 1.25rem) / 1.2 var(--lp-ui);
+  text-decoration: none;
+}
+
+.lp-marquee__track .lp-partner img {
+  width: clamp(32px, 2.4vw, 44px);
+  height: clamp(32px, 2.4vw, 44px);
+  border-radius: 0.75rem;
+  object-fit: cover;
+}
+
+.lp-counters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(16px, 4vw, 64px);
+  margin: 0 auto clamp(28px, 3.5vw, 56px);
+  padding: 0 var(--lp-gutter);
+  list-style: none;
+}
+
+.lp-counters li {
+  display: grid;
+  justify-items: center;
+}
+
+.lp-counters strong {
+  color: var(--lp-navy);
+  font: 800 clamp(1.75rem, 3.4vw, 3rem) / 1.1 var(--lp-display);
+}
+
+.lp-counters span {
+  color: var(--lp-ink-soft);
+}
+
+/* Liens vers de vraies boutiques : contraste plein (AA) et défilement en pause au survol ou au clavier. */
+.lp-partners .lp-marquee {
+  opacity: 1;
+}
+
+.lp-partners .lp-marquee:is(:hover, :focus-within) .lp-marquee__track {
+  animation-play-state: paused;
+}

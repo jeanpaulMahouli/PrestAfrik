@@ -107,11 +107,11 @@ export function Steps({ items }: { items: { title: string; text: string }[] }) {
 }
 
 /** Comparatif « Avant / Avec PrestAfrik ». */
-export function Compare({ rows }: { rows: { before: string; after: string }[] }) {
+export function Compare({ rows, beforeTitle = "Sans PrestAfrik", afterTitle = "Avec PrestAfrik" }: { rows: { before: string; after: string }[]; beforeTitle?: string; afterTitle?: string }) {
   return (
     <div className="lp-compare">
       <div className="lp-compare__col lp-compare__col--before">
-        <h3>Sans PrestAfrik</h3>
+        <h3>{beforeTitle}</h3>
         <ul>
           {rows.map((row) => (
             <li key={row.before}>
@@ -122,7 +122,7 @@ export function Compare({ rows }: { rows: { before: string; after: string }[] })
         </ul>
       </div>
       <div className="lp-compare__col lp-compare__col--after">
-        <h3>Avec PrestAfrik</h3>
+        <h3>{afterTitle}</h3>
         <ul>
           {rows.map((row) => (
             <li key={row.after}>

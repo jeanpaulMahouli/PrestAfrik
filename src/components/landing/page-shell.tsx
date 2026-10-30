@@ -5,6 +5,7 @@ import { auth } from "@/modules/auth/server";
 import { FinalCta } from "./final-cta";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
+import { SupportWhatsapp } from "./support-whatsapp";
 
 export type PageHeroProps = {
   title: string;
@@ -65,6 +66,7 @@ export function PageShell({
         {cta && <FinalCta signedIn={signedIn} />}
       </main>
       <SiteFooter />
+      <SupportWhatsapp />
     </div>
   );
 }
