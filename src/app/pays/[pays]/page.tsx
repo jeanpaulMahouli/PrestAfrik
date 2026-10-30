@@ -1,4 +1,4 @@
-import { MessageCircle, Smartphone, Truck } from "lucide-react";
+import { Smartphone, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -7,6 +7,7 @@ import { LandingButton } from "@/components/landing/buttons";
 import { isSignedIn, PageShell } from "@/components/landing/page-shell";
 import { VendorSearch } from "@/components/marketplace/vendor-search";
 import { countryPages, findCountryPage } from "@/config/country-pages";
+import { WhatsAppLogoIcon } from "@/components/ui/whatsapp-icon";
 
 export function generateStaticParams() {
   return countryPages.map((page) => ({ pays: page.slug }));
@@ -43,7 +44,7 @@ export default async function CountryPage({ params }: PageProps<"/pays/[pays]">)
         <FeatureGrid
           items={[
             { icon: Smartphone, title: "Prête en 5 minutes", text: "Nom, produits, zones de livraison : votre boutique est en ligne depuis votre téléphone." },
-            { icon: MessageCircle, title: "Commandes sur WhatsApp", text: "Chaque commande arrive avec le détail et le total : vous confirmez en un message." },
+            { icon: WhatsAppLogoIcon, title: "Commandes sur WhatsApp", text: "Chaque commande arrive avec le détail et le total : vous confirmez en un message." },
             { icon: Truck, title: "Paiement à la livraison", text: `Vos clients paient en espèces ou par mobile money à la réception, partout ${page.locative}.` },
           ]}
         />

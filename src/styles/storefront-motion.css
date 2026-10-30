@@ -73,9 +73,7 @@
 }
 
 .sf-search input:focus {
-  border-color: var(--store-primary);
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--store-primary) 18%, transparent);
 }
 
 .sf-home-section-head a,

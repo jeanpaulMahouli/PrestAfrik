@@ -1,4 +1,4 @@
-import { Bot, FileSpreadsheet, HandCoins, LayoutTemplate, Megaphone, MessageCircle, Palette, QrCode, ShieldCheck, Smartphone, Store, Truck, Users, Wallet } from "lucide-react";
+import { Bot, FileSpreadsheet, HandCoins, LayoutTemplate, Megaphone, Palette, QrCode, ShieldCheck, Smartphone, Store, Truck, Users, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SectionHead } from "@/components/landing/blocks";
@@ -6,6 +6,7 @@ import { LandingButton } from "@/components/landing/buttons";
 import { disabledPages } from "@/components/landing/content";
 import { DemoVideoButton } from "@/components/landing/demo-video-button";
 import { isSignedIn, PageShell } from "@/components/landing/page-shell";
+import { WhatsAppLogoIcon } from "@/components/ui/whatsapp-icon";
 
 export const metadata: Metadata = {
   title: { absolute: "Fonctionnalités · PrestAfrik" },
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 
 const tiles = [
   { icon: Store, title: "Boutique en 5 minutes" },
-  { icon: MessageCircle, title: "Commandes sur WhatsApp" },
+  { icon: WhatsAppLogoIcon, title: "Commandes sur WhatsApp" },
   { icon: HandCoins, title: "Paiement à la livraison" },
   { icon: Truck, title: "Livraison par zones" },
   { icon: Users, title: "Fichier clients automatique" },

@@ -1,10 +1,11 @@
-import { Download, MessageCircle } from "lucide-react";
+import { Download } from "lucide-react";
 import { searchValue } from "@/components/admin/admin-feedback";
 import { Badge } from "@/components/ui/badge";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Pagination } from "@/components/ui/pagination";
 import { formatDate, formatNumber, plural } from "@/lib/format";
 import { requirePlatformAdmin } from "@/modules/admin/context";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import {
   listProspects,
   parseProspectionFilters,
@@ -109,11 +110,11 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
                       <span className="icon-actions">
                         {whatsapp ? (
                           <a aria-label={`Écrire à ${row.name} sur WhatsApp`} className="icon-button icon-button-sm icon-button-whatsapp" href={whatsapp} rel="noreferrer" target="_blank" title="Écrire sur WhatsApp">
-                            <MessageCircle aria-hidden="true" size={16} />
+                            <WhatsAppIcon size={16} />
                           </a>
                         ) : (
                           <button aria-label={`WhatsApp indisponible : aucun numéro pour ${row.name}`} className="icon-button icon-button-sm" disabled title="Aucun numéro renseigné" type="button">
-                            <MessageCircle aria-hidden="true" size={16} />
+                            <WhatsAppIcon size={16} />
                           </button>
                         )}
                         {row.phone && <CopyButton className="icon-button icon-button-sm" copiedLabel="Numéro copié" iconOnly label={`Copier le numéro de ${row.name}`} value={`+${row.phoneDigits}`} />}

@@ -34,6 +34,11 @@
   outline-offset: 2px;
 }
 
+/* Champs : aucun contour ni anneau pendant la saisie, la bordure d'origine reste (le curseur suffit). */
+.sf :is(input, select, textarea):is(:focus, :focus-visible) {
+  outline: none;
+}
+
 /* ---------- En-tête ---------- */
 
 .sf-header {
@@ -248,9 +253,7 @@
 .sf-field input:focus,
 .sf-field select:focus,
 .sf-field textarea:focus {
-  border-color: var(--store-primary);
   outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--store-primary) 25%, transparent);
 }
 
 .sf-field-help {

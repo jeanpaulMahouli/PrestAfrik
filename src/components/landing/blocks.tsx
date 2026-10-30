@@ -17,7 +17,8 @@ export function SectionHead({ title, lead, id }: { title: string; lead?: string;
   );
 }
 
-export type FeatureItem = { icon: LucideIcon; title: string; text: string };
+/** Icône Lucide, ou tout composant qui accepte `size` et `strokeWidth` (ex. logo WhatsApp). */
+export type FeatureItem = { icon: LucideIcon | React.ComponentType<{ size?: number | string; strokeWidth?: number | string }>; title: string; text: string };
 
 /** Grille de cartes « icône, titre, texte ». */
 export function FeatureGrid({ items, columns = 3 }: { items: FeatureItem[]; columns?: 2 | 3 | 4 }) {

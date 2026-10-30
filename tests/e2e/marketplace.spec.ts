@@ -13,8 +13,8 @@ test("la page Nos boutiques propose des vendeurs pendant la saisie, avec le text
   await page.goto("/nos-boutiques");
   const box = page.getByRole("combobox", { name: "Rechercher un vendeur, une boutique ou une ville" });
   await box.fill("mbo");
-  await expect(page.getByRole("option")).toHaveCount(2);
-  await expect(page.getByRole("option").first().locator("mark")).toHaveText("Mbo");
+  await expect(page.getByRole("listbox", { name: "Vendeurs suggérés" }).getByRole("option")).toHaveCount(2);
+  await expect(page.getByRole("listbox", { name: "Vendeurs suggérés" }).getByRole("option").first().locator("mark")).toHaveText("Mbo");
   await expect(box).toHaveAttribute("aria-expanded", "true");
 });
 
@@ -23,11 +23,11 @@ test("la recherche se pilote au clavier : flèches, Échap, Entrée", async ({ p
   await page.goto("/nos-boutiques");
   const box = page.getByRole("combobox", { name: "Rechercher un vendeur, une boutique ou une ville" });
   await box.fill("mboa");
-  await expect(page.getByRole("option")).toHaveCount(2);
+  await expect(page.getByRole("listbox", { name: "Vendeurs suggérés" }).getByRole("option")).toHaveCount(2);
   await box.press("ArrowDown");
-  await expect(page.getByRole("option").first()).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("listbox", { name: "Vendeurs suggérés" }).getByRole("option").first()).toHaveAttribute("aria-selected", "true");
   await box.press("ArrowDown");
-  await expect(page.getByRole("option").nth(1)).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("listbox", { name: "Vendeurs suggérés" }).getByRole("option").nth(1)).toHaveAttribute("aria-selected", "true");
   await box.press("Escape");
   await expect(box).toHaveAttribute("aria-expanded", "false");
   await box.press("Enter");

@@ -11,6 +11,7 @@ import { reopenAlert, resendVerificationEmail, resolveAllAlerts, suspendStore, u
 import { alertKindLabels, listOpenAlerts, type AlertKind } from "@/modules/admin/alerts";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { replyToTicket, updateTicket } from "@/modules/support/actions";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 export const metadata = { title: "Alertes" };
 
@@ -108,7 +109,7 @@ export default async function AdminAlertsPage({ searchParams }: PageProps<"/admi
                     <>
                       {alert.store.contactUrl ? (
                         <a className="btn btn-secondary" href={alert.store.contactUrl} rel="noreferrer" target="_blank">
-                          <MessageCircle aria-hidden="true" size={16} /> Contacter
+                          {alert.store.contactUrl.startsWith("https://wa.me/") ? <WhatsAppIcon size={16} variant="logo" /> : <MessageCircle aria-hidden="true" size={16} />} Contacter
                         </a>
                       ) : (
                         <span className="v-small v-muted">Aucun contact renseigné</span>

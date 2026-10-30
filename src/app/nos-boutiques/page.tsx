@@ -1,12 +1,13 @@
-import { BadgePercent, Crown, LayoutGrid, Rocket, Sparkles, Star, Store, Wallet, Zap } from "lucide-react";
+import { Crown, LayoutGrid, Sparkles, Store, Wallet, Zap } from "lucide-react";
 import type { Metadata } from "next";
 import { categoryIcon } from "@/components/shop/category-icons";
-import { FeaturedStoreCard, ProductRail, ShopSectionHead, StoreTile } from "@/components/shop/shop-blocks";
+import { FeaturedStoreCard, ProductRail, ShopSectionHead } from "@/components/shop/shop-blocks";
 import { ShopHero, type DrawnSlide } from "@/components/shop/shop-hero";
 import { budgetHref, categoryHref, ShopShell, shopBudgets } from "@/components/shop/shop-shell";
 import { FlashCountdown, ScrollRail } from "@/components/shop/shop-widgets";
 import { shopUrl } from "@/lib/urls";
 import { getShopAnnouncements } from "@/modules/announcements/queries";
+import { getShopCountry } from "@/modules/marketplace/country";
 import { getShopHome } from "@/modules/marketplace/shop";
 
 export const metadata: Metadata = {
@@ -20,12 +21,13 @@ export const dynamic = "force-dynamic";
 const signupHref = () => `${(process.env.BETTER_AUTH_URL ?? "").replace(/\/$/, "")}/inscription`;
 
 /**
- * Accueil de la marketplace (shop.prestafrik.com) : à la une, rubriques, ventes flash, promotions, budgets,
- * offres exclusives, mieux notés, boutiques à la une, univers, nouveautés et toutes les boutiques.
- * Une rubrique vide n'est pas affichée.
+ * Accueil de la marketplace (shop.prestafrik.com) : à la une, budgets, catégories, ventes flash, offres
+ * exclusives, une section par grande catégorie, puis les boutiques à la une. Les boutiques montrées sont
+ * celles du pays du visiteur (zone CEMAC). Une section vide n'est pas affichée.
  */
 export default async function ShopHomePage() {
-  const [home, visuals] = await Promise.all([getShopHome(), getShopAnnouncements()]);
+  const country = await getShopCountry();
+  const [home, visuals] = await Promise.all([getShopHome(country?.iso), getShopAnnouncements()]);
   const drawn: DrawnSlide[] = [
     {
       id: "bienvenue",
@@ -64,21 +66,30 @@ export default async function ShopHomePage() {
   ];
 
   return (
-    <ShopShell categories={home.categories}>
+    <ShopShell categories={home.categories} country={country} local={home.local}>
       <ShopHero banners={visuals.banners} carousel={visuals.carousel} drawn={drawn} drawnBanners={drawnBanners} />
+
+      <section aria-labelledby="budget-title" className="shop-section">
+        <ShopSectionHead icon={Wallet} id="budget-title" title="Votre budget, vos options" />
+        <ul className="shop-budgets">
+          {shopBudgets.map((budget) => (
+            <li key={budget.label}>
+              <a href={budgetHref(budget)}>{budget.label}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {home.categories.length > 0 && (
         <section aria-labelledby="rubriques-title" className="shop-section" id="rubriques">
-          <ShopSectionHead icon={LayoutGrid} id="rubriques-title" subtitle="Chaque univers a ses boutiques spécialisées." title="Trouvez ce qu’il vous faut" />
+          <ShopSectionHead icon={LayoutGrid} id="rubriques-title" subtitle={home.local && country ? `Les boutiques ${country.locative}, par univers.` : "Chaque univers a ses boutiques spécialisées."} title="Trouvez ce qu’il vous faut" />
           <ul className="shop-categories">
             {home.categories.map((category) => {
               const { icon: Icon, tint } = categoryIcon(category.slug);
               return (
                 <li key={category.slug}>
                   <a href={categoryHref(category.slug)} style={{ "--tint": tint } as React.CSSProperties}>
-                    <span aria-hidden="true" className="shop-category-icon">
-                      <Icon size={30} strokeWidth={1.7} />
-                    </span>
+                    <Icon aria-hidden="true" className="shop-category-icon" size={30} strokeWidth={1.7} />
                     <strong>{category.label}</strong>
                     <small>
                       {category.storeCount} boutique{category.storeCount > 1 ? "s" : ""}
@@ -104,24 +115,6 @@ export default async function ShopHomePage() {
         </section>
       )}
 
-      {home.promotions.length > 0 && (
-        <section aria-labelledby="promos-title" className="shop-section">
-          <ShopSectionHead href={shopUrl("/recherche?tri=promo&promo=1")} icon={BadgePercent} id="promos-title" subtitle="Les plus fortes réductions d’abord." tint="#e8508a" title="Promotions du moment" />
-          <ProductRail label="Promotions du moment" products={home.promotions} />
-        </section>
-      )}
-
-      <section aria-labelledby="budget-title" className="shop-section">
-        <ShopSectionHead icon={Wallet} id="budget-title" tint="#1f9d74" title="Votre budget, vos options" />
-        <ul className="shop-budgets">
-          {shopBudgets.map((budget) => (
-            <li key={budget.label}>
-              <a href={budgetHref(budget)}>{budget.label}</a>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       {home.exclusive.length > 0 && (
         <section aria-labelledby="exclusives-title" className="shop-section shop-band shop-band--gold" id="offres-exclusives">
           <ShopSectionHead icon={Crown} id="exclusives-title" subtitle="Sélectionnées par l’équipe PrestAfrik, uniquement ici." title="Offres exclusives PrestAfrik" />
@@ -129,15 +122,39 @@ export default async function ShopHomePage() {
         </section>
       )}
 
-      {home.topRated.length > 0 && (
-        <section aria-labelledby="notes-title" className="shop-section">
-          <ShopSectionHead href={shopUrl("/recherche?tri=mieux-notes")} icon={Star} id="notes-title" subtitle="Notés par de vrais acheteurs." tint="#c8a12c" title="Les mieux notés" />
-          <ProductRail label="Les mieux notés" products={home.topRated} />
-        </section>
-      )}
+      {/* Une section par grande catégorie : les produits ne sont jamais mélangés entre catégories. */}
+      {home.sections.map(({ category, products }) => {
+        const { icon, tint } = categoryIcon(category.slug);
+        return (
+          <section aria-labelledby={`categorie-${category.slug}`} className="shop-section shop-category-section" key={category.slug} style={{ "--tint": tint } as React.CSSProperties}>
+            <ShopSectionHead
+              href={categoryHref(category.slug)}
+              icon={icon}
+              id={`categorie-${category.slug}`}
+              subtitle={`${category.storeCount} boutique${category.storeCount > 1 ? "s" : ""} · promotions et mieux notés d’abord`}
+              tint={tint}
+              title={category.label}
+            />
+            <ProductRail label={category.label} products={products} />
+          </section>
+        );
+      })}
 
-      {home.featuredStores.length > 0 && (
-        <section aria-labelledby="une-title" className="shop-section">
+      <section aria-labelledby="vendre-title" className="shop-section">
+        <div className="shop-sell">
+          <div>
+            <p className="shop-sell-kicker">Vous êtes commerçant ?</p>
+            <h2 id="vendre-title">Ouvrez votre boutique et vendez ici, gratuitement</h2>
+            <p>Prête en 5 minutes. Vos produits apparaissent sur la marketplace, vos clients commandent sur WhatsApp.</p>
+          </div>
+          <a className="shop-btn shop-btn-dark" href={signupHref()}>
+            <Store aria-hidden="true" size={20} /> Créer ma boutique
+          </a>
+        </div>
+      </section>
+
+      {home.featuredStores.length > 0 ? (
+        <section aria-labelledby="une-title" className="shop-section" id="boutiques">
           <ShopSectionHead icon={Sparkles} id="une-title" subtitle="Des vendeurs à découvrir absolument." title="Boutiques à la une" />
           <ScrollRail label="Boutiques à la une">
             {home.featuredStores.map((store) => (
@@ -147,52 +164,9 @@ export default async function ShopHomePage() {
             ))}
           </ScrollRail>
         </section>
+      ) : (
+        <p className="shop-empty">Les premières boutiques arrivent. Vous êtes vendeur ? La vôtre pourrait être la première.</p>
       )}
-
-      {home.niches.map(({ category, products }) => {
-        const { icon, tint } = categoryIcon(category.slug);
-        return (
-          <section aria-labelledby={`univers-${category.slug}`} className="shop-section" key={category.slug}>
-            <ShopSectionHead href={categoryHref(category.slug)} icon={icon} id={`univers-${category.slug}`} tint={tint} title={category.label} />
-            <ProductRail label={category.label} products={products} />
-          </section>
-        );
-      })}
-
-      {home.newest.length > 0 && (
-        <section aria-labelledby="nouveautes-title" className="shop-section">
-          <ShopSectionHead href={shopUrl("/recherche?tri=nouveautes")} icon={Rocket} id="nouveautes-title" subtitle="Tout juste arrivés dans les boutiques." tint="#2f6bff" title="Nouveautés" />
-          <ProductRail label="Nouveautés" products={home.newest} />
-        </section>
-      )}
-
-      <section aria-labelledby="vendre-title" className="shop-section">
-        <div className="shop-sell">
-          <div>
-            <p className="shop-sell-kicker">Vous êtes commerçant ?</p>
-            <h2 id="vendre-title">Ouvrez votre boutique et vendez ici, gratuitement</h2>
-            <p>Prête en 5 minutes. Vos produits apparaissent sur la marketplace, vos clients commandent sur WhatsApp.</p>
-          </div>
-          <a className="shop-sell-cta" href={signupHref()}>
-            <Store aria-hidden="true" size={20} /> Créer ma boutique
-          </a>
-        </div>
-      </section>
-
-      <section aria-labelledby="boutiques-title" className="shop-section" id="boutiques">
-        <ShopSectionHead icon={Store} id="boutiques-title" title="Toutes les boutiques" />
-        {home.stores.length > 0 ? (
-          <ul className="stores-tiles">
-            {home.stores.map((store) => (
-              <li key={store.id}>
-                <StoreTile store={store} />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="shop-empty">Les premières boutiques arrivent. Vous êtes vendeur ? La vôtre pourrait être la première.</p>
-        )}
-      </section>
     </ShopShell>
   );
 }

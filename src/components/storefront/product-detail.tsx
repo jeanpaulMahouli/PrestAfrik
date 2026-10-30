@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, MessageCircle, ShieldCheck, Sparkles, Tag, Truck, X, Zap } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldCheck, Sparkles, Tag, Truck, X, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -12,6 +12,7 @@ import { StoreImage } from "@/components/ui/store-image";
 import { buildProductWhatsappOrderMessage, buildWaMeUrl } from "@/modules/whatsapp/wa-me";
 import { BackIcon } from "@/components/ui/icons";
 import { useStoreHref } from "@/components/storefront/store-links";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 type ProductDetailProps = {
   storeSlug: string;
@@ -271,7 +272,7 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
             )}
             <ul className="sf-assurances">
               <li><Truck aria-hidden="true" size={18} /> Paiement à la livraison</li>
-              <li><MessageCircle aria-hidden="true" size={18} /> Suivi sur WhatsApp</li>
+              <li><WhatsAppIcon size={18} variant="logo" /> Suivi sur WhatsApp</li>
               <li><ShieldCheck aria-hidden="true" size={18} /> Aucun compte à créer</li>
             </ul>
           </div>

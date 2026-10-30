@@ -1,10 +1,11 @@
-import { CalendarDays, Mail, MessageCircle, Store } from "lucide-react";
+import { CalendarDays, Mail, Store } from "lucide-react";
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/landing/contact-form";
 import { Faq } from "@/components/landing/faq";
 import { isSignedIn, PageShell } from "@/components/landing/page-shell";
 import { site } from "@/config/site";
 import { isContactSubject } from "@/modules/contact/subjects";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 export const metadata: Metadata = {
   title: { absolute: "Contact · PrestAfrik" },
@@ -48,7 +49,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
             {whatsappLink && (
               <a className="lp-contact__card" href={whatsappLink} rel="noreferrer" target="_blank">
                 <span aria-hidden="true" className="lp-card__icon">
-                  <MessageCircle size={24} strokeWidth={1.8} />
+                  <WhatsAppIcon size={26} variant="logo" />
                 </span>
                 <span>
                   <strong>Sur WhatsApp</strong>

@@ -1,7 +1,8 @@
 "use client";
 
-import { Bot, HandCoins, MessageCircle, PackageSearch, Rocket, Search, Truck, Wallet, X } from "lucide-react";
+import { Bot, HandCoins, PackageSearch, Rocket, Search, Truck, Wallet, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 type Link = { label: string; href: string };
 type Topic = "produit" | "budget" | "commander" | "suivi" | "vendre";
@@ -133,7 +134,7 @@ export function ShopAssistant({ categories, budgets, searchHref, signupHref, wha
                 <div className="shop-assistant-links">
                   {whatsapp && (
                     <a href={whatsapp} rel="noopener noreferrer" target="_blank">
-                      <MessageCircle aria-hidden="true" size={15} /> Écrire à l’équipe
+                      <WhatsAppIcon size={16} variant="logo" /> Écrire à l’équipe
                     </a>
                   )}
                   <button onClick={() => setTopic(null)} type="button">
@@ -155,7 +156,6 @@ export function ShopAssistant({ categories, budgets, searchHref, signupHref, wha
         type="button"
       >
         {open ? <X aria-hidden="true" size={24} /> : <Bot aria-hidden="true" size={26} />}
-        {!open && <span className="shop-assistant-ping" aria-hidden="true" />}
       </button>
     </>
   );
