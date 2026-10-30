@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 156 40" width="156" height="40" fill="none">
-  <title>Ndolo Kids</title>
-  <ellipse cx="14" cy="14" rx="10" ry="12" fill="#14142b"/>
-  <path d="M14 26l-2.2 3h4.4L14 26Zm0 3c0 3 3 4 1 9" stroke="#14142b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-  <ellipse cx="10.5" cy="9.5" rx="2.5" ry="3.5" fill="#fff" opacity=".7"/>
-  <text x="32" y="28" fill="#14142b" font-family="'Arial Rounded MT Bold','Trebuchet MS','Helvetica Neue',Arial,sans-serif" font-size="23"><tspan font-weight="800" letter-spacing="-0.3">ndolo</tspan><tspan dx="3" font-weight="400">kids</tspan></text>
-</svg>

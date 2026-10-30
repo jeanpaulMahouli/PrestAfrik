@@ -5,8 +5,8 @@ import { disabledPages } from "@/components/landing/content";
 import { billingEnabled } from "@/config/billing";
 import { site } from "@/config/site";
 
-// Les mentions légales sont désactivées (disabledPages) tant que l'identité juridique de l'entreprise
-// (forme, siège, RCCM, NIU, responsable de publication) n'est pas connue.
+// Mentions légales : contenu provisoire tant que l'identité juridique de l'entreprise (forme, siège, RCCM,
+// NIU, responsable de publication, hébergeur) n'est pas fournie ; les informations manquantes sont signalées.
 
 const contact = (
   <>
@@ -25,8 +25,20 @@ const legalPages = {
     title: "Mentions légales",
     content: (
       <>
+        <p className="legal-provisional">
+          Version provisoire : les informations juridiques complètes de l’éditeur (forme, siège, numéros
+          d’immatriculation) seront ajoutées très prochainement.
+        </p>
         <h2>Éditeur de la plateforme</h2>
         <p>PrestAfrik. Contact : {contact}.</p>
+        <ul>
+          <li>Forme juridique et capital : à compléter.</li>
+          <li>Siège social : à compléter.</li>
+          <li>Immatriculation (RCCM) et numéro d’identifiant unique (NIU) : à compléter.</li>
+          <li>Responsable de la publication : à compléter.</li>
+        </ul>
+        <h2>Hébergement</h2>
+        <p>Application hébergée par Hostinger International Ltd. ; base de données hébergée par Supabase Inc.</p>
         <h2>Activité de la plateforme</h2>
         <p>
           PrestAfrik fournit un outil logiciel de création et de gestion de boutiques en ligne. Les

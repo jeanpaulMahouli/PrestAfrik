@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 214 40" width="214" height="40" fill="none">
-  <title>Mboa Style</title>
-  <g stroke="#14142b" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M18 9a4 4 0 1 1 4 4v3"/>
-    <path d="M22 16 5 28.5c-1.6 1.2-.8 3.5 1.2 3.5h31.6c2 0 2.8-2.3 1.2-3.5L22 16Z"/>
-  </g>
-  <text x="50" y="27" fill="#14142b" font-family="'Helvetica Neue',Arial,sans-serif" font-size="18" letter-spacing="2.4"><tspan font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900">MBOA</tspan><tspan dx="7" font-weight="300">STYLE</tspan></text>
-</svg>

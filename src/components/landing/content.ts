@@ -1,3 +1,5 @@
+import { pricingPlans, trialLabel } from "@/config/pricing";
+
 /**
  * Contenu de la landing page : textes, liens, images et témoignages.
  * Modifiez ce fichier pour changer ce qui s'affiche, sans toucher aux composants ni au CSS.
@@ -7,21 +9,22 @@
 export type NavLink = { label: string; href: string };
 
 /**
- * Pages désactivées en attendant leurs maquettes ou leurs informations (mentions légales) : elles renvoient « page introuvable », et leurs liens
- * (menu, pied de page) restent visibles mais mènent à l'accueil. Retirez une adresse pour la remettre en ligne.
+ * Pages désactivées (adresse ajoutée ici) : elles renvoient « page introuvable » et leurs liens disparaissent
+ * du menu et du pied de page. Aucun lien ne renvoie vers l'accueil à leur place.
  */
-export const disabledPages: ReadonlySet<string> = new Set(["/fonctionnalites", "/a-propos", "/legal/mentions-legales"]);
+export const disabledPages: ReadonlySet<string> = new Set<string>([]);
 
-const toHomeIfDisabled = (link: NavLink): NavLink => (disabledPages.has(link.href.split("#")[0]) ? { ...link, href: "/" } : link);
+const isEnabled = (link: NavLink) => !disabledPages.has(link.href.split("#")[0]);
 
 export const navLinks: NavLink[] = [
   { label: "Accueil", href: "/" },
   { label: "Fonctionnalités", href: "/fonctionnalites" },
+  { label: "Tarifs", href: "/tarifs" },
   { label: "À propos", href: "/a-propos" },
   { label: "Démo", href: "/demo" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
-].map(toHomeIfDisabled);
+].filter(isEnabled);
 
 export const authLinks = {
   login: { label: "Se connecter", href: "/connexion" },
@@ -88,16 +91,21 @@ export const demoPage = {
 
 export const partners = {
   title: "Ces boutiques vendent déjà avec PrestAfrik",
-  /** Logos fictifs (public/landing/logos/) : remplacez-les par ceux de vraies boutiques, avec leur accord. */
-  logos: [
-    { src: "/landing/logos/mboa-style.svg", alt: "Mboa Style", width: 214, height: 40 },
-    { src: "/landing/logos/mama-pagne.svg", alt: "Mama Pagne", width: 214, height: 40 },
-    { src: "/landing/logos/linda-beauty.svg", alt: "Linda Beauty", width: 190, height: 40 },
-    { src: "/landing/logos/ekane-electro.svg", alt: "Ekane Électro", width: 204, height: 40 },
-    { src: "/landing/logos/kribi-accessoires.svg", alt: "Kribi Accessoires", width: 172, height: 40 },
-    { src: "/landing/logos/saveurs-du-littoral.svg", alt: "Saveurs du Littoral", width: 236, height: 40 },
-    { src: "/landing/logos/ndolo-kids.svg", alt: "Ndolo Kids", width: 156, height: 40 },
-    { src: "/landing/logos/atelier-ndop.svg", alt: "Atelier Ndop", width: 178, height: 40 },
+  // Logos et compteurs : de vraies boutiques publiées, lues en base (modules/marketplace/social-proof.ts).
+};
+
+/** Comparatif de l'accueil : vendre seulement dans les discussions, ou avec une boutique PrestAfrik. */
+export const comparison = {
+  title: "Vendre seulement sur WhatsApp ou Facebook, ou avec PrestAfrik ?",
+  lead: "Vous gardez WhatsApp : PrestAfrik le rend plus simple, plus clair et plus professionnel.",
+  beforeTitle: "Seulement WhatsApp / Facebook",
+  afterTitle: "Avec PrestAfrik",
+  rows: [
+    { before: "Vos produits se perdent dans les statuts et les discussions", after: "Un catalogue clair, avec photos, prix et stock, toujours à jour" },
+    { before: "Vous répétez les prix et calculez les totaux à la main", after: "Le client voit le total exact, livraison comprise, avant de commander" },
+    { before: "Les commandes se mélangent avec les messages personnels", after: "Chaque commande arrive avec le détail : vous confirmez en un message" },
+    { before: "Difficile de savoir ce que vous avez vendu ce mois-ci", after: "Commandes, argent reçu et clients fidèles suivis dans un tableau de bord" },
+    { before: "Un simple numéro de téléphone pour vous présenter", after: "Un lien et un QR code de boutique à partager partout" },
   ],
 };
 
@@ -184,9 +192,16 @@ export const testimonials: { title: string; items: Testimonial[] } = {
   ],
 };
 
+const fcfa = (amount: number) => `${new Intl.NumberFormat("fr-FR").format(amount)} FCFA`;
+
 export const faq = {
   title: "Questions fréquentes",
   items: [
+    {
+      question: "Combien coûte PrestAfrik ?",
+      // Montants lus dans config/pricing.ts : la FAQ suit toujours la page Tarifs.
+      answer: `${trialLabel}. Ensuite : ${pricingPlans.map((plan) => `${plan.name} à ${fcfa(plan.monthlyXaf)} par mois (ou ${fcfa(plan.yearlyXaf)} par an)`).join(", ")}. Sans engagement. Pendant le lancement, PrestAfrik reste gratuit. Détail des offres sur la page Tarifs.`,
+    },
     {
       question: "Mes clients doivent-ils créer un compte ?",
       answer:
@@ -230,13 +245,15 @@ export const footer = {
     {
       title: "Ressources",
       links: [
-        { label: "Centre d’aide", href: "/contact#faq" },
+        { label: "Centre d’aide", href: "/aide" },
+        { label: "Tarifs", href: "/tarifs" },
+        { label: "Rechercher un vendeur", href: "/recherche" },
         { label: "Blog", href: "/blog" },
         { label: "Démo guidée", href: "/demo" },
         { label: "Fonctionnalités", href: "/fonctionnalites" },
         { label: "Témoignages", href: "/#temoignages" },
         { label: "Créer ma boutique", href: "/inscription" },
-      ].map(toHomeIfDisabled),
+      ].filter(isEnabled),
     },
     {
       title: "Entreprise",
@@ -247,7 +264,7 @@ export const footer = {
         { label: "Confidentialité", href: "/legal/politique-de-confidentialite" },
         { label: "Conditions générales", href: "/legal/conditions-generales" },
         { label: "Conditions de vente", href: "/legal/conditions-de-vente" },
-      ].map(toHomeIfDisabled),
+      ].filter(isEnabled),
     },
   ],
   socialTitle: "Réseaux sociaux",

@@ -1291,3 +1291,396 @@
   grid-template-columns: 7rem minmax(0, 1fr);
   gap: 8px;
 }
+
+/* ---------- Tarifs ---------- */
+.pricing {
+  max-width: 76rem;
+  margin: 0 auto;
+}
+
+.pricing-club {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--lp-radius-xl);
+  color: #fff;
+  background: linear-gradient(120deg, var(--lp-navy), #1f1f5c);
+}
+
+.pricing-club p {
+  max-width: 44rem;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.pricing-club strong {
+  display: block;
+  color: var(--lp-orange);
+  font-size: 1.15rem;
+}
+
+.pricing-club .lp-btn {
+  min-height: 48px;
+  color: var(--lp-navy);
+  background: #fff;
+  animation: none;
+}
+
+.pricing-toggle {
+  display: flex;
+  width: fit-content;
+  gap: 0.25rem;
+  margin: 0 auto 2rem;
+  padding: 0.3rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--lp-line);
+}
+
+.pricing-toggle button {
+  min-height: 2.75rem;
+  padding: 0 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  color: var(--lp-ink-soft);
+  background: transparent;
+  font: 500 0.95rem / 1 var(--lp-ui);
+  cursor: pointer;
+}
+
+.pricing-toggle button[aria-pressed="true"] {
+  color: var(--lp-navy);
+  background: var(--lp-orange);
+  font-weight: 600;
+}
+
+.pricing-toggle small {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.pricing-plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: clamp(16px, 2vw, 28px);
+  align-items: stretch;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pricing-plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.75rem 1.5rem 1.5rem;
+  border-radius: 1.75rem;
+  background: #fff;
+  box-shadow:
+    0 16px 40px -24px rgb(0 0 38 / 0.35),
+    inset 0 0 0 1px var(--lp-line);
+}
+
+.pricing-plan.is-recommended {
+  box-shadow:
+    0 24px 50px -24px rgb(255 153 0 / 0.55),
+    inset 0 0 0 2.5px var(--lp-orange);
+}
+
+.pricing-badge {
+  position: absolute;
+  top: -0.875rem;
+  left: 1.5rem;
+  margin: 0;
+  padding: 0.3rem 0.875rem;
+  border-radius: 999px;
+  color: var(--lp-navy);
+  background: var(--lp-orange);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.pricing-plan h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.pricing-tagline,
+.pricing-saving {
+  margin: 0;
+  color: var(--lp-ink-soft);
+  font-size: 0.9rem;
+}
+
+.pricing-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.375rem;
+  margin: 0.25rem 0 0;
+}
+
+.pricing-price strong {
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.pricing-price span {
+  color: var(--lp-ink-soft);
+}
+
+.pricing-features {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.pricing-features li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.pricing-features svg {
+  flex: none;
+  margin-top: 0.1rem;
+  color: #1f8a4c;
+}
+
+.pricing-features li.is-off {
+  color: var(--lp-ink-faint);
+}
+
+.pricing-features li.is-off svg {
+  color: var(--lp-ink-faint);
+}
+
+.pricing-cta {
+  width: 100%;
+  min-width: 0;
+  min-height: 3.25rem;
+  margin-top: auto;
+  animation: none;
+}
+
+.pricing-compare-wrap {
+  overflow-x: auto;
+  margin-top: clamp(32px, 4vw, 56px);
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--lp-line);
+}
+
+.pricing-compare {
+  width: 100%;
+  min-width: 36rem;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.pricing-compare caption {
+  padding: 1rem 1.25rem 0.5rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.pricing-compare :is(th, td) {
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--lp-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.pricing-compare thead th {
+  border-top: 0;
+  background: var(--lp-cream);
+}
+
+.pricing-compare small {
+  color: var(--lp-ink-soft);
+  font-weight: 400;
+}
+
+.pricing-note {
+  margin: 1.5rem 0 0;
+  color: var(--lp-ink-soft);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.pricing-final {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+/* ---------- Centre d'aide ---------- */
+.help {
+  max-width: 52rem;
+  margin: 0 auto;
+}
+
+.help-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.help-topics a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding: 0 1.125rem;
+  border-radius: 999px;
+  color: var(--lp-ink);
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--lp-line);
+  text-decoration: none;
+}
+
+.help-topic {
+  margin-bottom: 2rem;
+  scroll-margin-top: 1.5rem;
+}
+
+.help-topic h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.35rem;
+}
+
+.help-item {
+  margin-bottom: 0.5rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--lp-line);
+}
+
+.help-item summary {
+  min-height: 3rem;
+  padding: 0.875rem 1.125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.help-item p {
+  margin: 0;
+  padding: 0 1.125rem 1rem;
+  color: var(--lp-ink-soft);
+  line-height: 1.6;
+}
+
+.help-contact {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  margin-top: 2.5rem;
+  padding: 2rem 1.5rem;
+  border-radius: var(--lp-radius-xl);
+  background: var(--lp-cream);
+  text-align: center;
+}
+
+.help-contact h2,
+.help-contact p {
+  margin: 0;
+}
+
+.help-small {
+  color: var(--lp-ink-soft);
+  font-size: 0.9rem;
+}
+
+.legal-provisional {
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  background: #fff4e0;
+  font-weight: 500;
+}
+
+.country-search {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+/* ---------- Bouton WhatsApp flottant (équipe PrestAfrik) ---------- */
+.lp-support {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 60;
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #25d366;
+  box-shadow: 0 10px 28px rgb(0 0 0 / 0.22);
+  transition: transform 0.2s var(--lp-ease);
+}
+
+.lp-support:hover,
+.lp-support:focus-visible {
+  transform: scale(1.06);
+}
+
+.lp-support:focus-visible {
+  outline: 3px solid var(--lp-navy);
+  outline-offset: 3px;
+}
+
+.lp-support__tip {
+  position: absolute;
+  right: calc(100% + 0.75rem);
+  padding: 0.5rem 0.875rem;
+  border-radius: 999px;
+  color: var(--lp-navy);
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.14);
+  font: 500 0.85rem / 1.2 var(--lp-ui);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.lp-support:hover .lp-support__tip,
+.lp-support:focus-visible .lp-support__tip {
+  opacity: 1;
+  transform: none;
+}
+
+/* Écran tactile : l'info-bulle s'affiche quelques secondes à l'arrivée sur la page. */
+@media (hover: none) {
+  .lp-support__tip {
+    animation: lp-support-tip 5s 2s ease both;
+  }
+}
+
+@keyframes lp-support-tip {
+  10%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-support,
+  .lp-support__tip {
+    transition: none;
+    animation: none;
+  }
+}
