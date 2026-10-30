@@ -205,3 +205,12 @@ Le document des modèles autorise `@react-email/components` ou MJML. Pour ne pas
 - **Fin de l'assistant** : retour à l'écran « Boutique publiée / créée » de l'assistant (la fenêtre du tableau de bord de l'ADR-029 est retirée) ; plus de mention « obligatoire / facultatif » sur les étapes.
 - **Google** : `socialProviders.google`, actif seulement si `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` sont renseignées (`docs/google-oauth.md`) ; un compte Google rejoint le compte existant de même adresse.
 - **Apparence sur toutes les pages des boutiques** (`src/styles/storefront-pages.css`) : le thème et le style des promotions s'appliquent aussi à la fiche produit (bandeau de réduction au style choisi, engagements), au panier, à la commande, au suivi et aux pages.
+
+## ADR-031 — PWA vendeur, recherche de vendeurs, pages Tarifs et Aide, preuve sociale réelle
+
+- **PWA** : une seule application « PrestAfrik » pour les vendeurs (`start_url` = tableau de bord), service worker sans cache ni interception (le cache existant reste seul), manifeste retiré des boutiques publiques. Installation native sur Android/Chrome, explication sur iPhone ; proposée une fois après la création de la boutique (facultative). Voir `docs/pwa.md`.
+- **Recherche de vendeurs** : liste publique filtrée en mémoire (accents et casse ignorés) plutôt que des extensions PostgreSQL, suffisant à cette échelle ; classement isolé dans `relevanceScore()` pour accueillir avis et boosts (« Sponsorisé » obligatoire). Voir `docs/marketplace.md`.
+- **Tarifs** : prix dans `config/pricing.ts` (grille du brief), affichage commercial seulement : la facturation reste désactivée et les plafonds de l'application ne sont pas modifiés. Bandeau Club des 1000 piloté par `CLUB_DES_1000`.
+- **Preuve sociale** : logos fictifs retirés ; bandeau et compteurs calculés en base, masqués sous des seuils (`SOCIAL_PROOF_MIN_*`).
+- **Liens** : une page désactivée disparaît du menu et du pied de page au lieu de renvoyer à l'accueil.
+- **Google** : un compte créé avec Google passe par l'étape « Votre numéro WhatsApp » avant le tableau de bord et l'assistant.
