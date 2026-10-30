@@ -3077,14 +3077,6 @@
 }
 
 /* Application installable (PWA) : bouton, proposition après la création, encart du tableau de bord. */
-.pwa-steps {
-  display: grid;
-  gap: 0.625rem;
-  margin: 0.75rem 0 0;
-  padding-left: 1.25rem;
-  line-height: 1.55;
-}
-
 .pwa-suggestion {
   display: grid;
   gap: 0.875rem;
@@ -3213,4 +3205,480 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+/* En-tête : « Visiter ma boutique » et copie du lien, avant le choix de boutique. */
+.topbar-visit {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.topbar-visit-link {
+  display: inline-flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.topbar-visit-link:hover {
+  background: var(--color-surface-muted);
+}
+
+.topbar-copy {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.store-mark {
+  overflow: hidden;
+}
+
+.store-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 760px) {
+  /* Téléphone : icônes seules (le libellé reste lu par les lecteurs d'écran). */
+  .topbar-visit-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .topbar-visit-link {
+    width: 2.5rem;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+/* Pages « carrefour » (Marketing) : une carte cliquable par outil, sans bouton à l'intérieur. */
+.hub-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  gap: 0.875rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hub-card {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.125rem 1.25rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.hub-card:hover {
+  box-shadow: 0 14px 30px -18px rgb(0 0 38 / 0.35);
+  transform: translateY(-2px);
+}
+
+.hub-card:focus-visible {
+  outline: 3px solid var(--color-brand-primary);
+  outline-offset: 2px;
+}
+
+.hub-card-icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex: none;
+  place-items: center;
+  border-radius: 0.875rem;
+  color: #c26a00;
+  background: rgb(255 153 0 / 0.12);
+}
+
+.hub-card-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 0.2rem;
+}
+
+.hub-card-text strong {
+  font-size: 1rem;
+}
+
+.hub-card-text small {
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.hub-card-arrow {
+  flex: none;
+  color: var(--color-text-secondary);
+}
+
+/* Fenêtre centrée aussi sur téléphone (installation de l'application) : au milieu de l'écran, à l'horizontale
+   comme à la verticale, au lieu d'une feuille posée en bas. */
+.dialog-layer-centered {
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.dialog-layer-centered .dialog-panel {
+  width: 100%;
+  max-width: 26rem;
+  max-height: calc(100dvh - 2rem);
+  border-radius: var(--radius-lg);
+}
+
+/* Bouton « verre » (installation de l'application) : fond translucide dépoli, liseré clair. */
+.btn-glass {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid rgb(255 255 255 / 0.7);
+  color: var(--color-text-primary);
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.75), rgb(255 236 204 / 0.55));
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow:
+    0 8px 24px -10px rgb(255 153 0 / 0.55),
+    inset 0 1px 0 rgb(255 255 255 / 0.9);
+  font-weight: 600;
+}
+
+.btn-glass:hover {
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.9), rgb(255 222 174 / 0.7));
+}
+
+/* Guide d'installation : animation puis étapes numérotées. */
+.pwa-guide {
+  display: grid;
+  gap: 1rem;
+}
+
+.pwa-steps {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pwa-steps li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.pwa-step-number {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--color-text-primary);
+  background: var(--color-brand-primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.pwa-step-text {
+  display: grid;
+  gap: 0.125rem;
+  line-height: 1.45;
+}
+
+.pwa-step-text > span {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.pwa-step-text strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.pwa-step-icon {
+  display: inline-grid;
+  color: #c26a00;
+}
+
+/* Animation du geste (en boucle, 6 s). */
+.pwa-anim {
+  display: grid;
+  place-items: center;
+  padding: 1rem 0 0.5rem;
+  border-radius: 1rem;
+  background: radial-gradient(circle at 50% 30%, rgb(255 153 0 / 0.16), transparent 70%);
+}
+
+.pwa-anim-phone {
+  position: relative;
+  width: 7.5rem;
+  height: 12.5rem;
+  overflow: hidden;
+  border: 5px solid #0b0b1f;
+  border-radius: 1.4rem;
+  background: #fff;
+  box-shadow: 0 18px 36px -16px rgb(0 0 38 / 0.45);
+}
+
+.pwa-anim-bar {
+  display: flex;
+  height: 1.25rem;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.375rem;
+  color: #53645b;
+  background: #f1f2f6;
+}
+
+.pwa-anim-page {
+  display: block;
+  height: 0.5rem;
+  margin: 0.625rem 0.625rem 0;
+  border-radius: 999px;
+  background: #eceef2;
+}
+
+.pwa-anim-page-short {
+  width: 55%;
+}
+
+.pwa-anim-toolbar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  height: 1.5rem;
+  place-items: center;
+  color: #007aff;
+  background: #f1f2f6;
+}
+
+.pwa-anim-sheet {
+  position: absolute;
+  right: 0.25rem;
+  left: 0.25rem;
+  display: grid;
+  padding: 0.375rem;
+  border-radius: 0.625rem;
+  background: #fff;
+  box-shadow: 0 6px 18px rgb(0 0 38 / 0.22);
+  opacity: 0;
+}
+
+.pwa-anim-ios .pwa-anim-sheet {
+  bottom: 1.75rem;
+  animation: pwa-sheet-up 6s ease infinite;
+}
+
+.pwa-anim-android .pwa-anim-sheet {
+  top: 1.5rem;
+  left: 1.5rem;
+  animation: pwa-sheet-down 6s ease infinite;
+}
+
+.pwa-anim-option {
+  padding: 0.25rem 0.375rem;
+  border-radius: 0.375rem;
+  font-size: 0.55rem;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: pwa-option 6s ease infinite;
+}
+
+.pwa-anim-tap {
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: rgb(255 153 0 / 0.55);
+  box-shadow: 0 0 0 0 rgb(255 153 0 / 0.5);
+  animation: pwa-tap-ios 6s ease infinite;
+}
+
+.pwa-anim-android .pwa-anim-tap {
+  animation-name: pwa-tap-android;
+}
+
+.pwa-anim-home {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(160deg, #ffe1b0, #ffb24d);
+  opacity: 0;
+  animation: pwa-home 6s ease infinite;
+}
+
+.pwa-anim-home img {
+  border-radius: 0.6rem;
+  box-shadow: 0 6px 14px rgb(0 0 38 / 0.25);
+  animation: pwa-icon-pop 6s ease infinite;
+}
+
+.pwa-anim-home small {
+  color: #000026;
+  font-size: 0.55rem;
+  font-weight: 600;
+}
+
+@keyframes pwa-tap-ios {
+  0%,
+  8% {
+    right: 2.9rem;
+    bottom: 0.15rem;
+    opacity: 0;
+  }
+  14%,
+  24% {
+    right: 2.9rem;
+    bottom: 0.15rem;
+    opacity: 1;
+    box-shadow: 0 0 0 8px rgb(255 153 0 / 0);
+  }
+  40%,
+  50% {
+    right: 2.9rem;
+    bottom: 2.1rem;
+    opacity: 1;
+  }
+  56%,
+  100% {
+    right: 2.9rem;
+    bottom: 2.1rem;
+    opacity: 0;
+  }
+}
+
+@keyframes pwa-tap-android {
+  0%,
+  8% {
+    top: 0;
+    right: 0.1rem;
+    opacity: 0;
+  }
+  14%,
+  24% {
+    top: 0;
+    right: 0.1rem;
+    opacity: 1;
+  }
+  40%,
+  50% {
+    top: 1.8rem;
+    right: 2.2rem;
+    opacity: 1;
+  }
+  56%,
+  100% {
+    top: 1.8rem;
+    right: 2.2rem;
+    opacity: 0;
+  }
+}
+
+@keyframes pwa-sheet-up {
+  0%,
+  22% {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  30%,
+  60% {
+    opacity: 1;
+    transform: none;
+  }
+  66%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pwa-sheet-down {
+  0%,
+  22% {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  30%,
+  60% {
+    opacity: 1;
+    transform: none;
+  }
+  66%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pwa-option {
+  0%,
+  42% {
+    background: transparent;
+  }
+  48%,
+  60% {
+    background: rgb(255 153 0 / 0.25);
+  }
+}
+
+@keyframes pwa-home {
+  0%,
+  62% {
+    opacity: 0;
+  }
+  70%,
+  96% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pwa-icon-pop {
+  0%,
+  66% {
+    transform: scale(0.3);
+  }
+  74% {
+    transform: scale(1.12);
+  }
+  80%,
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pwa-anim * {
+    animation: none !important;
+  }
+
+  .pwa-anim-sheet {
+    opacity: 1;
+  }
 }

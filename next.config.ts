@@ -58,6 +58,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/boutique/:slug", destination: "/:slug", permanent: true },
       { source: "/boutique/:slug/:path*", destination: "/:slug/:path*", permanent: true },
+      // La bannière est passée de « Ma boutique » à « Marketing ».
+      { source: "/dashboard/boutique/banniere", destination: "/dashboard/marketing/banniere", permanent: true },
     ];
   },
   async rewrites() {

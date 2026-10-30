@@ -1,7 +1,10 @@
-import { Eye, Hourglass, ShoppingBag, ShoppingCart, Wallet } from "lucide-react";
+import { Eye, ShoppingBag, ShoppingCart, Wallet } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AnnouncementBanner, AnnouncementCarousel } from "@/components/dashboard/announcements";
+import { CommunityBlock } from "@/components/dashboard/community";
+import { DayMomentIcon, dayMoment, greetingWord } from "@/components/dashboard/greeting";
 import { WelcomeNoStore } from "@/components/dashboard/welcome-no-store";
 import { InstallAppCard } from "@/components/pwa/install-app";
 import { TimeSeriesChart } from "@/components/dashboard/time-series-chart";
@@ -21,6 +24,8 @@ import { requireWhatsappNumber } from "@/modules/auth/google";
 import { auth } from "@/modules/auth/server";
 import { isPlatformAdmin } from "@/modules/admin/context";
 import { prisma } from "@/lib/prisma";
+import { site } from "@/config/site";
+import { getDashboardAnnouncements } from "@/modules/announcements/queries";
 import { getDashboardOverview } from "@/modules/dashboard/service";
 import { setupChecklist } from "@/modules/dashboard/setup-checklist";
 import { getDashboardStats } from "@/modules/dashboard/stats";
@@ -56,13 +61,15 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   const { session, store, membership } = await getStoreContext();
   const period = resolveDashboardPeriod(params.periode);
-  const [stats, overview, draft] = await Promise.all([
+  const [stats, overview, draft, announcements] = await Promise.all([
     getDashboardStats(store.id, period),
     getDashboardOverview(store.id, period.from, period.to),
     findDraft(session.user.id),
+    getDashboardAnnouncements(),
   ]);
   const can = (permission: Parameters<typeof hasPermission>[1]) => hasPermission(membership.role, permission);
   const firstName = session.user.name.trim().split(/\s+/)[0] || session.user.name;
+  const moment = dayMoment();
   const publicUrl = storePublicUrl(store.slug);
   const comparison = `vs les ${period.days} jours précédents`;
   const totalStages = stageOrder.reduce((total, stage) => total + stats.stages[stage], 0);
@@ -80,9 +87,14 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   return (
     <VendorShell>
+      <AnnouncementCarousel items={announcements.carousel} />
+      <AnnouncementBanner item={announcements.banner} />
       <div className="v-page-header">
         <div>
-          <h1 className="v-page-title">Bonjour {firstName} !</h1>
+          <h1 className="v-page-title greeting">
+            <DayMomentIcon moment={moment} />
+            {greetingWord(moment)} {firstName} !
+          </h1>
           <p className="v-page-subtitle">L’essentiel de {store.name} en un coup d’œil, sur les {dashboardPeriodLabels[period.key]} derniers.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
@@ -118,19 +130,20 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       )}
 
       <section aria-label="Chiffres clés" className="kpi-grid">
-        <KpiCard comparison={comparison} evolution={stats.kpis.orders.evolution} icon={ShoppingBag} label="Commandes" value={String(stats.kpis.orders.value)} />
+        <KpiCard comparison={comparison} evolution={stats.kpis.orders.evolution} icon={ShoppingBag} info="Toutes les commandes reçues sur la période, quel que soit leur statut." label="Commandes" value={String(stats.kpis.orders.value)} />
         {can("payments.read") && (
-          <KpiCard comparison={comparison} evolution={stats.kpis.received.evolution} icon={Wallet} label="Argent encaissé" tone="green" value={formatFcfa(stats.kpis.received.value)} />
+          <KpiCard
+            comparison={comparison}
+            evolution={stats.kpis.received.evolution}
+            icon={Wallet}
+            info="Somme des commandes validées (payées) sur la période. Une annulation est déduite automatiquement."
+            label="Argent encaissé"
+            tone="green"
+            value={formatFcfa(stats.kpis.received.value)}
+          />
         )}
-        <KpiCard
-          hint={stats.kpis.pending.value ? "à valider dès maintenant" : "tout est à jour"}
-          icon={Hourglass}
-          label="En attente de confirmation"
-          tone="navy"
-          value={String(stats.kpis.pending.value)}
-        />
-        <KpiCard comparison={comparison} evolution={stats.kpis.visits.evolution} icon={Eye} label="Visites de la boutique" tone="blue" value={String(stats.kpis.visits.value)} />
-        <KpiCard comparison={comparison} evolution={stats.kpis.basket.evolution} icon={ShoppingCart} label="Panier moyen" tone="violet" value={formatFcfa(stats.kpis.basket.value)} />
+        <KpiCard comparison={comparison} evolution={stats.kpis.visits.evolution} icon={Eye} info="Nombre de visites de votre boutique publique sur la période (les robots ne sont pas comptés)." label="Visites de la boutique" tone="blue" value={String(stats.kpis.visits.value)} />
+        <KpiCard comparison={comparison} evolution={stats.kpis.basket.evolution} icon={ShoppingCart} info="Montant moyen d’une commande sur la période, commandes annulées exclues." label="Panier moyen" tone="violet" value={formatFcfa(stats.kpis.basket.value)} />
       </section>
 
       {noOrdersYet ? (
@@ -275,6 +288,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           </section>
         )}
       </div>
+
+      <CommunityBlock firstName={firstName} whatsappChannel={site.whatsappChannel} youtube={site.youtube} />
     </VendorShell>
   );
 }

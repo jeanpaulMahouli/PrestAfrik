@@ -4,7 +4,8 @@ import { texts } from "@/config/texts";
 import { EmailVerificationBanner } from "@/components/layout/email-verification-banner";
 import { PwaRegistration } from "@/components/pwa/install-app";
 import { VendorDrawer, VendorSidebar } from "@/components/layout/vendor-navigation";
-import { MobileSearchButton, StoreSwitcher, UserMenu } from "@/components/layout/vendor-topbar-menus";
+import { MobileSearchButton, StoreSwitcher, UserMenu, VisitStoreLinks } from "@/components/layout/vendor-topbar-menus";
+import { storePublicUrl } from "@/lib/urls";
 import { isPlatformAdmin } from "@/modules/admin/context";
 import { accountContact, isAccountVerified } from "@/modules/auth/phone-account";
 import { getStoreContext } from "@/modules/stores/context";
@@ -37,13 +38,15 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
         </form>
         <span className="vendor-topbar-spacer" />
         <MobileSearchButton />
+        <VisitStoreLinks storeUrl={storePublicUrl(store.slug)} />
         <StoreSwitcher
           memberships={memberships.map(({ storeId, role, store: memberStore }) => ({
             storeId,
             role,
-            store: { name: memberStore.name, city: memberStore.city },
+            store: { name: memberStore.name, city: memberStore.city, logoUrl: memberStore.logoUrl },
           }))}
           storeId={store.id}
+          storeLogoUrl={store.logoUrl}
           storeName={store.name}
         />
         <UserMenu adminLink={showAdminLink} userEmail={accountContact(session.user)} userImage={session.user.image ?? null} userName={session.user.name} />

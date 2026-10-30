@@ -96,7 +96,7 @@
 }
 
 /* Icônes toujours centrées dans leur bouton ou leur pastille. */
-:is(.icon-button, .bell-button, .severity-icon, .kpi-icon, .sf-chat-trigger, .sf-popup-close, .sf-menu-button, .sf-drawer-close) svg {
+:is(.icon-button, .bell-button, .severity-icon, .sf-chat-trigger, .sf-popup-close, .sf-menu-button, .sf-drawer-close) svg {
   display: block;
   flex: none;
 }

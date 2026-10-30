@@ -1,5 +1,6 @@
 "use client";
 
+import { Store } from "lucide-react";
 import Link from "next/link";
 import { InstallAppSuggestion } from "@/components/pwa/install-app";
 import { SocialShare } from "@/components/shared/social-share";
@@ -66,7 +67,7 @@ export function PublishStep({ draftId, recap, missing, hasProduct }: { draftId: 
   );
 }
 
-/** Lien de la boutique à copier ; « Voir ma boutique » sur la même ligne une fois la boutique en ligne. */
+/** Lien de la boutique à copier ; « Visiter ma boutique » sur la même ligne une fois la boutique en ligne. */
 function StoreLink({ storeUrl, showView = false }: { storeUrl: string; showView?: boolean }) {
   const display = storeUrl.replace(/^https?:\/\//, "");
   return (
@@ -77,7 +78,7 @@ function StoreLink({ storeUrl, showView = false }: { storeUrl: string; showView?
         <CopyButton label="Copier" value={storeUrl} />
         {showView && (
           <a className="btn btn-primary" href={storeUrl} rel="noopener noreferrer" target="_blank">
-            Voir ma boutique
+            <Store aria-hidden="true" size={18} /> Visiter ma boutique
           </a>
         )}
       </span>

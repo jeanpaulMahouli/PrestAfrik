@@ -1,7 +1,7 @@
 "use client";
 
-import { Download, Smartphone } from "lucide-react";
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { Check, Compass, Download, EllipsisVertical, Share, Smartphone, SquarePlus } from "lucide-react";
+import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Dialog } from "@/components/ui/dialog";
 
 // Installation de l'application PrestAfrik (PWA) sur l'écran d'accueil.
@@ -81,55 +81,89 @@ export function PwaRegistration() {
   return null;
 }
 
-/** Étapes à suivre quand le navigateur n'a pas de fenêtre d'installation (iPhone surtout). */
-function InstallSteps({ platform }: { platform: Platform }) {
+type Step = { icon: ReactNode; title: string; text: ReactNode };
+
+const ShareIcon = () => <Share aria-hidden="true" size={18} />;
+
+/** Étapes à suivre, une par une, selon l'appareil (quand le navigateur n'ouvre pas sa propre fenêtre). */
+function stepsFor(platform: Platform): Step[] {
   if (platform === "ios") {
-    return (
-      <ol className="pwa-steps">
-        <li>
-          Touchez le bouton <strong>Partager</strong> en bas de Safari (le carré avec une flèche vers le haut).
-        </li>
-        <li>
-          Faites défiler et touchez <strong>« Sur l’écran d’accueil »</strong>.
-        </li>
-        <li>
-          Touchez <strong>Ajouter</strong> : l’icône PrestAfrik apparaît sur votre écran d’accueil.
-        </li>
-      </ol>
-    );
+    return [
+      { icon: <ShareIcon />, title: "Touchez « Partager »", text: <>Le carré avec une flèche vers le haut, <strong>en bas de Safari</strong>.</> },
+      { icon: <SquarePlus aria-hidden="true" size={18} />, title: "Touchez « Sur l’écran d’accueil »", text: <>Faites glisser la liste vers le haut si vous ne le voyez pas.</> },
+      { icon: <Check aria-hidden="true" size={18} />, title: "Touchez « Ajouter »", text: <>En haut à droite. L’icône PrestAfrik apparaît sur votre écran d’accueil.</> },
+    ];
   }
   if (platform === "ios-other-browser") {
-    return (
-      <ol className="pwa-steps">
-        <li>Sur iPhone, l’installation se fait depuis <strong>Safari</strong> : copiez l’adresse de cette page et ouvrez-la dans Safari.</li>
-        <li>
-          Touchez <strong>Partager</strong>, puis <strong>« Sur l’écran d’accueil »</strong>, puis <strong>Ajouter</strong>.
-        </li>
-      </ol>
-    );
+    return [
+      { icon: <Compass aria-hidden="true" size={18} />, title: "Ouvrez cette page dans Safari", text: <>Sur iPhone, l’installation se fait depuis <strong>Safari</strong> (l’icône boussole bleue).</> },
+      { icon: <ShareIcon />, title: "Touchez « Partager »", text: <>Le carré avec une flèche, en bas de l’écran.</> },
+      { icon: <SquarePlus aria-hidden="true" size={18} />, title: "« Sur l’écran d’accueil », puis « Ajouter »", text: <>L’icône PrestAfrik apparaît sur votre écran d’accueil.</> },
+    ];
   }
   if (platform === "android") {
-    return (
-      <ol className="pwa-steps">
-        <li>
-          Touchez le menu <strong>⋮</strong> en haut à droite de votre navigateur.
-        </li>
-        <li>
-          Touchez <strong>« Installer l’application »</strong> ou <strong>« Ajouter à l’écran d’accueil »</strong>.
-        </li>
-        <li>Confirmez : l’icône PrestAfrik apparaît sur votre écran d’accueil.</li>
-      </ol>
-    );
+    return [
+      { icon: <EllipsisVertical aria-hidden="true" size={18} />, title: "Touchez le menu ⋮", text: <>Les trois points, <strong>en haut à droite</strong> de votre navigateur.</> },
+      { icon: <Download aria-hidden="true" size={18} />, title: "Touchez « Installer l’application »", text: <>Selon le téléphone : « Ajouter à l’écran d’accueil ».</> },
+      { icon: <Check aria-hidden="true" size={18} />, title: "Confirmez avec « Installer »", text: <>L’icône PrestAfrik apparaît sur votre écran d’accueil.</> },
+    ];
   }
+  return [
+    { icon: <Download aria-hidden="true" size={18} />, title: "Cliquez sur l’icône d’installation", text: <>À droite de la barre d’adresse de Chrome ou d’Edge.</> },
+    { icon: <Check aria-hidden="true" size={18} />, title: "Confirmez avec « Installer »", text: <>PrestAfrik s’ouvre dans sa propre fenêtre, comme une application.</> },
+  ];
+}
+
+/** Petite animation (façon GIF) qui montre le geste : bouton touché, menu, icône ajoutée à l'écran d'accueil. */
+function InstallAnimation({ platform }: { platform: Platform }) {
+  const ios = platform === "ios" || platform === "ios-other-browser";
   return (
-    <ol className="pwa-steps">
-      <li>
-        Dans Chrome ou Edge, cliquez sur l’icône d’installation <strong>⊕</strong> à droite de la barre d’adresse.
-      </li>
-      <li>
-        Ou ouvrez le menu <strong>⋮</strong>, puis <strong>« Installer PrestAfrik »</strong>.
-      </li>
-    </ol>
+    <div aria-hidden="true" className={`pwa-anim ${ios ? "pwa-anim-ios" : "pwa-anim-android"}`}>
+      <div className="pwa-anim-phone">
+        <span className="pwa-anim-bar">{ios ? null : <EllipsisVertical size={12} />}</span>
+        <span className="pwa-anim-page" />
+        <span className="pwa-anim-page pwa-anim-page-short" />
+        <span className="pwa-anim-sheet">
+          <span className="pwa-anim-option">{ios ? "Sur l’écran d’accueil" : "Installer l’application"}</span>
+        </span>
+        {ios && (
+          <span className="pwa-anim-toolbar">
+            <Share size={12} />
+          </span>
+        )}
+        <span className="pwa-anim-tap" />
+        <span className="pwa-anim-home">
+          {/* Icône de l'application, telle qu'elle apparaîtra. */}
+          <img alt="" height={34} src="/brand/pwa/icon-192.png" width={34} />
+          <small>PrestAfrik</small>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Explication complète : animation, puis les étapes numérotées pour cet appareil. */
+function InstallSteps({ platform }: { platform: Platform }) {
+  return (
+    <div className="pwa-guide">
+      <InstallAnimation platform={platform} />
+      <ol className="pwa-steps">
+        {stepsFor(platform).map((step, index) => (
+          <li key={step.title}>
+            <span aria-hidden="true" className="pwa-step-number">
+              {index + 1}
+            </span>
+            <span className="pwa-step-text">
+              <strong>
+                <span aria-hidden="true" className="pwa-step-icon">{step.icon}</span>
+                {step.title}
+              </strong>
+              <span>{step.text}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -143,7 +177,7 @@ const benefits = [
  * Bouton « Installer PrestAfrik sur mon écran d'accueil ». Fenêtre native quand le navigateur la propose,
  * sinon explication pas à pas. Rien ne s'affiche si l'application est déjà installée.
  */
-export function InstallAppButton({ className = "btn btn-secondary", compact = false }: { className?: string; compact?: boolean }) {
+export function InstallAppButton({ className = "btn btn-glass", compact = false }: { className?: string; compact?: boolean }) {
   const { ready, installed: isInstalled, canPrompt, platform, promptInstall } = usePwaInstall();
   const [help, setHelp] = useState(false);
   if (!ready || isInstalled) return null;
@@ -161,7 +195,7 @@ export function InstallAppButton({ className = "btn btn-secondary", compact = fa
         <Download aria-hidden="true" size={18} />
         {compact ? "Installer l’application" : "Installer PrestAfrik sur mon écran d’accueil"}
       </button>
-      <Dialog description="Quelques secondes suffisent." onClose={() => setHelp(false)} open={help} size="sm" title="Installer PrestAfrik sur votre écran d’accueil">
+      <Dialog centered description="Trois gestes, moins de 30 secondes. Suivez les étapes ci-dessous." onClose={() => setHelp(false)} open={help} size="sm" title="Installer PrestAfrik sur votre écran d’accueil">
         <InstallSteps platform={platform} />
       </Dialog>
     </>
@@ -201,6 +235,7 @@ export function InstallAppSuggestion({ storageKey = "prestafrik:pwa-proposee" }:
 
   return (
     <Dialog
+      centered
       description="Recommandé, mais facultatif : vous pouvez aussi continuer depuis votre navigateur."
       footer={
         <div className="pwa-actions">
@@ -208,7 +243,7 @@ export function InstallAppSuggestion({ storageKey = "prestafrik:pwa-proposee" }:
             Plus tard
           </button>
           <button
-            className="btn btn-primary"
+            className="btn btn-glass"
             data-autofocus=""
             onClick={async () => {
               if (canPrompt) {
@@ -269,7 +304,7 @@ export function InstallAppCard() {
         <strong>PrestAfrik sur votre écran d’accueil</strong>
         <span>Ouvrez vos commandes en un geste, comme une application.</span>
       </p>
-      <InstallAppButton className="btn btn-primary btn-sm" compact />
+      <InstallAppButton className="btn btn-glass btn-sm" compact />
       <button
         aria-label="Masquer cet encart"
         className="pwa-card-close"

@@ -351,6 +351,7 @@ model Store {
   reviews            ProductReview[]
   slugAliases        StoreSlugAlias[]
   banners            StoreBanner[]
+  supportTickets     SupportTicket[]
   popups             StorePopup[]
   lastActiveUsers    User[]                 @relation("UserLastActiveStore")
   visitDays          StoreVisitDay[]
@@ -1161,6 +1162,38 @@ enum SupportTicketStatus {
   RESOLVED
 }
 
+/// Nature d'un message reçu : formulaire de contact, ou message d'un vendeur depuis son tableau de bord
+/// (question, suggestion, avis noté sur PrestAfrik).
+enum SupportTicketKind {
+  CONTACT
+  QUESTION
+  SUGGESTION
+  REVIEW
+}
+
+/// Emplacement d'une annonce de PrestAfrik dans le tableau de bord des vendeurs.
+enum AnnouncementPlacement {
+  CAROUSEL
+  BANNER
+}
+
+/// Annonce de PrestAfrik affichée en haut du tableau de bord des vendeurs (Administration → Annonces) :
+/// diaporama pleine largeur, ou bannière simple en dessous.
+model PlatformAnnouncement {
+  id        String                @id @default(cuid())
+  placement AnnouncementPlacement
+  imageUrl  String
+  altText   String                @db.VarChar(160)
+  /// Lien ouvert au clic (page de PrestAfrik ou adresse https) ; facultatif.
+  linkUrl   String?               @db.VarChar(500)
+  position  Int                   @default(0)
+  active    Boolean               @default(true)
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  @@index([placement, active, position])
+}
+
 /// Demande d'aide (formulaire de contact du site) suivie par l'équipe PrestAfrik.
 model SupportTicket {
   id             String                 @id @default(cuid())
@@ -1170,14 +1203,21 @@ model SupportTicket {
   requesterEmail String                 @db.VarChar(254)
   requesterId    String?
   status         SupportTicketStatus    @default(OPEN)
+  kind           SupportTicketKind      @default(CONTACT)
+  /// Avis sur PrestAfrik : note de 1 à 5 (contrainte en base), seulement pour kind = REVIEW.
+  rating         Int?                   @db.SmallInt
+  /// Boutique depuis laquelle le vendeur a écrit (messages du tableau de bord).
+  storeId        String?
   assignedToId   String?
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
   requester      User?                  @relation("SupportTicketRequester", fields: [requesterId], references: [id], onDelete: SetNull)
   assignedTo     User?                  @relation("SupportTicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
   replies        SupportTicketMessage[]
+  store          Store?                 @relation(fields: [storeId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
+  @@index([kind, createdAt])
 }
 
 /// Réponse de l'équipe à une demande d'aide (envoyée par e-mail au demandeur).

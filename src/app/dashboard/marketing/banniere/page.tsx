@@ -1,7 +1,8 @@
+import { Store } from "lucide-react";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { BannerManager } from "@/components/merchandising/banner-manager";
-import { StoreSectionNav } from "@/components/stores/store-section-nav";
+import { MarketingTabs } from "@/components/marketing/marketing-tabs";
 import { prisma } from "@/lib/prisma";
 import { linkTargets } from "@/modules/merchandising/server";
 import { requireStorePermission } from "@/modules/stores/context";
@@ -21,7 +22,7 @@ export default async function StoreBannerPage() {
 
   return (
     <VendorShell>
-      <StoreSectionNav current="/dashboard/boutique/banniere" />
+      <MarketingTabs current="/dashboard/marketing/banniere" />
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Bannière</h1>
@@ -30,7 +31,7 @@ export default async function StoreBannerPage() {
           </p>
         </div>
         <div className="v-page-actions">
-          <Link className="btn btn-secondary" href={`/${store.slug}`} target="_blank">Voir ma boutique</Link>
+          <Link className="btn btn-secondary" href={`/${store.slug}`} target="_blank"><Store aria-hidden="true" size={18} /> Visiter ma boutique</Link>
         </div>
       </div>
       <BannerManager banners={banners} targets={targets} />

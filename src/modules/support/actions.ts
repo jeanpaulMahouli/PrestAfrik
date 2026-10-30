@@ -10,14 +10,23 @@ import { sendEmailQuietly } from "@/modules/email/server";
 // Demandes d'aide (Alertes → Tickets) : réponse par e-mail, statut, administrateur assigné.
 
 const ticketsPath = "/admin/alertes?onglet=tickets";
+/** Pages qui affichent les messages reçus (retour après une action) : liste fermée, aucune adresse libre. */
+const returnPaths = { tickets: ticketsPath, avis: "/admin/avis?" } as const;
 const idSchema = z.string().min(10).max(64).regex(/^[A-Za-z0-9_-]+$/);
+type Back = (message: string, kind?: "succes" | "erreur", ticketId?: string) => never;
 
-function back(message: string, kind: "succes" | "erreur" = "succes", ticketId?: string): never {
-  redirect(`${ticketsPath}${ticketId ? `&ticket=${ticketId}` : ""}&${kind}=${encodeURIComponent(message)}`);
+/** Retour vers la page d'origine (champ « retour » du formulaire), avec le message et le ticket ouvert. */
+function backTo(formData: FormData): Back {
+  const returnTo: string = formData.get("retour") === "avis" ? returnPaths.avis : returnPaths.tickets;
+  return (message: string, kind: "succes" | "erreur" = "succes", ticketId?: string): never => {
+    const separator = returnTo.endsWith("?") ? "" : "&";
+    redirect(`${returnTo}${ticketId ? `${separator}ticket=${ticketId}&` : separator}${kind}=${encodeURIComponent(message)}`);
+  };
 }
 
 export async function replyToTicket(formData: FormData) {
   const admin = await requirePlatformAdmin();
+  const back: Back = backTo(formData);
   const ticketId = idSchema.safeParse(formData.get("ticketId"));
   const body = z.string().trim().min(5, "Votre réponse doit contenir au moins 5 caractères.").max(4000, "La réponse ne peut pas dépasser 4 000 caractères.").safeParse(formData.get("body"));
   if (!ticketId.success) back("Demande introuvable.", "erreur");
@@ -42,6 +51,7 @@ export async function replyToTicket(formData: FormData) {
 
 export async function updateTicket(formData: FormData) {
   const admin = await requirePlatformAdmin();
+  const back: Back = backTo(formData);
   const ticketId = idSchema.safeParse(formData.get("ticketId"));
   const status = z.enum(["OPEN", "IN_PROGRESS", "RESOLVED"]).safeParse(formData.get("status"));
   const assignee = z.string().max(64).safeParse(formData.get("assignedToId") ?? "");

@@ -14,7 +14,7 @@ const forbidden = { ok: false, message: "Vous n’avez pas l’autorisation de m
 const idSchema = z.string().min(1).max(40);
 
 function refresh(store: { id: string; slug: string }) {
-  revalidatePath("/dashboard/boutique/banniere");
+  revalidatePath("/dashboard/marketing/banniere");
   revalidatePath(`/${store.slug}`);
   invalidateStorefrontCache(store.id, store.slug);
 }

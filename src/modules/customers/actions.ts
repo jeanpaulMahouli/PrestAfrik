@@ -291,7 +291,7 @@ export async function revokeCustomerMarketingConsent(formData: FormData) {
   });
   revalidatePath(clientPath(parsed.data.customerId));
   revalidatePath("/dashboard/clients");
-  revalidatePath("/dashboard/marketing");
+  revalidatePath("/dashboard/marketing/campagnes");
 }
 
 export async function resolveCustomerNameConflict(formData: FormData) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Copy, Store } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -8,6 +9,7 @@ import { UserAvatar } from "@/components/account/user-avatar";
 import { InstallAppButton } from "@/components/pwa/install-app";
 import { useDismiss } from "@/components/ui/use-dismiss";
 import { texts } from "@/config/texts";
+import { copyText } from "@/lib/clipboard";
 import { authClient } from "@/modules/auth/client";
 import { selectStore } from "@/modules/stores/actions";
 
@@ -24,9 +26,45 @@ export function storeInitials(name: string) {
   );
 }
 
-type Membership = { storeId: string; role: StoreRole; store: { name: string; city: string | null } };
+type Membership = { storeId: string; role: StoreRole; store: { name: string; city: string | null; logoUrl: string | null } };
 
-export function StoreSwitcher({ storeId, storeName, memberships }: { storeId: string; storeName: string; memberships: Membership[] }) {
+/** Logo de la boutique (ou ses initiales s'il n'y en a pas). */
+function StoreMark({ name, logoUrl }: { name: string; logoUrl: string | null }) {
+  return (
+    <span aria-hidden="true" className="store-mark">
+      {/* Logo déjà optimisé (WebP carré) : affiché tel quel. */}
+      {logoUrl ? <img alt="" height={28} src={logoUrl} width={28} /> : storeInitials(name)}
+    </span>
+  );
+}
+
+/** « Visiter ma boutique » et copie du lien, dans l'en-tête de l'espace vendeur. */
+export function VisitStoreLinks({ storeUrl }: { storeUrl: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="topbar-visit">
+      <a className="topbar-visit-link" href={storeUrl} rel="noopener noreferrer" target="_blank">
+        <Store aria-hidden="true" size={18} />
+        <span className="topbar-visit-label">{t.visitStore}</span>
+      </a>
+      <button
+        aria-label={copied ? "Lien copié" : "Copier le lien de ma boutique"}
+        className="icon-button topbar-copy"
+        onClick={async () => {
+          const done = await copyText(storeUrl);
+          setCopied(done);
+          if (done) window.setTimeout(() => setCopied(false), 2000);
+        }}
+        title={copied ? "Lien copié" : "Copier le lien de ma boutique"}
+        type="button"
+      >
+        {copied ? <Check aria-hidden="true" size={18} /> : <Copy aria-hidden="true" size={18} />}
+      </button>
+    </div>
+  );
+}
+
+export function StoreSwitcher({ storeId, storeName, storeLogoUrl, memberships }: { storeId: string; storeName: string; storeLogoUrl: string | null; memberships: Membership[] }) {
   const [open, setOpen] = useState(false);
   const ref = useDismiss(open, () => setOpen(false));
 
@@ -40,7 +78,7 @@ export function StoreSwitcher({ storeId, storeName, memberships }: { storeId: st
         onClick={() => setOpen((value) => !value)}
         type="button"
       >
-        <span aria-hidden="true" className="store-mark">{storeInitials(storeName)}</span>
+        <StoreMark logoUrl={storeLogoUrl} name={storeName} />
         <span className="topbar-store-name">{storeName}</span>
       </button>
       {open && (
@@ -51,7 +89,7 @@ export function StoreSwitcher({ storeId, storeName, memberships }: { storeId: st
               <li key={membership.storeId}>
                 {membership.storeId === storeId ? (
                   <span aria-current="true" className="store-switch-item is-active">
-                    <span aria-hidden="true" className="store-mark">{storeInitials(membership.store.name)}</span>
+                    <StoreMark logoUrl={membership.store.logoUrl} name={membership.store.name} />
                     <span>
                       <strong>{membership.store.name}</strong>
                       <small>{t.roles[membership.role]}</small>
@@ -61,7 +99,7 @@ export function StoreSwitcher({ storeId, storeName, memberships }: { storeId: st
                   <form action={selectStore}>
                     <input name="storeId" type="hidden" value={membership.storeId} />
                     <button aria-label={`${t.switchStore} : ${membership.store.name}`} className="store-switch-item" type="submit">
-                      <span aria-hidden="true" className="store-mark">{storeInitials(membership.store.name)}</span>
+                      <StoreMark logoUrl={membership.store.logoUrl} name={membership.store.name} />
                       <span>
                         <strong>{membership.store.name}</strong>
                         <small>{t.roles[membership.role]}</small>

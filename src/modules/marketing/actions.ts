@@ -17,7 +17,7 @@ import {
   SubscriptionLimitError,
 } from "@/modules/subscriptions/service";
 
-const marketingPath = "/dashboard/marketing";
+const marketingPath = "/dashboard/marketing/campagnes";
 
 function reportError(message: string): never {
   redirect(`${marketingPath}?erreur=${encodeURIComponent(message)}`);

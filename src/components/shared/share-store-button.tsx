@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Copy } from "lucide-react";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { SocialShare } from "@/components/shared/social-share";
@@ -14,7 +15,7 @@ type ShareStoreButtonProps = {
   label?: string;
 };
 
-/** Fenêtre de partage de la boutique : lien, QR code téléchargeable, message WhatsApp (brief §6.3). */
+/** Fenêtre de partage de la boutique : lien à copier, QR code téléchargeable, partage sur les réseaux. */
 export function ShareStoreButton({ storeName, storeUrl, published, className = "btn btn-primary", label = "Partager ma boutique" }: ShareStoreButtonProps) {
   const [open, setOpen] = useState(false);
 
@@ -35,13 +36,11 @@ export function ShareStoreButton({ storeName, storeUrl, published, className = "
   );
 }
 
-/** Contenu du partage (aussi affiché dans la fenêtre « Boutique créée ») : lien à copier, QR code, WhatsApp. */
+/** Contenu du partage : lien et son bouton copier, QR code, boutons de partage. */
 export function ShareStorePanel({ storeName, storeUrl, compact = false }: { storeName: string; storeUrl: string; compact?: boolean }) {
   const [qr, setQr] = useState("");
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
-  const message = `Bonjour ! Découvrez ma boutique ${storeName} : ${storeUrl}\nCommandez en quelques clics, paiement à la livraison.`;
-
   useEffect(() => {
     QRCode.toDataURL(storeUrl, { width: 480, margin: 1, color: { dark: "#000026", light: "#ffffff" } })
       .then(setQr)
@@ -61,12 +60,10 @@ export function ShareStorePanel({ storeName, storeUrl, compact = false }: { stor
         Lien de votre boutique
         <span className="share-link-row">
           <input onFocus={(event) => event.currentTarget.select()} readOnly value={storeUrl} />
-          <button aria-live="polite" className="btn btn-secondary" onClick={copy} type="button">
-            {copied ? "Lien copié !" : "Copier"}
+          <button aria-label={copied ? "Lien copié" : "Copier le lien"} className="icon-button share-copy" onClick={copy} title={copied ? "Lien copié" : "Copier le lien"} type="button">
+            {copied ? <Check aria-hidden="true" size={18} /> : <Copy aria-hidden="true" size={18} />}
           </button>
-          <a className="btn btn-primary" href={storeUrl} rel="noopener noreferrer" target="_blank">
-            Voir ma boutique
-          </a>
+          <span aria-live="polite" className="visually-hidden">{copied ? "Lien copié" : ""}</span>
         </span>
         {copyFailed && <span className="v-field-help" role="status">Copie automatique bloquée par le navigateur : le lien est sélectionné, faites un appui long puis « Copier ».</span>}
       </label>
@@ -87,12 +84,6 @@ export function ShareStorePanel({ storeName, storeUrl, compact = false }: { stor
           )}
         </div>
       </div>
-      {!compact && (
-        <div className="share-preview">
-          <strong>Aperçu du message</strong>
-          <p>{message}</p>
-        </div>
-      )}
       <SocialShare text={`Découvrez ma boutique ${storeName} : commandez en quelques clics, paiement à la livraison.`} title={storeName} url={storeUrl} />
     </div>
   );

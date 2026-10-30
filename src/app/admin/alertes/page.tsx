@@ -37,7 +37,8 @@ export default async function AdminAlertsPage({ searchParams }: PageProps<"/admi
       : Promise.resolve([]),
     tab === "tickets"
       ? prisma.supportTicket.findMany({
-          where: ticketFilter === "OPEN" || ticketFilter === "IN_PROGRESS" || ticketFilter === "RESOLVED" ? { status: ticketFilter } : {},
+          // Demandes du formulaire de contact ; les messages des vendeurs sont dans « Messages et avis ».
+          where: { kind: "CONTACT", ...(ticketFilter === "OPEN" || ticketFilter === "IN_PROGRESS" || ticketFilter === "RESOLVED" ? { status: ticketFilter } : {}) },
           orderBy: [{ status: "asc" }, { createdAt: "desc" }],
           take: 100,
           include: {
@@ -46,7 +47,7 @@ export default async function AdminAlertsPage({ searchParams }: PageProps<"/admi
           },
         })
       : Promise.resolve([]),
-    prisma.supportTicket.count({ where: { status: "OPEN" } }),
+    prisma.supportTicket.count({ where: { status: "OPEN", kind: "CONTACT" } }),
     prisma.user.findMany({ where: { platformRole: { in: ["ADMIN", "SUPER_ADMIN"] }, suspendedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
   const retour = currentPath("/admin/alertes", params);

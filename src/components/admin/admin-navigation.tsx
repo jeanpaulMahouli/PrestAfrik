@@ -8,6 +8,8 @@ const links = [
   { title: "Boutiques", href: "/admin/boutiques" },
   { title: "Prospection", href: "/admin/prospection" },
   { title: "Abonnements", href: "/admin/abonnements" },
+  { title: "Messages et avis", href: "/admin/avis" },
+  { title: "Annonces", href: "/admin/annonces" },
   { title: "Messages échoués", href: "/admin/messages" },
   { title: "Alertes", href: "/admin/alertes" },
   { title: "Utilisateurs", href: "/admin/utilisateurs" },

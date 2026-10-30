@@ -12,13 +12,15 @@ type DialogProps = {
   children: ReactNode;
   footer?: ReactNode;
   size?: "sm" | "md" | "lg";
+  /** Centrée aussi sur téléphone (au lieu d'une feuille en bas de l'écran). */
+  centered?: boolean;
 };
 
 /**
  * Boîte de dialogue accessible (pattern APG « dialog ») : centrée dès 768 px, feuille basse en dessous,
  * focus piégé puis restitué, fermeture par Échap et par le fond.
  */
-export function Dialog({ open, onClose, title, description, children, footer, size = "md" }: DialogProps) {
+export function Dialog({ open, onClose, title, description, children, footer, size = "md", centered = false }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const descriptionId = useId();
@@ -62,7 +64,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="dialog-layer">
+    <div className={`dialog-layer${centered ? " dialog-layer-centered" : ""}`}>
       <div aria-hidden="true" className="dialog-backdrop" onClick={onClose} />
       <div
         aria-describedby={description ? descriptionId : undefined}

@@ -13,9 +13,9 @@ import { getCampaignSender, unsubscribeNotice, whatsappApiSettingsPath } from "@
 import { requireStorePermission } from "@/modules/stores/context";
 import { getStoreSubscriptionAccess } from "@/modules/subscriptions/service";
 
-export const metadata = { title: "Marketing" };
+export const metadata = { title: "Campagnes WhatsApp" };
 
-export default async function MarketingPage({ searchParams }: PageProps<"/dashboard/marketing">) {
+export default async function MarketingPage({ searchParams }: PageProps<"/dashboard/marketing/campagnes">) {
   const { store } = await requireStorePermission("marketing.manage");
   const params = await searchParams;
   const [counts, campaigns, subscription, sender] = await Promise.all([
@@ -46,10 +46,10 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
 
   return (
     <VendorShell>
-      <MarketingTabs current="/dashboard/marketing" />
+      <MarketingTabs current="/dashboard/marketing/campagnes" />
       <div className="v-page-header">
         <div>
-          <h1 className="v-page-title">Marketing</h1>
+          <h1 className="v-page-title">Campagnes</h1>
           <p className="v-page-subtitle">Préparez des messages ciblés, uniquement pour les clients qui ont accepté de recevoir vos offres.</p>
         </div>
         {!subscription.featureRestricted && (
