@@ -152,10 +152,10 @@ export const clientSide = {
     "Vos clients achètent sur leur téléphone. Votre boutique aussi est faite pour ça. Pas d’application à télécharger, pas de paiement en ligne : ils paient à la livraison, en toute confiance.",
   steps: [
     // Captures compressées par Cloudinary (WebP 720 px de large, transparence gardée).
-    { label: "Votre boutique", image: "/landing/screens/telephone-1-boutique.webp", width: 720, height: 1495 },
-    { label: "Détail produit", image: "/landing/screens/telephone-2-detail.webp", width: 720, height: 1495 },
-    { label: "Commande en 1 minute", image: "/landing/screens/telephone-3-commande.webp", width: 720, height: 1495 },
-    { label: "Suivez vos commandes", image: "/landing/screens/telephone-4-suivi.webp", width: 720, height: 1495 },
+    { label: "Votre boutique", image: "/landing/screens/telephone-1-boutique-v2.webp", width: 720, height: 1495 },
+    { label: "Détail produit", image: "/landing/screens/telephone-2-detail-v2.webp", width: 720, height: 1495 },
+    { label: "Commande en 1 minute", image: "/landing/screens/telephone-3-commande-v2.webp", width: 720, height: 1495 },
+    { label: "Suivez vos commandes", image: "/landing/screens/telephone-4-suivi-v2.webp", width: 720, height: 1495 },
   ],
   cta: { label: "Créer ma boutique gratuitement", href: "/inscription" },
 };

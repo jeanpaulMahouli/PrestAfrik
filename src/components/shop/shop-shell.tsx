@@ -152,7 +152,7 @@ export function ShopShell({
 
       <footer className="shop-footer">
         <div className="shop-footer-brand">
-          <Image alt="PrestAfrik" height={40} src="/brand/logo-prestafrik.png" width={73} />
+          <Image alt="PrestAfrik" height={110} src="/brand/logo-white.webp" width={201} />
           <p>La marketplace des commerçants d’Afrique centrale. Commandez directement aux vendeurs, payez à la livraison.</p>
           <a className="shop-footer-cta" href={signupHref()}>
             <Sparkles aria-hidden="true" size={16} /> Vendre sur PrestAfrik, c’est gratuit

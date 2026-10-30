@@ -47,8 +47,8 @@ const productSelect = {
 
 type ProductRow = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 
-/** Produits visibles sur la marketplace : en ligne, disponibles, d'une boutique publiée. */
-const visible = (storeIds: string[]): Prisma.ProductWhereInput => ({ storeId: { in: storeIds }, status: "ACTIVE", archivedAt: null, availability: "AVAILABLE" });
+/** Produits visibles sur la marketplace : en ligne, disponibles, d'une boutique publiée, et avec au moins une photo. */
+const visible = (storeIds: string[]): Prisma.ProductWhereInput => ({ storeId: { in: storeIds }, status: "ACTIVE", archivedAt: null, availability: "AVAILABLE", images: { some: {} } });
 
 async function ratingsOf(productIds: string[]) {
   if (!productIds.length) return new Map<string, { rating: number; count: number }>();

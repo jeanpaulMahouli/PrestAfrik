@@ -32,7 +32,7 @@ export const blogPosts: BlogPost[] = [
     category: "Ventes",
     date: "2026-10-20",
     author: "L’équipe PrestAfrik",
-    cover: { src: "/landing/screens/telephone-4-suivi.webp", width: 1068, height: 2217, kind: "phone" },
+    cover: { src: "/landing/screens/telephone-4-suivi-v2.webp", width: 720, height: 1495, kind: "phone" },
     blocks: [
       {
         type: "p",
