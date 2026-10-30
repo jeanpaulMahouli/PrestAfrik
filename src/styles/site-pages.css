@@ -5,8 +5,9 @@
    ========================================================================== */
 
 /* ---------- Héros compact ---------- */
+/* Pas de « overflow: hidden » ici : il coupait le menu mobile, qui s'ouvre sous l'en-tête. Seul le décor
+   (piliers) est découpé à l'arrondi du héros. */
 .lp-page-hero {
-  overflow: hidden;
   isolation: isolate;
   padding-bottom: clamp(56px, 6vw, 112px);
 }
@@ -15,6 +16,8 @@
   position: absolute;
   inset: 0;
   z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
   pointer-events: none;
 }
 
@@ -2228,5 +2231,31 @@
 @media (max-width: 640px) {
   .lp-feature-roles {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Téléphone : À propos et Fonctionnalités ---------- */
+@media (max-width: 767px) {
+  /* À propos : titre « Transformer chaque vendeur… » et texte centrés. */
+  .lp-story__copy {
+    align-items: center;
+    text-align: center;
+  }
+
+  /* Fonctionnalités : deux cartes par ligne, plus hautes, contenu centré, à distance des bords. */
+  .lp-feature-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    padding-inline: 0.5rem;
+  }
+
+  .lp-feature-tiles li {
+    min-height: 8.5rem;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 1.25rem 0.875rem;
+    text-align: center;
+    line-height: 1.3;
   }
 }

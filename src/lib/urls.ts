@@ -31,6 +31,19 @@ export function storePublicUrl(slug: string) {
   return `${appBaseUrl()}${storePath(slug)}`;
 }
 
+/**
+ * Adresse d'une page de la marketplace : https://shop.prestafrik.com/recherche avec les sous-domaines,
+ * /nos-boutiques/recherche sinon (développement, ou sous-domaines désactivés).
+ */
+export function shopUrl(path = "/") {
+  const clean = path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
+  if (subdomainsEnabled()) {
+    const protocol = appBaseUrl().startsWith("http://") ? "http" : "https";
+    return `${protocol}://shop.${process.env.STORE_ROOT_DOMAIN}${clean || "/"}`;
+  }
+  return `/nos-boutiques${clean}`;
+}
+
 /** Chemin d'une page de la boutique sur le site (« /mboa-style », « /mboa-style/panier »…). */
 export function storePath(slug: string, ...segments: string[]) {
   return ["", slug, ...segments].join("/");

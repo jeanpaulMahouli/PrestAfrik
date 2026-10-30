@@ -6,7 +6,7 @@ import { LandingButton } from "./buttons";
 import { clientSide } from "./content";
 import { Reveal } from "./reveal";
 
-/** « Côté client » : chaque étape affiche l'écran correspondant dans le téléphone (clic, clavier ou glissé sur mobile). */
+/** « Côté client » : chaque étape affiche l'écran correspondant dans le téléphone (clic, clavier, ou glissé sur mobile, sur les étapes comme sur l'image). */
 export function ClientShowcase({ signedIn }: { signedIn: boolean }) {
   const [active, setActive] = useState(0);
   // Écrans téléchargés : l'écran affiché et le suivant (les autres arrivent quand on avance) ; auparavant
@@ -32,22 +32,20 @@ export function ClientShowcase({ signedIn }: { signedIn: boolean }) {
         </Reveal>
       </header>
 
-      <div className="lp-client__card">
+      <div
+        className="lp-client__card"
+        onTouchEnd={(e) => {
+          const dx = e.changedTouches[0].clientX - touchX.current;
+          if (Math.abs(dx) > 40) go(active + (dx < 0 ? 1 : -1));
+        }}
+        onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+      >
         {/* Fond découpé à l'arrondi de la carte ; le téléphone, lui, peut déborder. */}
         <span aria-hidden="true" className="lp-client__bg">
           <span className="lp-client__rings" />
         </span>
 
-        <div
-          className="lp-client__steps"
-          onTouchEnd={(e) => {
-            const dx = e.changedTouches[0].clientX - touchX.current;
-            if (Math.abs(dx) > 40) go(active + (dx < 0 ? 1 : -1));
-          }}
-          onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
-          role="tablist"
-          style={{ "--step": active } as CSSProperties}
-        >
+        <div className="lp-client__steps" role="tablist" style={{ "--step": active } as CSSProperties}>
           {steps.map((step, i) => (
             <button
               aria-controls="client-phone"
@@ -72,11 +70,11 @@ export function ClientShowcase({ signedIn }: { signedIn: boolean }) {
             <Image
               alt={i === active ? `Écran « ${step.label} » sur téléphone` : ""}
               className={`lp-client__phone${i === active ? " is-active" : ""}`}
-              height={2217}
+              height={step.height}
               key={step.image}
               sizes="(max-width: 767px) 60vw, 360px"
               src={step.image}
-              width={1068}
+              width={step.width}
             />
           ))}
         </div>

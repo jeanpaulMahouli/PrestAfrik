@@ -22,7 +22,7 @@ const actionLabels: Record<string, string> = {
   "export.utilisateurs": "Export des utilisateurs",
 };
 
-const targetLabels: Record<string, string> = { store: "Boutique", user: "Compte", subscription: "Abonnement", alert: "Alerte", message: "Message", ticket: "Message reçu", announcement: "Annonce" };
+const targetLabels: Record<string, string> = { store: "Boutique", user: "Compte", subscription: "Abonnement", alert: "Alerte", message: "Message", ticket: "Message reçu", announcement: "Annonce", marketplace: "Marketplace" };
 
 function detailText(details: unknown) {
   if (!details || typeof details !== "object" || Array.isArray(details)) return "";

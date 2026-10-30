@@ -42,7 +42,7 @@ export async function isPlatformAdmin(userId: string) {
 /** Toute action d'administration est journalisée (brief §6.13). */
 export function logAdminAction(
   actorId: string,
-  entry: { action: string; targetType: "store" | "user" | "subscription" | "alert" | "message" | "ticket" | "announcement"; targetId: string; storeId?: string | null; details?: Prisma.InputJsonValue },
+  entry: { action: string; targetType: "store" | "user" | "subscription" | "alert" | "message" | "ticket" | "announcement" | "marketplace"; targetId: string; storeId?: string | null; details?: Prisma.InputJsonValue },
   client: Prisma.TransactionClient | typeof prisma = prisma,
 ) {
   return client.auditLog.create({

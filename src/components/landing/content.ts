@@ -92,7 +92,7 @@ export const demoPage = {
 export const partners = {
   title: "Ces boutiques vendent déjà avec PrestAfrik",
   findCta: "Voir toutes les boutiques",
-  // Logos d'illustration, suivis des vraies boutiques publiées lues en base (modules/marketplace/social-proof.ts).
+  // Logos d'illustration (boutiques fictives) ; les compteurs réels sont lus en base (modules/marketplace/social-proof.ts).
   logos: [
     { src: "/landing/logos/mboa-style.svg", alt: "Mboa Style", width: 214, height: 40 },
     { src: "/landing/logos/mama-pagne.svg", alt: "Mama Pagne", width: 214, height: 40 },
@@ -151,10 +151,11 @@ export const clientSide = {
   subtitle:
     "Vos clients achètent sur leur téléphone. Votre boutique aussi est faite pour ça. Pas d’application à télécharger, pas de paiement en ligne : ils paient à la livraison, en toute confiance.",
   steps: [
-    { label: "Votre boutique", image: "/landing/screens/telephone-1-boutique.webp" },
-    { label: "Détail produit", image: "/landing/screens/telephone-2-detail.webp" },
-    { label: "Commande en 1 minute", image: "/landing/screens/telephone-3-commande.webp" },
-    { label: "Suivez vos commandes", image: "/landing/screens/telephone-4-suivi.webp" },
+    // Captures compressées par Cloudinary (WebP 720 px de large, transparence gardée).
+    { label: "Votre boutique", image: "/landing/screens/telephone-1-boutique.webp", width: 720, height: 1564 },
+    { label: "Détail produit", image: "/landing/screens/telephone-2-detail.webp", width: 720, height: 1564 },
+    { label: "Commande en 1 minute", image: "/landing/screens/telephone-3-commande.webp", width: 720, height: 1564 },
+    { label: "Suivez vos commandes", image: "/landing/screens/telephone-4-suivi.webp", width: 720, height: 1495 },
   ],
   cta: { label: "Créer ma boutique gratuitement", href: "/inscription" },
 };

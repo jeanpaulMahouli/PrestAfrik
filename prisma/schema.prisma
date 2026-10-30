@@ -352,6 +352,7 @@ model Store {
   slugAliases        StoreSlugAlias[]
   banners            StoreBanner[]
   supportTickets     SupportTicket[]
+  marketplacePicks   MarketplacePick[]
   popups             StorePopup[]
   lastActiveUsers    User[]                 @relation("UserLastActiveStore")
   visitDays          StoreVisitDay[]
@@ -445,6 +446,7 @@ model Product {
   reviews             ProductReview[]
   banners             StoreBanner[]
   popups              StorePopup[]
+  marketplacePicks    MarketplacePick[]
 
   @@unique([storeId, sku])
   @@unique([storeId, slug])
@@ -1171,10 +1173,13 @@ enum SupportTicketKind {
   REVIEW
 }
 
-/// Emplacement d'une annonce de PrestAfrik dans le tableau de bord des vendeurs.
+/// Emplacement d'une annonce de PrestAfrik : tableau de bord des vendeurs (diaporama, bannière) ou
+/// marketplace shop.prestafrik.com (grand diaporama du haut, visuels à côté).
 enum AnnouncementPlacement {
   CAROUSEL
   BANNER
+  SHOP_CAROUSEL
+  SHOP_BANNER
 }
 
 /// Annonce de PrestAfrik affichée en haut du tableau de bord des vendeurs (Administration → Annonces) :
@@ -1231,4 +1236,31 @@ model SupportTicketMessage {
   author    User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   @@index([ticketId, createdAt])
+}
+
+/// Rubrique de la marketplace choisie par l'administration (shop.prestafrik.com).
+enum MarketplacePickSection {
+  /// Ventes flash : produits, avec compte à rebours jusqu'à `endsAt`.
+  FLASH
+  /// Offres exclusives PrestAfrik : produits.
+  EXCLUSIVE
+  /// Boutiques à la une : boutiques.
+  FEATURED_STORE
+}
+
+/// Sélection de l'administration pour la marketplace (seule l'administration la gère) : un produit
+/// (ventes flash, offres exclusives) ou une boutique (boutiques à la une). Les prix restent ceux du vendeur.
+model MarketplacePick {
+  id        String                 @id @default(cuid())
+  section   MarketplacePickSection
+  productId String?
+  storeId   String?
+  position  Int                    @default(0)
+  /// Fin de la sélection (ventes flash) : elle disparaît d'elle-même passé cette date.
+  endsAt    DateTime?
+  createdAt DateTime               @default(now())
+  product   Product?               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store     Store?                 @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([section, position])
 }

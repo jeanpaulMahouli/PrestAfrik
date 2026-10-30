@@ -7,8 +7,13 @@ export const subdomainStoreHeader = "x-prestafrik-subdomain";
 export const forwardedStoreHostHeader = "x-prestafrik-store-host";
 export const proxyKeyHeader = "x-prestafrik-proxy-key";
 
+/** Sous-domaine de la marketplace de PrestAfrik (shop.prestafrik.com), réservé : jamais une boutique. */
+export const marketplaceSubdomain = "shop";
+/** Chemin interne des pages de la marketplace (servies à la racine de shop.prestafrik.com). */
+export const marketplaceBasePath = "/nos-boutiques";
+
 /** Sous-domaines qui ne sont jamais des boutiques. */
-const platformSubdomains = new Set(["www", "app", "api", "admin", "mail", "webmail", "smtp", "imap", "ftp", "cpanel", "autodiscover", "autoconfig"]);
+const platformSubdomains = new Set(["www", "app", "api", "admin", "mail", "webmail", "smtp", "imap", "ftp", "cpanel", "autodiscover", "autoconfig", marketplaceSubdomain]);
 const slugPattern = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
 
 /**
@@ -23,6 +28,19 @@ export function storeSlugFromHost(host: string | null | undefined, rootDomain: s
   const sub = hostname.slice(0, -root.length - 1);
   if (sub.includes(".") || platformSubdomains.has(sub) || !slugPattern.test(sub)) return null;
   return sub;
+}
+
+/** Vrai si l'hôte est celui de la marketplace (« shop.prestafrik.com »). */
+export function isMarketplaceHost(host: string | null | undefined, rootDomain: string | null | undefined) {
+  if (!host || !rootDomain) return false;
+  const hostname = host.trim().toLowerCase().replace(/\.$/, "");
+  const root = rootDomain.trim().toLowerCase().replace(/^\.+|\.$/g, "");
+  return Boolean(root) && hostname === `${marketplaceSubdomain}.${root}`;
+}
+
+/** Chemin interne d'une page de la marketplace : « / » → « /nos-boutiques », « /recherche » → « /nos-boutiques/recherche ». */
+export function marketplaceRewritePath(pathname: string) {
+  return pathname === "/" || pathname === "" ? marketplaceBasePath : `${marketplaceBasePath}${pathname}`;
 }
 
 /** Fichiers et routes techniques jamais réécrits (scripts, images, API, médias). */

@@ -8,16 +8,25 @@ import { ImageUploadError, deleteStoreImage, saveStoreImage } from "@/lib/upload
 import { logAdminAction, requirePlatformAdmin } from "@/modules/admin/context";
 import { announcementMediaId } from "@/modules/announcements/queries";
 
-// Administration → Annonces : images affichées en haut du tableau de bord de tous les vendeurs.
+// Administration → Annonces : images affichées en haut du tableau de bord de tous les vendeurs, et en haut
+// de la marketplace (shop.prestafrik.com : grand diaporama et deux visuels à côté).
 
 const listPath = "/admin/annonces";
-/** Formats d'image : diaporama pleine largeur (16:5) et bannière fine (8:1). */
-const frames = { CAROUSEL: { width: 1920, height: 600 }, BANNER: { width: 1920, height: 240 } } as const;
-const maxPerPlacement = { CAROUSEL: 6, BANNER: 3 } as const;
+/**
+ * Formats d'image : tableau de bord (diaporama 16:5, bannière fine 8:1) ; marketplace (diaporama et
+ * visuels de côté au même format 8:3, pour que les deux visuels empilés aient la hauteur du diaporama).
+ */
+const frames = {
+  CAROUSEL: { width: 1920, height: 600 },
+  BANNER: { width: 1920, height: 240 },
+  SHOP_CAROUSEL: { width: 1600, height: 600 },
+  SHOP_BANNER: { width: 1200, height: 450 },
+} as const;
+const maxPerPlacement = { CAROUSEL: 6, BANNER: 3, SHOP_CAROUSEL: 6, SHOP_BANNER: 2 } as const;
 const idSchema = z.string().min(10).max(40).regex(/^[a-z0-9]+$/);
 
 const fieldsSchema = z.object({
-  placement: z.enum(["CAROUSEL", "BANNER"]),
+  placement: z.enum(["CAROUSEL", "BANNER", "SHOP_CAROUSEL", "SHOP_BANNER"]),
   altText: z.string().trim().min(3, "Décrivez l’image en quelques mots (lecteurs d’écran).").max(160),
   linkUrl: z
     .string()
@@ -34,6 +43,7 @@ function back(message: string, kind: "succes" | "erreur" = "succes"): never {
 function refresh() {
   revalidatePath(listPath);
   revalidatePath("/dashboard");
+  revalidatePath("/nos-boutiques");
 }
 
 export async function createAnnouncement(formData: FormData) {
@@ -57,7 +67,7 @@ export async function createAnnouncement(formData: FormData) {
   const created = await prisma.platformAnnouncement.create({ data: { placement, imageUrl, altText, linkUrl, position } });
   await logAdminAction(admin.id, { action: "announcement.create", targetType: "announcement", targetId: created.id, details: { placement } });
   refresh();
-  back("Image ajoutée : elle est déjà visible sur le tableau de bord des vendeurs.");
+  back(placement.startsWith("SHOP_") ? "Image ajoutée : elle est déjà visible sur la marketplace." : "Image ajoutée : elle est déjà visible sur le tableau de bord des vendeurs.");
 }
 
 export async function toggleAnnouncement(formData: FormData) {

@@ -9,8 +9,10 @@ import { createAnnouncement, deleteAnnouncement, moveAnnouncement, toggleAnnounc
 export const metadata = { title: "Annonces" };
 
 const placements = {
-  CAROUSEL: { title: "Diaporama", help: "Pleine largeur en haut du tableau de bord, une image toutes les 6 secondes. Format conseillé : 1920 × 600 px (6 images au plus)." },
-  BANNER: { title: "Bannière", help: "Bande fine sous le diaporama. Format conseillé : 1920 × 240 px (la première image active s’affiche)." },
+  CAROUSEL: { title: "Tableau de bord : diaporama", help: "Pleine largeur en haut du tableau de bord des vendeurs, une image toutes les 6 secondes. Format conseillé : 1920 × 600 px (6 images au plus)." },
+  BANNER: { title: "Tableau de bord : bannière", help: "Bande fine sous le diaporama. Format conseillé : 1920 × 240 px (la première image active s’affiche)." },
+  SHOP_CAROUSEL: { title: "Marketplace : grand diaporama", help: "En haut de shop.prestafrik.com, une image toutes les 5 secondes. Format conseillé : 1600 × 600 px (6 images au plus)." },
+  SHOP_BANNER: { title: "Marketplace : visuels à côté", help: "Deux visuels empilés à droite du diaporama (sous le diaporama sur téléphone). Format conseillé : 1200 × 450 px (2 images au plus)." },
 } as const;
 
 /** Annonces de PrestAfrik sur le tableau de bord des vendeurs : ajout, ordre, masquer, supprimer. */
@@ -24,7 +26,7 @@ export default async function AdminAnnouncementsPage({ searchParams }: PageProps
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Annonces</h1>
-          <p className="v-page-subtitle">Les images affichées en haut du tableau de bord de tous les vendeurs : nouveautés, conseils, offres de PrestAfrik.</p>
+          <p className="v-page-subtitle">Les images affichées en haut du tableau de bord de tous les vendeurs et en haut de la marketplace : nouveautés, conseils, offres de PrestAfrik.</p>
         </div>
       </div>
       <AdminFeedback params={params} />

@@ -9,6 +9,7 @@ const links = [
   { title: "Prospection", href: "/admin/prospection" },
   { title: "Abonnements", href: "/admin/abonnements" },
   { title: "Messages et avis", href: "/admin/avis" },
+  { title: "Marketplace", href: "/admin/marketplace" },
   { title: "Annonces", href: "/admin/annonces" },
   { title: "Messages échoués", href: "/admin/messages" },
   { title: "Alertes", href: "/admin/alertes" },

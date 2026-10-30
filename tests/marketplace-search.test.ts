@@ -12,6 +12,7 @@ const store = (name: string, city: string, activity = "", description = "") => (
   city,
   country: "CM",
   activity,
+  activitySlug: null,
   description,
   logoUrl: null,
   createdAt: new Date(),

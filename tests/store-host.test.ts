@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPassthroughPath, storeHref, storeRewritePath, storeSlugFromHost } from "@/lib/store-host";
+import { isMarketplaceHost, isPassthroughPath, marketplaceRewritePath, storeHref, storeRewritePath, storeSlugFromHost } from "@/lib/store-host";
 
 describe("storeSlugFromHost", () => {
   it("lit l'adresse de la boutique dans le sous-domaine", () => {
@@ -36,5 +36,21 @@ describe("chemins", () => {
     expect(storeHref("", "suivi", "abc")).toBe("/suivi/abc");
     expect(storeHref("/mboa")).toBe("/mboa");
     expect(storeHref("/mboa", "page", "contact")).toBe("/mboa/page/contact");
+  });
+});
+
+describe("marketplace shop.prestafrik.com", () => {
+  it("reconnaît le sous-domaine réservé de la marketplace, qui n'est jamais une boutique", () => {
+    expect(isMarketplaceHost("shop.prestafrik.com", "prestafrik.com")).toBe(true);
+    expect(isMarketplaceHost("Shop.PrestAfrik.com.", "prestafrik.com")).toBe(true);
+    expect(isMarketplaceHost("prestafrik.com", "prestafrik.com")).toBe(false);
+    expect(isMarketplaceHost("shop.evil.io", "prestafrik.com")).toBe(false);
+    expect(isMarketplaceHost("shop.prestafrik.com", undefined)).toBe(false);
+    expect(storeSlugFromHost("shop.prestafrik.com", "prestafrik.com")).toBeNull();
+  });
+
+  it("sert les pages de la marketplace depuis /nos-boutiques", () => {
+    expect(marketplaceRewritePath("/")).toBe("/nos-boutiques");
+    expect(marketplaceRewritePath("/recherche")).toBe("/nos-boutiques/recherche");
   });
 });

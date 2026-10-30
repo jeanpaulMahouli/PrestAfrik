@@ -46,6 +46,8 @@ export type SearchableStore = {
   city: string | null;
   country: string;
   activity: string | null;
+  /** Identifiant de l'activité (« vetements-mode ») : rubriques de la marketplace. */
+  activitySlug: string | null;
   description: string | null;
   logoUrl: string | null;
   createdAt: Date;
@@ -56,11 +58,12 @@ export type SearchableStore = {
 let cache: { at: number; stores: SearchableStore[] } | null = null;
 const cacheTtlMs = 60_000;
 
-async function loadIndex(): Promise<SearchableStore[]> {
+/** Boutiques publiées et non suspendues (liste lue une fois par minute) : marketplace et recherche. */
+export async function loadIndex(): Promise<SearchableStore[]> {
   if (cache && Date.now() - cache.at < cacheTtlMs) return cache.stores;
   const rows = await prisma.store.findMany({
     where: { isPublished: true, suspendedAt: null },
-    select: { id: true, name: true, slug: true, city: true, country: true, description: true, logoUrl: true, createdAt: true, activityOther: true, activity: { select: { label: true } } },
+    select: { id: true, name: true, slug: true, city: true, country: true, description: true, logoUrl: true, createdAt: true, activityOther: true, activity: { select: { label: true, slug: true } } },
   });
   const stores = rows.map((row) => {
     const activity = row.activity?.label ?? row.activityOther ?? null;
@@ -71,6 +74,7 @@ async function loadIndex(): Promise<SearchableStore[]> {
       city: row.city,
       country: row.country,
       activity,
+      activitySlug: row.activity?.slug ?? null,
       description: row.description,
       logoUrl: row.logoUrl,
       createdAt: row.createdAt,
@@ -198,62 +202,4 @@ export async function getTopStores(take = 10): Promise<SearchableStore[]> {
     .filter((store) => (productCount.get(store.id) ?? 0) > 0)
     .sort((a, b) => (ratingScore.get(b.id) ?? 0) - (ratingScore.get(a.id) ?? 0) || (productCount.get(b.id) ?? 0) - (productCount.get(a.id) ?? 0) || a.createdAt.getTime() - b.createdAt.getTime())
     .slice(0, take);
-}
-
-export type MarketplaceProduct = TopProduct & { storeSlug: string; storeName: string };
-
-/**
- * Produits mis en avant sur « Nos boutiques », toutes boutiques confondues : les mieux notés (avis approuvés,
- * moyenne pondérée par le nombre d'avis), puis ceux des boutiques les plus visitées sur 30 jours (les visites
- * sont comptées par boutique, pas par produit), puis les plus récents. Au plus `perStore` produits par
- * boutique, pour que la sélection reste variée. Aucune note inventée.
- */
-export async function getMarketplaceTopProducts(take = 32, perStore = 4): Promise<MarketplaceProduct[]> {
-  const stores = await loadIndex();
-  if (!stores.length) return [];
-  const byId = new Map(stores.map((store) => [store.id, store]));
-  const ids = [...byId.keys()];
-  const where = { storeId: { in: ids }, status: "ACTIVE" as const, archivedAt: null };
-  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const [rated, visits] = await Promise.all([
-    prisma.productReview.groupBy({ by: ["productId"], where: { storeId: { in: ids }, status: "APPROVED", product: where }, _avg: { rating: true }, _count: { _all: true } }),
-    prisma.storeVisitDay.groupBy({ by: ["storeId"], where: { storeId: { in: ids }, day: { gte: since } }, _sum: { visits: true } }),
-  ]);
-  const ratings = new Map(rated.map((row) => [row.productId, { rating: row._avg.rating ?? 0, count: row._count._all }]));
-  const storeVisits = new Map(visits.map((row) => [row.storeId, row._sum.visits ?? 0]));
-  const select = { id: true, storeId: true, name: true, slug: true, priceXaf: true, promotionalPriceXaf: true, createdAt: true, images: { orderBy: { position: "asc" as const }, take: 1, select: { url: true } } };
-  const [best, recent] = await Promise.all([
-    ratings.size ? prisma.product.findMany({ where: { ...where, id: { in: [...ratings.keys()] } }, select }) : Promise.resolve([]),
-    prisma.product.findMany({ where: { ...where, id: { notIn: [...ratings.keys()] } }, orderBy: { createdAt: "desc" }, take: 400, select }),
-  ]);
-  const score = (id: string) => {
-    const rating = ratings.get(id);
-    return rating ? rating.rating * Math.log2(1 + rating.count) : 0;
-  };
-  const sorted = [...best, ...recent].sort(
-    (a, b) => score(b.id) - score(a.id) || (storeVisits.get(b.storeId) ?? 0) - (storeVisits.get(a.storeId) ?? 0) || b.createdAt.getTime() - a.createdAt.getTime(),
-  );
-  const taken = new Map<string, number>();
-  const picked: MarketplaceProduct[] = [];
-  for (const product of sorted) {
-    if (picked.length >= take) break;
-    const count = taken.get(product.storeId) ?? 0;
-    const store = byId.get(product.storeId);
-    if (!store || count >= perStore) continue;
-    taken.set(product.storeId, count + 1);
-    const rating = ratings.get(product.id);
-    const image = product.images[0]?.url ?? null;
-    picked.push({
-      name: product.name,
-      slug: product.slug,
-      priceXaf: product.priceXaf,
-      promotionalPriceXaf: product.promotionalPriceXaf,
-      imageUrl: image ? photoVariant(image, 320) : null,
-      rating: rating?.rating ? Math.round(rating.rating * 10) / 10 : null,
-      reviewCount: rating?.count ?? 0,
-      storeSlug: store.slug,
-      storeName: store.name,
-    });
-  }
-  return picked;
 }

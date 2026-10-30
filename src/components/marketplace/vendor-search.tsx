@@ -33,7 +33,21 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
  * Recherche de vendeurs avec suggestions pendant la saisie (motif « combobox » ARIA 1.2) :
  * flèches, Entrée et Échap au clavier ; « Rechercher » ouvre la page de résultats /recherche.
  */
-export function VendorSearch({ defaultValue = "", className = "", bare = false }: { defaultValue?: string; className?: string; /** Sans libellé visible ni bouton « Rechercher » (Entrée lance la recherche). */ bare?: boolean }) {
+export function VendorSearch({
+  defaultValue = "",
+  className = "",
+  bare = false,
+  resultsPath = "/recherche",
+  placeholder,
+}: {
+  defaultValue?: string;
+  className?: string;
+  /** Sans libellé visible ni bouton « Rechercher » (Entrée lance la recherche). */
+  bare?: boolean;
+  /** Page de résultats (la marketplace a la sienne : shop.prestafrik.com/recherche). */
+  resultsPath?: string;
+  placeholder?: string;
+}) {
   const router = useRouter();
   const id = useId();
   const listId = `${id}-liste`;
@@ -84,12 +98,14 @@ export function VendorSearch({ defaultValue = "", className = "", bare = false }
   const goToResults = () => {
     if (trimmed.length < 2) return;
     setOpen(false);
-    router.push(`/recherche?q=${encodeURIComponent(trimmed)}`);
+    const target = `${resultsPath}?q=${encodeURIComponent(trimmed)}`;
+    if (/^https?:\/\//.test(target)) window.location.assign(target);
+    else router.push(target);
   };
 
   return (
     <form
-      action="/recherche"
+      action={resultsPath}
       className={`vendor-search ${className}`.trim()}
       onSubmit={(event) => {
         event.preventDefault();
@@ -133,7 +149,7 @@ export function VendorSearch({ defaultValue = "", className = "", bare = false }
               setActive(-1);
             }
           }}
-          placeholder={bare ? "Boutique, ville ou activité…" : "Ex. pagne, Douala, beauté…"}
+          placeholder={placeholder ?? (bare ? "Boutique, ville ou activité…" : "Ex. pagne, Douala, beauté…")}
           role="combobox"
           type="search"
           value={query}

@@ -266,7 +266,7 @@
 /* ---------- 4. En-tête et navigation ---------- */
 .lp-header {
   position: relative;
-  z-index: 20;
+  z-index: 40;
   padding: clamp(10px, 2.86vw, 55px) clamp(10px, 3.7vw, 71px) 0;
 }
 
@@ -417,8 +417,10 @@
 }
 
 /* ---------- 5. Héros ---------- */
+/* Au-dessus du contenu qui suit : le menu mobile, ouvert dans le héros, passe par-dessus la page. */
 .lp-hero {
   position: relative;
+  z-index: 30;
   margin: clamp(8px, 2.13vw, 41px) clamp(8px, 2.55vw, 49px) 0;
   border-radius: var(--lp-radius-xl);
   background: linear-gradient(0deg, var(--lp-peach), var(--lp-cream));

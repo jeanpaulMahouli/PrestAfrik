@@ -521,50 +521,7 @@
   padding: 0 var(--lp-gutter);
 }
 
-/* ---------- Page « Nos boutiques » ---------- */
-/* Recherche sous le héros (pleine largeur), produits mis en avant (8 par ligne), boutiques en carrés (5 par ligne). */
-.stores-page {
-  display: grid;
-  gap: clamp(32px, 4vw, 56px);
-  max-width: 82rem;
-  margin: 0 auto;
-  padding: clamp(32px, 4vw, 64px) var(--lp-gutter) 0;
-}
-
-.vendor-search.vendor-search--wide {
-  width: 100%;
-  margin: 0;
-}
-
-.vendor-search--wide .vendor-search-bar {
-  min-height: 3.5rem;
-  padding-right: 1rem;
-}
-
-.stores-products-grid {
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: clamp(10px, 1.2vw, 18px);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.stores-products-grid a {
-  display: grid;
-  gap: 0.25rem;
-  color: var(--lp-ink);
-  text-decoration: none;
-}
-
-.stores-products-grid a:hover .search-card-photo img {
-  transform: scale(1.05);
-}
-
-.stores-products-grid .search-card-photo img {
-  transition: transform 0.3s var(--lp-ease);
-}
-
+/* ---------- Carrés de boutique (marketplace) ---------- */
 .stores-tiles {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -660,17 +617,12 @@
 }
 
 @media (max-width: 1100px) {
-  .stores-products-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .stores-tiles {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .stores-products-grid,
   .stores-tiles {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

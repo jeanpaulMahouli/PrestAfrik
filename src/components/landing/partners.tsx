@@ -1,37 +1,24 @@
 import Image from "next/image";
+import { shopUrl } from "@/lib/urls";
 import { getSocialProof } from "@/modules/marketplace/social-proof";
 import { LandingButton } from "./buttons";
 import { partners } from "./content";
 
-type Item = { key: string; node: React.ReactNode };
-
 /**
- * Boutiques qui vendent avec PrestAfrik : logos qui défilent en continu (logos d'illustration puis vraies
- * boutiques publiées, avec leur lien), compteurs réels en dessous, et un lien vers toutes les boutiques.
+ * Bandeau de l'accueil : logos d'illustration (boutiques fictives, aucune vraie boutique mêlée) qui défilent
+ * en continu, compteurs réels en dessous, et un lien vers toutes les boutiques.
  */
 export async function Partners() {
-  const { stores, counters } = await getSocialProof().catch(() => ({ stores: [], counters: [] }));
-  const items: Item[] = [
-    ...partners.logos.map((logo) => ({ key: logo.src, node: <Image alt={logo.alt} height={logo.height} src={logo.src} width={logo.width} /> })),
-    ...stores.map((store) => ({
-      key: store.href,
-      node: (
-        <a className="lp-partner" href={store.href}>
-          {/* Logo déjà optimisé (WebP carré) : affiché tel quel. */}
-          <img alt="" height={40} loading="lazy" src={store.logoUrl} width={40} />
-          <span>{store.name}</span>
-        </a>
-      ),
-    })),
-  ];
+  const { counters } = await getSocialProof().catch(() => ({ counters: [] }));
+  const logos = partners.logos;
 
   const row = (reverse: boolean) => (
     <div className={`lp-marquee${reverse ? " lp-marquee--reverse" : ""}`}>
       {/* La liste est doublée pour que le défilement boucle sans saut ; la copie est ignorée des lecteurs d'écran. */}
       <ul className="lp-marquee__track">
-        {[...items, ...items].map((item, i) => (
-          <li aria-hidden={i >= items.length} inert={i >= items.length} key={`${item.key}-${i}`}>
-            {item.node}
+        {[...logos, ...logos].map((logo, i) => (
+          <li aria-hidden={i >= logos.length} key={`${logo.src}-${i}`}>
+            <Image alt={i < logos.length ? logo.alt : ""} height={logo.height} src={logo.src} width={logo.width} />
           </li>
         ))}
       </ul>
@@ -56,7 +43,7 @@ export async function Partners() {
       {row(false)}
       <div className="lp-partners__second">{row(true)}</div>
       <div className="lp-find-stores">
-        <LandingButton href="/nos-boutiques" variant="glass">
+        <LandingButton href={shopUrl("/")} variant="glass">
           {partners.findCta}
         </LandingButton>
       </div>

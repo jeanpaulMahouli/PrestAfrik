@@ -401,6 +401,11 @@
   aspect-ratio: 8 / 1;
 }
 
+.admin-announce-thumb-shop_carousel,
+.admin-announce-thumb-shop_banner {
+  aspect-ratio: 8 / 3;
+}
+
 .admin-announce-text {
   display: grid;
   min-width: 10rem;
