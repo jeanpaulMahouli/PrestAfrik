@@ -8,9 +8,9 @@ const suggestions = [
   { name: "Mboa Beauté", slug: "mboa-beaute", href: "/mboa-beaute", city: "Yaoundé", country: "Cameroun", activity: "Beauté", logoUrl: null },
 ];
 
-test("la recherche du héros propose des vendeurs pendant la saisie, avec le texte mis en évidence", async ({ page }) => {
+test("la page Nos boutiques propose des vendeurs pendant la saisie, avec le texte mis en évidence", async ({ page }) => {
   await page.route("**/api/recherche?**", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ suggestions }) }));
-  await page.goto("/");
+  await page.goto("/nos-boutiques");
   const box = page.getByRole("combobox", { name: "Rechercher un vendeur, une boutique ou une ville" });
   await box.fill("mbo");
   await expect(page.getByRole("option")).toHaveCount(2);
@@ -20,7 +20,7 @@ test("la recherche du héros propose des vendeurs pendant la saisie, avec le tex
 
 test("la recherche se pilote au clavier : flèches, Échap, Entrée", async ({ page }) => {
   await page.route("**/api/recherche?**", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ suggestions }) }));
-  await page.goto("/");
+  await page.goto("/nos-boutiques");
   const box = page.getByRole("combobox", { name: "Rechercher un vendeur, une boutique ou une ville" });
   await box.fill("mboa");
   await expect(page.getByRole("option")).toHaveCount(2);
@@ -40,7 +40,7 @@ test("la recherche signale l'absence de résultat et l'erreur réseau, avec « R
     calls += 1;
     return calls === 1 ? route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ suggestions: [] }) }) : route.abort("failed");
   });
-  await page.goto("/");
+  await page.goto("/nos-boutiques");
   const box = page.getByRole("combobox", { name: "Rechercher un vendeur, une boutique ou une ville" });
   await box.fill("zzzq");
   await expect(page.getByText("Aucun vendeur ne correspond à « zzzq ». Essayez un nom de ville ou une activité.")).toBeVisible();
@@ -70,6 +70,7 @@ test("la page Tarifs bascule entre mensuel et annuel et affiche l'économie", as
   await expect(page.getByRole("heading", { name: "Business" })).toBeVisible();
   await expect(page.getByText("Recommandé", { exact: true })).toBeVisible();
   await expect(page.locator(".pricing-plan").nth(1).locator(".pricing-price strong")).toHaveText("3 000 FCFA");
+  await expect(page.getByRole("button", { name: "Bientôt disponible" }).first()).toBeDisabled();
   await page.getByRole("button", { name: /Annuel/ }).click();
   await expect(page.locator(".pricing-plan").nth(1).locator(".pricing-price strong")).toHaveText("29 000 FCFA");
   await expect(page.locator(".pricing-plan").nth(1)).toContainText("Vous économisez 7 000 FCFA (19 %)");
@@ -84,4 +85,14 @@ test("aucun lien interne de la landing ne mène à une page introuvable ou à «
     const response = await request.get(href, { maxRedirects: 5 });
     expect(response.status(), `${href} renvoie ${response.status()}`).toBeLessThan(400);
   }
+});
+
+test("l’accueil invite à découvrir les boutiques", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Vous cherchez une boutique ? Consultez nos vendeurs" })).toBeVisible();
+  // Bouton animé en continu (il « flotte ») : on suit son lien plutôt que d'attendre qu'il s'immobilise.
+  const link = page.getByRole("link", { name: "Voir toutes nos boutiques" });
+  await expect(link).toHaveAttribute("href", "/nos-boutiques");
+  await page.goto("/nos-boutiques");
+  await expect(page.getByRole("heading", { name: /Top 10/i })).toBeVisible();
 });

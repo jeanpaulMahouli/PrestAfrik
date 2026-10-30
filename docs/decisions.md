@@ -214,3 +214,14 @@ Le document des modèles autorise `@react-email/components` ou MJML. Pour ne pas
 - **Preuve sociale** : logos fictifs retirés ; bandeau et compteurs calculés en base, masqués sous des seuils (`SOCIAL_PROOF_MIN_*`).
 - **Liens** : une page désactivée disparaît du menu et du pied de page au lieu de renvoyer à l'accueil.
 - **Google** : un compte créé avec Google passe par l'étape « Votre numéro WhatsApp » avant le tableau de bord et l'assistant.
+
+## ADR-032 — Tableau de bord vendeur : annonces, communauté, salutation ; Marketing en cartes ; zone CEMAC
+
+- **Annonces** (`PlatformAnnouncement`, Administration → Annonces) : diaporama pleine largeur (16:5) et bannière fine (8:1) en haut du tableau de bord de tous les vendeurs ; images converties en WebP au bon format, lien facultatif, ordre, masquer, supprimer.
+- **Communauté** : chaîne WhatsApp, YouTube, et « Partagez vos suggestions » qui ouvre un assistant (note de 1 à 5, idée, question). Les messages sont des `SupportTicket` avec `kind` (REVIEW, SUGGESTION, QUESTION), `rating` et `storeId` ; l'équipe répond par e-mail depuis Administration → Messages et avis. Les demandes du formulaire de contact restent dans Alertes → Tickets.
+- **Salutation** selon l'heure d'Afrique centrale (Bonjour, Bon après-midi, Bonsoir) avec une illustration SVG douce ; chiffres clés : icône seule, valeur, libellé et info-bulle ; « En attente de confirmation » retiré.
+- **En-tête** : « Visiter ma boutique » et copie du lien avant « Vos boutiques » (logo de la boutique) ; la fenêtre de partage ne garde que le lien, le QR code et les réseaux.
+- **Marketing** : page en cartes (Campagnes, Bannière, Popups) ; la bannière quitte « Ma boutique » (`/dashboard/boutique/banniere` redirigé).
+- **Zone CEMAC** : PrestAfrik s'adresse d'abord aux six pays de la CEMAC (textes, pages pays) ; les conditions juridiques gardent le droit camerounais.
+- **Tarifs** : offres présentées mais non sélectionnables tant que `PRICING_SALES_OPEN` n'est pas `true`.
+- **Plus de filets colorés en haut des blocs** (vitrines, e-mails).
