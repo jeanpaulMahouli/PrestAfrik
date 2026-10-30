@@ -42,11 +42,13 @@ export async function Partners() {
       )}
       {row(false)}
       <div className="lp-partners__second">{row(true)}</div>
-      <div className="lp-find-stores">
-        <LandingButton href={shopUrl("/")} variant="glass">
-          {partners.findCta}
-        </LandingButton>
-      </div>
+      {partners.showStoresLink && (
+        <div className="lp-find-stores">
+          <LandingButton href={shopUrl("/")} variant="glass">
+            {partners.findCta}
+          </LandingButton>
+        </div>
+      )}
     </section>
   );
 }

@@ -129,9 +129,9 @@
 
 /* ---------- Bandeau du haut ---------- */
 .shop-topbar {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
   padding: 0.35rem var(--lp-gutter);
   color: rgb(255 255 255 / 0.85);
@@ -160,6 +160,14 @@
   color: var(--color-brand-primary);
 }
 
+.shop-topbar-perks {
+  overflow: hidden;
+}
+
+.shop-topbar-links {
+  justify-content: flex-end;
+}
+
 .shop-topbar-links a:hover {
   color: #fff;
 }
@@ -169,29 +177,37 @@
   font-weight: 600;
 }
 
-/* Pays de livraison (détecté, modifiable). */
+/* Pays du visiteur (détecté, modifiable) : nom et flèche, sur une liste native invisible. */
 .shop-country {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  justify-self: center;
+  gap: 0.3rem;
   color: #fff;
   font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .shop-country svg {
+  flex: none;
   color: var(--color-brand-primary);
 }
 
 .shop-country select {
-  max-width: 17rem;
-  padding: 0.2rem 1.4rem 0.2rem 0.1rem;
-  border: 0;
-  color: inherit;
-  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='m1 1 4 4 4-4' stroke='%23ff9900' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 0.3rem center;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
   font: inherit;
-  appearance: none;
   cursor: pointer;
+}
+
+.shop-country:has(select:focus-visible) {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 3px;
+  border-radius: 0.375rem;
 }
 
 .shop-country option {
@@ -1633,7 +1649,8 @@
 
 @media (max-width: 767px) {
   .shop-topbar {
-    justify-content: center;
+    grid-template-columns: 1fr;
+    justify-items: center;
   }
 
   .shop-topbar-links,

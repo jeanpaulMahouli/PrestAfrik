@@ -87,13 +87,12 @@ test("aucun lien interne de la landing ne mène à une page introuvable ou à «
   }
 });
 
-test("l’accueil invite à découvrir les boutiques", async ({ page }) => {
+test("la marketplace propose la recherche sans bouton « Rechercher »", async ({ page }) => {
+  // Le lien « Voir toutes les boutiques » de l'accueil est désactivé pour l'instant (partners.showStoresLink).
   await page.goto("/");
-  const link = page.getByRole("link", { name: "Voir toutes les boutiques" });
-  await expect(link).toHaveAttribute("href", "/nos-boutiques");
-  await link.click();
-  await expect(page).toHaveURL(/\/nos-boutiques$/);
-  // Recherche sous le héros, sans bouton « Rechercher » : Entrée lance la recherche.
+  await expect(page.getByRole("link", { name: "Voir toutes les boutiques" })).toHaveCount(0);
+  await page.goto("/nos-boutiques");
+  // Recherche sous l'en-tête, sans bouton « Rechercher » : Entrée lance la recherche.
   await expect(page.getByRole("button", { name: "Rechercher" })).toHaveCount(0);
   await expect(page.getByRole("combobox", { name: /Rechercher un vendeur/ })).toBeVisible();
 });

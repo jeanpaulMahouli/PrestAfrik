@@ -92,6 +92,8 @@ export const demoPage = {
 export const partners = {
   title: "Ces boutiques vendent déjà avec PrestAfrik",
   findCta: "Voir toutes les boutiques",
+  /** Bouton « Voir toutes les boutiques » sous les logos : désactivé pour l'instant (true pour le remettre). */
+  showStoresLink: false,
   // Logos d'illustration (boutiques fictives) ; les compteurs réels sont lus en base (modules/marketplace/social-proof.ts).
   logos: [
     { src: "/landing/logos/mboa-style.svg", alt: "Mboa Style", width: 214, height: 40 },

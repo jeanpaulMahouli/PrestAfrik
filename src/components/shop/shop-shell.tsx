@@ -65,7 +65,6 @@ export function ShopShell({
         Aller au contenu
       </a>
       <div className="shop-topbar">
-        <CountryPicker cookieName={shopCountryCookie} countries={shopCountries} current={country && local ? country.iso : "CEMAC"} />
         <ul className="shop-topbar-perks">
           <li>
             <HandCoins aria-hidden="true" size={15} /> Paiement à la livraison
@@ -74,6 +73,7 @@ export function ShopShell({
             <WhatsAppIcon size={15} variant="logo" /> Commande confirmée sur WhatsApp
           </li>
         </ul>
+        <CountryPicker cookieName={shopCountryCookie} countries={shopCountries} current={country && local ? country.iso : "CEMAC"} />
         <nav aria-label="Liens utiles" className="shop-topbar-links">
           <a href={siteHref("/aide")}>Aide</a>
           <a href={siteHref("/")}>PrestAfrik.com</a>

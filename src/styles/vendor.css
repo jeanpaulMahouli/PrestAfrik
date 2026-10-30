@@ -3279,6 +3279,11 @@
     padding: 0;
     justify-content: center;
   }
+
+  /* Pas de bouton « copier le lien » sur téléphone : le partage reste dans « Partager ». */
+  .topbar-copy {
+    display: none;
+  }
 }
 
 /* Pages « carrefour » (Marketing) et bloc Communauté : cartes carrées en verre dépoli, cliquables en

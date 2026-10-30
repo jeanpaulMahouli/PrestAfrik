@@ -897,6 +897,11 @@
 
 /* Téléphone : deux chiffres clés par ligne. */
 @media (max-width: 640px) {
+  /* Info-bulle alignée sur le « i » (bord droit de la carte) : assez étroite pour ne pas sortir de l'écran. */
+  .kpi-info-tip {
+    max-width: calc(50vw - 2.5rem);
+  }
+
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
