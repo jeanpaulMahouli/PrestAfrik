@@ -32,6 +32,8 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
+      // Logo PrestAfrik vectorisé (PrestAfrik maquettes UX UI/fav.jpg) : net à toutes les tailles.
+      { url: "/brand/favicon.svg", type: "image/svg+xml" },
       { url: "/brand/icon.png", type: "image/png", sizes: "512x512" },
     ],
     apple: { url: "/brand/apple-icon.png", sizes: "180x180" },
