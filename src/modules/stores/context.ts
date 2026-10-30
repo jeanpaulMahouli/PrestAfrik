@@ -4,6 +4,7 @@ import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requireWhatsappNumber } from "@/modules/auth/google";
 import { auth } from "@/modules/auth/server";
 import {
   findAuthorizedMembership,
@@ -46,6 +47,7 @@ export const getStoreContext = cache(async function getStoreContext() {
   const session = await auth.api.getSession({ headers: await headers() });
 
   if (!session) redirect("/connexion");
+  await requireWhatsappNumber(session.user);
 
   const cookieStore = await cookies();
   const [memberships, user] = await Promise.all([

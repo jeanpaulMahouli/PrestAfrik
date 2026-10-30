@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { texts } from "@/config/texts";
 import { EmailVerificationBanner } from "@/components/layout/email-verification-banner";
+import { PwaRegistration } from "@/components/pwa/install-app";
 import { VendorDrawer, VendorSidebar } from "@/components/layout/vendor-navigation";
 import { MobileSearchButton, StoreSwitcher, UserMenu } from "@/components/layout/vendor-topbar-menus";
 import { isPlatformAdmin } from "@/modules/admin/context";
@@ -21,6 +22,7 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
 
   return (
     <div className="vendor-shell">
+      <PwaRegistration />
       <header className="vendor-topbar">
         <VendorDrawer role={membership.role} storeName={store.name} />
         <Link aria-label="PrestAfrik, accueil de mon espace" className="vendor-logo" href="/dashboard">

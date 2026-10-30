@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { PwaRegistration } from "@/components/pwa/install-app";
 import { StoreLivePreview, type LivePreviewValues } from "@/components/stores/store-live-preview";
 import { CheckIcon } from "@/components/ui/icons";
 import { WizardPauseDialog } from "@/components/wizard/wizard-pause-dialog";
@@ -68,6 +69,7 @@ export function WizardShell({ steps, current, reached, draftId, exitHref = "/das
   return (
     <PreviewContext.Provider value={{ draft, update }}>
       <div className="wizard">
+        <PwaRegistration />
         <header className="wizard-header">
           <Link aria-label="PrestAfrik" className="wizard-logo" href="/dashboard">
             <Image alt="PrestAfrik" height={34} priority src="/brand/logo-prestafrik.png" width={62} />

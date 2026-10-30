@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { WelcomeNoStore } from "@/components/dashboard/welcome-no-store";
+import { InstallAppCard } from "@/components/pwa/install-app";
 import { TimeSeriesChart } from "@/components/dashboard/time-series-chart";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ShareStoreButton } from "@/components/shared/share-store-button";
@@ -16,6 +17,7 @@ import { formatDateTime, formatFcfa, formatReference, plural } from "@/lib/forma
 import { photoVariant } from "@/lib/product-photos";
 import { storePublicUrl } from "@/lib/urls";
 import { hasPermission } from "@/modules/auth/permissions";
+import { requireWhatsappNumber } from "@/modules/auth/google";
 import { auth } from "@/modules/auth/server";
 import { isPlatformAdmin } from "@/modules/admin/context";
 import { prisma } from "@/lib/prisma";
@@ -34,6 +36,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   // Compte sans boutique (juste après l'inscription, ou boutique pas encore créée) : une seule prochaine étape.
   const account = await auth.api.getSession({ headers: await headers() });
   if (!account) redirect("/connexion");
+  await requireWhatsappNumber(account.user);
   const hasStore = await prisma.storeMembership.findFirst({ where: { userId: account.user.id }, select: { id: true } });
   if (!hasStore) {
     const [pendingDraft, adminLink] = await Promise.all([findDraft(account.user.id), isPlatformAdmin(account.user.id)]);
@@ -93,6 +96,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <ShareStoreButton className="btn btn-primary" label="Partager" published={store.isPublished} storeName={store.name} storeUrl={publicUrl} />
         </div>
       </div>
+
+      <InstallAppCard />
 
       {params.succes === "boutique-supprimee" && (
         <p className="v-banner v-banner-success" role="status">

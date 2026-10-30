@@ -8,6 +8,7 @@ import { EmailCodeStep, emailCodeResendDelayMs } from "@/components/auth/email-c
 import { GoogleButton } from "@/components/auth/google-button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { welcomeHref, whatsappStepHref } from "@/config/routes";
 import { texts } from "@/config/texts";
 import { parsePhone } from "@/lib/phone";
 import { authClient } from "@/modules/auth/client";
@@ -25,8 +26,6 @@ type AuthFormProps = {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const t = texts.auth;
-/** Accueil du tableau de bord après l'inscription : félicitations et première étape. */
-export const welcomeHref = "/dashboard?bienvenue=1";
 // Inscription en attente du code : gardée pendant l'onglet (actualisation) ; jamais le mot de passe.
 const pendingKey = "prestafrik:inscription-code";
 
@@ -192,7 +191,7 @@ export function AuthForm({ mode, invitationToken, next, googleEnabled = false }:
     <form aria-busy={pending} className="auth-form" noValidate onSubmit={submit}>
       {googleEnabled && !validInvitation && (
         <>
-          <GoogleButton callbackURL={safeInternalPath(next) ?? "/dashboard"} newUserCallbackURL={welcomeHref} />
+          <GoogleButton callbackURL={safeInternalPath(next) ?? "/dashboard"} newUserCallbackURL={whatsappStepHref} />
           <p aria-hidden="true" className="auth-divider"><span>{t.signIn.or}</span></p>
         </>
       )}

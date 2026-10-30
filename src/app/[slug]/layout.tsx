@@ -34,11 +34,13 @@ export async function generateMetadata({ params }: LayoutProps<"/[slug]">): Prom
   const store = await findStoreBySlug(slug);
   // Une boutique hors ligne (brouillon ou suspendue) n'est pas indexée par les moteurs de recherche.
   const robots = store && (!store.isPublished || store.suspendedAt) ? { index: false, follow: false } : undefined;
-  if (!store?.logoUrl) return robots ? { robots } : {};
+  // Pas de manifeste de l'application vendeur sur une boutique : un client n'installe pas l'espace vendeur.
+  if (!store?.logoUrl) return { manifest: null, ...(robots ? { robots } : {}) };
   // L'identifiant du fichier change à chaque nouveau logo : le navigateur ne garde pas l'ancienne icône.
   const version = store.logoUrl.split("/").pop()?.replace(/\.webp$/, "") ?? "1";
   const icon = (size: number) => `/api/boutique/${encodeURIComponent(slug)}/icone?taille=${size}&v=${version}`;
   return {
+    manifest: null,
     icons: {
       icon: [
         { url: icon(32), type: "image/png", sizes: "32x32" },

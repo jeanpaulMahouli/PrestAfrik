@@ -2,6 +2,7 @@ import "server-only";
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { requireWhatsappNumber } from "@/modules/auth/google";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/modules/auth/server";
 import { isAccountVerified } from "@/modules/auth/phone-account";
@@ -24,6 +25,7 @@ export const wizardStepCount = wizardSteps.length;
 export async function requireWizardSession() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/connexion?next=/boutiques/nouvelle");
+  await requireWhatsappNumber(session.user);
   return session;
 }
 

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { EmailVerificationBanner } from "@/components/layout/email-verification-banner";
 import { UserMenu } from "@/components/layout/vendor-topbar-menus";
+import { PwaRegistration } from "@/components/pwa/install-app";
 import { Confetti } from "@/components/ui/confetti";
 
 type WelcomeNoStoreProps = {
@@ -21,6 +22,7 @@ type WelcomeNoStoreProps = {
 export function WelcomeNoStore({ firstName, userName, userEmail, userImage, adminLink, emailVerified, justSignedUp, createHref }: WelcomeNoStoreProps) {
   return (
     <div className="vendor-shell welcome-shell">
+      <PwaRegistration />
       {justSignedUp && <Confetti />}
       <header className="vendor-topbar">
         <Link aria-label="PrestAfrik, accueil de mon espace" className="vendor-logo" href="/dashboard">

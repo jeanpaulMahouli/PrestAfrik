@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { fontVariables } from "@/lib/fonts";
 import { NavigationLoadingIndicator } from "@/components/ui/navigation-loading-indicator";
@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   description:
     "PrestAfrik : créez gratuitement votre boutique en ligne en 5 minutes. Commandes sur WhatsApp, paiement à la livraison, au Cameroun et en Afrique.",
   applicationName: "PrestAfrik",
+  // Application installable (PWA) : public/manifest.webmanifest, ouverte sur le tableau de bord.
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "PrestAfrik", statusBarStyle: "default" },
   keywords: ["PrestAfrik", "boutique en ligne", "créer une boutique en ligne", "vendre sur WhatsApp", "e-commerce Cameroun", "paiement à la livraison", "Afrique", "Douala", "Yaoundé"],
   // Aperçu des liens partagés (WhatsApp, Facebook, LinkedIn…) ; une boutique ou un produit le remplace par ses images.
   openGraph: {
@@ -34,6 +37,10 @@ export const metadata: Metadata = {
     ],
     apple: { url: "/brand/apple-icon.png", sizes: "180x180" },
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FF9900",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

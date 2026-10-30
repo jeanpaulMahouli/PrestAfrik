@@ -32,7 +32,7 @@ export function SiteFooter() {
         <ul className="lp-footer__socials">
           {footer.socials.map((social) => (
             <li key={social.label}>
-              <a aria-label={social.label} href={social.href}>
+              <a aria-label={`${social.label} (nouvel onglet)`} href={social.href} rel="noopener noreferrer" target="_blank" title={social.label}>
                 <Image alt="" height={26} src={social.icon} width={26} />
               </a>
             </li>

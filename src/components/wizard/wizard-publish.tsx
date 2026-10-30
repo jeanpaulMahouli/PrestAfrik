@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { InstallAppSuggestion } from "@/components/pwa/install-app";
 import { SocialShare } from "@/components/shared/social-share";
 import { CopyButton } from "@/components/ui/copy-button";
 import { WizardStepForm } from "@/components/wizard/wizard-step-form";
@@ -88,6 +89,7 @@ function StoreLink({ storeUrl, showView = false }: { storeUrl: string; showView?
 export function PublishedScreen({ storeName, storeUrl }: { storeName: string; storeUrl: string }) {
   return (
     <section aria-labelledby="published-title" className="wizard-card wizard-published">
+      <InstallAppSuggestion />
       <span aria-hidden="true" className="wizard-published-icon"><CheckIcon size={24} /></span>
       <h1 id="published-title">Félicitations, votre boutique prend vie !</h1>
       <p className="wizard-subtitle">
@@ -107,6 +109,7 @@ export function PublishedScreen({ storeName, storeUrl }: { storeName: string; st
 export function CreatedScreen({ storeName, storeUrl, missing }: { storeName: string; storeUrl: string; missing: { label: string; href: string }[] }) {
   return (
     <section aria-labelledby="created-title" className="wizard-card wizard-published">
+      <InstallAppSuggestion />
       <span aria-hidden="true" className="wizard-published-icon"><CheckIcon size={24} /></span>
       <h1 id="created-title">Votre boutique « {storeName} » est créée !</h1>
       <p className="wizard-subtitle">

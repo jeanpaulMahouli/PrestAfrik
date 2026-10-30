@@ -125,7 +125,18 @@ function Gallery({ images, name }: { images: ProductDetailProps["product"]["imag
           </button>
         ))}
       </div>
-      {zoomed && <Lightbox images={images} name={name} onClose={() => setZoomed(false)} start={index} />}
+      {zoomed && (
+        <Lightbox
+          images={images}
+          name={name}
+          onClose={() => {
+            setZoomed(false);
+            // Retour du focus sur la photo sans contour visible (toucher) : le clavier le retrouve quand même.
+            requestAnimationFrame(() => track.current?.querySelectorAll<HTMLElement>(".sf-gallery-slide")[index]?.focus({ preventScroll: true, focusVisible: false } as FocusOptions));
+          }}
+          start={index}
+        />
+      )}
       {images.length > 1 && (
         <>
           <button aria-label="Photo précédente" className="sf-gallery-arrow sf-gallery-arrow-prev" onClick={() => go(index - 1)} type="button">

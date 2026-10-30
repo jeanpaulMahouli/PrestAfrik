@@ -251,11 +251,11 @@ export const footer = {
     },
   ],
   socialTitle: "Réseaux sociaux",
+  // Seulement les comptes qui existent (lien réel) ; ouverts dans un nouvel onglet.
   socials: [
-    { label: "X (Twitter)", href: "#", icon: "/landing/icons/x.svg" },
-    { label: "Facebook", href: "#", icon: "/landing/icons/facebook.svg" },
-    { label: "Instagram", href: "#", icon: "/landing/icons/instagram.svg" },
-    { label: "YouTube", href: "#", icon: "/landing/icons/youtube.svg" },
+    { label: "PrestAfrik sur TikTok", href: "https://www.tiktok.com/@prestafrik1", icon: "/landing/icons/tiktok.svg" },
+    { label: "PrestAfrik sur Facebook", href: "https://www.facebook.com/share/19Wt8Ra1nd/", icon: "/landing/icons/facebook.svg" },
+    { label: "Chaîne WhatsApp « Club des 1000 »", href: "https://whatsapp.com/channel/0029Vb9M5ZPEwEjzoo7OsM3y", icon: "/landing/icons/whatsapp.svg" },
   ],
   copyright: "© 2026 PrestAfrik. Tous droits réservés.",
   madeBy: "Zalam",

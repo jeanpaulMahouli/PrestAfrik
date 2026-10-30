@@ -1814,7 +1814,13 @@
   scroll-snap-align: start;
 }
 
-.sf-gallery-slide:focus-visible {
+/* Contour dessiné à l'intérieur de la photo : à l'extérieur, la galerie le coupait et il ne restait
+   qu'un trait sombre sous la photo (au retour de l'agrandissement, le focus revient sur la photo). */
+.sf .sf-gallery-slide:focus {
+  outline: none;
+}
+
+.sf .sf-gallery-slide:focus-visible {
   outline: 3px solid var(--store-primary, var(--color-brand-primary));
   outline-offset: -3px;
 }

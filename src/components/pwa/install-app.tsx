@@ -1,0 +1,290 @@
+"use client";
+
+import { Download, Smartphone } from "lucide-react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { Dialog } from "@/components/ui/dialog";
+
+// Installation de l'application PrestAfrik (PWA) sur l'écran d'accueil.
+// - Android et Chrome : la fenêtre d'installation native du navigateur (événement beforeinstallprompt).
+// - iPhone / iPad et navigateurs sans cette fenêtre : une explication courte, étape par étape.
+// L'événement n'est émis qu'une fois, au chargement : il est capté ici dès que le module est chargé.
+
+type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
+
+let deferredPrompt: InstallPromptEvent | null = null;
+let installed = false;
+const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((listener) => listener());
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event as InstallPromptEvent;
+    notify();
+  });
+  window.addEventListener("appinstalled", () => {
+    installed = true;
+    deferredPrompt = null;
+    notify();
+  });
+}
+
+type Platform = "ios" | "ios-other-browser" | "android" | "desktop";
+
+function detectPlatform(): Platform {
+  const ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (ios) return /CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua) ? "ios-other-browser" : "ios";
+  return /Android/i.test(ua) ? "android" : "desktop";
+}
+
+function isStandalone() {
+  return window.matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+}
+
+type InstallState = { ready: boolean; installed: boolean; canPrompt: boolean; platform: Platform };
+const serverState: InstallState = { ready: false, installed: false, canPrompt: false, platform: "desktop" };
+let snapshot: InstallState = serverState;
+
+function readState(): InstallState {
+  const next: InstallState = { ready: true, installed: installed || isStandalone(), canPrompt: Boolean(deferredPrompt), platform: detectPlatform() };
+  if (next.installed !== snapshot.installed || next.canPrompt !== snapshot.canPrompt || next.platform !== snapshot.platform || !snapshot.ready) snapshot = next;
+  return snapshot;
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/** État de l'installation : déjà installée, fenêtre native disponible, type d'appareil. */
+export function usePwaInstall() {
+  const state = useSyncExternalStore(subscribe, readState, () => serverState);
+  const promptInstall = useCallback(async () => {
+    if (!deferredPrompt) return "unavailable" as const;
+    const event = deferredPrompt;
+    deferredPrompt = null;
+    await event.prompt();
+    const { outcome } = await event.userChoice;
+    notify();
+    return outcome;
+  }, []);
+  return { ...state, promptInstall };
+}
+
+/** Enregistre le service worker minimal (public/sw.js) : il rend l'application installable, sans rien mettre en cache. */
+export function PwaRegistration() {
+  useEffect(() => {
+    if (!("serviceWorker" in navigator) || process.env.NODE_ENV !== "production") return;
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined);
+  }, []);
+  return null;
+}
+
+/** Étapes à suivre quand le navigateur n'a pas de fenêtre d'installation (iPhone surtout). */
+function InstallSteps({ platform }: { platform: Platform }) {
+  if (platform === "ios") {
+    return (
+      <ol className="pwa-steps">
+        <li>
+          Touchez le bouton <strong>Partager</strong> en bas de Safari (le carré avec une flèche vers le haut).
+        </li>
+        <li>
+          Faites défiler et touchez <strong>« Sur l’écran d’accueil »</strong>.
+        </li>
+        <li>
+          Touchez <strong>Ajouter</strong> : l’icône PrestAfrik apparaît sur votre écran d’accueil.
+        </li>
+      </ol>
+    );
+  }
+  if (platform === "ios-other-browser") {
+    return (
+      <ol className="pwa-steps">
+        <li>Sur iPhone, l’installation se fait depuis <strong>Safari</strong> : copiez l’adresse de cette page et ouvrez-la dans Safari.</li>
+        <li>
+          Touchez <strong>Partager</strong>, puis <strong>« Sur l’écran d’accueil »</strong>, puis <strong>Ajouter</strong>.
+        </li>
+      </ol>
+    );
+  }
+  if (platform === "android") {
+    return (
+      <ol className="pwa-steps">
+        <li>
+          Touchez le menu <strong>⋮</strong> en haut à droite de votre navigateur.
+        </li>
+        <li>
+          Touchez <strong>« Installer l’application »</strong> ou <strong>« Ajouter à l’écran d’accueil »</strong>.
+        </li>
+        <li>Confirmez : l’icône PrestAfrik apparaît sur votre écran d’accueil.</li>
+      </ol>
+    );
+  }
+  return (
+    <ol className="pwa-steps">
+      <li>
+        Dans Chrome ou Edge, cliquez sur l’icône d’installation <strong>⊕</strong> à droite de la barre d’adresse.
+      </li>
+      <li>
+        Ou ouvrez le menu <strong>⋮</strong>, puis <strong>« Installer PrestAfrik »</strong>.
+      </li>
+    </ol>
+  );
+}
+
+const benefits = [
+  "Ouverture en un geste, comme une application, sans chercher le lien",
+  "Plein écran, sans la barre du navigateur",
+  "Rien à télécharger depuis un magasin d’applications : très léger, toujours à jour",
+];
+
+/**
+ * Bouton « Installer PrestAfrik sur mon écran d'accueil ». Fenêtre native quand le navigateur la propose,
+ * sinon explication pas à pas. Rien ne s'affiche si l'application est déjà installée.
+ */
+export function InstallAppButton({ className = "btn btn-secondary", compact = false }: { className?: string; compact?: boolean }) {
+  const { ready, installed: isInstalled, canPrompt, platform, promptInstall } = usePwaInstall();
+  const [help, setHelp] = useState(false);
+  if (!ready || isInstalled) return null;
+
+  return (
+    <>
+      <button
+        className={className}
+        onClick={async () => {
+          if (canPrompt && (await promptInstall()) !== "unavailable") return;
+          setHelp(true);
+        }}
+        type="button"
+      >
+        <Download aria-hidden="true" size={18} />
+        {compact ? "Installer l’application" : "Installer PrestAfrik sur mon écran d’accueil"}
+      </button>
+      <Dialog description="Quelques secondes suffisent." onClose={() => setHelp(false)} open={help} size="sm" title="Installer PrestAfrik sur votre écran d’accueil">
+        <InstallSteps platform={platform} />
+      </Dialog>
+    </>
+  );
+}
+
+/**
+ * Proposition d'installation affichée une seule fois sur cet appareil (juste après la création de la boutique).
+ * Facultative : « Plus tard » la ferme pour de bon ; le bouton reste dans le menu du compte.
+ */
+export function InstallAppSuggestion({ storageKey = "prestafrik:pwa-proposee" }: { storageKey?: string }) {
+  const { ready, installed: isInstalled, canPrompt, platform, promptInstall } = usePwaInstall();
+  const [open, setOpen] = useState(false);
+  const [showSteps, setShowSteps] = useState(false);
+
+  useEffect(() => {
+    if (!ready || isInstalled) return;
+    try {
+      if (localStorage.getItem(storageKey)) return;
+    } catch {
+      return;
+    }
+    // Mémorisé au moment où la fenêtre s'ouvre (pas avant : un effet relancé ne doit pas l'empêcher).
+    const timer = window.setTimeout(() => {
+      try {
+        localStorage.setItem(storageKey, new Date().toISOString());
+      } catch {
+        // Stockage indisponible : la proposition pourra revenir.
+      }
+      setOpen(true);
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [ready, isInstalled, storageKey]);
+
+  const close = useCallback(() => setOpen(false), []);
+  if (isInstalled) return null;
+
+  return (
+    <Dialog
+      description="Recommandé, mais facultatif : vous pouvez aussi continuer depuis votre navigateur."
+      footer={
+        <div className="pwa-actions">
+          <button className="btn btn-secondary" onClick={close} type="button">
+            Plus tard
+          </button>
+          <button
+            className="btn btn-primary"
+            data-autofocus=""
+            onClick={async () => {
+              if (canPrompt) {
+                const outcome = await promptInstall();
+                if (outcome !== "unavailable") {
+                  close();
+                  return;
+                }
+              }
+              setShowSteps(true);
+            }}
+            type="button"
+          >
+            <Download aria-hidden="true" size={18} /> Installer PrestAfrik sur mon écran d’accueil
+          </button>
+        </div>
+      }
+      onClose={close}
+      open={open}
+      size="sm"
+      title="Gardez votre boutique à portée de main"
+    >
+      <div className="pwa-suggestion">
+        <span aria-hidden="true" className="pwa-suggestion-icon">
+          <Smartphone size={26} />
+        </span>
+        <ul className="pwa-benefits">
+          {benefits.map((benefit) => (
+            <li key={benefit}>{benefit}</li>
+          ))}
+        </ul>
+        <p className="pwa-note">Vos clients, eux, continuent d’utiliser le lien de votre boutique : rien ne change pour eux.</p>
+        {showSteps && <InstallSteps platform={platform} />}
+      </div>
+    </Dialog>
+  );
+}
+
+/** Encart du tableau de bord : installer l'application, masqué une fois installée ou refusé sur cet appareil. */
+export function InstallAppCard() {
+  const { ready, installed: isInstalled } = usePwaInstall();
+  const [hidden, setHidden] = useState(true);
+  useEffect(() => {
+    try {
+      setHidden(Boolean(localStorage.getItem("prestafrik:pwa-encart-ferme")));
+    } catch {
+      setHidden(false);
+    }
+  }, []);
+  if (!ready || isInstalled || hidden) return null;
+
+  return (
+    <section aria-label="Application PrestAfrik" className="pwa-card">
+      <span aria-hidden="true" className="pwa-suggestion-icon">
+        <Smartphone size={22} />
+      </span>
+      <p>
+        <strong>PrestAfrik sur votre écran d’accueil</strong>
+        <span>Ouvrez vos commandes en un geste, comme une application.</span>
+      </p>
+      <InstallAppButton className="btn btn-primary btn-sm" compact />
+      <button
+        aria-label="Masquer cet encart"
+        className="pwa-card-close"
+        onClick={() => {
+          setHidden(true);
+          try {
+            localStorage.setItem("prestafrik:pwa-encart-ferme", "1");
+          } catch {
+            // Stockage indisponible : l'encart reviendra à la prochaine visite.
+          }
+        }}
+        type="button"
+      >
+        ×
+      </button>
+    </section>
+  );
+}

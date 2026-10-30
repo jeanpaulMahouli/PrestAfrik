@@ -862,7 +862,8 @@
 
 /* ---------- 14. Menus déroulants sur téléphone ---------- */
 /* Période, boutique, compte, « … » : sur un écran étroit, le menu devient un panneau centré en bas de
-   l'écran (fond assombri), au lieu d'un menu accroché au bouton qui pouvait sortir de l'écran. */
+   l'écran (fond assombri), au lieu d'un menu accroché au bouton qui pouvait sortir de l'écran.
+   Exception : les menus de l'en-tête s'ouvrent en haut, sous la barre. */
 @media (max-width: 640px) {
   .period-filter-panel,
   .topbar-menu-panel,
@@ -885,6 +886,17 @@
     animation: menu-sheet-in 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
 
+  /* Menus de l'en-tête (boutique, compte) : le panneau descend juste sous la barre du haut, près du
+     bouton touché, au lieu d'apparaître en bas de l'écran. */
+  .topbar-menu-panel {
+    top: calc(var(--topbar-height, 56px) + 0.5rem);
+    bottom: auto;
+    box-shadow:
+      0 0 0 100vmax rgb(0 0 38 / 0.35),
+      0 8px 30px rgb(0 0 0 / 0.15);
+    animation-name: menu-drop-in;
+  }
+
   /* Liens et boutons du panneau : plus hauts, faciles à toucher. */
   .period-filter-panel li a,
   .row-menu-panel a,
@@ -892,6 +904,13 @@
   .topbar-menu-link,
   .store-switch-item {
     min-height: 3rem;
+  }
+}
+
+@keyframes menu-drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-1rem);
   }
 }
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { StoreRole } from "@prisma/client";
 import { UserAvatar } from "@/components/account/user-avatar";
+import { InstallAppButton } from "@/components/pwa/install-app";
 import { useDismiss } from "@/components/ui/use-dismiss";
 import { texts } from "@/config/texts";
 import { authClient } from "@/modules/auth/client";
@@ -117,6 +118,7 @@ export function UserMenu({ userName, userEmail, userImage = null, adminLink = fa
             <small>{userEmail}</small>
           </p>
           <Link className="topbar-menu-link" href="/dashboard/profil" onClick={() => setOpen(false)}>{t.profile}</Link>
+          <InstallAppButton className="topbar-menu-link topbar-install" compact />
           {adminLink && <Link className="topbar-menu-link" href="/admin" onClick={() => setOpen(false)}>Administration</Link>}
           <button className="topbar-menu-link topbar-signout" disabled={pending} onClick={signOut} type="button">
             {pending ? t.signingOut : t.signOut}
