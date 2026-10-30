@@ -512,38 +512,170 @@
   }
 }
 
-.search-card-rank {
+
+/* Accueil : petit lien vers toutes les boutiques, sous le bandeau des vendeurs. */
+.lp-find-stores {
+  display: flex;
+  justify-content: center;
+  margin: clamp(28px, 3vw, 48px) auto 0;
+  padding: 0 var(--lp-gutter);
+}
+
+/* ---------- Page « Nos boutiques » ---------- */
+/* Recherche sous le héros (pleine largeur), produits mis en avant (8 par ligne), boutiques en carrés (5 par ligne). */
+.stores-page {
   display: grid;
-  width: 2rem;
-  height: 2rem;
+  gap: clamp(32px, 4vw, 56px);
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: clamp(32px, 4vw, 64px) var(--lp-gutter) 0;
+}
+
+.vendor-search.vendor-search--wide {
+  width: 100%;
+  margin: 0;
+}
+
+.vendor-search--wide .vendor-search-bar {
+  min-height: 3.5rem;
+  padding-right: 1rem;
+}
+
+.stores-products-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: clamp(10px, 1.2vw, 18px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stores-products-grid a {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--lp-ink);
+  text-decoration: none;
+}
+
+.stores-products-grid a:hover .search-card-photo img {
+  transform: scale(1.05);
+}
+
+.stores-products-grid .search-card-photo img {
+  transition: transform 0.3s var(--lp-ease);
+}
+
+.stores-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(12px, 1.4vw, 22px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.store-tile {
+  display: flex;
+  aspect-ratio: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 1rem;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  color: var(--lp-ink);
+  background: #fff;
+  box-shadow:
+    0 12px 32px -20px rgb(0 0 38 / 0.35),
+    inset 0 0 0 1px var(--lp-line);
+  text-align: center;
+  text-decoration: none;
+  transition:
+    translate 0.25s var(--lp-ease),
+    box-shadow 0.25s var(--lp-ease);
+}
+
+.store-tile:hover,
+.store-tile:focus-visible {
+  translate: 0 -4px;
+  box-shadow:
+    0 20px 40px -18px rgb(255 153 0 / 0.55),
+    inset 0 0 0 1px rgb(255 153 0 / 0.45);
+}
+
+.store-tile-logo {
+  display: grid;
+  overflow: hidden;
+  width: clamp(3.5rem, 5vw, 4.5rem);
+  aspect-ratio: 1;
   flex: none;
   place-items: center;
-  border-radius: 50%;
+  margin-bottom: 0.25rem;
+  border-radius: 1.1rem;
   color: var(--lp-navy);
-  background: var(--lp-orange);
-  font-weight: 800;
+  background: var(--lp-peach);
+  font-weight: 700;
 }
 
-ol.search-grid {
-  counter-reset: none;
+.store-tile-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-/* Accueil : invitation à découvrir les boutiques, sous le bandeau des vendeurs. */
-.lp-find-stores {
-  display: grid;
-  justify-items: center;
-  gap: 1rem;
-  margin: clamp(32px, 4vw, 64px) auto 0;
-  padding: 0 var(--lp-gutter);
-  text-align: center;
+.store-tile strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
-.lp-find-stores h2 {
-  margin: 0;
-  font: 600 clamp(1.25rem, 2.2vw, 2rem) / 1.25 var(--lp-display);
-}
-
-.lp-find-stores p {
-  margin: 0;
+.store-tile small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  max-width: 100%;
+  overflow: hidden;
   color: var(--lp-ink-soft);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.store-tile-activity {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  color: #92400e;
+  background: var(--lp-cream);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 1100px) {
+  .stores-products-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .stores-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .stores-products-grid,
+  .stores-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .store-tile {
+    padding: 0.75rem;
+  }
 }

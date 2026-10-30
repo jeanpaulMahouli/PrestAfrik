@@ -21,32 +21,25 @@ export default async function PricingPage() {
     <PageShell
       className="lp-page--pricing"
       hero={{
-        title: "Des tarifs simples, en FCFA, sans engagement",
-        subtitle: `${trialLabel}. Choisissez ensuite l’offre qui correspond à votre commerce : vous pouvez en changer à tout moment.`,
+        title: "Des tarifs simples, adaptés à vos besoins",
+        subtitle: club.active
+          ? "Rejoignez le Club des 1000 et profitez de 6 mois offerts : il reste encore des places."
+          : `${trialLabel}. Choisissez ensuite l’offre qui correspond à votre commerce : vous pouvez en changer à tout moment.`,
+        actions: club.active ? (
+          <LandingButton href={club.channelUrl} variant="glass">
+            Rejoindre la communauté WhatsApp
+          </LandingButton>
+        ) : undefined,
       }}
       signedIn={signedIn}
     >
       <section aria-label="Offres" className="lp-section pricing">
-        {club.active && (
-          <aside aria-label="Promotion Club des 1000" className="pricing-club">
-            <p>
-              <strong>{club.title}</strong> {club.text}
-            </p>
-            <div className="pricing-club-actions">
-              <a className="lp-btn lp-btn--secondary" href={club.channelUrl} rel="noopener noreferrer" target="_blank">
-                Rejoindre la communauté WhatsApp
-              </a>
-              <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Créer ma boutique gratuitement maintenant"}</LandingButton>
-            </div>
-          </aside>
-        )}
         <PricingTable plans={pricingPlans} salesOpen={salesOpen} signupHref={signedIn ? "/dashboard" : "/inscription"} />
         {!salesOpen && (
           <p className="pricing-note" id="pricing-soon">
             Les offres payantes ne sont pas encore ouvertes : en attendant, PrestAfrik est entièrement gratuit, sans rien à payer.
           </p>
         )}
-        <p className="pricing-note">Prix en francs CFA (FCFA), paiement mensuel ou annuel, sans engagement.</p>
         <p className="pricing-final">
           <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Commencer mon essai gratuit"}</LandingButton>
         </p>

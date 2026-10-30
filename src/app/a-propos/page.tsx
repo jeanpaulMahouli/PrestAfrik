@@ -1,9 +1,8 @@
-import { LayoutDashboard, Lock, MessageCircle, Rocket, Smartphone, TrendingUp } from "lucide-react";
+import { Lock, MessageCircle, Smartphone } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { FeatureGrid, SectionHead } from "@/components/landing/blocks";
-import { LandingButton } from "@/components/landing/buttons";
 import { disabledPages } from "@/components/landing/content";
 import { isSignedIn, PageShell } from "@/components/landing/page-shell";
 import { Testimonials } from "@/components/landing/testimonials";
@@ -14,12 +13,6 @@ export const metadata: Metadata = {
   description:
     "PrestAfrik donne à chaque commerçant africain une boutique en ligne professionnelle, simple et gratuite pour démarrer. Notre mission, nos valeurs et nos engagements.",
 };
-
-const journey = [
-  { icon: Rocket, phase: "Semaine 1", title: "Lancez-vous", text: "Boutique créée gratuitement, premiers produits en ligne, lien partagé dans vos statuts." },
-  { icon: LayoutDashboard, phase: "Mois 1", title: "Structurez", text: "Zones de livraison, fichier clients, argent reçu : votre activité devient lisible." },
-  { icon: TrendingUp, phase: "Ensuite", title: "Développez", text: "Campagnes, équipe, pages de marque : de vendeur à entreprise, sans changer d’outil." },
-];
 
 export default async function AboutPage() {
   // Page en attente de sa maquette (voir disabledPages dans content.ts).
@@ -60,7 +53,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <section aria-labelledby="engagements-title" className="lp-section">
+      <section aria-labelledby="engagements-title" className="lp-section lp-glass-zone">
         <SectionHead id="engagements-title" title="Ce que nous vous promettons" />
         <FeatureGrid
           items={[
@@ -71,37 +64,7 @@ export default async function AboutPage() {
         />
       </section>
 
-      <section aria-labelledby="chemin-title" className="lp-section lp-journey">
-        <div className="lp-journey__panel">
-          <span aria-hidden="true" className="lp-journey__glow" />
-          <header className="lp-journey__head">
-            <p className="lp-journey__kicker">Votre parcours avec PrestAfrik</p>
-            <h2 id="chemin-title">Commencer petit, voir grand</h2>
-            <p>De la première commande à la marque reconnue, PrestAfrik grandit avec vous.</p>
-          </header>
-          <ol className="lp-journey__steps">
-            {journey.map(({ icon: Icon, phase, title, text }, index) => (
-              <li className="lp-journey__step" key={title}>
-                <span aria-hidden="true" className="lp-journey__number">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span aria-hidden="true" className="lp-journey__icon">
-                  <Icon size={26} strokeWidth={1.8} />
-                </span>
-                <p className="lp-journey__phase">{phase}</p>
-                <h3>{title}</h3>
-                <p>{text}</p>
-              </li>
-            ))}
-          </ol>
-          <div className="lp-journey__cta">
-            <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Rejoindre PrestAfrik"}</LandingButton>
-          </div>
-        </div>
-      </section>
-
       <Testimonials />
-
     </PageShell>
   );
 }

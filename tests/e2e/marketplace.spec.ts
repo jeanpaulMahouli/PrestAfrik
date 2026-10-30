@@ -89,10 +89,11 @@ test("aucun lien interne de la landing ne mène à une page introuvable ou à «
 
 test("l’accueil invite à découvrir les boutiques", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Vous cherchez une boutique ? Consultez nos vendeurs" })).toBeVisible();
-  // Bouton animé en continu (il « flotte ») : on suit son lien plutôt que d'attendre qu'il s'immobilise.
-  const link = page.getByRole("link", { name: "Voir toutes nos boutiques" });
+  const link = page.getByRole("link", { name: "Voir toutes les boutiques" });
   await expect(link).toHaveAttribute("href", "/nos-boutiques");
-  await page.goto("/nos-boutiques");
-  await expect(page.getByRole("heading", { name: /Top 10/i })).toBeVisible();
+  await link.click();
+  await expect(page).toHaveURL(/\/nos-boutiques$/);
+  // Recherche sous le héros, sans bouton « Rechercher » : Entrée lance la recherche.
+  await expect(page.getByRole("button", { name: "Rechercher" })).toHaveCount(0);
+  await expect(page.getByRole("combobox", { name: /Rechercher un vendeur/ })).toBeVisible();
 });

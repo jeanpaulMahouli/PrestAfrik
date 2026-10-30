@@ -33,7 +33,7 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
  * Recherche de vendeurs avec suggestions pendant la saisie (motif « combobox » ARIA 1.2) :
  * flèches, Entrée et Échap au clavier ; « Rechercher » ouvre la page de résultats /recherche.
  */
-export function VendorSearch({ defaultValue = "", className = "" }: { defaultValue?: string; className?: string }) {
+export function VendorSearch({ defaultValue = "", className = "", bare = false }: { defaultValue?: string; className?: string; /** Sans libellé visible ni bouton « Rechercher » (Entrée lance la recherche). */ bare?: boolean }) {
   const router = useRouter();
   const id = useId();
   const listId = `${id}-liste`;
@@ -99,7 +99,7 @@ export function VendorSearch({ defaultValue = "", className = "" }: { defaultVal
       ref={rootRef}
       role="search"
     >
-      <label className="vendor-search-label" htmlFor={`${id}-champ`}>
+      <label className={bare ? "visually-hidden" : "vendor-search-label"} htmlFor={`${id}-champ`}>
         Rechercher un vendeur, une boutique ou une ville
       </label>
       <div className="vendor-search-bar">
@@ -133,14 +133,16 @@ export function VendorSearch({ defaultValue = "", className = "" }: { defaultVal
               setActive(-1);
             }
           }}
-          placeholder="Ex. pagne, Douala, beauté…"
+          placeholder={bare ? "Boutique, ville ou activité…" : "Ex. pagne, Douala, beauté…"}
           role="combobox"
           type="search"
           value={query}
         />
-        <button className="vendor-search-submit" type="submit">
-          Rechercher
-        </button>
+        {!bare && (
+          <button className="vendor-search-submit" type="submit">
+            Rechercher
+          </button>
+        )}
       </div>
 
       <div className="vendor-search-popover" hidden={!showList}>

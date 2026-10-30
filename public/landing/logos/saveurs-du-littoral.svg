@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 236 40" width="236" height="40" fill="none">
+  <title>Saveurs du Littoral</title>
+  <path d="M4 19h30a15 15 0 0 1-30 0Z" fill="#14142b"/>
+  <path d="M13 13c0-3 3-3 3-6M19 13c0-3 3-3 3-6M25 13c0-3 3-3 3-6" stroke="#14142b" stroke-width="2.2" stroke-linecap="round"/>
+  <text x="44" y="26" fill="#14142b" font-family="Georgia,'Times New Roman',serif"><tspan font-size="21" font-weight="700">Saveurs</tspan><tspan dx="6" font-size="14" font-style="italic">du Littoral</tspan></text>
+</svg>

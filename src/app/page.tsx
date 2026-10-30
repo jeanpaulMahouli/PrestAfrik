@@ -2,7 +2,6 @@ import "@/styles/landing-site.css";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { ClientShowcase } from "@/components/landing/client-showcase";
-import { Comparison } from "@/components/landing/comparison";
 import { DashboardShowcase } from "@/components/landing/dashboard-showcase";
 import { Faq } from "@/components/landing/faq";
 import { FinalCta } from "@/components/landing/final-cta";
@@ -71,7 +70,6 @@ export default async function LandingPage() {
       <main id="contenu">
         <Partners />
         <DashboardShowcase />
-        <Comparison />
         <ClientShowcase signedIn={signedIn} />
         <Testimonials />
         <Faq />

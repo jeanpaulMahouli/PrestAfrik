@@ -3,19 +3,13 @@ import { storePublicUrl } from "@/lib/urls";
 import { formatXaf } from "@/modules/catalog/format";
 import { countryName, type getTopProducts, type SearchableStore } from "@/modules/marketplace/search";
 
-/** Carte d'une boutique (recherche, « Nos boutiques ») : logo, ville, description courte, produits, lien. */
-export function StoreCard({ store, products, rank }: { store: SearchableStore; products: Awaited<ReturnType<typeof getTopProducts>>; rank?: number }) {
+/** Carte d'une boutique (page de recherche) : logo, ville, description courte, produits, lien. */
+export function StoreCard({ store, products }: { store: SearchableStore; products: Awaited<ReturnType<typeof getTopProducts>> }) {
   const url = storePublicUrl(store.slug);
   const initials = store.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr-FR")).join("");
   return (
     <article className="search-card">
       <header className="search-card-head">
-        {rank !== undefined && (
-          <span className="search-card-rank">
-            <span className="visually-hidden">Rang </span>
-            {rank}
-          </span>
-        )}
         <span aria-hidden="true" className="search-card-logo">
           {/* Logo et miniatures déjà optimisés (WebP) : affichés tels quels. */}
           {store.logoUrl ? <img alt="" height={56} loading="lazy" src={store.logoUrl} width={56} /> : initials || <Store size={22} />}

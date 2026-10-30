@@ -26,7 +26,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
       }}
       signedIn={signedIn}
     >
-      <section aria-labelledby="contact-title" className="lp-section">
+      <section aria-labelledby="contact-title" className="lp-section lp-glass-zone">
         <div className="lp-contact">
           <div className="lp-contact__form">
             <h2 className="lp-split__title" id="contact-title">

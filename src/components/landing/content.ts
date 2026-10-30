@@ -91,10 +91,18 @@ export const demoPage = {
 
 export const partners = {
   title: "Ces boutiques vendent déjà avec PrestAfrik",
-  findTitle: "Vous cherchez une boutique ? Consultez nos vendeurs",
-  findText: "Mode, beauté, maison, alimentation… Trouvez un vendeur près de chez vous et commandez sur WhatsApp.",
-  findCta: "Voir toutes nos boutiques",
-  // Logos et compteurs : de vraies boutiques publiées, lues en base (modules/marketplace/social-proof.ts).
+  findCta: "Voir toutes les boutiques",
+  // Logos d'illustration, suivis des vraies boutiques publiées lues en base (modules/marketplace/social-proof.ts).
+  logos: [
+    { src: "/landing/logos/mboa-style.svg", alt: "Mboa Style", width: 214, height: 40 },
+    { src: "/landing/logos/mama-pagne.svg", alt: "Mama Pagne", width: 214, height: 40 },
+    { src: "/landing/logos/linda-beauty.svg", alt: "Linda Beauty", width: 190, height: 40 },
+    { src: "/landing/logos/ekane-electro.svg", alt: "Ekane Électro", width: 204, height: 40 },
+    { src: "/landing/logos/kribi-accessoires.svg", alt: "Kribi Accessoires", width: 172, height: 40 },
+    { src: "/landing/logos/saveurs-du-littoral.svg", alt: "Saveurs du Littoral", width: 236, height: 40 },
+    { src: "/landing/logos/ndolo-kids.svg", alt: "Ndolo Kids", width: 156, height: 40 },
+    { src: "/landing/logos/atelier-ndop.svg", alt: "Atelier Ndop", width: 178, height: 40 },
+  ],
 };
 
 /** Comparatif de l'accueil : vendre seulement dans les discussions, ou avec une boutique PrestAfrik. */

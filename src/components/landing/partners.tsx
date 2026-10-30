@@ -1,26 +1,37 @@
+import Image from "next/image";
 import { getSocialProof } from "@/modules/marketplace/social-proof";
 import { LandingButton } from "./buttons";
 import { partners } from "./content";
 
+type Item = { key: string; node: React.ReactNode };
+
 /**
- * Boutiques qui vendent déjà avec PrestAfrik : de vraies boutiques publiées (logo et lien), qui défilent en
- * continu ; compteurs réels en dessous. Rien ne s'affiche tant que les chiffres sont trop faibles.
+ * Boutiques qui vendent avec PrestAfrik : logos qui défilent en continu (logos d'illustration puis vraies
+ * boutiques publiées, avec leur lien), compteurs réels en dessous, et un lien vers toutes les boutiques.
  */
 export async function Partners() {
   const { stores, counters } = await getSocialProof().catch(() => ({ stores: [], counters: [] }));
-  const proof = stores.length > 0 || counters.length > 0;
+  const items: Item[] = [
+    ...partners.logos.map((logo) => ({ key: logo.src, node: <Image alt={logo.alt} height={logo.height} src={logo.src} width={logo.width} /> })),
+    ...stores.map((store) => ({
+      key: store.href,
+      node: (
+        <a className="lp-partner" href={store.href}>
+          {/* Logo déjà optimisé (WebP carré) : affiché tel quel. */}
+          <img alt="" height={40} loading="lazy" src={store.logoUrl} width={40} />
+          <span>{store.name}</span>
+        </a>
+      ),
+    })),
+  ];
 
   const row = (reverse: boolean) => (
     <div className={`lp-marquee${reverse ? " lp-marquee--reverse" : ""}`}>
       {/* La liste est doublée pour que le défilement boucle sans saut ; la copie est ignorée des lecteurs d'écran. */}
       <ul className="lp-marquee__track">
-        {[...stores, ...stores].map((store, i) => (
-          <li aria-hidden={i >= stores.length} key={i}>
-            <a className="lp-partner" href={store.href} tabIndex={i >= stores.length ? -1 : undefined}>
-              {/* Logo déjà optimisé (WebP carré) : affiché tel quel. */}
-              <img alt="" height={40} loading="lazy" src={store.logoUrl} width={40} />
-              <span>{store.name}</span>
-            </a>
+        {[...items, ...items].map((item, i) => (
+          <li aria-hidden={i >= items.length} inert={i >= items.length} key={`${item.key}-${i}`}>
+            {item.node}
           </li>
         ))}
       </ul>
@@ -28,12 +39,10 @@ export async function Partners() {
   );
 
   return (
-    <section aria-labelledby={proof ? "partners-title" : "find-stores-title"} className="lp-partners">
-      {proof && (
-        <h2 className="lp-partners__title" id="partners-title">
-          {partners.title}
-        </h2>
-      )}
+    <section aria-labelledby="partners-title" className="lp-partners">
+      <h2 className="lp-partners__title" id="partners-title">
+        {partners.title}
+      </h2>
       {counters.length > 0 && (
         <ul aria-label="PrestAfrik en chiffres" className="lp-counters">
           {counters.map((counter) => (
@@ -44,16 +53,12 @@ export async function Partners() {
           ))}
         </ul>
       )}
-      {stores.length > 0 && (
-        <>
-          {row(false)}
-          <div className="lp-partners__second">{row(true)}</div>
-        </>
-      )}
+      {row(false)}
+      <div className="lp-partners__second">{row(true)}</div>
       <div className="lp-find-stores">
-        <h2 id="find-stores-title">{partners.findTitle}</h2>
-        <p>{partners.findText}</p>
-        <LandingButton href="/nos-boutiques">{partners.findCta}</LandingButton>
+        <LandingButton href="/nos-boutiques" variant="glass">
+          {partners.findCta}
+        </LandingButton>
       </div>
     </section>
   );

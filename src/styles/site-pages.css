@@ -2096,18 +2096,73 @@
   list-style: none;
 }
 
+/* Fonctionnalités en verre dépoli, posées sur un halo orangé ; icônes sans fond. */
 .lp-feature-tiles li {
   display: flex;
   gap: 0.75rem;
   align-items: center;
-  padding: 1rem 1.125rem;
+  padding: 1.1rem 1.25rem;
   border-radius: 1.25rem;
-  background: #fff;
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.72), rgb(255 255 255 / 0.4));
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
   box-shadow:
-    0 12px 30px -22px rgb(0 0 38 / 0.4),
-    inset 0 0 0 1px var(--lp-line);
+    0 16px 36px -24px rgb(0 0 38 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.9);
   font-weight: 500;
   transition: transform 0.25s var(--lp-ease);
+}
+
+/* Zone à halo orangé derrière des cartes en verre (Fonctionnalités, À propos, Contact) : sans couleur
+   derrière, le verre dépoli ne se verrait pas sur le fond blanc. */
+.lp-glass-zone {
+  position: relative;
+  isolation: isolate;
+}
+
+.lp-glass-zone::before {
+  content: "";
+  position: absolute;
+  inset: 25% 0 -5%;
+  z-index: -1;
+  background:
+    radial-gradient(45% 55% at 22% 45%, rgb(255 153 0 / 0.2), transparent 70%),
+    radial-gradient(40% 55% at 78% 60%, rgb(239 118 94 / 0.16), transparent 70%);
+  pointer-events: none;
+}
+
+/* Cartes en verre dépoli, sans bordure, icônes sans fond (À propos : promesses ; Contact). */
+.lp .lp-glass-zone :is(.lp-card, .lp-contact__card) {
+  border: 0;
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.72), rgb(255 255 255 / 0.4));
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow:
+    0 16px 36px -24px rgb(0 0 38 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.9);
+}
+
+.lp .lp-glass-zone :is(.lp-card, .lp-contact__card):hover {
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.88), rgb(255 255 255 / 0.6));
+  box-shadow:
+    0 22px 44px -24px rgb(255 153 0 / 0.5),
+    inset 0 1px 0 rgb(255 255 255 / 0.9);
+}
+
+.lp .lp-glass-zone .lp-card__icon {
+  width: auto;
+  height: auto;
+  justify-content: start;
+  color: var(--lp-orange);
+  background: none;
+  box-shadow: none;
+}
+
+.lp-feature-tiles li > span {
+  display: grid;
+  flex: none;
+  place-items: center;
+  color: var(--lp-orange);
 }
 
 @media (hover: hover) {
@@ -2116,7 +2171,6 @@
   }
 }
 
-.lp-feature-tiles li > span,
 .lp-feature-roles li > span {
   display: grid;
   width: 2.75rem;

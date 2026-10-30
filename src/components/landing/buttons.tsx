@@ -5,8 +5,8 @@ import { SparklesIcon } from "./icons";
 type ButtonProps = {
   href: string;
   children: ReactNode;
-  /** primary : dégradé orange animé + étincelles. secondary : bouton blanc bordé. */
-  variant?: "primary" | "secondary";
+  /** primary : dégradé orange animé + étincelles. secondary : bouton blanc bordé. glass : petit bouton en verre dépoli. */
+  variant?: "primary" | "secondary" | "glass";
   icon?: ReactNode;
   className?: string;
 };
