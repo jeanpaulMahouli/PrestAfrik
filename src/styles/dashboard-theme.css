@@ -129,11 +129,11 @@
   height: 2.5rem;
 }
 
-.vendor-search {
+.topbar-search {
   position: relative;
 }
 
-.vendor-search-icon {
+.topbar-search-icon {
   position: absolute;
   left: 1rem;
   top: 50%;
@@ -142,7 +142,7 @@
   pointer-events: none;
 }
 
-.vendor-search input,
+.topbar-search input,
 .topbar-search-overlay-form input {
   height: 2.75rem;
   padding: 0 1rem;
@@ -157,17 +157,17 @@
     box-shadow 0.18s ease;
 }
 
-.vendor-search input {
+.topbar-search input {
   padding-left: 2.75rem;
 }
 
-.vendor-search input:hover,
+.topbar-search input:hover,
 .topbar-search-overlay-form input:hover {
   border-color: var(--color-border-input);
   background: #fff;
 }
 
-.vendor-search input:focus-visible,
+.topbar-search input:focus-visible,
 .topbar-search-overlay-form input:focus-visible {
   border-color: var(--color-brand-primary);
   outline: 0;
@@ -804,58 +804,72 @@
   margin: 0.75rem 0;
 }
 
-/* Téléphone de 390 px, réduit (transform) pour tenir dans la colonne. */
+/* Téléphone de 430 px (cadre d'iPhone), réduit (transform) pour tenir dans la colonne. */
 .live-preview-phone {
   position: absolute;
   top: 0;
   left: 50%;
-  overflow: hidden;
-  border: 10px solid #111;
-  border-radius: 44px;
-  background: #fff;
-  box-shadow:
-    0 0 0 2px #2b2b2b,
-    0 24px 50px rgb(0 0 0 / 0.18);
+  filter: drop-shadow(0 24px 40px rgb(0 0 0 / 0.16));
   transform-origin: top center;
   translate: -50% 0;
 }
 
-/* Barre d'état (heure, encoche) au-dessus de la page, comme sur un vrai téléphone. */
-.live-preview-phone {
-  padding-top: 34px;
-}
-
-.live-preview-phone::before {
-  content: "9:41";
+/* Écran : la zone transparente du cadre (marges mesurées sur l'image 1068 × 2217 px). */
+.live-preview-screen {
   position: absolute;
-  top: 9px;
-  left: 30px;
-  color: #111;
-  font: 600 13px/1 var(--dt-font-ui);
+  inset: 1.31% 3.28% 1.35% 3.56%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 58px;
+  background: #fff;
 }
 
-.live-preview-phone iframe {
+/* Barre d'état (heure, réseau, batterie) de part et d'autre de la Dynamic Island : couleur de l'en-tête
+   de la boutique, texte clair ou foncé selon le fond. La page commence sous la barre. */
+.live-preview-status {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 6px 30px 0 42px;
+  color: #111;
+  background: #fff;
+  font: 600 15px/1 var(--dt-font-ui);
+  transition: background-color 0.2s ease;
+}
+
+.live-preview-status.is-dark {
+  color: #fff;
+}
+
+.live-preview-status-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.live-preview-screen iframe {
   display: block;
+  flex: 1;
   width: 100%;
-  height: 100%;
+  min-height: 0;
   border: 0;
 }
 
-.live-preview-notch {
+.live-preview-frame {
   position: absolute;
-  top: 8px;
-  left: 50%;
+  inset: 0;
   z-index: 2;
-  width: 110px;
-  height: 26px;
-  border-radius: 999px;
-  background: #111;
-  translate: -50% 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .live-preview-loading {
   position: absolute;
-  inset: 34px 0 0;
+  inset: 52px 0 0;
   border-radius: 0;
 }
 

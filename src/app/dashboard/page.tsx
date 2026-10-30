@@ -34,7 +34,6 @@ import { findDraft } from "@/modules/stores/draft";
 
 export const metadata = { title: "Accueil" };
 
-const stageOrder = ["NEW", "VALIDATED", "CANCELLED"] as const;
 
 export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const params = await searchParams;
@@ -71,16 +70,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const firstName = session.user.name.trim().split(/\s+/)[0] || session.user.name;
   const moment = dayMoment();
   const publicUrl = storePublicUrl(store.slug);
-  const comparison = `vs les ${period.days} jours précédents`;
-  const totalStages = stageOrder.reduce((total, stage) => total + stats.stages[stage], 0);
   const noOrdersYet = stats.latestOrders.length === 0;
-
-  const tasks = [
-    { count: overview.ordersToValidate, label: (n: number) => `${plural(n, "nouvelle commande", "nouvelles commandes")} à valider`, action: "Voir", href: "/dashboard/commandes?onglet=nouvelles", show: can("orders.read") },
-    { count: overview.failedMessages, label: (n: number) => `${plural(n, "message")} WhatsApp échoué${n === 1 ? "" : "s"}`, action: "Réessayer", href: "/dashboard/boutique/whatsapp", show: can("store.manage") },
-    { count: overview.soldOutProducts, label: (n: number) => `${plural(n, "produit")} épuisé${n === 1 ? "" : "s"}`, action: "Réapprovisionner", href: "/dashboard/produits?disponibilite=SOLD_OUT", show: can("products.read") },
-    { count: overview.customersToRecontact, label: (n: number) => `${plural(n, "client")} à recontacter`, action: "Ouvrir la liste", href: "/dashboard/clients?segment=to-recontact", show: can("customers.read") },
-  ].filter((task) => task.show && task.count > 0);
 
   const checklist = setupChecklist({ store, activeProducts: overview.activeProducts, activeZones: overview.activeZones, whatsappNumber: overview.whatsappConnected });
   const doneSteps = checklist.filter((step) => step.done).length;
@@ -130,11 +120,9 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       )}
 
       <section aria-label="Chiffres clés" className="kpi-grid">
-        <KpiCard comparison={comparison} evolution={stats.kpis.orders.evolution} icon={ShoppingBag} info="Toutes les commandes reçues sur la période, quel que soit leur statut." label="Commandes" value={String(stats.kpis.orders.value)} />
+        <KpiCard icon={ShoppingBag} info="Toutes les commandes reçues sur la période, quel que soit leur statut." label="Commandes" value={String(stats.kpis.orders.value)} />
         {can("payments.read") && (
           <KpiCard
-            comparison={comparison}
-            evolution={stats.kpis.received.evolution}
             icon={Wallet}
             info="Somme des commandes validées (payées) sur la période. Une annulation est déduite automatiquement."
             label="Argent encaissé"
@@ -142,8 +130,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
             value={formatFcfa(stats.kpis.received.value)}
           />
         )}
-        <KpiCard comparison={comparison} evolution={stats.kpis.visits.evolution} icon={Eye} info="Nombre de visites de votre boutique publique sur la période (les robots ne sont pas comptés)." label="Visites de la boutique" tone="blue" value={String(stats.kpis.visits.value)} />
-        <KpiCard comparison={comparison} evolution={stats.kpis.basket.evolution} icon={ShoppingCart} info="Montant moyen d’une commande sur la période, commandes annulées exclues." label="Panier moyen" tone="violet" value={formatFcfa(stats.kpis.basket.value)} />
+        <KpiCard icon={Eye} info="Nombre de visites de votre boutique publique sur la période (les robots ne sont pas comptés)." label="Visites de la boutique" tone="blue" value={String(stats.kpis.visits.value)} />
+        <KpiCard icon={ShoppingCart} info="Montant moyen d’une commande sur la période, commandes annulées exclues." label="Panier moyen" tone="violet" value={formatFcfa(stats.kpis.basket.value)} />
       </section>
 
       {noOrdersYet ? (
@@ -153,48 +141,23 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <ShareStoreButton published={store.isPublished} storeName={store.name} storeUrl={publicUrl} />
         </section>
       ) : (
-        <>
-          <div className="home-charts">
-            <section aria-labelledby="chart-orders" className="v-card">
-              <h2 className="v-card-title" id="chart-orders">Commandes par {period.bucket === "week" ? "semaine" : "jour"}</h2>
-              <TimeSeriesChart bucket={period.bucket} kind="line" measure="Commandes" points={stats.ordersSeries} unit="orders" />
+        <div className="home-charts">
+          <section aria-labelledby="chart-orders" className="v-card">
+            <h2 className="v-card-title" id="chart-orders">Commandes par {period.bucket === "week" ? "semaine" : "jour"}</h2>
+            <TimeSeriesChart bucket={period.bucket} kind="line" measure="Commandes" points={stats.ordersSeries} unit="orders" />
+          </section>
+          {can("payments.read") && (
+            <section aria-labelledby="chart-money" className="v-card">
+              <h2 className="v-card-title" id="chart-money">Argent encaissé par {period.bucket === "week" ? "semaine" : "jour"}</h2>
+              <TimeSeriesChart bucket={period.bucket} kind="bar" measure="Argent encaissé" points={stats.receivedSeries} unit="fcfa" />
             </section>
-            {can("payments.read") && (
-              <section aria-labelledby="chart-money" className="v-card">
-                <h2 className="v-card-title" id="chart-money">Argent encaissé par {period.bucket === "week" ? "semaine" : "jour"}</h2>
-                <TimeSeriesChart bucket={period.bucket} kind="bar" measure="Argent encaissé" points={stats.receivedSeries} unit="fcfa" />
-              </section>
-            )}
-          </div>
+          )}
+        </div>
+      )}
 
-          <div className="home-lists">
-            <section aria-labelledby="chart-status" className="v-card">
-              <h2 className="v-card-title" id="chart-status">Commandes par statut</h2>
-              {totalStages ? (
-                <ul className="stage-bars">
-                  {stageOrder.map((stage) => {
-                    const count = stats.stages[stage];
-                    const percent = Math.round((count / totalStages) * 100);
-                    return (
-                      <li key={stage}>
-                        <span className="stage-bars-label">
-                          <StatusBadge status={orderStageDisplay[stage]} />
-                          <strong>{count}</strong>
-                          <small>{percent} %</small>
-                        </span>
-                        <span aria-hidden="true" className="stage-bars-track">
-                          <span className="stage-bars-fill" style={{ width: `${percent}%` }} />
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p className="v-muted">Aucune commande sur cette période.</p>
-              )}
-              <p className="v-small v-muted">Une commande « Validée » est payée : son montant est compté dans l’argent encaissé.</p>
-            </section>
-
+      <div className="home-lists">
+        {!noOrdersYet && (
+          <>
             <section aria-labelledby="top-rated" className="v-card">
               <h2 className="v-card-title" id="top-rated">Produits les mieux notés</h2>
               {stats.topRated.length ? (
@@ -243,26 +206,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
                 <Link className="v-link" href="/dashboard/commandes">Toutes les commandes</Link>
               </section>
             )}
-          </div>
-        </>
-      )}
-
-      <div className="v-split home-panels">
-        <section aria-labelledby="todo-title" className="v-card">
-          <h2 className="v-card-title" id="todo-title">À faire aujourd’hui</h2>
-          {tasks.length ? (
-            <ul className="todo-list">
-              {tasks.map((task) => (
-                <li key={task.href}>
-                  <span>{task.label(task.count)}</span>
-                  <Link href={task.href}>{task.action}</Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="todo-empty">Tout est à jour. Bravo ! Profitez-en pour ajouter de nouveaux produits ou partager votre boutique.</p>
-          )}
-        </section>
+          </>
+        )}
 
         {doneSteps < checklist.length && (
           <section aria-labelledby="onboarding-title" className="v-card">
@@ -289,7 +234,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
         )}
       </div>
 
-      <CommunityBlock firstName={firstName} whatsappChannel={site.whatsappChannel} youtube={site.youtube} />
+      <CommunityBlock whatsappChannel={site.whatsappChannel} youtube={site.youtube} />
     </VendorShell>
   );
 }

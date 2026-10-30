@@ -1,4 +1,4 @@
-import { ChevronRight, Images, Megaphone, MessageSquareText, type LucideIcon } from "lucide-react";
+import { Images, Megaphone, MessageSquareText, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { hasPermission, type Permission } from "@/modules/auth/permissions";
@@ -45,18 +45,17 @@ export default async function MarketingPage() {
           <p className="v-page-subtitle">Faites revenir vos clients et mettez vos offres en avant. Choisissez un outil.</p>
         </div>
       </div>
-      <ul className="hub-cards">
+      <ul className="hub-cards glass-zone">
         {visible.map(({ href, icon: Icon, title, text }) => (
           <li key={href}>
             <Link className="hub-card" href={href}>
               <span aria-hidden="true" className="hub-card-icon">
-                <Icon size={24} strokeWidth={1.8} />
+                <Icon size={30} strokeWidth={1.8} />
               </span>
               <span className="hub-card-text">
                 <strong>{title}</strong>
                 <small>{text}</small>
               </span>
-              <ChevronRight aria-hidden="true" className="hub-card-arrow" size={20} />
             </Link>
           </li>
         ))}

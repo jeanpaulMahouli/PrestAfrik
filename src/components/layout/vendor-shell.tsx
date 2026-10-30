@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { texts } from "@/config/texts";
+import { FeedbackLauncher } from "@/components/dashboard/community";
 import { EmailVerificationBanner } from "@/components/layout/email-verification-banner";
 import { PwaRegistration } from "@/components/pwa/install-app";
 import { VendorDrawer, VendorSidebar } from "@/components/layout/vendor-navigation";
@@ -29,8 +30,8 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
         <Link aria-label="PrestAfrik, accueil de mon espace" className="vendor-logo" href="/dashboard">
           <Image alt="" height={34} priority src="/brand/logo-prestafrik.png" width={62} />
         </Link>
-        <form action="/dashboard/recherche" className="vendor-search" role="search">
-          <svg aria-hidden="true" className="vendor-search-icon" fill="none" height="18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" viewBox="0 0 24 24" width="18">
+        <form action="/dashboard/recherche" className="topbar-search" role="search">
+          <svg aria-hidden="true" className="topbar-search-icon" fill="none" height="18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" viewBox="0 0 24 24" width="18">
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3.5-3.5" />
           </svg>
@@ -63,6 +64,7 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
           {children}
         </main>
       </div>
+      <FeedbackLauncher firstName={session.user.name.trim().split(/\s+/)[0] || session.user.name} />
     </div>
   );
 }
