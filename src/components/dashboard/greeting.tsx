@@ -3,12 +3,16 @@
 
 export type DayMoment = "morning" | "afternoon" | "evening";
 
-/** Moment de la journée à l'heure d'Afrique centrale (Douala, Libreville, Brazzaville… : UTC+1). */
-export function dayMoment(now = new Date()): DayMoment {
-  const hour = Number(new Intl.DateTimeFormat("fr-FR", { hour: "numeric", hourCycle: "h23", timeZone: "Africa/Douala" }).format(now));
+/** Matin de 5 h à 12 h, après-midi de 12 h à 18 h, soir ensuite. */
+export function momentOfHour(hour: number): DayMoment {
   if (hour >= 5 && hour < 12) return "morning";
   if (hour >= 12 && hour < 18) return "afternoon";
   return "evening";
+}
+
+/** Moment de la journée à l'heure d'Afrique centrale (Douala, Libreville, Brazzaville… : UTC+1). */
+export function dayMoment(now = new Date()): DayMoment {
+  return momentOfHour(Number(new Intl.DateTimeFormat("fr-FR", { hour: "numeric", hourCycle: "h23", timeZone: "Africa/Douala" }).format(now)));
 }
 
 const words: Record<DayMoment, string> = { morning: "Bonjour", afternoon: "Bon après-midi", evening: "Bonsoir" };

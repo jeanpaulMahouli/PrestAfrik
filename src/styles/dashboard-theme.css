@@ -875,29 +875,37 @@
 
 
 /* ---------- 14. Menus déroulants sur téléphone ---------- */
-/* Période, boutique, compte, « … » : sur un écran étroit, le menu devient un panneau centré en bas de
-   l'écran (fond assombri), au lieu d'un menu accroché au bouton qui pouvait sortir de l'écran.
-   Exception : les menus de l'en-tête s'ouvrent en haut, sous la barre. */
+/* Période et « … » : sur un écran étroit, le menu devient un panneau au milieu de l'écran (fond assombri),
+   comme une fenêtre, au lieu d'être collé en bas (on avait l'impression que la liste « fuyait »).
+   La page derrière ne défile plus tant qu'un menu est ouvert, et faire défiler la liste ne fait pas
+   défiler la page. Exception : les menus de l'en-tête s'ouvrent en haut, sous la barre. */
 @media (max-width: 640px) {
   .period-filter-panel,
   .topbar-menu-panel,
   .row-menu-panel,
   .row-menu-panel.is-upward {
     position: fixed;
-    top: auto;
+    top: 50%;
     right: 0.75rem;
-    bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    bottom: auto;
     left: 0.75rem;
     z-index: 90;
     width: auto;
-    max-height: 75dvh;
+    max-height: 70dvh;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 0.75rem;
     border-radius: 1.25rem;
     box-shadow:
       0 0 0 100vmax rgb(0 0 38 / 0.35),
-      0 -8px 30px rgb(0 0 0 / 0.15);
-    animation: menu-sheet-in 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
+      0 12px 40px rgb(0 0 0 / 0.18);
+    translate: 0 -50%;
+    animation: menu-pop-in 0.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  /* Page immobile tant qu'un menu est ouvert. */
+  html:has(.period-filter[open] .period-filter-panel, .row-menu-panel, .topbar-menu-panel) {
+    overflow: hidden;
   }
 
   /* Menus de l'en-tête (boutique, compte) : le panneau descend juste sous la barre du haut, près du
@@ -908,6 +916,8 @@
     box-shadow:
       0 0 0 100vmax rgb(0 0 38 / 0.35),
       0 8px 30px rgb(0 0 0 / 0.15);
+    translate: none;
+    overscroll-behavior: contain;
     animation-name: menu-drop-in;
   }
 
@@ -928,10 +938,10 @@
   }
 }
 
-@keyframes menu-sheet-in {
+@keyframes menu-pop-in {
   from {
     opacity: 0;
-    transform: translateY(1.5rem);
+    transform: scale(0.96);
   }
 }
 

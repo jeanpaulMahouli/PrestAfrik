@@ -122,6 +122,17 @@
   background: rgb(0 0 38 / 0.38);
 }
 
+/* Téléphone : les menus s'ouvrent comme une fenêtre, sur un fond assombri (dashboard-theme.css, §14). */
+@media (max-width: 640px) {
+  .topbar-menu-panel,
+  .row-menu-panel,
+  .period-filter-panel {
+    box-shadow:
+      0 0 0 100vmax rgb(0 0 38 / 0.38),
+      var(--glass-shadow-raised);
+  }
+}
+
 /* ---------- Bandeaux ---------- */
 .vendor-shell .v-banner {
   border: 1px solid var(--glass-edge);

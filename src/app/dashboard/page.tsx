@@ -4,7 +4,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AnnouncementBanner, AnnouncementCarousel } from "@/components/dashboard/announcements";
 import { CommunityBlock } from "@/components/dashboard/community";
-import { DayMomentIcon, dayMoment, greetingWord } from "@/components/dashboard/greeting";
+import { dayMoment } from "@/components/dashboard/greeting";
+import { LiveGreeting } from "@/components/dashboard/live-greeting";
 import { WelcomeNoStore } from "@/components/dashboard/welcome-no-store";
 import { InstallAppCard } from "@/components/pwa/install-app";
 import { TimeSeriesChart } from "@/components/dashboard/time-series-chart";
@@ -82,8 +83,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title greeting">
-            <DayMomentIcon moment={moment} />
-            {greetingWord(moment)} {firstName} !
+            <LiveGreeting firstName={firstName} initial={moment} />
           </h1>
           <p className="v-page-subtitle">L’essentiel de {store.name} en un coup d’œil, sur les {dashboardPeriodLabels[period.key]} derniers.</p>
         </div>
