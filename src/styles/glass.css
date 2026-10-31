@@ -7,8 +7,8 @@
    ========================================================================== */
 
 :root {
-  /* Crème qui tend vers le blanc : rien de foncé. */
-  --glass-page: linear-gradient(170deg, #fffefb 0%, #fffbf5 55%, #fff7ee 100%);
+  /* Presque blanc, à peine crème en bas de page : rien de foncé. */
+  --glass-page: linear-gradient(170deg, #ffffff 0%, #fffefd 55%, #fffcf9 100%);
   --glass-surface: rgb(255 255 255 / 0.72);
   --glass-surface-strong: rgb(255 255 255 / 0.86);
   --glass-edge: rgb(255 255 255 / 0.9);
@@ -23,7 +23,7 @@
 .wizard,
 .auth-page {
   background: var(--glass-page);
-  background-color: #fffcf7;
+  background-color: #fffefd;
 }
 
 /* ---------- Surfaces de verre ---------- */
@@ -46,7 +46,7 @@
 .vendor-shell .vendor-topbar,
 .wizard-header {
   border-bottom: 1px solid var(--glass-edge);
-  background: #fffefb;
+  background: #ffffff;
   box-shadow: 0 6px 24px rgb(170 96 10 / 0.05);
 }
 

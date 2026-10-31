@@ -1065,14 +1065,49 @@
   font-size: clamp(1rem, 1.05vw, 1.26rem);
 }
 
+/* Le lecteur passe au-dessus du héros (z-index 30, landing.css §5) qu'il chevauche ; le menu mobile,
+   ouvert dans le héros, repasse au-dessus du lecteur. */
 .lp-demo {
   position: relative;
-  z-index: 2;
+  z-index: 31;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 0 var(--lp-gutter);
   margin-top: calc(-1 * clamp(80px, 6.6vw, 128px));
+}
+
+.lp-page--demo .lp-page-hero:has(.lp-menu.is-open) {
+  z-index: 40;
+}
+
+/* Lien vers le guide du vendeur, sous les onglets des vidéos. */
+.lp-demo-guide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  width: min(100% - 2 * var(--lp-gutter), 80rem);
+  margin: clamp(48px, 5vw, 88px) auto 0;
+  padding: clamp(1.5rem, 2.6vw, 2.5rem);
+  border-radius: var(--lp-radius-xl);
+  background: var(--lp-cream);
+}
+
+.lp-demo-guide > div {
+  flex: 1 1 26rem;
+}
+
+.lp-demo-guide h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.3rem, 1.8vw, 1.8rem);
+}
+
+.lp-demo-guide p {
+  margin: 0;
+  color: var(--lp-ink-soft);
+  line-height: 1.6;
 }
 
 /* Lecteur : cadre blanc arrondi avec ombre, 16:9. */
@@ -1554,6 +1589,14 @@
 .help {
   max-width: 52rem;
   margin: 0 auto;
+}
+
+.help-guide-link {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 1rem;
+  background: var(--lp-cream);
+  line-height: 1.6;
 }
 
 .help-topics {

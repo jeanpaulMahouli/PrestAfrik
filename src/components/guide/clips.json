@@ -1,0 +1,92 @@
+{
+  "tableau-de-bord": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 10230
+  },
+  "menu": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 7520
+  },
+  "partager": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 4960
+  },
+  "ajouter-produit": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 21400
+  },
+  "gerer-produits": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 16040
+  },
+  "commandes": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 13830
+  },
+  "avis-client": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 16800
+  },
+  "avis-vendeur": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 8870
+  },
+  "livraisons": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 13360
+  },
+  "clients": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 8810
+  },
+  "ma-boutique": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 9320
+  },
+  "marketing": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 9810
+  },
+  "equipe": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 8180
+  },
+  "argent": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 9210
+  },
+  "creer-boutique-1": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 15160
+  },
+  "creer-boutique-2": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 16870
+  },
+  "creer-boutique-3": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 14110
+  },
+  "creer-boutique-4": {
+    "statusBar": "rgb(255 255 255)",
+    "dark": false,
+    "duration": 20110
+  }
+}

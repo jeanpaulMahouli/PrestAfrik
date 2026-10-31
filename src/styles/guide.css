@@ -1,0 +1,313 @@
+/* Guide du vendeur (/aide/guide) : sommaire, chapitres, étapes numérotées et films dans le téléphone. */
+
+.guide {
+  display: grid;
+  gap: 2rem;
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 4vw, 3.5rem) var(--lp-gutter) 0;
+}
+
+@media (min-width: 1024px) {
+  .guide {
+    grid-template-columns: 15rem minmax(0, 1fr);
+    align-items: start;
+    gap: 3rem;
+  }
+}
+
+/* ---------- Sommaire ---------- */
+.guide-toc {
+  padding: 1.25rem;
+  border-radius: var(--lp-radius-md);
+  background: var(--lp-cream);
+}
+
+@media (min-width: 1024px) {
+  .guide-toc {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+.guide-toc-title {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+}
+
+.guide-toc ol {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 600px) and (max-width: 1023px) {
+  .guide-toc ol {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.guide-toc a {
+  display: flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.625rem;
+  color: var(--lp-ink);
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+.guide-toc a:hover,
+.guide-toc a:focus-visible {
+  background: #fff;
+}
+
+.guide-toc a span {
+  display: inline-grid;
+  flex: none;
+  width: 1.625rem;
+  height: 1.625rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #000;
+  background: var(--lp-peach);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.guide-toc-note {
+  margin: 1rem 0 0;
+  color: var(--lp-ink-soft);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* ---------- Chapitres ---------- */
+.guide-content {
+  min-width: 0;
+}
+
+.guide-chapter {
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+  scroll-margin-top: 1.5rem;
+}
+
+.guide-chapter-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--lp-line);
+}
+
+.guide-chapter-number {
+  display: grid;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 1rem;
+  color: #000;
+  background: var(--lp-orange);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.guide-chapter-head h2 {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  line-height: 1.2;
+}
+
+.guide-chapter-head p {
+  margin: 0;
+  color: var(--lp-ink-soft);
+  line-height: 1.6;
+}
+
+/* ---------- Leçons : texte et téléphone côte à côte sur grand écran ---------- */
+.guide-lesson {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  scroll-margin-top: 1.5rem;
+}
+
+@media (min-width: 860px) {
+  .guide-lesson.has-clip {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    align-items: start;
+    gap: 2.5rem;
+  }
+
+  .guide-lesson-media {
+    position: sticky;
+    top: 1.5rem;
+  }
+}
+
+.guide-lesson h3 {
+  margin: 0 0 0.875rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.guide-lesson p,
+.guide-lesson li {
+  line-height: 1.65;
+}
+
+.guide-steps {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: guide-step;
+}
+
+.guide-steps li {
+  position: relative;
+  padding-left: 2.5rem;
+  counter-increment: guide-step;
+}
+
+.guide-steps li::before {
+  position: absolute;
+  top: 0.05rem;
+  left: 0;
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #000;
+  background: var(--lp-peach);
+  content: counter(guide-step);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Libellé exact d'un bouton ou d'un champ de l'interface. */
+.guide-ui {
+  display: inline;
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.375rem;
+  background: #fff4e0;
+  box-shadow: inset 0 0 0 1px rgb(255 153 0 / 0.35);
+  font-size: 0.92em;
+  font-weight: 500;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.guide-more {
+  margin-top: 1.25rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--lp-radius-md);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--lp-line);
+}
+
+.guide-more h4 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.guide-more ul {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.guide-tip {
+  margin: 1.25rem 0 0;
+  padding: 0.875rem 1.125rem;
+  border-left: 4px solid var(--lp-orange);
+  border-radius: 0 0.75rem 0.75rem 0;
+  background: var(--lp-cream);
+}
+
+.guide-tip strong {
+  margin-right: 0.35rem;
+}
+
+.guide-callout {
+  margin: 0 0 1.25rem;
+  padding: 1.125rem 1.25rem;
+  border-radius: var(--lp-radius-md);
+  background: linear-gradient(135deg, #fff1d6, #ffe2b3);
+  font-size: 1.05rem;
+}
+
+/* ---------- Film dans le téléphone ---------- */
+.guide-clip {
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.guide-clip .live-preview {
+  margin: 0;
+}
+
+.guide-clip-screen {
+  display: block;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  object-fit: cover;
+  object-position: top;
+  background: #ffffff;
+}
+
+.guide-clip figcaption {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  color: var(--lp-ink-soft);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.guide-replay {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0 0.875rem;
+  border: 0;
+  border-radius: 999px;
+  color: var(--lp-ink);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--lp-line);
+  cursor: pointer;
+}
+
+.guide-replay:hover {
+  background: var(--lp-cream);
+}
+
+.guide-end {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.5rem;
+  border-radius: var(--lp-radius-xl);
+  background: var(--lp-cream);
+  text-align: center;
+}
+
+.guide-end h2,
+.guide-end p {
+  margin: 0;
+}

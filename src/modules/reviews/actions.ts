@@ -23,7 +23,7 @@ const reviewSchema = z.object({
   comment: z.string().trim().min(10, "Votre avis doit contenir au moins 10 caractères.").max(1000, "Votre avis ne peut pas dépasser 1 000 caractères."),
 });
 
-/** Publie l'avis immédiatement ; la boutique peut ensuite le retirer depuis « Avis clients ». */
+/** Publie l'avis immédiatement. Le vendeur ne peut ni le retirer ni le supprimer : les avis restent visibles. */
 export async function submitReview(_previous: ReviewFormState, formData: FormData): Promise<ReviewFormState> {
   // Champ piège invisible : un humain le laisse vide.
   if (String(formData.get("website") ?? "")) return { ok: true, message: "Merci ! Votre avis est publié." };
@@ -76,16 +76,16 @@ async function refreshStorefront(storeId: string) {
   revalidatePath(reviewsPath);
 }
 
+/**
+ * Règle : un vendeur ne peut pas retirer ni supprimer un avis client. Il peut seulement publier
+ * d'anciens avis restés « En attente » ou « Retirés » (avant cette règle).
+ */
 export async function moderateReview(formData: FormData) {
   const { store } = await requireStorePermission("products.manage");
   const id = String(formData.get("reviewId") ?? "");
-  const decision = String(formData.get("decision") ?? "");
-  if (decision === "delete") {
-    await prisma.productReview.deleteMany({ where: { id, storeId: store.id } });
-  } else if (decision === "APPROVED" || decision === "REJECTED") {
-    // storeId dans le filtre : un vendeur ne peut modérer que les avis de sa boutique.
-    await prisma.productReview.updateMany({ where: { id, storeId: store.id }, data: { status: decision, moderatedAt: new Date() } });
-  }
+  if (String(formData.get("decision") ?? "") !== "APPROVED") return;
+  // storeId dans le filtre : un vendeur ne peut publier que les avis de sa boutique.
+  await prisma.productReview.updateMany({ where: { id, storeId: store.id }, data: { status: "APPROVED", moderatedAt: new Date() } });
   await refreshStorefront(store.id);
 }
 

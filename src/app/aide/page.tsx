@@ -78,6 +78,9 @@ export default async function HelpPage() {
       signedIn={signedIn}
     >
       <section aria-label="Sujets d’aide" className="lp-section help">
+        <p className="help-guide-link">
+          Nouveau sur PrestAfrik ? Suivez le <Link href="/aide/guide">guide du vendeur, pas à pas et en images</Link> : création de la boutique, produits, commandes, avis clients…
+        </p>
         <nav aria-label="Sujets" className="help-topics">
           {topics.map((topic) => (
             <a href={`#${topic.id}`} key={topic.id}>

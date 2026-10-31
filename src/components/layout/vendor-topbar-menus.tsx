@@ -156,6 +156,7 @@ export function UserMenu({ userName, userEmail, userImage = null, adminLink = fa
             <small>{userEmail}</small>
           </p>
           <Link className="topbar-menu-link" href="/dashboard/profil" onClick={() => setOpen(false)}>{t.profile}</Link>
+          <Link className="topbar-menu-link" href="/aide/guide" onClick={() => setOpen(false)}>Guide du vendeur</Link>
           <InstallAppButton className="topbar-menu-link topbar-install" compact />
           {adminLink && <Link className="topbar-menu-link" href="/admin" onClick={() => setOpen(false)}>Administration</Link>}
           <button className="topbar-menu-link topbar-signout" disabled={pending} onClick={signOut} type="button">

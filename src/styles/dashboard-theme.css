@@ -13,9 +13,9 @@
   --color-brand-primary-soft: #fff1d6;
   --color-brand-secondary: #000026;
 
-  /* Fond de page d'origine (gris clair), conservé à la demande. */
-  --color-page-background: #f1f2ee;
-  --color-page-background-alt: #f7f8f4;
+  /* Fond de page presque blanc. */
+  --color-page-background: #fdfdfc;
+  --color-page-background-alt: #fefefd;
   --color-surface: #ffffff;
   --color-surface-muted: #f6f2ea;
   --color-surface-warm: #fef9eb;
@@ -779,19 +779,15 @@
   }
 }
 
-/* Fenêtre « Partager ma boutique » : sur téléphone, lien en pleine largeur puis les deux boutons. */
-@media (max-width: 520px) {
-  .share-link-row {
-    flex-wrap: wrap;
-  }
+/* Fenêtre « Partager ma boutique » : le bouton Copier reste sur la même ligne que le lien, même sur téléphone. */
+.share-link-row {
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
 
-  .share-link-row input {
-    flex-basis: 100%;
-  }
-
-  .share-link-row .btn {
-    flex: 1;
-  }
+.share-link-row .share-copy {
+  flex: none;
+  align-self: center;
 }
 
 /* ---------- 13. Aperçu réaliste de la boutique (Ma boutique) ---------- */
@@ -799,80 +795,7 @@
   align-content: start;
 }
 
-.live-preview {
-  position: relative;
-  margin: 0.75rem 0;
-}
-
-/* Téléphone de 430 px (cadre d'iPhone), réduit (transform) pour tenir dans la colonne. */
-.live-preview-phone {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  filter: drop-shadow(0 24px 40px rgb(0 0 0 / 0.16));
-  transform-origin: top center;
-  translate: -50% 0;
-}
-
-/* Écran : la zone transparente du cadre (marges mesurées sur l'image 1068 × 2217 px). */
-.live-preview-screen {
-  position: absolute;
-  inset: 1.31% 3.28% 1.35% 3.56%;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border-radius: 58px;
-  background: #fff;
-}
-
-/* Barre d'état (heure, réseau, batterie) de part et d'autre de la Dynamic Island : couleur de l'en-tête
-   de la boutique, texte clair ou foncé selon le fond. La page commence sous la barre. */
-.live-preview-status {
-  display: flex;
-  flex: none;
-  align-items: center;
-  justify-content: space-between;
-  height: 52px;
-  padding: 6px 30px 0 42px;
-  color: #111;
-  background: #fff;
-  font: 600 15px/1 var(--dt-font-ui);
-  transition: background-color 0.2s ease;
-}
-
-.live-preview-status.is-dark {
-  color: #fff;
-}
-
-.live-preview-status-icons {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.live-preview-screen iframe {
-  display: block;
-  flex: 1;
-  width: 100%;
-  min-height: 0;
-  border: 0;
-}
-
-.live-preview-frame {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.live-preview-loading {
-  position: absolute;
-  inset: 52px 0 0;
-  border-radius: 0;
-}
-
+/* Téléphone de l'aperçu : styles/phone-mockup.css (composant PhoneMockup). */
 
 /* ---------- 14. Menus déroulants sur téléphone ---------- */
 /* Période et « … » : sur un écran étroit, le menu devient un panneau au milieu de l'écran (fond assombri),

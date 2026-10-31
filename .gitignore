@@ -14,3 +14,6 @@ next-env.d.ts
 
 # Uploaded images (see src/lib/uploads.ts)
 storage/
+
+# Animations du guide exportées en GIF/WebP pour la démo (scripts/guide/export.mjs)
+/extrait demo/

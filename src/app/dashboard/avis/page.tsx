@@ -10,7 +10,8 @@ import { requireStorePermission } from "@/modules/stores/context";
 
 export const metadata = { title: "Avis clients" };
 
-// Les avis sont publiés dès leur dépôt ; le vendeur peut les retirer. « En attente » ne concerne que d'anciens avis.
+// Les avis sont publiés dès leur dépôt et le vendeur ne peut pas les retirer. « Retirés » et « En attente »
+// ne concernent que d'anciens avis (avant cette règle) : ils n'apparaissent que s'il en reste, et peuvent être publiés.
 const tabs = { publies: { label: "Publiés", status: "APPROVED" }, retires: { label: "Retirés", status: "REJECTED" }, attente: { label: "En attente", status: "PENDING" } } as const;
 type Tab = keyof typeof tabs;
 
@@ -36,7 +37,7 @@ export default async function ReviewsPage({ searchParams }: PageProps<"/dashboar
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Avis clients</h1>
-          <p className="v-page-subtitle">Vos clients notent vos produits. Leurs avis sont publiés aussitôt ; vous pouvez retirer ceux qui ne conviennent pas.</p>
+          <p className="v-page-subtitle">Vos clients notent vos produits. Leurs avis sont publiés aussitôt et ne peuvent pas être retirés : de vrais avis rassurent vos futurs acheteurs et valorisent vos produits.</p>
         </div>
       </div>
 
@@ -63,7 +64,7 @@ export default async function ReviewsPage({ searchParams }: PageProps<"/dashboar
       </section>
 
       <nav aria-label="Filtrer les avis" className="pill-tabs">
-        {(Object.keys(tabs) as Tab[]).filter((key) => key !== "attente" || count("PENDING") > 0 || tab === "attente").map((key) => (
+        {(Object.keys(tabs) as Tab[]).filter((key) => key === "publies" || count(tabs[key].status) > 0 || tab === key).map((key) => (
           <Link aria-current={tab === key ? "page" : undefined} href={key === "publies" ? "/dashboard/avis" : `/dashboard/avis?onglet=${key}`} key={key}>
             {tabs[key].label} ({count(tabs[key].status)})
           </Link>
@@ -85,37 +86,23 @@ export default async function ReviewsPage({ searchParams }: PageProps<"/dashboar
                 Sur <a href={`/${store.slug}/${review.product.slug}`} rel="noopener noreferrer" target="_blank">{review.product.name}</a>
               </p>
               <p className="review-item-comment">{review.comment}</p>
-              <div className="review-item-actions">
-                {tab !== "publies" && (
+              {tab !== "publies" && (
+                <div className="review-item-actions">
                   <form action={moderateReview}>
                     <input name="reviewId" type="hidden" value={review.id} />
                     <input name="decision" type="hidden" value="APPROVED" />
                     <SubmitButton className="btn btn-primary btn-sm" pendingLabel="…">{tab === "retires" ? "Republier" : "Publier"}</SubmitButton>
                   </form>
-                )}
-                {tab !== "retires" && (
-                  <form action={moderateReview}>
-                    <input name="reviewId" type="hidden" value={review.id} />
-                    <input name="decision" type="hidden" value="REJECTED" />
-                    <SubmitButton className="btn btn-secondary btn-sm" pendingLabel="…">Retirer</SubmitButton>
-                  </form>
-                )}
-                {tab === "retires" && (
-                  <form action={moderateReview}>
-                    <input name="reviewId" type="hidden" value={review.id} />
-                    <input name="decision" type="hidden" value="delete" />
-                    <SubmitButton className="btn btn-danger-outline btn-sm" pendingLabel="…">Supprimer</SubmitButton>
-                  </form>
-                )}
-                {tab === "attente" && <Badge tone="warning">En attente de validation</Badge>}
-              </div>
+                  {tab === "attente" && <Badge tone="warning">En attente de validation</Badge>}
+                </div>
+              )}
             </li>
           ))}
         </ul>
       ) : (
         <div className="v-card v-empty">
           <h2>{tab === "publies" ? "Aucun avis pour le moment" : tab === "retires" ? "Aucun avis retiré" : "Aucun avis en attente"}</h2>
-          <p>{tab === "publies" ? "Les avis de vos clients apparaîtront ici dès qu’ils seront déposés sur vos fiches produit." : "Les avis que vous retirez de votre boutique apparaissent ici."}</p>
+          <p>{tab === "publies" ? "Les avis de vos clients apparaîtront ici dès qu’ils seront déposés sur vos fiches produit." : "Tous vos avis sont publiés."}</p>
         </div>
       )}
     </VendorShell>

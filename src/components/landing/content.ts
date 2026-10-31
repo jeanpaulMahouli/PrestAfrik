@@ -131,19 +131,19 @@ export const dashboard = {
       title: "Tableau de bord",
       lead: "Un coup d’œil, chaque matin",
       text: "Nouvelles commandes à valider, argent reçu, produits épuisés : tout ce qui compte est sur la première page.",
-      image: "/landing/dashboard/accueil.webp",
+      image: "/landing/dashboard/accueil-v2.webp",
     },
     {
       title: "Commandes",
       lead: "Trois boutons, pas plus",
       text: "Continuer sur WhatsApp, Valider la commande ou Voir la commande en détail. Pas d’étapes compliquées : la commande est nouvelle, validée ou annulée.",
-      image: "/landing/dashboard/commandes.webp",
+      image: "/landing/dashboard/commandes-v2.webp",
     },
     {
       title: "Argent reçu",
       lead: "",
       text: "Chaque commande validée est comptée automatiquement, jour après jour.",
-      image: "/landing/dashboard/argent.webp",
+      image: "/landing/dashboard/argent-v2.webp",
     },
   ],
 };

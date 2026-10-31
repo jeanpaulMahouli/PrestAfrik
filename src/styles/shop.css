@@ -20,7 +20,7 @@
   --dt-hover: #fff6e6;
   --dt-active: linear-gradient(98.7deg, #ffdeae, rgb(255 174 73 / 0.16));
   --dt-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --glass-page: linear-gradient(170deg, #fffefb 0%, #fffbf5 55%, #fff7ee 100%);
+  --glass-page: linear-gradient(170deg, #ffffff 0%, #fffefd 55%, #fffcf9 100%);
   --glass-surface: rgb(255 255 255 / 0.72);
   --glass-surface-strong: rgb(255 255 255 / 0.86);
   --glass-edge: rgb(255 255 255 / 0.9);
@@ -47,7 +47,7 @@
   overflow-x: clip;
   color: var(--color-text-primary);
   background: var(--glass-page);
-  background-color: #fffcf7;
+  background-color: #fffefd;
   font-family: var(--lp-ui);
 }
 
@@ -225,7 +225,7 @@
   gap: clamp(0.75rem, 2vw, 2rem);
   padding: 0.6rem var(--lp-gutter);
   border-bottom: 1px solid var(--glass-edge);
-  background: #fffefb;
+  background: #ffffff;
   box-shadow: 0 6px 24px rgb(170 96 10 / 0.05);
 }
 
