@@ -114,39 +114,10 @@ function stepsFor(platform: Platform): Step[] {
   ];
 }
 
-/** Petite animation (façon GIF) qui montre le geste : bouton touché, menu, icône ajoutée à l'écran d'accueil. */
-function InstallAnimation({ platform }: { platform: Platform }) {
-  const ios = platform === "ios" || platform === "ios-other-browser";
-  return (
-    <div aria-hidden="true" className={`pwa-anim ${ios ? "pwa-anim-ios" : "pwa-anim-android"}`}>
-      <div className="pwa-anim-phone">
-        <span className="pwa-anim-bar">{ios ? null : <EllipsisVertical size={12} />}</span>
-        <span className="pwa-anim-page" />
-        <span className="pwa-anim-page pwa-anim-page-short" />
-        <span className="pwa-anim-sheet">
-          <span className="pwa-anim-option">{ios ? "Sur l’écran d’accueil" : "Installer l’application"}</span>
-        </span>
-        {ios && (
-          <span className="pwa-anim-toolbar">
-            <Share size={12} />
-          </span>
-        )}
-        <span className="pwa-anim-tap" />
-        <span className="pwa-anim-home">
-          {/* Icône de l'application, telle qu'elle apparaîtra. */}
-          <img alt="" height={34} src="/brand/pwa/icon-192.png" width={34} />
-          <small>PrestAfrik</small>
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/** Explication complète : animation, puis les étapes numérotées pour cet appareil. */
+/** Explication complète : les étapes numérotées pour cet appareil, chacune suivie de son icône. */
 function InstallSteps({ platform }: { platform: Platform }) {
   return (
     <div className="pwa-guide">
-      <InstallAnimation platform={platform} />
       <ol className="pwa-steps">
         {stepsFor(platform).map((step, index) => (
           <li key={step.title}>
@@ -155,8 +126,8 @@ function InstallSteps({ platform }: { platform: Platform }) {
             </span>
             <span className="pwa-step-text">
               <strong>
-                <span aria-hidden="true" className="pwa-step-icon">{step.icon}</span>
                 {step.title}
+                <span aria-hidden="true" className="pwa-step-icon">{step.icon}</span>
               </strong>
               <span>{step.text}</span>
             </span>

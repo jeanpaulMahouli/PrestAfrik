@@ -842,8 +842,12 @@
 }
 
 .shop-card-photo img {
+  position: absolute;
+  inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
+  max-width: none;
   object-fit: cover;
   transition: transform 0.4s var(--lp-ease);
 }
@@ -1291,37 +1295,6 @@
 }
 
 /* ---------- Appel aux vendeurs ---------- */
-.shop-sell {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.25rem;
-  padding: clamp(1.5rem, 3vw, 2.5rem);
-  border-radius: 1.75rem;
-  background:
-    radial-gradient(40% 120% at 100% 0%, rgb(255 153 0 / 0.35), transparent 70%),
-    linear-gradient(135deg, var(--lp-cream), var(--lp-peach));
-}
-
-.shop-sell h2 {
-  margin: 0.25rem 0;
-  font-size: clamp(1.25rem, 2.4vw, 1.9rem);
-  line-height: 1.2;
-}
-
-.shop-sell p {
-  margin: 0;
-  color: var(--lp-ink-soft);
-}
-
-.shop-sell .shop-sell-kicker {
-  color: #c26a00;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
 /* ---------- Carrés « toutes les boutiques » ---------- */
 
 /* ---------- Engagements et pied de page ---------- */
@@ -1366,22 +1339,16 @@
 }
 
 .shop-footer-brand img {
+  display: block;
   width: auto;
   height: 3.25rem;
+  margin-bottom: 1rem;
 }
 
 .shop-footer-brand p {
   max-width: 26rem;
   font-size: 0.88rem;
   line-height: 1.55;
-}
-
-.shop-footer-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--lp-orange);
-  font-weight: 600;
 }
 
 .shop-footer h2 {
@@ -1669,9 +1636,14 @@
     height: 2.1rem;
   }
 
+  /* Logo et recherche sur une seule ligne (pas de bouton « Ouvrir ma boutique » sur téléphone). */
   .shop .vendor-search.shop-search {
-    order: 3;
-    flex: 1 0 100%;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .shop .shop-header-cta {
+    display: none;
   }
 
   .shop-header-cta {
@@ -1682,11 +1654,11 @@
   }
 
   .shop-rubriques {
-    top: 7.4rem;
+    top: 3.7rem;
   }
 
   .shop-section {
-    scroll-margin-top: 11.5rem;
+    scroll-margin-top: 8rem;
   }
 
   .shop-carousel {
@@ -1805,10 +1777,6 @@
     flex: none;
   }
 
-  .shop-sell {
-    text-align: center;
-    justify-content: center;
-  }
 
   .shop-assistant-launcher {
     right: 1rem;
@@ -1948,10 +1916,6 @@
     padding: 0.6rem 0.25rem;
   }
 
-  .shop-sell {
-    gap: 0.75rem;
-    padding: 1.1rem;
-  }
 
   .shop-promises {
     gap: 0.75rem;

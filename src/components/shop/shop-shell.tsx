@@ -1,5 +1,5 @@
 import "@/styles/shop.css";
-import { BadgeCheck, BadgePercent, Crown, HandCoins, LayoutGrid, Rocket, ShieldCheck, Sparkles, Star, Store, Zap } from "lucide-react";
+import { BadgeCheck, BadgePercent, Crown, HandCoins, LayoutGrid, Rocket, ShieldCheck, Star, Store, Zap } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { VendorSearch } from "@/components/marketplace/vendor-search";
@@ -154,9 +154,6 @@ export function ShopShell({
         <div className="shop-footer-brand">
           <Image alt="PrestAfrik" height={110} src="/brand/logo-white.webp" width={201} />
           <p>La marketplace des commerçants d’Afrique centrale. Commandez directement aux vendeurs, payez à la livraison.</p>
-          <a className="shop-footer-cta" href={signupHref()}>
-            <Sparkles aria-hidden="true" size={16} /> Vendre sur PrestAfrik, c’est gratuit
-          </a>
         </div>
         <nav aria-label="Catégories populaires">
           <h2>Catégories</h2>

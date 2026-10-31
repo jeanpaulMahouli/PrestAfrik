@@ -1,11 +1,14 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 import { Dialog } from "@/components/ui/dialog";
 import { deleteStore, type DeleteStoreState } from "@/modules/stores/settings-actions";
 
-/** « Zone sensible » de Ma boutique : suppression définitive, confirmée en retapant le nom de la boutique. */
-export function DeleteStoreZone({ storeName, orderCount, productCount }: { storeName: string; orderCount: number; productCount: number }) {
+/**
+ * « Zone sensible » de Ma boutique : mise en brouillon (`before`, boutique publiée), puis suppression
+ * définitive, confirmée en retapant le nom de la boutique.
+ */
+export function DeleteStoreZone({ storeName, orderCount, productCount, before }: { storeName: string; orderCount: number; productCount: number; before?: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [state, action, pending] = useActionState<DeleteStoreState, FormData>(deleteStore, null);
@@ -18,6 +21,7 @@ export function DeleteStoreZone({ storeName, orderCount, productCount }: { store
         d’autre. Cette action est irréversible.
       </p>
       <div className="v-button-row">
+        {before}
         <button className="btn btn-danger-outline" onClick={() => setOpen(true)} type="button">
           Supprimer ma boutique…
         </button>

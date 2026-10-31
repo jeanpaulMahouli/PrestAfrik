@@ -37,6 +37,11 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
   const error = typeof params.erreur === "string" ? params.erreur : null;
   const success = typeof params.succes === "string" ? successMessages[params.succes] : null;
   const publicUrl = storePublicUrl(store.slug);
+  const draftButton = (
+    <form action={unpublishStore}>
+      <SubmitButton className="btn btn-secondary" pendingLabel="…">Mettre en brouillon</SubmitButton>
+    </form>
+  );
 
   return (
     <VendorShell>
@@ -50,9 +55,8 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
           {store.isPublished ? (
             <>
               <ShareStoreButton className="btn btn-secondary" published storeName={store.name} storeUrl={publicUrl} />
-              <form action={unpublishStore}>
-                <SubmitButton className="btn btn-secondary" pendingLabel="…">Mettre en brouillon</SubmitButton>
-              </form>
+              {/* Propriétaire : « Mettre en brouillon » est dans la zone sensible, avant la suppression. */}
+              {membership.role !== "OWNER" && draftButton}
             </>
           ) : (
             <>
@@ -106,7 +110,9 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
         publicUrl={publicUrl}
         published={store.isPublished}
         sideFooter={
-          membership.role === "OWNER" ? <DeleteStoreZone orderCount={counts._count.orders} productCount={counts._count.products} storeName={store.name} /> : null
+          membership.role === "OWNER" ? (
+            <DeleteStoreZone before={store.isPublished ? draftButton : undefined} orderCount={counts._count.orders} productCount={counts._count.products} storeName={store.name} />
+          ) : null
         }
       />
     </VendorShell>

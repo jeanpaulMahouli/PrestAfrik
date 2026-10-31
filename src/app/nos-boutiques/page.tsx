@@ -1,4 +1,4 @@
-import { Crown, LayoutGrid, Sparkles, Store, Wallet, Zap } from "lucide-react";
+import { Crown, LayoutGrid, Sparkles, Wallet, Zap } from "lucide-react";
 import type { Metadata } from "next";
 import { categoryIcon } from "@/components/shop/category-icons";
 import { FeaturedStoreCard, ProductRail, ShopSectionHead } from "@/components/shop/shop-blocks";
@@ -51,7 +51,7 @@ export default async function ShopHomePage() {
     },
     {
       id: "vendre",
-      kicker: "Vous êtes commerçant ?",
+      kicker: "Pour les vendeurs",
       title: "Votre boutique ici, gratuitement",
       text: "Prête en 5 minutes, visible sur la marketplace, commandes sur WhatsApp.",
       cta: "Ouvrir ma boutique",
@@ -139,19 +139,6 @@ export default async function ShopHomePage() {
           </section>
         );
       })}
-
-      <section aria-labelledby="vendre-title" className="shop-section">
-        <div className="shop-sell">
-          <div>
-            <p className="shop-sell-kicker">Vous êtes commerçant ?</p>
-            <h2 id="vendre-title">Ouvrez votre boutique et vendez ici, gratuitement</h2>
-            <p>Prête en 5 minutes. Vos produits apparaissent sur la marketplace, vos clients commandent sur WhatsApp.</p>
-          </div>
-          <a className="shop-btn shop-btn-dark" href={signupHref()}>
-            <Store aria-hidden="true" size={20} /> Créer ma boutique
-          </a>
-        </div>
-      </section>
 
       {home.featuredStores.length > 0 ? (
         <section aria-labelledby="une-title" className="shop-section" id="boutiques">
