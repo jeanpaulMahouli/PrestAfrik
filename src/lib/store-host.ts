@@ -12,6 +12,24 @@ export const marketplaceSubdomain = "shop";
 /** Chemin interne des pages de la marketplace (servies à la racine de shop.prestafrik.com). */
 export const marketplaceBasePath = "/nos-boutiques";
 
+/** Sous-domaine des espaces connectés (tableau de bord des vendeurs, création de boutique, administration). */
+export const appSubdomain = "app";
+/** Chemins servis sur app.prestafrik.com : sur le domaine principal, ils y sont redirigés. */
+const appPathPrefixes = ["/dashboard", "/admin", "/boutiques/nouvelle"];
+
+/** Vrai pour une page des espaces connectés (« /dashboard/commandes », « /admin », « /boutiques/nouvelle »). */
+export function isAppPath(pathname: string) {
+  return appPathPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+/** Vrai si l'hôte est celui des espaces connectés (« app.prestafrik.com »). */
+export function isAppHost(host: string | null | undefined, rootDomain: string | null | undefined) {
+  if (!host || !rootDomain) return false;
+  const hostname = host.trim().toLowerCase().replace(/\.$/, "");
+  const root = rootDomain.trim().toLowerCase().replace(/^\.+|\.$/g, "");
+  return Boolean(root) && hostname === `${appSubdomain}.${root}`;
+}
+
 /** Sous-domaines qui ne sont jamais des boutiques. */
 const platformSubdomains = new Set(["www", "app", "api", "admin", "mail", "webmail", "smtp", "imap", "ftp", "cpanel", "autodiscover", "autoconfig", marketplaceSubdomain]);
 const slugPattern = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;

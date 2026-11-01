@@ -7,7 +7,7 @@
   "menu": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 7520
+    "duration": 13910
   },
   "partager": {
     "statusBar": "rgb(255 255 255)",
@@ -42,7 +42,7 @@
   "livraisons": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 13360
+    "duration": 14050
   },
   "clients": {
     "statusBar": "rgb(255 255 255)",
@@ -62,17 +62,17 @@
   "equipe": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 8180
+    "duration": 7490
   },
   "argent": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 9210
+    "duration": 8520
   },
   "creer-boutique-1": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 15160
+    "duration": 16060
   },
   "creer-boutique-2": {
     "statusBar": "rgb(255 255 255)",
@@ -87,6 +87,6 @@
   "creer-boutique-4": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 20110
+    "duration": 20910
   }
 }

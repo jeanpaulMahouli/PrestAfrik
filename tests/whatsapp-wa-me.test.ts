@@ -68,12 +68,12 @@ describe("liens wa.me", () => {
     expect(message).toContain("https://prestafrik.example/boutique/mboa-style/robe-wax");
   });
 
-  it("prépare le message « Continuer sur WhatsApp » sans demande de confirmation", () => {
+  it("prépare le message « Continuer sur WhatsApp » avec la demande de confirmation", () => {
     const message = renderTemplate(defaultStoreTemplate, order);
     expect(message).toContain("Bonjour Estelle, merci pour votre commande #MB-1042 chez Mboa Style !");
     expect(message).toContain("Robe wax (M) × 2, Sac raphia × 1");
-    expect(message).toContain("Livraison : Douala, Bonamoussadi, Près de la pharmacie.");
-    expect(message).not.toMatch(/confirm/i);
+    expect(message).toContain("Livraison : Douala, Bonamoussadi, Près de la pharmacie. Confirmez-vous votre commande et ce lieu de livraison ?");
+    expect(message).not.toContain(". .");
   });
 
   it("remplace les anciens messages par défaut qui demandaient une confirmation", () => {

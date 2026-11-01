@@ -3498,3 +3498,75 @@
   color: #c26a00;
   vertical-align: -0.2em;
 }
+
+/* ---------- Fenêtre « Félicitations, votre boutique prend vie ! » (fin de l'assistant) ---------- */
+.launch {
+  display: grid;
+  gap: 1.25rem;
+  text-align: center;
+}
+
+.launch-link {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+}
+
+.launch-link input {
+  min-width: 0;
+  padding-inline: 0.875rem;
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.launch-note {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.launch-install {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 0.25rem;
+  text-align: left;
+}
+
+.launch-install p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.launch-apps-icon {
+  flex: none;
+  width: 4.5rem;
+  height: 4.5rem;
+  color: var(--color-text-primary);
+}
+
+.launch-install-button {
+  width: 100%;
+  min-height: 3.25rem;
+  justify-content: center;
+  font-size: 1.05rem;
+}
+
+/* Titre centré et en grand, comme la maquette ; la croix de fermeture reste à sa place. */
+.dialog-panel:has(.launch) .dialog-header {
+  position: relative;
+  justify-content: center;
+  padding-inline: 2.75rem;
+  text-align: center;
+}
+
+.dialog-panel:has(.launch) .dialog-header h2 {
+  font-size: clamp(1.4rem, 4.5vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.dialog-panel:has(.launch) .dialog-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}

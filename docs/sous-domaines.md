@@ -56,3 +56,18 @@ http://mboa-style.localhost:3001 (les navigateurs résolvent `*.localhost`).
 
 `FEATURE_SUBDOMAINS=false` puis redéployer : les liens partagés redeviennent `prestafrik.com/{adresse}`.
 Les sous-domaines déjà partagés restent servis tant que le Worker tourne ; le supprimer les coupe.
+
+## Espaces connectés : app.prestafrik.com
+
+Le tableau de bord des vendeurs (`/dashboard`), l'administration (`/admin`) et la création de boutique
+(`/boutiques/nouvelle`) sont servis sur `app.prestafrik.com` dès que `FEATURE_SUBDOMAINS="true"` :
+
+- `prestafrik.com/dashboard/…` redirige vers `app.prestafrik.com/dashboard/…` (même chemin, même requête) ;
+- `app.prestafrik.com/` ouvre le tableau de bord ; les autres pages (connexion, aperçu des boutiques…)
+  y restent servies, pour que l'aperçu « Ma boutique » fonctionne sans changer d'origine ;
+- le cookie de session est posé sur `.prestafrik.com` (better-auth `crossSubDomainCookies`) : une seule
+  connexion vaut pour prestafrik.com, app.prestafrik.com et shop.prestafrik.com. À la mise en ligne,
+  les vendeurs déjà connectés doivent se reconnecter une fois (ancien cookie limité à prestafrik.com).
+
+Rien à faire de plus côté Cloudflare : `app` est couvert par l'enregistrement DNS `*` et le Worker,
+comme `shop`. Le sous-domaine `app` est réservé : aucune boutique ne peut le prendre.

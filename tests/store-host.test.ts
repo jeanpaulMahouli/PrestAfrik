@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isMarketplaceHost, isPassthroughPath, marketplaceRewritePath, storeHref, storeRewritePath, storeSlugFromHost } from "@/lib/store-host";
+import { isAppHost, isAppPath, isMarketplaceHost, isPassthroughPath, marketplaceRewritePath, storeHref, storeRewritePath, storeSlugFromHost } from "@/lib/store-host";
 
 describe("storeSlugFromHost", () => {
   it("lit l'adresse de la boutique dans le sous-domaine", () => {
@@ -52,5 +52,24 @@ describe("marketplace shop.prestafrik.com", () => {
   it("sert les pages de la marketplace depuis /nos-boutiques", () => {
     expect(marketplaceRewritePath("/")).toBe("/nos-boutiques");
     expect(marketplaceRewritePath("/recherche")).toBe("/nos-boutiques/recherche");
+  });
+});
+
+describe("espaces connectés sur app.prestafrik.com", () => {
+  it("reconnaît l'hôte app", () => {
+    expect(isAppHost("app.prestafrik.com", "prestafrik.com")).toBe(true);
+    expect(isAppHost("App.PrestAfrik.com.", "prestafrik.com")).toBe(true);
+    expect(isAppHost("shop.prestafrik.com", "prestafrik.com")).toBe(false);
+    expect(isAppHost("prestafrik.com", "prestafrik.com")).toBe(false);
+  });
+
+  it("repère les pages du tableau de bord, de l'administration et de la création de boutique", () => {
+    expect(isAppPath("/dashboard")).toBe(true);
+    expect(isAppPath("/dashboard/commandes/abc")).toBe(true);
+    expect(isAppPath("/admin")).toBe(true);
+    expect(isAppPath("/boutiques/nouvelle")).toBe(true);
+    expect(isAppPath("/dashboards")).toBe(false);
+    expect(isAppPath("/aide/guide")).toBe(false);
+    expect(isAppPath("/mboa-style")).toBe(false);
   });
 });

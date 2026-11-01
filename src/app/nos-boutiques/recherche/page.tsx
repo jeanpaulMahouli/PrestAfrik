@@ -4,7 +4,8 @@ import { categoryIcon } from "@/components/shop/category-icons";
 import { ProductGrid, ShopSectionHead, StoreTile } from "@/components/shop/shop-blocks";
 import { ShopShell, shopBudgets } from "@/components/shop/shop-shell";
 import { shopUrl } from "@/lib/urls";
-import { getShopCountry } from "@/modules/marketplace/country";
+import { getShopTicker, getShopTickerSeconds } from "@/modules/announcements/queries";
+import { getShopScope } from "@/modules/marketplace/country";
 import { exploreShop, getShopCategories, scopedStores, shopSorts, type ShopSort } from "@/modules/marketplace/shop";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,7 @@ function readQuery(params: Params) {
 
 export async function generateMetadata({ searchParams }: PageProps<"/nos-boutiques/recherche">): Promise<Metadata> {
   const query = readQuery(await searchParams);
-  const categories = query.category ? await getShopCategories((await getShopCountry())?.iso) : [];
+  const categories = query.category ? await getShopCategories(await getShopScope()) : [];
   const label = categories.find((item) => item.slug === query.category)?.label;
   return {
     title: { absolute: `${query.q ? `« ${query.q} »` : label ?? "Explorer"} · PrestAfrik Shop` },
@@ -41,8 +42,9 @@ export async function generateMetadata({ searchParams }: PageProps<"/nos-boutiqu
 /** Explorer la marketplace : recherche, rubrique, budget et tri, produits puis boutiques correspondantes. */
 export default async function ShopSearchPage({ searchParams }: PageProps<"/nos-boutiques/recherche">) {
   const query = readQuery(await searchParams);
-  const country = await getShopCountry();
-  const [categories, result, scope] = await Promise.all([getShopCategories(country?.iso), exploreShop(query, country?.iso), scopedStores(country?.iso)]);
+  const shopScope = await getShopScope();
+  const [categories, result, scope, ticker] = await Promise.all([getShopCategories(shopScope), exploreShop(query, shopScope), scopedStores(shopScope), getShopTicker()]);
+  const tickerSeconds = await getShopTickerSeconds();
   const { icon, tint } = categoryIcon(result.category?.slug);
   const title = query.q ? `Résultats pour « ${query.q} »` : result.category ? result.category.label : query.promo ? "Promotions" : query.sort !== "pertinence" ? shopSorts[query.sort] : "Tous les produits";
   // Lien vers la même recherche avec un réglage changé (les autres sont gardés).
@@ -58,7 +60,9 @@ export default async function ShopSearchPage({ searchParams }: PageProps<"/nos-b
     <ShopShell
       active={result.category?.slug ?? (query.promo || query.sort === "promo" ? "promo" : query.sort === "mieux-notes" ? "notes" : query.sort === "nouveautes" ? "nouveautes" : undefined)}
       categories={categories}
-      country={country}
+      scope={shopScope}
+      ticker={ticker}
+      tickerSeconds={tickerSeconds}
       local={scope.local}
       query={query.q}
     >

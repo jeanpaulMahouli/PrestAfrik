@@ -946,7 +946,30 @@ model Activity {
   label    String  @db.VarChar(80)
   position Int     @default(0)
   popular  Boolean @default(false)
+  /// Image ronde de la catégorie sur la marketplace (Administration → Marketplace).
+  imageUrl String?
   stores   Store[]
+}
+
+/// Réglages de la marketplace (une seule ligne, id « shop ») modifiables dans l'administration.
+model MarketplaceSettings {
+  id            String   @id @default("shop")
+  /// Durée d'affichage de chaque texte du bandeau publicitaire, en secondes.
+  tickerSeconds Int      @default(4)
+  updatedAt     DateTime @updatedAt
+}
+
+/// Bandeau publicitaire en haut de la marketplace : textes courts qui défilent toutes les 2 secondes.
+model MarketplaceTicker {
+  id        String   @id @default(cuid())
+  text      String   @db.VarChar(140)
+  /// Lien ouvert au clic (page de PrestAfrik ou adresse https) ; facultatif.
+  linkUrl   String?  @db.VarChar(500)
+  position  Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([active, position])
 }
 
 /// Assistant WhatsApp de la boutique : réponses guidées rédigées par le vendeur, sans IA (brief §6.15).
@@ -1180,6 +1203,12 @@ enum AnnouncementPlacement {
   BANNER
   SHOP_CAROUSEL
   SHOP_BANNER
+  /// Marketplace sur téléphone : une seule bannière rectangulaire, gérée à part de la version ordinateur.
+  SHOP_MOBILE
+  /// Marketplace, univers Immobilier : une seule bannière (ordinateur et téléphone).
+  SHOP_IMMO
+  /// Marketplace, univers Services : une seule bannière (ordinateur et téléphone).
+  SHOP_SERVICES
 }
 
 /// Annonce de PrestAfrik affichée en haut du tableau de bord des vendeurs (Administration → Annonces) :
@@ -1191,6 +1220,8 @@ model PlatformAnnouncement {
   altText   String                @db.VarChar(160)
   /// Lien ouvert au clic (page de PrestAfrik ou adresse https) ; facultatif.
   linkUrl   String?               @db.VarChar(500)
+  /// Texte du bouton posé sur l'image (marketplace) ; « Découvrir » par défaut.
+  ctaLabel  String?               @db.VarChar(40)
   position  Int                   @default(0)
   active    Boolean               @default(true)
   createdAt DateTime              @default(now())

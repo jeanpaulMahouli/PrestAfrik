@@ -7,7 +7,7 @@ import { CommunityBlock } from "@/components/dashboard/community";
 import { dayMoment } from "@/components/dashboard/greeting";
 import { LiveGreeting } from "@/components/dashboard/live-greeting";
 import { WelcomeNoStore } from "@/components/dashboard/welcome-no-store";
-import { InstallAppCard } from "@/components/pwa/install-app";
+import { InstallAppCard, StoreLaunchDialog } from "@/components/pwa/install-app";
 import { TimeSeriesChart } from "@/components/dashboard/time-series-chart";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ShareStoreButton } from "@/components/shared/share-store-button";
@@ -78,6 +78,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   return (
     <VendorShell>
+      {/* Fin de l'assistant de création : félicitations, partage et installation de l'application. */}
+      {params.bienvenue === "1" && <StoreLaunchDialog published={store.isPublished} storeName={store.name} storeUrl={publicUrl} />}
       <AnnouncementCarousel items={announcements.carousel} />
       <AnnouncementBanner item={announcements.banner} />
       <div className="v-page-header">

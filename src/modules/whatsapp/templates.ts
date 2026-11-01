@@ -7,12 +7,16 @@ export type TemplateVariable = (typeof templateVariables)[number];
 export const defaultCustomerTemplate =
   "Bonjour {boutique}, voici ma commande {reference} : {articles}. Montant : {montant}. Livraison : {livraison}.";
 export const defaultStoreTemplate =
+  "Bonjour {prenom}, merci pour votre commande {reference} chez {boutique} ! Articles : {articles}. Montant : {montant}. Livraison : {livraison}. Confirmez-vous votre commande et ce lieu de livraison ?";
+// Version précédente (double point) : remplacée à la lecture.
+const previousStoreTemplate =
   "Bonjour {prenom}, merci pour votre commande {reference} chez {boutique} ! Articles : {articles}. Montant : {montant}. Livraison : {livraison}. . Confirmez-vous votre commande et ce lieu de livraison ?";
 
-// Anciens textes par défaut (avec demande de confirmation), remplacés à la lecture.
+// Anciens textes par défaut, remplacés à la lecture.
 const legacyDefaults: Record<string, string> = {
   "Bonjour {boutique}, je confirme ma commande {reference} : {articles}. Montant : {montant}. Livraison : {livraison}.": defaultCustomerTemplate,
   "Bonjour {prenom}, {boutique} a bien reçu votre commande {reference}. Articles : {articles}. Montant : {montant}. Livraison : {livraison}. Confirmez-vous votre commande et ce lieu de livraison ?": defaultStoreTemplate,
+  [previousStoreTemplate]: defaultStoreTemplate,
 };
 
 export function currentTemplate(saved: string | null | undefined, fallback: string) {

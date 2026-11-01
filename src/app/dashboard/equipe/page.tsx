@@ -12,7 +12,6 @@ import {
 import { hasPermission, type Permission } from "@/modules/auth/permissions";
 import { requireStorePermission } from "@/modules/stores/context";
 import Link from "next/link";
-import { getStoreSubscriptionAccess } from "@/modules/subscriptions/service";
 import { hasSmtpConfig } from "@/modules/email/config";
 import { CheckIcon } from "@/components/ui/icons";
 
@@ -59,7 +58,7 @@ export default async function TeamPage({
   const canManage = hasPermission(membership.role, "team.manage");
   const emailConfigured = hasSmtpConfig();
   const now = new Date();
-  const [teamMembers, invitations, subscription] = await Promise.all([
+  const [teamMembers, invitations] = await Promise.all([
     prisma.storeMembership.findMany({
       where: { storeId: store.id },
       include: { user: { select: { id: true, name: true, email: true } } },
@@ -76,10 +75,7 @@ export default async function TeamPage({
       },
       orderBy: { createdAt: "desc" },
     }),
-    getStoreSubscriptionAccess(store.id, now),
   ]);
-  const reservedSeats = invitations.filter((invitation) => invitation.expiresAt > now).length;
-  const occupiedSeats = teamMembers.length + reservedSeats;
   const rawError = typeof params.erreur === "string" ? params.erreur : "";
   const error = errorMessages[rawError] ?? rawError;
   const success =
@@ -111,21 +107,13 @@ export default async function TeamPage({
         </p>
       )}
       {success && <p className="notice" role="status">{success}</p>}
-      {emailConfigured ? (
-        <p className="notice team-mail-notice" role="note">
-          Les invitations sont envoyées par e-mail. Le lien expire après 7 jours et ne peut être
-          utilisé qu’une seule fois.
-        </p>
-      ) : (
+      {/* Message seulement si l'envoi d'e-mails est impossible (configuration du serveur). */}
+      {!emailConfigured && (
         <p className="notice team-mail-notice" role="note">
           L’envoi d’e-mails n’est pas configuré. Ajoute les variables SMTP et redémarre
           l’application pour inviter des membres.
         </p>
       )}
-      <p className="notice">
-        Places occupées : {occupiedSeats} / {subscription.plan.memberQuota}
-        {reservedSeats > 0 && ` (dont ${reservedSeats} invitation${reservedSeats === 1 ? "" : "s"} en attente)`}
-      </p>
 
       {canManage && (
         <section className="surface-card team-invite-card">

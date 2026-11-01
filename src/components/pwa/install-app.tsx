@@ -2,6 +2,8 @@
 
 import { Check, Compass, Download, EllipsisVertical, Share, Smartphone, SquarePlus } from "lucide-react";
 import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { SocialShare } from "@/components/shared/social-share";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Dialog } from "@/components/ui/dialog";
 
 // Installation de l'application PrestAfrik (PWA) sur l'écran d'accueil.
@@ -292,5 +294,80 @@ export function InstallAppCard() {
         ×
       </button>
     </section>
+  );
+}
+
+/** Icône « applications » de la maquette : trois carrés arrondis et un rond. */
+function AppsIcon() {
+  return (
+    <svg aria-hidden="true" className="launch-apps-icon" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 48 48">
+      <rect height="17" rx="4" width="17" x="3" y="3" />
+      <circle cx="36.5" cy="11.5" r="8.5" />
+      <rect height="17" rx="4" width="17" x="3" y="28" />
+      <rect height="17" rx="4" width="17" x="28" y="28" />
+    </svg>
+  );
+}
+
+/**
+ * Fenêtre affichée sur le tableau de bord juste après la création de la boutique (fin de l'assistant,
+ * /dashboard?bienvenue=1) : félicitations, lien à copier, partage sur les réseaux et installation de l'application.
+ */
+export function StoreLaunchDialog({ storeName, storeUrl, published }: { storeName: string; storeUrl: string; published: boolean }) {
+  const { ready, installed: isInstalled, canPrompt, platform, promptInstall } = usePwaInstall();
+  const [open, setOpen] = useState(true);
+  const [showSteps, setShowSteps] = useState(false);
+
+  // Le paramètre est retiré de l'adresse (sans recharger la page, qui fermerait la fenêtre) :
+  // un rechargement ne la rouvre pas.
+  useEffect(() => {
+    window.history.replaceState(window.history.state, "", "/dashboard");
+    try {
+      localStorage.setItem("prestafrik:pwa-proposee", new Date().toISOString());
+    } catch {
+      // Stockage indisponible : sans conséquence.
+    }
+  }, []);
+
+  return (
+    <Dialog centered onClose={() => setOpen(false)} open={open} size="sm" title={published ? "Félicitations, votre boutique prend vie ! 🎉" : "Félicitations, votre boutique est créée ! 🎉"}>
+      <div className="launch">
+        <label className="launch-link">
+          <span>Le lien de votre boutique</span>
+          <span className="share-link-row">
+            <input onFocus={(event) => event.currentTarget.select()} readOnly value={storeUrl.replace(/^https?:\/\//, "")} />
+            <CopyButton className="icon-button share-copy" iconOnly label="Copier le lien" value={storeUrl} />
+          </span>
+        </label>
+        {published ? (
+          <SocialShare text={`Découvrez ma boutique ${storeName}`} title={storeName} url={storeUrl} />
+        ) : (
+          <p className="launch-note">Ajoutez un produit pour la mettre en ligne : « Pour bien démarrer » vous guide.</p>
+        )}
+        {ready && !isInstalled && (
+          <>
+            <div className="launch-install">
+              <AppsIcon />
+              <p>Installez PrestAfrik sur votre écran d’accueil et gardez votre boutique à portée de main.</p>
+            </div>
+            {showSteps && <InstallSteps platform={platform} />}
+            <button
+              className="btn btn-glass launch-install-button"
+              data-autofocus=""
+              onClick={async () => {
+                if (canPrompt && (await promptInstall()) !== "unavailable") {
+                  setOpen(false);
+                  return;
+                }
+                setShowSteps(true);
+              }}
+              type="button"
+            >
+              Installer maintenant
+            </button>
+          </>
+        )}
+      </div>
+    </Dialog>
   );
 }

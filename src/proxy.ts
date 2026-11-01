@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import {
+  appSubdomain,
   forwardedStoreHostHeader,
+  isAppHost,
+  isAppPath,
   isMarketplaceHost,
   isPassthroughPath,
   marketplaceBasePath,
@@ -22,6 +25,10 @@ import {
  *
  * La marketplace a son propre sous-domaine réservé : shop.prestafrik.com/recherche affiche la page
  * /nos-boutiques/recherche ; prestafrik.com/nos-boutiques/… redirige vers shop.prestafrik.com/….
+ *
+ * Les espaces connectés ont le leur : app.prestafrik.com/dashboard (tableau de bord), /admin et
+ * /boutiques/nouvelle ; prestafrik.com/dashboard/… y est redirigé, app.prestafrik.com/ ouvre le tableau
+ * de bord. Le cookie de session est commun à tous les sous-domaines (modules/auth/server.ts).
  */
 export function proxy(request: NextRequest) {
   const headers = new Headers(request.headers);
@@ -33,13 +40,28 @@ export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   if (subdomains && root && !isPassthroughPath(pathname)) {
     const url = request.nextUrl.clone();
-    if (isMarketplaceHost(requestedHost(request), root)) {
+    // Protocole du site (derrière Cloudflare, la requête reçue peut être en http).
+    const protocol = (process.env.BETTER_AUTH_URL ?? "").startsWith("http://") ? "http:" : "https:";
+    const host = requestedHost(request);
+    if (isAppHost(host, root)) {
+      // app.prestafrik.com : le tableau de bord ; les autres pages (connexion, aperçu des boutiques…) restent servies.
+      if (pathname === "/") {
+        url.pathname = "/dashboard";
+        return NextResponse.redirect(url, 307);
+      }
+      return NextResponse.next({ request: { headers } });
+    }
+    if (isAppPath(pathname) && !isMarketplaceHost(host, root)) {
+      const target = new URL(`${protocol}//${appSubdomain}.${root}`);
+      target.pathname = pathname;
+      target.search = request.nextUrl.search;
+      return NextResponse.redirect(target, 307);
+    }
+    if (isMarketplaceHost(host, root)) {
       url.pathname = marketplaceRewritePath(pathname);
       return NextResponse.rewrite(url, { request: { headers } });
     }
     if (pathname === marketplaceBasePath || pathname.startsWith(`${marketplaceBasePath}/`)) {
-      // Protocole du site (derrière Cloudflare, la requête reçue peut être en http).
-      const protocol = (process.env.BETTER_AUTH_URL ?? "").startsWith("http://") ? "http:" : "https:";
       const target = new URL(`${protocol}//${marketplaceSubdomain}.${root}`);
       target.pathname = pathname.slice(marketplaceBasePath.length) || "/";
       target.search = request.nextUrl.search;

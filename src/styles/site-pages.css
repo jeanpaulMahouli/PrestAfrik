@@ -1409,7 +1409,7 @@
 .pricing-plans {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
-  gap: clamp(16px, 2vw, 28px);
+  gap: clamp(28px, 3vw, 40px) clamp(16px, 2vw, 28px);
   align-items: stretch;
   margin: 0;
   padding: 0;
@@ -1537,7 +1537,8 @@
 
 .pricing-compare-wrap {
   overflow-x: auto;
-  margin-top: clamp(32px, 4vw, 56px);
+  /* Bien séparé des offres au-dessus. */
+  margin-top: clamp(64px, 7vw, 112px);
   border-radius: 1.25rem;
   background: #fff;
   box-shadow: inset 0 0 0 1px var(--lp-line);

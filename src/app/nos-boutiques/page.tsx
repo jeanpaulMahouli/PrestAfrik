@@ -1,18 +1,20 @@
-import { Crown, LayoutGrid, Sparkles, Wallet, Zap } from "lucide-react";
+import { BadgePercent, Building2, Crown, Flame, Handshake, Rocket, Sparkles, Star, Tag, Wallet, Zap } from "lucide-react";
 import type { Metadata } from "next";
 import { categoryIcon } from "@/components/shop/category-icons";
 import { FeaturedStoreCard, ProductRail, ShopSectionHead } from "@/components/shop/shop-blocks";
-import { ShopHero, type DrawnSlide } from "@/components/shop/shop-hero";
+import { ShopHero, ShopSingleBanner, type DrawnSlide } from "@/components/shop/shop-hero";
+import { BudgetSelect } from "@/components/shop/shop-menus";
 import { budgetHref, categoryHref, ShopShell, shopBudgets } from "@/components/shop/shop-shell";
 import { FlashCountdown, ScrollRail } from "@/components/shop/shop-widgets";
+import { shopUniverses } from "@/config/marketplace";
 import { shopUrl } from "@/lib/urls";
-import { getShopAnnouncements } from "@/modules/announcements/queries";
-import { getShopCountry } from "@/modules/marketplace/country";
+import { getShopAnnouncements, getShopTicker, getShopTickerSeconds } from "@/modules/announcements/queries";
+import { getShopScope } from "@/modules/marketplace/country";
 import { getShopHome } from "@/modules/marketplace/shop";
 
 export const metadata: Metadata = {
-  title: { absolute: "PrestAfrik Shop : la marketplace des boutiques d’Afrique centrale" },
-  description: "Mode, beauté, maison, alimentation… Ventes flash, promotions et produits les mieux notés des boutiques PrestAfrik. Commande sur WhatsApp, paiement à la livraison.",
+  title: { absolute: "PrestAfrik Shop : shopping, immobilier et services au Cameroun" },
+  description: "Mode, beauté, maison, téléphones, immobilier et services près de chez vous : promotions, meilleures ventes et prestataires les mieux notés. Contact direct sur WhatsApp, paiement à la livraison.",
   alternates: { canonical: shopUrl("/") },
 };
 
@@ -21,79 +23,123 @@ export const dynamic = "force-dynamic";
 const signupHref = () => `${(process.env.BETTER_AUTH_URL ?? "").replace(/\/$/, "")}/inscription`;
 
 /**
- * Accueil de la marketplace (shop.prestafrik.com) : à la une, budgets, catégories, ventes flash, offres
- * exclusives, une section par grande catégorie, puis les boutiques à la une. Les boutiques montrées sont
- * celles du pays du visiteur (zone CEMAC). Une section vide n'est pas affichée.
+ * Accueil de la marketplace (shop.prestafrik.com), pour l'univers choisi (shopping, immobilier, services) et
+ * la ville du visiteur : bannières (images et boutons), raccourcis, budget, catégories en cercles, offre du
+ * jour, incontournables, exclusivités, une section par catégorie, puis les boutiques à la une.
+ * Une section vide n'est pas affichée.
  */
 export default async function ShopHomePage() {
-  const country = await getShopCountry();
-  const [home, visuals] = await Promise.all([getShopHome(country?.iso), getShopAnnouncements()]);
-  const drawn: DrawnSlide[] = [
-    {
-      id: "bienvenue",
-      kicker: "PrestAfrik Shop",
-      title: "Les boutiques d’Afrique centrale, réunies ici",
-      text: "Mode, beauté, maison, alimentation… Commandez directement aux vendeurs, payez à la livraison.",
-      cta: "Découvrir les boutiques",
-      href: shopUrl("/#boutiques"),
-      tone: "navy",
-      icon: "sparkles",
-    },
-    {
-      id: "promos",
-      kicker: "Bons plans",
-      title: "Les promotions du moment",
-      text: "Les plus belles réductions de nos vendeurs, mises à jour chaque jour.",
-      cta: "Voir les promotions",
-      href: shopUrl("/recherche?tri=promo&promo=1"),
-      tone: "orange",
-      icon: "zap",
-    },
-    {
-      id: "vendre",
-      kicker: "Pour les vendeurs",
-      title: "Votre boutique ici, gratuitement",
-      text: "Prête en 5 minutes, visible sur la marketplace, commandes sur WhatsApp.",
-      cta: "Ouvrir ma boutique",
-      href: signupHref(),
-      tone: "coral",
-      icon: "rocket",
-    },
-  ];
+  const scope = await getShopScope();
+  const [home, visuals, ticker, tickerSeconds] = await Promise.all([getShopHome(scope), getShopAnnouncements(), getShopTicker(), getShopTickerSeconds()]);
+  const universe = scope.universe;
+
+  // Emplacements sans image : le bouton seul, sur un fond aux couleurs de PrestAfrik.
+  const drawn: DrawnSlide[] =
+    universe === "immobilier"
+      ? [
+          { id: "immo", cta: "Voir les annonces", href: shopUrl("/recherche?tri=nouveautes"), tone: "navy" },
+          { id: "publier", cta: "Publier une annonce", href: signupHref(), tone: "coral" },
+        ]
+      : universe === "services"
+        ? [
+            { id: "services", cta: "Trouver un prestataire", href: shopUrl("/recherche?tri=mieux-notes"), tone: "navy" },
+            { id: "proposer", cta: "Proposer mes services", href: signupHref(), tone: "coral" },
+          ]
+        : [
+            { id: "bienvenue", cta: "Découvrir les boutiques", href: shopUrl("/#boutiques"), tone: "navy" },
+            { id: "promos", cta: "Voir les promotions", href: shopUrl("/recherche?tri=promo&promo=1"), tone: "orange" },
+            { id: "vendre", cta: "Ouvrir ma boutique", href: signupHref(), tone: "coral" },
+          ];
   const drawnBanners: DrawnSlide[] = [
-    { id: "livraison", kicker: "Zéro risque", title: "Paiement à la livraison", text: "Vous payez quand vous recevez.", cta: "Explorer les produits", href: shopUrl("/recherche"), tone: "navy", icon: "coins" },
-    { id: "notes", kicker: "Avis vérifiés", title: "Les mieux notés", text: "Choisis par les acheteurs.", cta: "Voir", href: shopUrl("/recherche?tri=mieux-notes"), tone: "orange", icon: "sparkles" },
+    { id: "explorer", cta: "Explorer", href: shopUrl("/recherche"), tone: "navy" },
+    { id: "notes", cta: "Les mieux notés", href: shopUrl("/recherche?tri=mieux-notes"), tone: "orange" },
   ];
+
+  // Raccourcis illustrés (icône, deux mots).
+  const shortcuts =
+    universe === "vente"
+      ? [
+          { label: "Offre du jour", href: shopUrl("/#ventes-flash"), icon: Zap, tint: "#ff6a00" },
+          { label: "Promotions", href: shopUrl("/recherche?tri=promo&promo=1"), icon: BadgePercent, tint: "#e8508a" },
+          { label: "Meilleures ventes", href: shopUrl("/recherche?tri=mieux-notes"), icon: Star, tint: "#c8a12c" },
+          { label: "Petits prix", href: shopUrl("/recherche?max=5000"), icon: Tag, tint: "#1f9d74" },
+          { label: "Nouveautés", href: shopUrl("/recherche?tri=nouveautes"), icon: Rocket, tint: "#2f6bff" },
+          { label: "Exclusivités", href: shopUrl("/#offres-exclusives"), icon: Crown, tint: "#7c5cff" },
+        ]
+      : [
+          { label: universe === "immobilier" ? "Nouvelles annonces" : "Nouveaux prestataires", href: shopUrl("/recherche?tri=nouveautes"), icon: Rocket, tint: "#2f6bff" },
+          { label: "Les mieux notés", href: shopUrl("/recherche?tri=mieux-notes"), icon: Star, tint: "#c8a12c" },
+          { label: universe === "immobilier" ? "Bonnes affaires" : "Offres du moment", href: shopUrl("/recherche?tri=promo&promo=1"), icon: BadgePercent, tint: "#e8508a" },
+          { label: "Petits budgets", href: shopUrl("/recherche?max=50000"), icon: Tag, tint: "#1f9d74" },
+        ];
+  const budgets = shopBudgets.map((budget) => ({ label: budget.label, href: budgetHref(budget) }));
+  const empty = universe !== "vente" && home.categories.length === 0;
+  const EmptyIcon = universe === "immobilier" ? Building2 : Handshake;
 
   return (
-    <ShopShell categories={home.categories} country={country} local={home.local}>
-      <ShopHero banners={visuals.banners} carousel={visuals.carousel} drawn={drawn} drawnBanners={drawnBanners} />
+    <ShopShell categories={home.categories} local={home.local} scope={scope} ticker={ticker} tickerSeconds={tickerSeconds}>
+      {universe === "vente" ? (
+        <ShopHero banners={visuals.banners} carousel={visuals.carousel} drawn={drawn} drawnBanners={drawnBanners} mobile={visuals.mobile} />
+      ) : (
+        <ShopSingleBanner banner={universe === "immobilier" ? visuals.immo : visuals.services} fallback={drawn[0]} />
+      )}
 
-      <section aria-labelledby="budget-title" className="shop-section">
-        <ShopSectionHead icon={Wallet} id="budget-title" title="Votre budget, vos options" />
-        <ul className="shop-budgets">
-          {shopBudgets.map((budget) => (
-            <li key={budget.label}>
-              <a href={budgetHref(budget)}>{budget.label}</a>
+      <nav aria-label="Raccourcis" className="shop-shortcuts">
+        <ul style={{ "--count": shortcuts.length } as React.CSSProperties}>
+          {shortcuts.map(({ label, href, icon: Icon, tint }) => (
+            <li key={label}>
+              <a href={href} style={{ "--tint": tint } as React.CSSProperties}>
+                <span aria-hidden="true">
+                  <Icon size={22} strokeWidth={1.9} />
+                </span>
+                {label}
+              </a>
             </li>
           ))}
         </ul>
-      </section>
+      </nav>
+
+      {empty && (
+        <section className="shop-universe-empty">
+          <span aria-hidden="true">
+            <EmptyIcon size={40} strokeWidth={1.6} />
+          </span>
+          <h2>{universe === "immobilier" ? "Les premières annonces arrivent" : "Les premiers prestataires arrivent"}</h2>
+          <p>{universe === "immobilier" ? "Propriétaire ou agence ? Publiez vos biens gratuitement, les demandes arrivent sur WhatsApp." : "Coiffeur, artisan, traiteur, transporteur ? Votre vitrine est prête en 5 minutes."}</p>
+          <a className="shop-btn shop-btn-primary" href={signupHref()}>
+            {universe === "immobilier" ? "Publier une annonce" : "Proposer mes services"}
+          </a>
+          <p className="shop-universe-switch">En attendant, découvrez « {shopUniverses.vente.label} » en haut de la page.</p>
+        </section>
+      )}
+
+      {!empty && (
+        <section aria-labelledby="budget-title" className="shop-section shop-budget-row">
+          <ShopSectionHead icon={Wallet} id="budget-title" title="Votre budget" />
+          <ul className="shop-budgets">
+            {budgets.map((budget) => (
+              <li key={budget.label}>
+                <a href={budget.href}>{budget.label}</a>
+              </li>
+            ))}
+          </ul>
+          <BudgetSelect budgets={budgets} />
+        </section>
+      )}
 
       {home.categories.length > 0 && (
-        <section aria-labelledby="rubriques-title" className="shop-section" id="rubriques">
-          <ShopSectionHead icon={LayoutGrid} id="rubriques-title" subtitle={home.local && country ? `Les boutiques ${country.locative}, par univers.` : "Chaque univers a ses boutiques spécialisées."} title="Trouvez ce qu’il vous faut" />
+        <section aria-label="Catégories" className="shop-section" id="rubriques">
           <ul className="shop-categories">
             {home.categories.map((category) => {
               const { icon: Icon, tint } = categoryIcon(category.slug);
               return (
                 <li key={category.slug}>
                   <a href={categoryHref(category.slug)} style={{ "--tint": tint } as React.CSSProperties}>
-                    <Icon aria-hidden="true" className="shop-category-icon" size={30} strokeWidth={1.7} />
+                    <span aria-hidden="true" className="shop-category-circle">
+                      {/* Image ronde de l'administration ; à défaut, l'icône de la catégorie. */}
+                      {category.imageUrl ? <img alt="" decoding="async" loading="lazy" src={category.imageUrl} /> : <Icon size={30} strokeWidth={1.7} />}
+                    </span>
                     <strong>{category.label}</strong>
-                    <small>
-                      {category.storeCount} boutique{category.storeCount > 1 ? "s" : ""}
-                    </small>
                   </a>
                 </li>
               );
@@ -108,41 +154,46 @@ export default async function ShopHomePage() {
             aside={home.flash.endsAt ? <FlashCountdown endsAt={home.flash.endsAt.toISOString()} /> : undefined}
             icon={Zap}
             id="flash-title"
-            subtitle="Quantités limitées, prix des vendeurs."
-            title="Ventes flash"
+            subtitle="Stock limité, prix des vendeurs."
+            title="Offre du jour"
           />
-          <ProductRail label="Ventes flash" products={home.flash.products} variant="flash" />
+          <ProductRail label="Offre du jour" products={home.flash.products} variant="flash" />
+        </section>
+      )}
+
+      {home.topProducts.length > 0 && (
+        <section aria-labelledby="incontournables-title" className="shop-section" id="incontournables">
+          <ShopSectionHead href={shopUrl("/recherche?tri=mieux-notes")} icon={Flame} id="incontournables-title" moreLabel="Découvrir" title="Les incontournables du moment" />
+          <ProductRail label="Les incontournables du moment" products={home.topProducts} />
         </section>
       )}
 
       {home.exclusive.length > 0 && (
         <section aria-labelledby="exclusives-title" className="shop-section shop-band shop-band--gold" id="offres-exclusives">
-          <ShopSectionHead icon={Crown} id="exclusives-title" subtitle="Sélectionnées par l’équipe PrestAfrik, uniquement ici." title="Offres exclusives PrestAfrik" />
-          <ProductRail label="Offres exclusives PrestAfrik" products={home.exclusive} variant="exclusive" />
+          <ShopSectionHead icon={Crown} id="exclusives-title" subtitle="Uniquement sur PrestAfrik Shop." title="Exclusivités PrestAfrik" />
+          <ProductRail label="Exclusivités PrestAfrik" products={home.exclusive} variant="exclusive" />
         </section>
       )}
 
-      {/* Une section par grande catégorie : les produits ne sont jamais mélangés entre catégories. */}
-      {home.sections.map(({ category, products }) => {
-        const { icon, tint } = categoryIcon(category.slug);
-        return (
-          <section aria-labelledby={`categorie-${category.slug}`} className="shop-section shop-category-section" key={category.slug} style={{ "--tint": tint } as React.CSSProperties}>
-            <ShopSectionHead
-              href={categoryHref(category.slug)}
-              icon={icon}
-              id={`categorie-${category.slug}`}
-              subtitle={`${category.storeCount} boutique${category.storeCount > 1 ? "s" : ""} · promotions et mieux notés d’abord`}
-              tint={tint}
-              title={category.label}
-            />
-            <ProductRail label={category.label} products={products} />
-          </section>
-        );
-      })}
+      {/* Une section par catégorie : « Vêtements et mode (3) », le nombre de boutiques entre parenthèses. */}
+      {home.sections.map(({ category, products }) => (
+        <section aria-labelledby={`categorie-${category.slug}`} className="shop-section shop-category-section" key={category.slug} style={{ "--tint": categoryIcon(category.slug).tint } as React.CSSProperties}>
+          <ShopSectionHead
+            href={categoryHref(category.slug)}
+            id={`categorie-${category.slug}`}
+            title={
+              <>
+                {category.label} <span className="shop-section-count">({category.storeCount})</span>
+              </>
+            }
+          />
+          <ProductRail label={category.label} products={products} />
+        </section>
+      ))}
 
       {home.featuredStores.length > 0 ? (
         <section aria-labelledby="une-title" className="shop-section" id="boutiques">
-          <ShopSectionHead icon={Sparkles} id="une-title" subtitle="Des vendeurs à découvrir absolument." title="Boutiques à la une" />
+          <ShopSectionHead icon={Sparkles} id="une-title" title={universe === "immobilier" ? "Annonceurs à la une" : universe === "services" ? "Prestataires à la une" : "Boutiques à la une"} />
           <ScrollRail label="Boutiques à la une">
             {home.featuredStores.map((store) => (
               <li key={store.id}>
@@ -152,7 +203,7 @@ export default async function ShopHomePage() {
           </ScrollRail>
         </section>
       ) : (
-        <p className="shop-empty">Les premières boutiques arrivent. Vous êtes vendeur ? La vôtre pourrait être la première.</p>
+        universe === "vente" && <p className="shop-empty">Les premières boutiques arrivent. Vous êtes vendeur ? La vôtre pourrait être la première.</p>
       )}
     </ShopShell>
   );

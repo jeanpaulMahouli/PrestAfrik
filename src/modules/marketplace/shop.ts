@@ -4,6 +4,8 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { photoVariant } from "@/lib/product-photos";
 import { storePublicUrl } from "@/lib/urls";
+import { cityKey, universeOfActivity } from "@/config/marketplace";
+import { scopeKey, type ShopScope } from "./country";
 import { getTopStores, loadIndex, normalizeForSearch, type SearchableStore } from "./search";
 
 // Marketplace PrestAfrik (shop.prestafrik.com) : les boutiques publiées et leurs produits, rangés par
@@ -30,7 +32,7 @@ export type ShopProduct = {
 
 export type ShopStore = SearchableStore & { href: string; productCount: number; rating: number | null };
 
-export type ShopCategory = { slug: string; label: string; storeCount: number; productCount: number };
+export type ShopCategory = { slug: string; label: string; imageUrl: string | null; storeCount: number; productCount: number };
 
 const productSelect = {
   id: true,
@@ -84,13 +86,14 @@ async function toShopProducts(rows: ProductRow[], stores: Map<string, Searchable
 }
 
 /**
- * Boutiques montrées au visiteur : celles de son pays quand il est dans la zone CEMAC et qu'il y en a,
- * sinon toute la zone. `local` dit si le filtre par pays s'applique.
+ * Boutiques montrées au visiteur : celles de son univers (vente, immobilier, services), dans sa ville
+ * quand elle en a, sinon dans tout le Cameroun et la zone. `local` dit si le filtre par ville s'applique.
  */
-export async function scopedStores(country?: string | null): Promise<{ stores: SearchableStore[]; local: boolean }> {
-  const all = await loadIndex();
-  if (!country) return { stores: all, local: false };
-  const local = all.filter((store) => store.country === country);
+export async function scopedStores(scope: Pick<ShopScope, "universe" | "city">): Promise<{ stores: SearchableStore[]; local: boolean }> {
+  const all = (await loadIndex()).filter((store) => universeOfActivity(store.activitySlug) === scope.universe);
+  if (!scope.city) return { stores: all, local: false };
+  const key = cityKey(scope.city.name);
+  const local = all.filter((store) => store.city && cityKey(store.city) === key);
   return local.length ? { stores: local, local: true } : { stores: all, local: false };
 }
 
@@ -145,27 +148,29 @@ async function decorateStores(list: SearchableStore[]): Promise<ShopStore[]> {
 }
 
 /** Rubriques (activités des boutiques) qui ont au moins une boutique en ligne, avec leurs compteurs. */
-export async function getShopCategories(country?: string | null): Promise<ShopCategory[]> {
-  const { stores } = await scopedStores(country);
+export async function getShopCategories(scope: Pick<ShopScope, "universe" | "city">): Promise<ShopCategory[]> {
+  const { stores } = await scopedStores(scope);
   const [activities, products] = await Promise.all([
-    prisma.activity.findMany({ orderBy: { position: "asc" }, select: { slug: true, label: true } }),
+    prisma.activity.findMany({ orderBy: { position: "asc" }, select: { slug: true, label: true, imageUrl: true } }),
     prisma.product.groupBy({ by: ["storeId"], where: visible(stores.map((store) => store.id)), _count: { _all: true } }),
   ]);
   const perStore = new Map(products.map((row) => [row.storeId, row._count._all]));
   return activities
     .map((activity) => {
       const members = stores.filter((store) => store.activitySlug === activity.slug);
-      return { slug: activity.slug, label: activity.label, storeCount: members.length, productCount: members.reduce((sum, store) => sum + (perStore.get(store.id) ?? 0), 0) };
+      return { slug: activity.slug, label: activity.label, imageUrl: activity.imageUrl, storeCount: members.length, productCount: members.reduce((sum, store) => sum + (perStore.get(store.id) ?? 0), 0) };
     })
     .filter((category) => category.storeCount > 0);
 }
 
 export type ShopHome = {
-  /** Vrai si seules les boutiques du pays du visiteur sont montrées. */
+  /** Vrai si seules les boutiques de la ville du visiteur sont montrées. */
   local: boolean;
   categories: ShopCategory[];
   flash: { products: ShopProduct[]; endsAt: Date | null };
   exclusive: ShopProduct[];
+  /** Les incontournables du moment : produits les mieux notés de l'univers et de la ville. */
+  topProducts: ShopProduct[];
   /** Une rangée par grande rubrique (vêtements, électronique… jamais mélangés). */
   sections: { category: ShopCategory; products: ShopProduct[] }[];
   featuredStores: ShopStore[];
@@ -179,20 +184,21 @@ export function clearShopCache() {
   homeCache.clear();
 }
 
-/** Accueil de la marketplace pour un pays (ou toute la zone), gardé une minute en mémoire. */
-export async function getShopHome(country?: string | null): Promise<ShopHome> {
-  const key = country ?? "CEMAC";
+/** Accueil de la marketplace pour un univers et une ville, gardé une minute en mémoire. */
+export async function getShopHome(scope: Pick<ShopScope, "universe" | "city">): Promise<ShopHome> {
+  const key = scopeKey(scope);
   const cached = homeCache.get(key);
   if (cached && Date.now() - cached.at < homeTtlMs) return cached.value;
-  const { stores: list, local } = await scopedStores(country);
+  const { stores: list, local } = await scopedStores(scope);
   const stores = toMap(list);
   const now = new Date();
-  const [categories, flash, exclusive, featuredPicks, topStores] = await Promise.all([
-    getShopCategories(country),
+  const [categories, flash, exclusive, featuredPicks, topStores, topProducts] = await Promise.all([
+    getShopCategories(scope),
     picks("FLASH", stores),
     picks("EXCLUSIVE", stores),
     prisma.marketplacePick.findMany({ where: { section: "FEATURED_STORE", OR: [{ endsAt: null }, { endsAt: { gt: now } }] }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { storeId: true } }),
     getTopStores(200),
+    topRated(stores, 12),
   ]);
   const sections = (
     await Promise.all(
@@ -206,7 +212,7 @@ export async function getShopHome(country?: string | null): Promise<ShopHome> {
   ).filter((section) => section.products.length > 0);
   const featured = featuredPicks.flatMap((pick) => (pick.storeId && stores.get(pick.storeId) ? [stores.get(pick.storeId)!] : []));
   const fallback = topStores.filter((store) => stores.has(store.id)).slice(0, 10);
-  const value: ShopHome = { local, categories, flash, exclusive: exclusive.products, sections, featuredStores: await decorateStores(featured.length ? featured : fallback) };
+  const value: ShopHome = { local, categories, flash, exclusive: exclusive.products, topProducts, sections, featuredStores: await decorateStores(featured.length ? featured : fallback) };
   homeCache.set(key, { at: Date.now(), value });
   return value;
 }
@@ -220,9 +226,9 @@ export type ShopQuery = { q?: string; category?: string; min?: number; max?: num
  * Explorer la marketplace : produits (48 au plus) et boutiques correspondant à une recherche, une rubrique,
  * un budget ou un tri. Le prix pris en compte est le prix payé (prix promotionnel s'il existe).
  */
-export async function exploreShop(query: ShopQuery, country?: string | null): Promise<{ products: ShopProduct[]; stores: ShopStore[]; category: ShopCategory | null }> {
-  const { stores: all } = await scopedStores(country);
-  const categories = query.category ? await getShopCategories(country) : [];
+export async function exploreShop(query: ShopQuery, scope: Pick<ShopScope, "universe" | "city">): Promise<{ products: ShopProduct[]; stores: ShopStore[]; category: ShopCategory | null }> {
+  const { stores: all } = await scopedStores(scope);
+  const categories = query.category ? await getShopCategories(scope) : [];
   const category = categories.find((item) => item.slug === query.category) ?? null;
   const terms = (query.q ?? "").trim();
   const inCategory = all.filter((store) => !query.category || store.activitySlug === query.category);

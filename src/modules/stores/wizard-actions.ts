@@ -271,7 +271,7 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
   if (!draft) {
     // Second envoi (double appui, réseau lent qui renvoie la requête) : la boutique existe déjà.
     const created = await findOwnedStore(session.user.id, text(formData, "draftId"));
-    if (created) redirect(createdHref(created.id));
+    if (created) redirect(launchHref);
     return missingDraft();
   }
   const data = draft.data;
@@ -370,7 +370,7 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
       }
       // Même brouillon envoyé deux fois en même temps : la première demande a créé la boutique.
       const created = await findOwnedStore(session.user.id, storeId);
-      if (created) redirect(createdHref(created.id));
+      if (created) redirect(launchHref);
       console.error("[assistant] Création de boutique refusée par une contrainte d’unicité", target);
       return fail("La boutique n’a pas pu être créée à cause d’une information en double. Vérifiez vos zones de livraison (étape 8), puis réessayez.");
     }
@@ -384,14 +384,14 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
   await rememberActiveStore(session.user.id, session.session.id, storeId);
   invalidateStorefrontCache(storeId, data.slug!);
 
-  // Publication immédiate si tout est prêt (le compte est forcément confirmé) ; sinon l'écran « Boutique créée »
-  // liste ce qu'il reste à faire.
+  // Publication immédiate si tout est prêt (le compte est forcément confirmé) ; sinon « Pour bien démarrer »,
+  // sur le tableau de bord, liste ce qu'il reste à faire.
   await publishStoreIfReady(storeId, isAccountVerified(session.user));
-  redirect(createdHref(storeId));
+  redirect(launchHref);
 }
 
-/** Écran final de l'assistant : « Boutique publiée » ou « Boutique créée » selon son état. */
-const createdHref = (storeId: string) => `/boutiques/nouvelle?boutique=${encodeURIComponent(storeId)}`;
+/** Fin de l'assistant : le tableau de bord de la nouvelle boutique (active), avec la fenêtre de félicitations. */
+const launchHref = "/dashboard?bienvenue=1";
 
 /** Colonnes d'une violation d'unicité Prisma (ex. ["slug"], ["storeId", "city", "name"]). */
 function uniqueTarget(error: Prisma.PrismaClientKnownRequestError): string[] {

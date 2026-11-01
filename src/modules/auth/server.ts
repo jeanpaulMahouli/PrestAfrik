@@ -108,13 +108,19 @@ if (shouldValidateProductionConfig) {
   getSmtpConfig();
 }
 
+// Sous-domaines activés : la session est valable sur prestafrik.com, app.prestafrik.com et shop.prestafrik.com.
+const rootDomain = process.env.FEATURE_SUBDOMAINS === "true" ? process.env.STORE_ROOT_DOMAIN?.trim().replace(/^\.+/, "") : undefined;
+const platformOrigins = rootDomain ? ["app", "shop"].map((sub) => `${new URL(authBaseUrl).protocol}//${sub}.${rootDomain}`) : [];
+
 export const auth = betterAuth({
   appName: "PrestAfrik",
   baseURL: authBaseUrl,
   trustedOrigins: async (request) => [
     authBaseUrl,
+    ...platformOrigins,
     localDevelopmentOrigin(request),
   ],
+  ...(rootDomain ? { advanced: { crossSubDomainCookies: { enabled: true, domain: rootDomain } } } : {}),
   secret: authSecret ?? "prestafrik-local-development-only-secret-0001",
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   plugins: [

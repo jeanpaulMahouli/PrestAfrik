@@ -1,4 +1,4 @@
-import { Apple, Baby, BookOpen, Car, Dumbbell, Footprints, Gem, Glasses, HeartPulse, Palette, Shirt, Smartphone, Sofa, Sparkles, Store, Tv, Wrench, type LucideIcon } from "lucide-react";
+import { Apple, Baby, BookOpen, Building2, Car, Dumbbell, Footprints, Gem, Glasses, HeartPulse, Palette, Shirt, Smartphone, Sofa, Sparkles, Store, Tv, Wrench, type LucideIcon } from "lucide-react";
 
 /**
  * Icône et teinte de chaque rubrique de la marketplace (activités des boutiques, migration
@@ -21,6 +21,7 @@ export const categoryLook: Record<string, { icon: LucideIcon; tint: string }> = 
   "librairie-papeterie": { icon: BookOpen, tint: "#6d4aff" },
   "auto-moto": { icon: Car, tint: "#475569" },
   services: { icon: Wrench, tint: "#0f766e" },
+  immobilier: { icon: Building2, tint: "#0b6e99" },
 };
 
 export function categoryIcon(slug: string | null | undefined) {

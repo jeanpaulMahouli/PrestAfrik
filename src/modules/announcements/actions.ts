@@ -21,12 +21,17 @@ const frames = {
   BANNER: { width: 1920, height: 240 },
   SHOP_CAROUSEL: { width: 1600, height: 600 },
   SHOP_BANNER: { width: 1200, height: 450 },
+  // Téléphone : une seule bannière rectangulaire (2:1), indépendante des visuels de l'ordinateur.
+  SHOP_MOBILE: { width: 1200, height: 600 },
+  // Immobilier et Services : une seule bannière, ordinateur et téléphone (8:3).
+  SHOP_IMMO: { width: 1600, height: 600 },
+  SHOP_SERVICES: { width: 1600, height: 600 },
 } as const;
-const maxPerPlacement = { CAROUSEL: 6, BANNER: 3, SHOP_CAROUSEL: 6, SHOP_BANNER: 2 } as const;
+const maxPerPlacement = { CAROUSEL: 6, BANNER: 3, SHOP_CAROUSEL: 6, SHOP_BANNER: 2, SHOP_MOBILE: 1, SHOP_IMMO: 1, SHOP_SERVICES: 1 } as const;
 const idSchema = z.string().min(10).max(40).regex(/^[a-z0-9]+$/);
 
 const fieldsSchema = z.object({
-  placement: z.enum(["CAROUSEL", "BANNER", "SHOP_CAROUSEL", "SHOP_BANNER"]),
+  placement: z.enum(["CAROUSEL", "BANNER", "SHOP_CAROUSEL", "SHOP_BANNER", "SHOP_MOBILE", "SHOP_IMMO", "SHOP_SERVICES"]),
   altText: z.string().trim().min(3, "Décrivez l’image en quelques mots (lecteurs d’écran).").max(160),
   linkUrl: z
     .string()
@@ -34,10 +39,18 @@ const fieldsSchema = z.object({
     .max(500)
     .refine((value) => value === "" || /^\/(?!\/)[^\s]*$/.test(value) || /^https:\/\/[^\s]+$/.test(value), "Le lien doit commencer par « / » (page de PrestAfrik) ou « https:// ».")
     .transform((value) => value || null),
+  ctaLabel: z
+    .string()
+    .trim()
+    .max(40, "Le texte du bouton ne peut pas dépasser 40 caractères.")
+    .transform((value) => value || null),
 });
 
-function back(message: string, kind: "succes" | "erreur" = "succes"): never {
-  redirect(`${listPath}?${kind}=${encodeURIComponent(message)}`);
+/** Onglet de la page Annonces où revenir : « marketplace » (par défaut) ou « tableau-de-bord ». */
+const espaceOf = (placement: string) => (placement.startsWith("SHOP_") ? "marketplace" : "tableau-de-bord");
+
+function back(message: string, kind: "succes" | "erreur" = "succes", espace?: string): never {
+  redirect(`${listPath}?${espace ? `espace=${espace}&` : ""}${kind}=${encodeURIComponent(message)}`);
 }
 
 function refresh() {
@@ -48,26 +61,26 @@ function refresh() {
 
 export async function createAnnouncement(formData: FormData) {
   const admin = await requirePlatformAdmin();
-  const fields = fieldsSchema.safeParse({ placement: formData.get("placement"), altText: formData.get("altText") ?? "", linkUrl: formData.get("linkUrl") ?? "" });
+  const fields = fieldsSchema.safeParse({ placement: formData.get("placement"), altText: formData.get("altText") ?? "", linkUrl: formData.get("linkUrl") ?? "", ctaLabel: formData.get("ctaLabel") ?? "" });
   if (!fields.success) back(fields.error.issues[0]?.message ?? "Vérifiez les informations.", "erreur");
-  const { placement, altText, linkUrl } = fields.data;
+  const { placement, altText, linkUrl, ctaLabel } = fields.data;
   if ((await prisma.platformAnnouncement.count({ where: { placement } })) >= maxPerPlacement[placement]) {
-    back(`${maxPerPlacement[placement]} images au plus pour cet emplacement : supprimez-en une d’abord.`, "erreur");
+    back(`${maxPerPlacement[placement]} image${maxPerPlacement[placement] > 1 ? "s" : ""} au plus pour cet emplacement : supprimez-en une d’abord.`, "erreur", espaceOf(placement));
   }
   let imageUrl: string;
   try {
     const saved = await saveStoreImage(formData.get("image"), announcementMediaId, { frame: frames[placement] });
-    if (!saved) back("Choisissez une image.", "erreur");
+    if (!saved) back("Choisissez une image.", "erreur", espaceOf(placement));
     imageUrl = saved.url;
   } catch (error) {
-    if (error instanceof ImageUploadError) back(error.message, "erreur");
+    if (error instanceof ImageUploadError) back(error.message, "erreur", espaceOf(placement));
     throw error;
   }
   const position = await prisma.platformAnnouncement.count({ where: { placement } });
-  const created = await prisma.platformAnnouncement.create({ data: { placement, imageUrl, altText, linkUrl, position } });
+  const created = await prisma.platformAnnouncement.create({ data: { placement, imageUrl, altText, linkUrl, ctaLabel: placement.startsWith("SHOP_") ? ctaLabel : null, position } });
   await logAdminAction(admin.id, { action: "announcement.create", targetType: "announcement", targetId: created.id, details: { placement } });
   refresh();
-  back(placement.startsWith("SHOP_") ? "Image ajoutée : elle est déjà visible sur la marketplace." : "Image ajoutée : elle est déjà visible sur le tableau de bord des vendeurs.");
+  back(placement.startsWith("SHOP_") ? "Image ajoutée : elle est déjà visible sur la marketplace." : "Image ajoutée : elle est déjà visible sur le tableau de bord des vendeurs.", "succes", espaceOf(placement));
 }
 
 export async function toggleAnnouncement(formData: FormData) {
@@ -79,7 +92,7 @@ export async function toggleAnnouncement(formData: FormData) {
   await prisma.platformAnnouncement.update({ where: { id: item.id }, data: { active: !item.active } });
   await logAdminAction(admin.id, { action: item.active ? "announcement.hide" : "announcement.show", targetType: "announcement", targetId: item.id });
   refresh();
-  back(item.active ? "Annonce masquée." : "Annonce de nouveau visible.");
+  back(item.active ? "Image masquée." : "Image de nouveau visible.", "succes", espaceOf(item.placement));
 }
 
 export async function moveAnnouncement(formData: FormData) {
@@ -92,12 +105,12 @@ export async function moveAnnouncement(formData: FormData) {
   const siblings = await prisma.platformAnnouncement.findMany({ where: { placement: item.placement }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { id: true } });
   const index = siblings.findIndex((row) => row.id === item.id);
   const target = index + direction;
-  if (target < 0 || target >= siblings.length) back("Déjà à cette place.");
+  if (target < 0 || target >= siblings.length) back("Déjà à cette place.", "succes", espaceOf(item.placement));
   const order = siblings.map((row) => row.id);
   [order[index], order[target]] = [order[target], order[index]];
   await prisma.$transaction(order.map((rowId, position) => prisma.platformAnnouncement.update({ where: { id: rowId }, data: { position } })));
   refresh();
-  back("Ordre mis à jour.");
+  back("Ordre mis à jour.", "succes", espaceOf(item.placement));
 }
 
 export async function deleteAnnouncement(formData: FormData) {
@@ -110,5 +123,5 @@ export async function deleteAnnouncement(formData: FormData) {
   await deleteStoreImage(item.imageUrl);
   await logAdminAction(admin.id, { action: "announcement.delete", targetType: "announcement", targetId: item.id });
   refresh();
-  back("Annonce supprimée.");
+  back("Image supprimée.", "succes", espaceOf(item.placement));
 }

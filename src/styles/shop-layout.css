@@ -1,0 +1,456 @@
+/* Marketplace : retouches de mise en page (bandeau publicitaire, bannières, raccourcis, budget, catégories). */
+
+/* ---------- « Livrer à » : liste déroulante native sous le libellé ---------- */
+.shop-city {
+  position: relative;
+}
+
+.shop-city select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.shop-city:has(select:focus-visible) {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- Bandeau publicitaire : un texte toutes les 4 secondes (réglable) ---------- */
+.shop-topbar {
+  align-items: center;
+  gap: 1rem;
+}
+
+.shop-ticker {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #fff;
+  font-weight: 600;
+}
+
+.shop-ticker-icon {
+  flex: none;
+  color: var(--color-brand-primary);
+  animation: shop-ticker-pulse 2s ease-in-out infinite;
+}
+
+.shop-ticker-window {
+  position: relative;
+  display: block;
+  height: 1.4em;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.shop-ticker-item {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  animation: shop-ticker-in var(--ticker-duration, 4s) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.shop-ticker-item a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgb(255 153 0 / 0.7);
+  text-underline-offset: 3px;
+}
+
+/* Entrée par le bas, léger rebond, puis sortie par le haut juste avant le texte suivant. */
+@keyframes shop-ticker-in {
+  0% {
+    opacity: 0;
+    transform: translateY(110%) scale(0.96);
+    filter: blur(2px);
+  }
+
+  8% {
+    opacity: 1;
+    transform: translateY(-6%) scale(1.02);
+    filter: blur(0);
+  }
+
+  13%,
+  92% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-110%);
+  }
+}
+
+/* Un seul texte : il entre, puis reste affiché. */
+.shop-ticker-item.is-single {
+  animation: shop-ticker-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes shop-ticker-enter {
+  from {
+    opacity: 0;
+    transform: translateY(110%);
+  }
+}
+
+@keyframes shop-ticker-pulse {
+  0%,
+  100% {
+    transform: scale(1) rotate(0);
+  }
+
+  20% {
+    transform: scale(1.18) rotate(-10deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-ticker-item,
+  .shop-ticker-icon {
+    animation: none;
+  }
+}
+
+/* ---------- Bannières : image et bouton seulement ---------- */
+.shop-slide {
+  position: relative;
+}
+
+.shop-slide .shop-slide-cta {
+  position: absolute;
+  bottom: clamp(0.875rem, 2.4vw, 1.75rem);
+  left: clamp(0.875rem, 2.4vw, 1.75rem);
+  z-index: 1;
+  margin: 0;
+  transition: transform 0.18s ease;
+}
+
+.shop-slide:hover .shop-slide-cta {
+  transform: translateY(-2px);
+}
+
+.shop-slide--small .shop-slide-cta {
+  padding: 0.5rem 1rem;
+  font-size: 0.82rem;
+}
+
+/* Téléphone : une seule bannière rectangulaire (2:1), gérée à part. */
+.shop-hero-mobile {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .shop-hero {
+    display: none;
+  }
+
+  .shop-hero-mobile {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 2 / 1;
+    margin-top: 0.75rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 18px 36px -26px rgb(0 0 38 / 0.6);
+  }
+
+  .shop-hero-mobile .shop-slide {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .shop-hero-mobile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .shop-hero-mobile .shop-slide-cta {
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+  }
+}
+
+/* ---------- Raccourcis : tous de la même taille, sans débordement ---------- */
+.shop-shortcuts ul {
+  grid-auto-columns: auto;
+  grid-auto-flow: row;
+  grid-template-columns: repeat(var(--count, 6), minmax(0, 1fr));
+  overflow: visible;
+}
+
+.shop-shortcuts li {
+  min-width: 0;
+}
+
+.shop-shortcuts a {
+  height: 100%;
+  align-content: start;
+  padding: 0.75rem 0.375rem;
+  font-size: 0.76rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.shop-shortcuts a > span {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+@media (max-width: 767px) {
+  .shop-shortcuts ul {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .shop-shortcuts a {
+    padding: 0.625rem 0.25rem;
+    font-size: 0.7rem;
+  }
+
+  .shop-shortcuts a > span {
+    width: 2.375rem;
+    height: 2.375rem;
+  }
+
+  .shop-shortcuts a > span svg {
+    width: 19px;
+    height: 19px;
+  }
+}
+
+/* ---------- Budget : titre et budgets sur la même ligne ; liste déroulante sur téléphone ---------- */
+.shop-budget-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.shop-budget-row .shop-section-head {
+  margin: 0;
+}
+
+.shop-budget-row .shop-budgets {
+  flex: 1;
+}
+
+.shop-budget-select {
+  position: relative;
+  display: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-budget-select select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 2.25rem 0 1rem;
+  border: 1px solid #efe9dd;
+  border-radius: var(--radius-xs);
+  color: var(--color-text-primary);
+  background: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  appearance: none;
+}
+
+.shop-budget-select svg {
+  position: absolute;
+  top: 50%;
+  right: 0.875rem;
+  pointer-events: none;
+  translate: 0 -50%;
+}
+
+@media (max-width: 767px) {
+  .shop-budget-row {
+    flex-wrap: nowrap;
+  }
+
+  .shop-budget-row .shop-budgets {
+    display: none;
+  }
+
+  .shop-budget-select {
+    display: block;
+  }
+}
+
+/* ---------- Catégories : cercle (image de l'administration, sinon icône) ---------- */
+.shop-category-circle {
+  display: grid;
+  width: clamp(4.25rem, 8vw, 5.5rem);
+  height: clamp(4.25rem, 8vw, 5.5rem);
+  overflow: hidden;
+  place-items: center;
+  margin-bottom: 0.35rem;
+  border-radius: 50%;
+  color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 14%, #fff);
+  box-shadow: 0 0 0 3px #fff, 0 8px 20px -10px rgb(0 0 38 / 0.35);
+}
+
+.shop-category-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shop-categories a {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Nombre de boutiques entre parenthèses, à la suite du titre. */
+.shop-section-count {
+  color: var(--lp-ink-soft);
+  font-weight: 600;
+}
+
+/* ---------- Menu « Catégories » en fin de barre des rubriques ---------- */
+.shop-rubriques {
+  position: sticky;
+}
+
+.shop-category-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.shop-category-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.shop-category-menu-chevron {
+  transition: rotate 0.2s ease;
+}
+
+.shop-category-menu[open] .shop-category-menu-chevron {
+  rotate: 180deg;
+}
+
+/* Le volet sort de la barre défilante : il se place sous la barre, à droite. */
+.shop-category-menu > ul {
+  position: absolute;
+  top: calc(100% + 0.375rem);
+  right: var(--lp-gutter);
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.125rem;
+  width: min(30rem, calc(100vw - 2rem));
+  max-height: min(26rem, 70vh);
+  margin: 0;
+  padding: 0.5rem;
+  overflow-y: auto;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 20px 50px rgb(0 0 38 / 0.18), 0 0 0 1px #f1ebdf;
+  list-style: none;
+}
+
+.shop-category-menu > ul a {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border-radius: 0.625rem;
+  font-size: 0.875rem;
+}
+
+.shop-category-menu > ul a:hover,
+.shop-category-menu > ul a[aria-current="page"] {
+  background: var(--dt-hover);
+  font-weight: 600;
+}
+
+@media (max-width: 767px) {
+  .shop-topbar {
+    display: flex;
+    padding-block: 0.4rem;
+  }
+
+  .shop-topbar-perks,
+  .shop-topbar-links {
+    display: none;
+  }
+
+  .shop-ticker {
+    font-size: 0.78rem;
+  }
+
+  .shop-category-menu > ul {
+    right: 1rem;
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Les éléments du volet ne reprennent pas le centrage de la barre des rubriques. */
+.shop-rubriques .shop-category-menu li {
+  margin: 0;
+}
+
+/* ---------- Immobilier et Services : une seule bannière (8:3), ordinateur et téléphone ---------- */
+.shop-single-banner {
+  overflow: hidden;
+  aspect-ratio: 8 / 3;
+  border-radius: 1.5rem;
+  box-shadow: 0 18px 36px -26px rgb(0 0 38 / 0.6);
+}
+
+.shop-single-banner .shop-slide {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.shop-single-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 767px) {
+  .shop-single-banner {
+    aspect-ratio: 2 / 1;
+    margin-top: 0.75rem;
+    border-radius: 1.25rem;
+  }
+
+  .shop-single-banner .shop-slide-cta {
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+  }
+}
+
+/* ---------- « Vendre sur PrestAfrik » en verre ---------- */
+.shop-btn-glass {
+  border: 1px solid rgb(255 255 255 / 0.9);
+  color: var(--color-text-primary);
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.85), rgb(255 222 174 / 0.55));
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.9),
+    0 8px 22px rgb(170 96 10 / 0.14),
+    0 0 0 1px rgb(255 153 0 / 0.18);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+.shop-btn-glass:hover {
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.95), rgb(255 222 174 / 0.75));
+}
+
+.shop-btn-glass svg {
+  color: #ff9900;
+}

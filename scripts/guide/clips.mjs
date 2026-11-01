@@ -22,7 +22,7 @@ export const clips = {
   /* ---------- Créer sa boutique (assistant en 9 étapes) ---------- */
   "creer-boutique-1": async (clip, page) => {
     await clip.goto("/boutiques/nouvelle?nouvelle=1", 1500);
-    await clip.type(page.locator("input[name=name]"), "Mama Ngo Couture", { perFrame: 1 });
+    await clip.type(page.locator("input[name=name]"), process.env.GUIDE_STORE_NAME ?? "Mama Ngo Couture", { perFrame: 1 });
     await clip.hold(900);
     await clip.tap(next(page), { after: 2200 });
     await clip.hold(900);
@@ -78,8 +78,11 @@ export const clips = {
     await clip.scrollBy(400);
     await clip.hold(900);
     const publish = page.getByRole("button", { name: /Créer et publier ma boutique|Créer ma boutique/ });
+    // Boutique créée : le tableau de bord s'ouvre avec la fenêtre « Félicitations ».
     await clip.tap(publish, { after: 6000 });
-    await clip.settle(1500, 2400);
+    await page.waitForURL(/\/dashboard/, { timeout: 120_000 }).catch(() => {});
+    await page.locator(".launch").waitFor({ timeout: 60_000 }).catch(() => {});
+    await clip.settle(1200, 3200);
   },
 
   /* ---------- Tableau de bord ---------- */
@@ -97,9 +100,14 @@ export const clips = {
   },
   menu: async (clip, page) => {
     await clip.goto("/dashboard", 1200);
-    await clip.tap(page.getByRole("button", { name: "Ouvrir le menu" }).or(page.locator(".vendor-menu-button")).first(), { after: 700 });
+    // Barre du bas : Accueil, Commandes, Produits, Ma boutique, puis « Menu » pour les autres rubriques.
+    await clip.tap(page.locator(".vendor-tabbar").getByRole("link", { name: "Commandes" }), { after: 1800 });
+    await clip.hold(1000);
+    await clip.tap(page.locator(".vendor-tabbar").getByRole("link", { name: "Produits" }), { after: 1800 });
+    await clip.hold(1000);
+    await clip.tap(page.locator(".vendor-tabbar button"), { after: 700 });
     await clip.hold(1800);
-    await clip.tap(page.locator(".vendor-drawer-nav").getByRole("link", { name: "Produits" }), { after: 2000 });
+    await clip.tap(page.locator(".vendor-drawer-nav").getByRole("link", { name: "Avis clients" }), { after: 2000 });
     await clip.hold(1400);
   },
   partager: async (clip, page) => {
