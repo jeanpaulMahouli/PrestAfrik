@@ -1,4 +1,6 @@
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { auth } from "@/modules/auth/server";
 import { PhotoError, purgeTemporaryPhotos, saveTemporaryPhoto } from "@/lib/product-photos";
 import { isSameOrigin } from "@/lib/request-guards";
 import { hasPermission } from "@/modules/auth/permissions";
@@ -10,6 +12,10 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return NextResponse.json({ error: "Requête refusée." }, { status: 403 });
+  }
+  // getStoreContext redirige vers /connexion sans session : une API doit répondre en JSON.
+  if (!(await auth.api.getSession({ headers: await headers() }))) {
+    return NextResponse.json({ error: "Votre session a expiré. Reconnectez-vous pour continuer." }, { status: 401 });
   }
   const { store, membership } = await getStoreContext();
   if (!hasPermission(membership.role, "products.manage")) {

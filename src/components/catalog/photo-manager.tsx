@@ -23,7 +23,13 @@ type PhotoItem = {
 
 const maxPhotos = 5;
 const maxBytes = 5 * 1024 * 1024;
-const acceptedTypes = ["image/jpeg", "image/png", "image/webp"];
+const acceptedTypes = ["image/jpeg", "image/jpg", "image/pjpeg", "image/png", "image/webp"];
+const acceptedExtensions = /\.(?:jpe?g|jfif|png|webp)$/i;
+
+/** Certains navigateurs (Windows sans codec WebP, fichiers venus d'une messagerie) ne donnent pas le type : on regarde alors l'extension. Le serveur vérifie le contenu réel. */
+function isAcceptedImage(file: File) {
+  return file.type ? acceptedTypes.includes(file.type.toLowerCase()) : acceptedExtensions.test(file.name);
+}
 
 function uploadPhoto(uploadUrl: string, file: File, onProgress: (value: number) => void) {
   return new Promise<{ key: string; previewUrl: string }>((resolve, reject) => {
@@ -101,7 +107,7 @@ export function PhotoManager({ initialPhotos, error, uploadUrl = "/api/dashboard
     for (const file of list.slice(0, slots)) {
       const uid = uuid();
       const item: PhotoItem = { uid, alt: "", status: "uploading", progress: 0, fileName: file.name };
-      if (!acceptedTypes.includes(file.type)) {
+      if (!isAcceptedImage(file)) {
         setPhotos((current) => [...current, { ...item, status: "error", error: "Format refusé : JPG, PNG ou WebP uniquement." }]);
         continue;
       }
@@ -249,7 +255,8 @@ export function PhotoManager({ initialPhotos, error, uploadUrl = "/api/dashboard
             )}
           </li>
         ))}
-        {Array.from({ length: Math.max(0, remaining) }, (_, index) => (
+        {/* Les fichiers en erreur occupent une case : jamais plus de 5 cases au total. */}
+        {Array.from({ length: Math.max(0, Math.min(remaining, maxPhotos - photos.length)) }, (_, index) => (
           <li className="photo-tile is-empty" key={`empty-${index}`}>
             <button aria-label="Ajouter une photo" className="photo-add" onClick={() => inputRef.current?.click()} type="button">
               +
