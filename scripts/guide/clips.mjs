@@ -66,7 +66,7 @@ export const clips = {
     const file = page.locator("input[type=file]").first();
     if (await file.count()) {
       await file.setInputFiles(await samplePhoto("Robe wax", "#FF9900"));
-      await page.waitForTimeout(2500);
+      await photoReady(page);
       await clip.snap(900);
     }
     await clip.tap(next(page), { after: 2200 });
@@ -130,7 +130,7 @@ export const clips = {
     await clip.hold(700);
     await clip.scrollTo(page.getByText("Glissez vos photos ici"));
     await page.locator("input[type=file]").first().setInputFiles(await samplePhoto("Boubou brodé", "#7A4BC2"));
-    await page.waitForTimeout(3000);
+    await photoReady(page);
     await clip.snap(1200);
     await clip.type(page.locator("input[name=priceXaf]"), "25000", { perFrame: 1 });
     await clip.type(page.locator("input[name=promotionalPriceXaf]"), "21000", { perFrame: 1 });
@@ -232,14 +232,18 @@ export const clips = {
   /* ---------- Ma boutique, marketing, équipe ---------- */
   "ma-boutique": async (clip, page) => {
     await clip.goto("/dashboard/boutique", 1300);
-    await clip.scrollTo(page.getByRole("heading", { name: "Aperçu avant publication" }));
-    await clip.hold(1300);
-    await clip.scrollTo(page.locator(".theme-tiles").first());
-    await clip.hold(600);
-    await clip.tap(page.locator("[role=radiogroup] label, [role=radiogroup] [role=radio]").nth(3), { after: 900 });
-    await clip.scrollTo(page.getByRole("heading", { name: "Aperçu avant publication" }));
-    await page.waitForTimeout(1500);
-    await clip.hold(1800);
+    // Thème de la boutique (section « Apparence »), puis l'aperçu en entier : le changement s'y voit avant d'enregistrer.
+    const preview = page.getByRole("heading", { name: "Aperçu avant publication" });
+    await scrollToTop(clip, page, preview);
+    await clip.hold(1500);
+    const themes = page.locator("#apparence .theme-tiles").first().locator("label.theme-tile");
+    await scrollToTop(clip, page, page.locator("#apparence"));
+    await clip.hold(700);
+    await clip.tap(themes.nth(2), { after: 900 });
+    await clip.hold(700);
+    await scrollToTop(clip, page, preview);
+    await page.waitForTimeout(1800);
+    await clip.hold(2200);
   },
   marketing: async (clip, page) => {
     await clip.goto("/dashboard/marketing", 1200);
@@ -248,8 +252,11 @@ export const clips = {
     await clip.scrollBy(500);
     await clip.hold(1200);
     await clip.goto("/dashboard/marketing", 900);
-    await clip.tap(page.getByRole("link", { name: /Campagnes/ }), { after: 2200 });
-    await clip.hold(1500);
+    // Popups plutôt que Campagnes : sur la base de démonstration, l'API WhatsApp n'est pas configurée (alerte rouge).
+    await clip.tap(page.getByRole("link", { name: /Popups/ }), { after: 2200 });
+    await clip.hold(1300);
+    await clip.scrollBy(450);
+    await clip.hold(1400);
   },
   equipe: async (clip, page) => {
     await clip.goto("/dashboard/equipe", 1300);
@@ -267,4 +274,17 @@ async function center(locator) {
   await locator.scrollIntoViewIfNeeded();
   const box = await locator.boundingBox();
   return [box.x + box.width / 2, box.y + box.height / 2];
+}
+
+/** Attend que la photo envoyée s'affiche en miniature (et non « Envoi en cours… »). */
+async function photoReady(page) {
+  await page.locator(".photo-tile.is-ready img").first().waitFor({ timeout: 60_000 }).catch(() => {});
+  await page.waitForTimeout(600);
+}
+
+/** Défilement filmé qui amène l'élément en haut de l'écran, juste sous l'en-tête. */
+async function scrollToTop(clip, page, locator) {
+  await locator.first().waitFor({ timeout: 60_000 });
+  const top = await locator.first().evaluate((element) => element.getBoundingClientRect().top);
+  await clip.scrollBy(top - 70);
 }

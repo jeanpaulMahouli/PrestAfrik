@@ -7,7 +7,7 @@
   "menu": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 13910
+    "duration": 11840
   },
   "partager": {
     "statusBar": "rgb(255 255 255)",
@@ -17,7 +17,7 @@
   "ajouter-produit": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 21400
+    "duration": 20710
   },
   "gerer-produits": {
     "statusBar": "rgb(255 255 255)",
@@ -42,7 +42,7 @@
   "livraisons": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 14050
+    "duration": 13360
   },
   "clients": {
     "statusBar": "rgb(255 255 255)",
@@ -52,12 +52,12 @@
   "ma-boutique": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 9320
+    "duration": 9630
   },
   "marketing": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 9810
+    "duration": 11110
   },
   "equipe": {
     "statusBar": "rgb(255 255 255)",
@@ -67,17 +67,17 @@
   "argent": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 8520
+    "duration": 9210
   },
   "creer-boutique-1": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 16060
+    "duration": 15160
   },
   "creer-boutique-2": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 16870
+    "duration": 15490
   },
   "creer-boutique-3": {
     "statusBar": "rgb(255 255 255)",
@@ -87,6 +87,6 @@
   "creer-boutique-4": {
     "statusBar": "rgb(255 255 255)",
     "dark": false,
-    "duration": 20910
+    "duration": 18840
   }
 }

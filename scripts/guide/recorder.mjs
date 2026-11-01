@@ -35,6 +35,27 @@ const fingerScript = () => {
   else install();
 };
 
+// Le tournage se fait en local : les adresses affichées (lien de la boutique, adresse web de l'assistant)
+// montrent le vrai domaine, prestafrik.com, au lieu de « localhost:3100 ». Affichage seulement.
+const publicAddressScript = (localHost) => {
+  const swap = (text) => text.replaceAll(`http://${localHost}`, "https://prestafrik.com").replaceAll(localHost, "prestafrik.com");
+  const fix = (root) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (node.nodeValue.includes(localHost)) node.nodeValue = swap(node.nodeValue);
+    }
+    for (const input of root.querySelectorAll?.("input") ?? []) {
+      if (input.value.includes(localHost)) input.value = swap(input.value);
+    }
+  };
+  const start = () => {
+    fix(document.body);
+    new MutationObserver(() => fix(document.body)).observe(document.body, { childList: true, subtree: true, characterData: true });
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+  else start();
+};
+
 export async function launch({ baseURL, storageState }) {
   const browser = await chromium.launch();
   const context = await browser.newContext({
@@ -47,14 +68,15 @@ export async function launch({ baseURL, storageState }) {
     locale: "fr-FR",
     timezoneId: "Africa/Douala",
   });
-  // Popup d'accueil déjà vu, animations d'apparition courtes.
+  // Popup d'accueil et encart « Installer l'application » déjà vus : l'écran du film reste sur l'essentiel.
   await context.addInitScript(() => {
     const original = Storage.prototype.getItem;
     Storage.prototype.getItem = function (key) {
-      return key.startsWith("prestafrik-popup:") ? "1" : original.call(this, key);
+      return key.startsWith("prestafrik-popup:") || key.startsWith("prestafrik:pwa-") ? "1" : original.call(this, key);
     };
   });
   await context.addInitScript(fingerScript);
+  await context.addInitScript(publicAddressScript, new URL(baseURL).host);
   return { browser, context };
 }
 
@@ -134,9 +156,18 @@ export class Clip {
     await locator.waitFor({ state: "visible", timeout: 60_000 });
     let box = await locator.boundingBox();
     if (!box) throw new Error(`${this.name} : élément sans position`);
+    // Élément d'une barre fixe (barre du bas, en-tête, fenêtre) : toujours à l'écran, on ne fait pas défiler la page.
+    const pinned = await locator.evaluate((element) => {
+      for (let node = element; node && node !== document.body; node = node.parentElement) {
+        const { position } = getComputedStyle(node);
+        if (position === "fixed" || position === "sticky") return true;
+      }
+      return false;
+    });
     const top = 120;
     const bottom = SCREEN.height - 130;
-    if (box.y < top || box.y + box.height > bottom) {
+    const onScreen = box.y >= 0 && box.y + box.height <= SCREEN.height;
+    if (!(pinned && onScreen) && (box.y < top || box.y + box.height > bottom)) {
       const delta = box.y + box.height / 2 - SCREEN.height * 0.5;
       await this.scrollBy(delta);
       box = await locator.boundingBox();
