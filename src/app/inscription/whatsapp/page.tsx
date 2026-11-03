@@ -5,6 +5,7 @@ import { AuthHeading, AuthShell } from "@/components/auth/auth-shell";
 import { WhatsappNumberForm } from "@/components/auth/whatsapp-number-form";
 import { welcomeHref } from "@/config/routes";
 import { prisma } from "@/lib/prisma";
+import { adoptOwnedStoreWhatsappNumber } from "@/modules/auth/google";
 import { auth } from "@/modules/auth/server";
 
 export const metadata: Metadata = { title: "Votre numéro WhatsApp", robots: { index: false } };
@@ -17,6 +18,8 @@ export default async function WhatsappStepPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/connexion");
   if (session.user.phoneNumber) redirect("/dashboard");
+  // Sa propre boutique a déjà un numéro WhatsApp : il devient celui du compte, rien à saisir.
+  if (await adoptOwnedStoreWhatsappNumber(session.user.id)) redirect("/dashboard");
 
   const firstName = session.user.name.trim().split(/\s+/)[0] || session.user.name;
   // Compte déjà installé (boutique existante) : retour au tableau de bord, sans l'accueil des nouveaux inscrits.
