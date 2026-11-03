@@ -1,7 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DashboardAnnouncement } from "@/modules/announcements/queries";
 
 // Annonces de PrestAfrik en haut du tableau de bord (gérées dans Administration → Annonces).
@@ -18,10 +17,14 @@ function Slide({ item, priority }: { item: DashboardAnnouncement; priority?: boo
   );
 }
 
-/** Diaporama pleine largeur : une image toutes les 6 secondes, en pause au survol ou au clavier. */
+/**
+ * Diaporama pleine largeur : une image toutes les 6 secondes, en pause au survol ou au clavier.
+ * Pas de flèches : les points, et le glissement du doigt sur téléphone.
+ */
 export function AnnouncementCarousel({ items }: { items: DashboardAnnouncement[] }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const touchStart = useRef<number | null>(null);
   const count = items.length;
 
   useEffect(() => {
@@ -40,6 +43,16 @@ export function AnnouncementCarousel({ items }: { items: DashboardAnnouncement[]
       onFocus={() => setPaused(true)}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onTouchEnd={(event) => {
+        const start = touchStart.current;
+        touchStart.current = null;
+        if (start === null || count < 2) return;
+        const delta = event.changedTouches[0].clientX - start;
+        if (Math.abs(delta) > 40) setIndex((index + (delta < 0 ? 1 : -1) + count) % count);
+      }}
+      onTouchStart={(event) => {
+        touchStart.current = event.touches[0].clientX;
+      }}
     >
       <div className="announce-track" style={{ transform: `translateX(-${index * 100}%)` }}>
         {items.map((item, position) => (
@@ -49,19 +62,11 @@ export function AnnouncementCarousel({ items }: { items: DashboardAnnouncement[]
         ))}
       </div>
       {count > 1 && (
-        <>
-          <button aria-label="Annonce précédente" className="announce-arrow announce-arrow-prev" onClick={() => setIndex((index - 1 + count) % count)} type="button">
-            <ChevronLeft aria-hidden="true" size={20} />
-          </button>
-          <button aria-label="Annonce suivante" className="announce-arrow announce-arrow-next" onClick={() => setIndex((index + 1) % count)} type="button">
-            <ChevronRight aria-hidden="true" size={20} />
-          </button>
-          <div className="announce-dots">
-            {items.map((item, position) => (
-              <button aria-current={position === index} aria-label={`Afficher l’annonce ${position + 1}`} key={item.id} onClick={() => setIndex(position)} type="button" />
-            ))}
-          </div>
-        </>
+        <div className="announce-dots">
+          {items.map((item, position) => (
+            <button aria-current={position === index} aria-label={`Afficher l’annonce ${position + 1}`} key={item.id} onClick={() => setIndex(position)} type="button" />
+          ))}
+        </div>
       )}
     </section>
   );

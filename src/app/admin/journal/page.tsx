@@ -21,6 +21,10 @@ const actionLabels: Record<string, string> = {
   "export.abonnements": "Export des abonnements",
   "export.utilisateurs": "Export des utilisateurs",
   "prospection.messages": "Messages de prospection modifiés",
+  "user.update": "Compte modifié",
+  "user.verify-email": "Adresse e-mail confirmée",
+  "user.sign-out": "Compte déconnecté de tous les appareils",
+  "user.delete": "Compte supprimé",
   "prospection.messages_reset": "Messages de prospection rétablis",
 };
 

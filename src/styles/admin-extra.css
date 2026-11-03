@@ -600,3 +600,84 @@
   flex: 1 1 16rem;
   min-width: min(100%, 16rem);
 }
+
+/* Utilisateurs → Gérer le compte. */
+.admin-back {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+}
+
+.admin-user-lg {
+  display: flex;
+  gap: 0.875rem;
+  align-items: center;
+}
+
+.admin-account-grid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+}
+
+.admin-account-form {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+
+.admin-account-form .v-field {
+  width: 100%;
+}
+
+.admin-account-facts {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.admin-account-facts div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.875rem;
+}
+
+.admin-account-facts dt {
+  color: var(--color-text-secondary);
+}
+
+.admin-account-facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.admin-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-card-empty {
+  padding: 0 1.25rem 1.25rem;
+}
+
+.admin-danger-zone {
+  margin-top: 1rem;
+  border-color: rgb(220 38 38 / 0.35);
+}
+
+.admin-danger-zone .v-card-title {
+  color: #b42318;
+}
+
+.admin-danger-form {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+  max-width: 32rem;
+}
+
+.admin-danger-form .v-field {
+  width: 100%;
+}

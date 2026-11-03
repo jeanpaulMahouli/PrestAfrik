@@ -33,7 +33,10 @@ const tabHrefs = ["/dashboard", "/dashboard/commandes", "/dashboard/produits", "
 const allowed = (role: StoreRole) => links.filter((link) => !link.permission || hasPermission(role, link.permission));
 const isActive = (pathname: string, href: string) => (href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href));
 
-function NavLinks({ role, onNavigate, exclude = [] }: { role: StoreRole; onNavigate?: () => void; exclude?: string[] }) {
+/** Compte sans boutique : seul l'Accueil est ouvert, les autres rubriques attendent la création de la boutique. */
+const lockedTitle = "Disponible après la création de votre boutique";
+
+function NavLinks({ role, onNavigate, exclude = [], locked = false }: { role: StoreRole; onNavigate?: () => void; exclude?: string[]; locked?: boolean }) {
   const pathname = usePathname();
   return (
     <>
@@ -41,6 +44,16 @@ function NavLinks({ role, onNavigate, exclude = [] }: { role: StoreRole; onNavig
         .filter((link) => !exclude.includes(link.href))
         .map((link) => {
           const Icon = link.icon;
+          if (locked && link.href !== "/dashboard") {
+            return (
+              <span aria-disabled="true" className="nav-link-disabled" key={link.href} title={lockedTitle}>
+                <span className="nav-link-label">
+                  <Icon aria-hidden="true" className="nav-link-icon" size={19} />
+                  {link.title}
+                </span>
+              </span>
+            );
+          }
           // Abonnement désactivé pendant le lancement gratuit (ADR-014) : entrée grisée, non cliquable.
           if (link.href === "/dashboard/abonnement" && !billingEnabled) {
             return (
@@ -65,10 +78,10 @@ function NavLinks({ role, onNavigate, exclude = [] }: { role: StoreRole; onNavig
 }
 
 /** Menu latéral fixe à partir de 1024 px. */
-export function VendorSidebar({ role }: { role: StoreRole }) {
+export function VendorSidebar({ role, locked = false }: { role: StoreRole; locked?: boolean }) {
   return (
     <nav aria-label={texts.vendor.shell.mainNavigation} className="vendor-sidebar">
-      <NavLinks role={role} />
+      <NavLinks locked={locked} role={role} />
     </nav>
   );
 }
@@ -77,7 +90,7 @@ export function VendorSidebar({ role }: { role: StoreRole }) {
  * Navigation sous 1024 px : barre du bas, comme une application mobile (Accueil, Commandes, Produits,
  * Ma boutique), et « Menu » qui ouvre les autres rubriques dans un tiroir.
  */
-export function VendorMobileNav({ role, storeName }: { role: StoreRole; storeName: string }) {
+export function VendorMobileNav({ role, storeName, locked = false }: { role: StoreRole; storeName: string; locked?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -121,6 +134,14 @@ export function VendorMobileNav({ role, storeName }: { role: StoreRole; storeNam
       <nav aria-label={texts.vendor.shell.mainNavigation} className="vendor-tabbar">
         {tabs.map((link) => {
           const Icon = link.icon;
+          if (locked && link.href !== "/dashboard") {
+            return (
+              <span aria-disabled="true" className="is-disabled" key={link.href} title={lockedTitle}>
+                <Icon aria-hidden="true" size={22} />
+                <span>{link.title}</span>
+              </span>
+            );
+          }
           return (
             <Link aria-current={isActive(pathname, link.href) ? "page" : undefined} href={link.href} key={link.href}>
               <Icon aria-hidden="true" size={22} />
@@ -128,7 +149,16 @@ export function VendorMobileNav({ role, storeName }: { role: StoreRole; storeNam
             </Link>
           );
         })}
-        <button aria-controls="vendor-drawer" aria-expanded={open} className={menuActive ? "is-active" : undefined} onClick={() => setOpen(true)} ref={triggerRef} type="button">
+        <button
+          aria-controls="vendor-drawer"
+          aria-expanded={open}
+          className={locked ? "is-disabled" : menuActive ? "is-active" : undefined}
+          disabled={locked}
+          onClick={() => setOpen(true)}
+          ref={triggerRef}
+          title={locked ? lockedTitle : undefined}
+          type="button"
+        >
           <LayoutGrid aria-hidden="true" size={22} />
           <span>Menu</span>
         </button>

@@ -65,8 +65,6 @@ export const fr = {
       ],
       title: "Créez votre compte",
       subtitle: "Bienvenue ! Il ne faut que quelques secondes pour créer votre compte.",
-      offerTitle: "6 mois d’abonnement offerts",
-      offerText: "Toutes les fonctions de PrestAfrik, gratuitement pendant 6 mois. Aucune carte bancaire demandée.",
       googleWhatsappNote: "Avec Google, nous vous demanderons ensuite votre numéro WhatsApp : il est indispensable pour recevoir vos commandes.",
       name: "Votre nom",
       namePlaceholder: "Awa Ngono",

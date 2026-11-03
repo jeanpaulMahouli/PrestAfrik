@@ -1,4 +1,5 @@
 import { Download } from "lucide-react";
+import Link from "next/link";
 import { UserAvatar } from "@/components/account/user-avatar";
 import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";
 import { ReasonDialog } from "@/components/admin/reason-dialog";
@@ -53,7 +54,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
       </div>
       <AdminFeedback params={params} />
       <p className="v-banner v-banner-info">
-        <strong>Accès limité par conception.</strong> Vous voyez les comptes et les rôles, jamais les mots de passe ni les données clients des boutiques.
+        Ouvrez <strong>Gérer le compte</strong> pour modifier les informations d’un compte, le confirmer, le déconnecter, le suspendre ou le supprimer. Les mots de passe ne sont jamais visibles.
       </p>
 
       <section className="v-card v-card-flush">
@@ -81,7 +82,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                     <span className="admin-user">
                       <UserAvatar image={user.image} name={user.name} size={32} />
                       <span>
-                        {user.name}
+                        <Link href={`/admin/utilisateurs/${user.id}`}>{user.name}</Link>
                         {isAdminRole(user.platformRole) && (
                           <span className="v-cell-sub">{user.platformRole === "SUPER_ADMIN" ? "Super administrateur PrestAfrik" : "Administrateur PrestAfrik"}</span>
                         )}
@@ -100,6 +101,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                     <Badge tone={user.suspendedAt ? "danger" : "success"}>{user.suspendedAt ? "Suspendu" : "Actif"}</Badge>
                   </td>
                   <td className="admin-row-actions">
+                    <Link className="v-link-button admin-row-action" href={`/admin/utilisateurs/${user.id}`}>
+                      Gérer le compte
+                    </Link>
                     {user.suspendedAt ? (
                       <form action={restoreUser}>
                         <input name="userId" type="hidden" value={user.id} />

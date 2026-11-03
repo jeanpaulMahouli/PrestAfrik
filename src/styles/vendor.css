@@ -3654,3 +3654,9 @@
 .framed-image-help strong {
   color: var(--color-text);
 }
+
+/* Compte sans boutique : la carte de bienvenue dans la mise en page du tableau de bord. */
+.vendor-main.welcome-main {
+  min-height: calc(100dvh - 10rem);
+  align-content: center;
+}

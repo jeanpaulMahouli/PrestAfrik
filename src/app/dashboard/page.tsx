@@ -51,7 +51,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
         createHref={pendingDraft ? `/boutiques/nouvelle?brouillon=${pendingDraft.id}&etape=${pendingDraft.step}` : "/boutiques/nouvelle"}
         emailVerified={account.user.emailVerified}
         firstName={account.user.name.trim().split(/\s+/)[0] || account.user.name}
-        justSignedUp={params.bienvenue === "1"}
+        resuming={Boolean(pendingDraft)}
         userEmail={account.user.email}
         userImage={account.user.image ?? null}
         userName={account.user.name}

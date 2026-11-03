@@ -15,16 +15,6 @@ export default async function SignUpPage({ searchParams }: PageProps<"/inscripti
   return (
     <AuthShell>
       <AuthHeading subtitle={t.subtitle} title={t.title} />
-      {/* Offre de lancement : 6 mois d'abonnement offerts (config/pricing.ts). */}
-      {!invitationToken && (
-        <p className="auth-offer">
-          <span aria-hidden="true">🎁</span>
-          <span>
-            <strong>{t.offerTitle}</strong>
-            {t.offerText}
-          </span>
-        </p>
-      )}
       <AuthForm googleEnabled={googleSignInEnabled()} invitationToken={invitationToken} mode="sign-up" />
     </AuthShell>
   );

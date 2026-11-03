@@ -944,7 +944,7 @@
   backdrop-filter: blur(12px);
 }
 
-.vendor-tabbar :is(a, button) {
+.vendor-tabbar :is(a, button, .is-disabled) {
   display: grid;
   justify-items: center;
   gap: 0.2rem;
@@ -1020,4 +1020,10 @@
   .vendor-tabbar {
     display: none;
   }
+}
+
+/* Compte sans boutique : rubriques grisées jusqu'à la création de la boutique. */
+.vendor-tabbar .is-disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
 }
