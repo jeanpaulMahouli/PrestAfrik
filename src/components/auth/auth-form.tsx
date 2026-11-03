@@ -192,6 +192,7 @@ export function AuthForm({ mode, invitationToken, next, googleEnabled = false }:
       {googleEnabled && !validInvitation && (
         <>
           <GoogleButton callbackURL={safeInternalPath(next) ?? "/dashboard"} newUserCallbackURL={whatsappStepHref} />
+          {isSignUp && <p className="auth-google-note">{t.signUp.googleWhatsappNote}</p>}
           <p aria-hidden="true" className="auth-divider"><span>{t.signIn.or}</span></p>
         </>
       )}

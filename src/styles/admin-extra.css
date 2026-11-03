@@ -487,3 +487,116 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+/* Prospection : messages WhatsApp personnalisables (repliés par défaut). */
+.prospection-messages {
+  margin-bottom: 1rem;
+}
+
+.prospection-messages > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  list-style: none;
+}
+
+.prospection-messages > summary::-webkit-details-marker {
+  display: none;
+}
+
+.prospection-messages > summary::after {
+  color: var(--color-text-secondary);
+  content: "▾";
+}
+
+.prospection-messages[open] > summary::after {
+  content: "▴";
+}
+
+.prospection-messages > summary span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.prospection-messages-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.prospection-messages-form textarea {
+  width: 100%;
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.prospection-messages-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Statistiques : titres de section et parcours des vendeurs. */
+.stats-section-title {
+  margin: 1.75rem 0 0.75rem;
+  color: var(--color-text);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.stats-section-title:first-of-type {
+  margin-top: 0.5rem;
+}
+
+.stats-funnel {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stats-funnel li {
+  display: grid;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  font-size: 0.8125rem;
+}
+
+.stats-funnel-label {
+  grid-column: 1 / -1;
+  font-weight: 600;
+}
+
+.stats-funnel-track {
+  height: 0.75rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-surface-muted, #f1f1f4);
+}
+
+.stats-funnel-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff9900, #ffb84d);
+}
+
+.stats-funnel small {
+  min-width: 3.5rem;
+  color: var(--color-text-secondary);
+  text-align: right;
+}
+
+.admin-cell-sub {
+  display: block;
+  font-weight: 400;
+}
+
+/* Prospection : la recherche garde une largeur lisible, les filtres passent à la ligne. */
+.prospection-filters input[type="search"] {
+  flex: 1 1 16rem;
+  min-width: min(100%, 16rem);
+}

@@ -3,6 +3,7 @@
 import { Check, Compass, Download, EllipsisVertical, Share, Smartphone, SquarePlus } from "lucide-react";
 import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { SocialShare } from "@/components/shared/social-share";
+import { freeMonths } from "@/config/pricing";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Dialog } from "@/components/ui/dialog";
 
@@ -28,7 +29,32 @@ if (typeof window !== "undefined") {
     installed = true;
     deferredPrompt = null;
     notify();
+    reportAppUsage("install");
   });
+}
+
+/** Signale à PrestAfrik l'installation ou l'utilisation de l'application (administration → Application). */
+function reportAppUsage(event: "install" | "open") {
+  const platform = detectPlatform();
+  void fetch("/api/app/usage", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ event, platform: platform === "ios-other-browser" ? "ios" : platform }),
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
+/** Ouverture depuis l'écran d'accueil : signalée au plus une fois par jour et par appareil. */
+function reportStandaloneOpen() {
+  if (!isStandalone()) return;
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    if (localStorage.getItem("prestafrik:app-ouverte") === today) return;
+    localStorage.setItem("prestafrik:app-ouverte", today);
+  } catch {
+    // Stockage indisponible : signalé à chaque ouverture, le serveur compte une ligne par jour.
+  }
+  reportAppUsage("open");
 }
 
 type Platform = "ios" | "ios-other-browser" | "android" | "desktop";
@@ -76,6 +102,9 @@ export function usePwaInstall() {
 
 /** Enregistre le service worker minimal (public/sw.js) : il rend l'application installable, sans rien mettre en cache. */
 export function PwaRegistration() {
+  useEffect(() => {
+    reportStandaloneOpen();
+  }, []);
   useEffect(() => {
     if (!("serviceWorker" in navigator) || process.env.NODE_ENV !== "production") return;
     navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined);
@@ -332,6 +361,9 @@ export function StoreLaunchDialog({ storeName, storeUrl, published }: { storeNam
   return (
     <Dialog centered onClose={() => setOpen(false)} open={open} size="sm" title={published ? "Félicitations, votre boutique prend vie ! 🎉" : "Félicitations, votre boutique est créée ! 🎉"}>
       <div className="launch">
+        <p className="launch-offer">
+          <span aria-hidden="true">🎁</span> Votre abonnement est offert pendant <strong>{freeMonths} mois</strong>.
+        </p>
         <label className="launch-link">
           <span>Le lien de votre boutique</span>
           <span className="share-link-row">

@@ -1,5 +1,8 @@
 import { Download } from "lucide-react";
-import { searchValue } from "@/components/admin/admin-feedback";
+import { AdminFeedback, searchValue } from "@/components/admin/admin-feedback";
+import { SubmitButton } from "@/components/ui/submit-button";
+import { prospectionMessageKeys, prospectionMessageLabels, prospectionMessages } from "@/config/prospection";
+import { resetProspectionMessages, saveProspectionMessages } from "@/modules/admin/prospection-actions";
 import { Badge } from "@/components/ui/badge";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Pagination } from "@/components/ui/pagination";
@@ -7,6 +10,7 @@ import { formatDate, formatNumber, plural } from "@/lib/format";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import {
+  getProspectionMessages,
   listProspects,
   parseProspectionFilters,
   prospectionFilterLabels,
@@ -24,7 +28,8 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
   const query = searchValue(params, "q");
   const filters = parseProspectionFilters(params.filtre);
   const page = Math.max(1, Math.min(1000, Number(searchValue(params, "page")) || 1));
-  const { rows, total } = await listProspects({ filters, query });
+  const [{ rows, total }, messages] = await Promise.all([listProspects({ filters, query }), getProspectionMessages()]);
+  const customized = prospectionMessageKeys.some((key) => messages[key] !== prospectionMessages[key]);
   const visible = rows.slice((page - 1) * prospectionPageSize, page * prospectionPageSize);
   const listQuery = (extra: Record<string, string> = {}) => {
     const next = new URLSearchParams();
@@ -47,6 +52,38 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
           </a>
         </div>
       </div>
+
+      <AdminFeedback params={params} />
+
+      {/* Messages WhatsApp pré-remplis : personnalisables, un par filtre. */}
+      <details className="v-card prospection-messages" id="messages-whatsapp" open={params.messages === "1" || undefined}>
+        <summary>
+          <span>
+            <strong>Messages WhatsApp</strong>
+            <small className="v-muted">{customized ? "Personnalisés" : "Messages par défaut"} · le message suit le filtre actif</small>
+          </span>
+        </summary>
+        <form action={saveProspectionMessages} className="prospection-messages-form">
+          <p className="v-small v-muted">
+            Écrivez le message qui s’ouvrira dans WhatsApp. <code>[prenom]</code> est remplacé par le prénom de la personne et <code>[boutique]</code> par le nom
+            de sa boutique. Vous pourrez encore le modifier dans WhatsApp avant de l’envoyer.
+          </p>
+          {prospectionMessageKeys.map((key) => (
+            <label className="v-field" key={key}>
+              {prospectionMessageLabels[key]}
+              <textarea defaultValue={messages[key]} maxLength={1000} name={`message-${key}`} rows={3} />
+            </label>
+          ))}
+          <div className="prospection-messages-actions">
+            <SubmitButton className="btn btn-primary" pendingLabel="Enregistrement…">Enregistrer les messages</SubmitButton>
+            {customized && (
+              <button className="btn btn-secondary" formAction={resetProspectionMessages} formNoValidate type="submit">
+                Revenir aux messages par défaut
+              </button>
+            )}
+          </div>
+        </form>
+      </details>
 
       <section className="v-card v-card-flush">
         <form className="admin-search prospection-filters" role="search">
@@ -87,7 +124,7 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
             <tbody>
               {visible.map((row) => {
                 const status = prospectStatus(row);
-                const whatsapp = prospectWhatsappUrl(row, filters);
+                const whatsapp = prospectWhatsappUrl(row, filters, messages);
                 return (
                   <tr key={row.id}>
                     <td className="v-cell-primary">

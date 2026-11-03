@@ -1,8 +1,8 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, ExternalLink } from "lucide-react";
 import QRCode from "qrcode";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { SocialShare } from "@/components/shared/social-share";
 import { Dialog } from "@/components/ui/dialog";
 import { copyText } from "@/lib/clipboard";
@@ -38,6 +38,7 @@ export function ShareStoreButton({ storeName, storeUrl, published, className = "
 
 /** Contenu du partage : lien et son bouton copier, QR code, boutons de partage. */
 export function ShareStorePanel({ storeName, storeUrl, compact = false }: { storeName: string; storeUrl: string; compact?: boolean }) {
+  const linkId = useId();
   const [qr, setQr] = useState("");
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
@@ -56,17 +57,24 @@ export function ShareStorePanel({ storeName, storeUrl, compact = false }: { stor
 
   return (
     <div className="share-store">
-      <label className="v-field">
-        Lien de votre boutique
-        <span className="share-link-row">
-          <input onFocus={(event) => event.currentTarget.select()} readOnly value={storeUrl} />
-          <button aria-label={copied ? "Lien copié" : "Copier le lien"} className="icon-button share-copy" onClick={copy} title={copied ? "Lien copié" : "Copier le lien"} type="button">
-            {copied ? <Check aria-hidden="true" size={18} /> : <Copy aria-hidden="true" size={18} />}
-          </button>
-          <span aria-live="polite" className="visually-hidden">{copied ? "Lien copié" : ""}</span>
-        </span>
+      <div className="v-field">
+        <label htmlFor={linkId}>Lien de votre boutique</label>
+        {/* Téléphone : « Voir ma boutique » en pleine largeur sous le lien ; ordinateur : sur la même ligne. */}
+        <div className="share-link-line">
+          <span className="share-link-row">
+            <input id={linkId} onFocus={(event) => event.currentTarget.select()} readOnly value={storeUrl} />
+            <button aria-label={copied ? "Lien copié" : "Copier le lien"} className="icon-button share-copy" onClick={copy} title={copied ? "Lien copié" : "Copier le lien"} type="button">
+              {copied ? <Check aria-hidden="true" size={18} /> : <Copy aria-hidden="true" size={18} />}
+            </button>
+            <span aria-live="polite" className="visually-hidden">{copied ? "Lien copié" : ""}</span>
+          </span>
+          <a className="btn btn-secondary share-view" href={storeUrl} rel="noreferrer" target="_blank">
+            <ExternalLink aria-hidden="true" size={18} />
+            Voir ma boutique
+          </a>
+        </div>
         {copyFailed && <span className="v-field-help" role="status">Copie automatique bloquée par le navigateur : le lien est sélectionné, faites un appui long puis « Copier ».</span>}
-      </label>
+      </div>
       <div className="share-qr">
         {qr ? (
           // L'image est générée localement (data URL), sans service externe.

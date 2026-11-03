@@ -42,6 +42,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#FF9900",
+  // Écrans arrondis et barre de gestes : les marges env(safe-area-inset-*) des barres fixes deviennent réelles.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

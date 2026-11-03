@@ -20,9 +20,11 @@ const actionLabels: Record<string, string> = {
   "export.boutiques": "Export des boutiques",
   "export.abonnements": "Export des abonnements",
   "export.utilisateurs": "Export des utilisateurs",
+  "prospection.messages": "Messages de prospection modifiés",
+  "prospection.messages_reset": "Messages de prospection rétablis",
 };
 
-const targetLabels: Record<string, string> = { store: "Boutique", user: "Compte", subscription: "Abonnement", alert: "Alerte", message: "Message", ticket: "Message reçu", announcement: "Annonce", marketplace: "Marketplace" };
+const targetLabels: Record<string, string> = { store: "Boutique", user: "Compte", subscription: "Abonnement", alert: "Alerte", message: "Message", ticket: "Message reçu", announcement: "Annonce", marketplace: "Marketplace", prospection: "Prospection" };
 
 function detailText(details: unknown) {
   if (!details || typeof details !== "object" || Array.isArray(details)) return "";

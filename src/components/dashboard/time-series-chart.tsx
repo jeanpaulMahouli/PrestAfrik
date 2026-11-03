@@ -9,7 +9,9 @@ type ChartProps = {
   points: SeriesPoint[];
   /** Nom de la mesure (« Commandes », « Argent encaissé »), lu dans l’info-bulle et le tableau. */
   measure: string;
-  unit: "orders" | "fcfa";
+  unit: "orders" | "fcfa" | "count";
+  /** Unité d'un compteur (unit « count ») : singulier et pluriel, par exemple ["inscription", "inscriptions"]. */
+  unitLabel?: [string, string];
   /** Un point par jour, ou par semaine (période de 3 mois). */
   bucket: "day" | "week";
 };
@@ -19,11 +21,11 @@ const compactFormat = new Intl.NumberFormat("fr-FR", { notation: "compact", maxi
 const dayFormat = new Intl.DateTimeFormat("fr-FR", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 const shortDayFormat = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", timeZone: "UTC" });
 
-function formatters(unit: ChartProps["unit"], bucket: ChartProps["bucket"]) {
+function formatters(unit: ChartProps["unit"], bucket: ChartProps["bucket"], unitLabel: [string, string] = ["commande", "commandes"]) {
   const date = (label: string) => new Date(`${label}T00:00:00.000Z`);
   return {
     format: (value: number) =>
-      unit === "fcfa" ? `${numberFormat.format(value)} FCFA` : `${numberFormat.format(value)} commande${value > 1 ? "s" : ""}`,
+      unit === "fcfa" ? `${numberFormat.format(value)} FCFA` : `${numberFormat.format(value)} ${value > 1 ? unitLabel[1] : unitLabel[0]}`,
     formatTick: (value: number) => (unit === "fcfa" ? compactFormat.format(value) : numberFormat.format(value)),
     formatLabel: (label: string) => (bucket === "week" ? `Semaine du ${dayFormat.format(date(label))}` : dayFormat.format(date(label))),
     formatAxisLabel: (label: string) => shortDayFormat.format(date(label)),
@@ -36,12 +38,15 @@ const margin = { top: 12, right: 12, bottom: 28, left: 44 };
 const plotWidth = width - margin.left - margin.right;
 const plotHeight = height - margin.top - margin.bottom;
 
-/** Graduation « propre » (1, 2, 5 × 10ⁿ) avec 4 intervalles au plus. */
+/**
+ * Graduation « propre » (1, 2, 5 × 10ⁿ) avec 4 intervalles au plus. Pas de 1 au minimum : les valeurs sont
+ * entières (commandes, visites, FCFA), sans quoi deux graduations arrondies se confondraient (1, 1, 2, 2).
+ */
 function niceMax(max: number) {
   if (max <= 0) return 4;
   const rough = max / 4;
   const power = 10 ** Math.floor(Math.log10(rough));
-  const step = [1, 2, 5, 10].map((factor) => factor * power).find((candidate) => candidate >= rough) ?? 10 * power;
+  const step = Math.max(1, [1, 2, 5, 10].map((factor) => factor * power).find((candidate) => candidate >= rough) ?? 10 * power);
   return Math.max(step * 4, step * Math.ceil(max / step));
 }
 
@@ -49,8 +54,8 @@ function niceMax(max: number) {
  * Série dans le temps : courbe (commandes) ou colonnes (argent). Une seule série, donc pas de légende :
  * le titre de la carte la nomme. Info-bulle au survol et au clavier ; tableau des valeurs en dessous.
  */
-export function TimeSeriesChart({ kind, points, measure, unit, bucket }: ChartProps) {
-  const { format, formatTick, formatLabel, formatAxisLabel } = formatters(unit, bucket);
+export function TimeSeriesChart({ kind, points, measure, unit, bucket, unitLabel }: ChartProps) {
+  const { format, formatTick, formatLabel, formatAxisLabel } = formatters(unit, bucket, unitLabel);
   const [active, setActive] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const titleId = useId();
@@ -88,8 +93,8 @@ export function TimeSeriesChart({ kind, points, measure, unit, bucket }: ChartPr
           viewBox={`0 0 ${width} ${height}`}
         >
           <title id={titleId}>{`${measure} : ${points.length} valeurs, détail dans le tableau ci-dessous.`}</title>
-          {ticks.map((tick) => (
-            <g key={tick}>
+          {ticks.map((tick, index) => (
+            <g key={index}>
               <line className="ts-grid" x1={margin.left} x2={width - margin.right} y1={y(tick)} y2={y(tick)} />
               <text className="ts-tick" textAnchor="end" x={margin.left - 8} y={y(tick) + 4}>
                 {formatTick(tick)}

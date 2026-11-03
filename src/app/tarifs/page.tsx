@@ -6,7 +6,7 @@ import { clubDes1000, pricingPlans, pricingSalesOpen, trialLabel } from "@/confi
 
 export const metadata: Metadata = {
   title: { absolute: "Tarifs : boutique en ligne dès 1 000 FCFA par mois | PrestAfrik" },
-  description: "Les offres PrestAfrik : Démarrage, Business et Market. Un mois d’essai offert, paiement mensuel ou annuel en FCFA, sans engagement.",
+  description: "Les offres PrestAfrik : Démarrage, Business et Market. 6 mois d’abonnement offerts, puis paiement mensuel ou annuel en FCFA, sans engagement.",
   alternates: { canonical: "/tarifs" },
 };
 

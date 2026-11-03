@@ -4,6 +4,7 @@ import { EmailVerificationBanner } from "@/components/layout/email-verification-
 import { UserMenu } from "@/components/layout/vendor-topbar-menus";
 import { PwaRegistration } from "@/components/pwa/install-app";
 import { Confetti } from "@/components/ui/confetti";
+import { freeMonths } from "@/config/pricing";
 
 type WelcomeNoStoreProps = {
   firstName: string;
@@ -40,6 +41,12 @@ export function WelcomeNoStore({ firstName, userName, userEmail, userImage, admi
             {justSignedUp
               ? "Bienvenue sur PrestAfrik. Il ne reste qu’une étape pour recevoir vos premières commandes sur WhatsApp : créer votre boutique en ligne. C’est gratuit et cela prend environ 5 minutes."
               : "Vous n’avez pas encore de boutique. Créez-la quand vous voulez : c’est gratuit et cela prend environ 5 minutes."}
+          </p>
+          <p className="welcome-offer">
+            <span aria-hidden="true">🎁</span>
+            <span>
+              <strong>{freeMonths} mois d’abonnement offerts</strong> : toutes les fonctions de PrestAfrik, gratuitement, sans carte bancaire.
+            </span>
           </p>
           <p className="welcome-next">
             <span>Prochaine étape</span>

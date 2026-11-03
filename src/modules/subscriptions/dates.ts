@@ -45,3 +45,14 @@ export function isStoreSubscriptionPaused(
   const expiresAt = subscription.currentPeriodEnd ?? subscription.trialEndsAt;
   return !active && daysSince(expiresAt, now) >= 14;
 }
+
+/** Date + n mois calendaires (le 31 août + 6 mois donne le 28 ou 29 février). */
+export function addCalendarMonths(date: Date, months: number): Date {
+  const result = new Date(date);
+  const originalDay = result.getUTCDate();
+  result.setUTCDate(1);
+  result.setUTCMonth(result.getUTCMonth() + months);
+  const lastDay = new Date(Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0)).getUTCDate();
+  result.setUTCDate(Math.min(originalDay, lastDay));
+  return result;
+}

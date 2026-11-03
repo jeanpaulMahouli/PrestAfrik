@@ -1,19 +1,20 @@
 import "server-only";
 
-import { activeUserDays, assistanceCriteria, prospectionMessages } from "@/config/prospection";
+import { activeUserDays, assistanceCriteria, prospectionMessageKeys, prospectionMessages, type ProspectionMessageKey } from "@/config/prospection";
 import { prisma } from "@/lib/prisma";
 import { buildWaMeUrl, formatWhatsappNumber } from "@/modules/whatsapp/wa-me";
 
 // Onglet Prospection : tous les utilisateurs (du plus récent au plus ancien), filtres combinables,
-// recherche, et contact WhatsApp. Le téléphone et la ville sont ceux de la première boutique du compte
-// (l'inscription ne les demande pas).
+// recherche, et contact WhatsApp. Le téléphone est le numéro WhatsApp du compte (demandé à l'inscription),
+// sinon celui de sa première boutique ; la ville est celle de la première boutique.
 
-export const prospectionFilters = ["actifs", "non-publiee", "assistance"] as const;
+export const prospectionFilters = ["actifs", "non-publiee", "assistance", "sans-whatsapp"] as const;
 export type ProspectionFilter = (typeof prospectionFilters)[number];
 export const prospectionFilterLabels: Record<ProspectionFilter, string> = {
   actifs: "Utilisateurs actifs (30 jours)",
   "non-publiee": "Boutique non publiée",
   assistance: "Besoin d’assistance",
+  "sans-whatsapp": "Sans numéro WhatsApp",
 };
 export const prospectionPageSize = 25;
 
@@ -36,6 +37,7 @@ export async function listProspects({ filters = [], query = "", now = new Date()
         id: true,
         name: true,
         email: true,
+        phoneNumber: true,
         emailVerified: true,
         suspendedAt: true,
         createdAt: true,
@@ -71,7 +73,7 @@ export async function listProspects({ filters = [], query = "", now = new Date()
     const owned = user.memberships.filter((membership) => membership.role === "OWNER").map((membership) => membership.store);
     const first = user.memberships[0]?.store ?? null;
     const lastActivity = [user.lastActiveAt, lastSession.get(user.id) ?? null].filter((date): date is Date => Boolean(date)).sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
-    const phone = first?.phoneE164 ?? first?.whatsappSettings?.businessNumber ?? null;
+    const phone = user.phoneNumber ?? first?.phoneE164 ?? first?.whatsappSettings?.businessNumber ?? null;
     const missing = owned.flatMap((store) => {
       const gaps = assistanceCriteria
         .filter((criterion) =>
@@ -115,6 +117,7 @@ export async function listProspects({ filters = [], query = "", now = new Date()
     if (filters.includes("actifs") && !row.active) return false;
     if (filters.includes("non-publiee") && !row.unpublished) return false;
     if (filters.includes("assistance") && row.missing.length === 0) return false;
+    if (filters.includes("sans-whatsapp") && row.phoneDigits) return false;
     if (!search) return true;
     return (
       row.name.toLocaleLowerCase("fr-FR").includes(search) ||
@@ -133,10 +136,19 @@ export function prospectStatus(row: Pick<Prospect, "suspended" | "emailVerified"
   return row.active ? { label: "Actif", tone: "success" as const } : { label: "Inactif", tone: "neutral" as const };
 }
 
+export type ProspectionMessageSet = Record<ProspectionMessageKey, string>;
+
+/** Messages WhatsApp en vigueur : ceux personnalisés par l'administration, sinon ceux par défaut. */
+export async function getProspectionMessages(): Promise<ProspectionMessageSet> {
+  const saved = await prisma.prospectionMessage.findMany({ select: { key: true, body: true } }).catch(() => []);
+  const custom = new Map(saved.map((row) => [row.key, row.body]));
+  return Object.fromEntries(prospectionMessageKeys.map((key) => [key, custom.get(key) ?? prospectionMessages[key]])) as ProspectionMessageSet;
+}
+
 /** Lien wa.me avec un message adapté au filtre actif (le plus spécifique). */
-export function prospectWhatsappUrl(row: Pick<Prospect, "phoneDigits" | "firstName" | "storeName">, filters: ProspectionFilter[]) {
+export function prospectWhatsappUrl(row: Pick<Prospect, "phoneDigits" | "firstName" | "storeName">, filters: ProspectionFilter[], messages: ProspectionMessageSet = prospectionMessages) {
   if (!row.phoneDigits) return null;
   const key = filters.includes("assistance") ? "assistance" : filters.includes("non-publiee") ? "non-publiee" : filters.includes("actifs") ? "actifs" : "default";
-  const message = prospectionMessages[key].replace("[prenom]", row.firstName).replace("[boutique]", row.storeName ? `« ${row.storeName} »` : "");
+  const message = messages[key].replaceAll("[prenom]", row.firstName).replaceAll("[boutique]", row.storeName ? `« ${row.storeName} »` : "");
   return buildWaMeUrl(row.phoneDigits, message.replace(/\s{2,}/g, " "));
 }

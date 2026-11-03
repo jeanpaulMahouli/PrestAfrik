@@ -88,8 +88,9 @@ export const pricingPlans: PricingPlan[] = [
  */
 export const pricingSalesOpen = () => process.env.PRICING_SALES_OPEN === "true";
 
-/** Essai offert sur l'offre Démarrage. */
-export const trialLabel = "1 mois d’essai offert sur l’offre Démarrage";
+/** Abonnement offert à chaque vendeur, nouveaux inscrits comme déjà inscrits (compté depuis la création de la boutique). */
+export const freeMonths = 6;
+export const trialLabel = "6 mois d’abonnement offerts";
 
 /** Économie de l'abonnement annuel par rapport à 12 mois payés au mois. */
 export function yearlySaving(plan: PricingPlan) {

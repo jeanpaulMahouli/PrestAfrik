@@ -3570,3 +3570,87 @@
   top: 0.75rem;
   right: 0.75rem;
 }
+
+/* Offre de lancement : 6 mois d'abonnement offerts (bienvenue après l'inscription, fenêtre « Félicitations »). */
+.welcome-offer {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  margin: 0.25rem 0 0;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid rgb(255 153 0 / 0.35);
+  border-radius: 0.875rem;
+  background: #fff6e8;
+  color: #3d2a00;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.welcome-offer > span:first-child {
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.welcome-offer strong {
+  color: #000026;
+}
+
+.launch-offer {
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  background: #fff6e8;
+  color: #3d2a00;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.launch-offer strong {
+  color: #000026;
+}
+
+/* Partager ma boutique : lien + Copier, puis « Voir ma boutique » (pleine largeur sur téléphone, même ligne sur ordinateur). */
+.share-link-line {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.share-view {
+  display: inline-flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .share-link-line {
+    display: flex;
+    align-items: center;
+  }
+
+  .share-link-line .share-link-row {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .share-view {
+    width: auto;
+    flex: none;
+  }
+}
+
+/* Bannière et popup : taille d'image recommandée, toujours visible. */
+.framed-image-help {
+  max-width: 34rem;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.framed-image-help strong {
+  color: var(--color-text);
+}

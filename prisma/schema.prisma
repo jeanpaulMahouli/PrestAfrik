@@ -172,6 +172,11 @@ model User {
   lastActiveStore            Store?                 @relation("UserLastActiveStore", fields: [lastActiveStoreId], references: [id], onDelete: SetNull)
   /// Dernière activité dans l'espace vendeur (mise à jour au plus une fois toutes les 5 minutes).
   lastActiveAt               DateTime?
+  /// Application PrestAfrik (PWA) : installation détectée, dernière ouverture depuis l'écran d'accueil, appareil.
+  appInstalledAt             DateTime?
+  appLastOpenedAt            DateTime?
+  appPlatform                String?                @db.VarChar(12)
+  appUsageDays               AppUsageDay[]
   supportTickets             SupportTicket[]        @relation("SupportTicketRequester")
   assignedTickets            SupportTicket[]        @relation("SupportTicketAssignee")
   supportReplies             SupportTicketMessage[]
@@ -1294,4 +1299,24 @@ model MarketplacePick {
   store     Store?                 @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@index([section, position])
+}
+
+/// Utilisation de l'application installée (ouverte depuis l'écran d'accueil) : un enregistrement par compte et par jour.
+model AppUsageDay {
+  userId   String
+  day      DateTime @db.Date
+  platform String   @db.VarChar(12)
+  opens    Int      @default(1)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, day])
+  @@index([day])
+}
+
+/// Prospection (administration) : messages WhatsApp pré-remplis, modifiables. Sans ligne, le texte par défaut
+/// de config/prospection.ts s'applique.
+model ProspectionMessage {
+  key       String   @id @db.VarChar(24)
+  body      String   @db.VarChar(1000)
+  updatedAt DateTime @updatedAt
 }

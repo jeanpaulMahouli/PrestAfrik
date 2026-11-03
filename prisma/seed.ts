@@ -251,15 +251,18 @@ async function main() {
     const pick = <T,>(items: readonly T[]) => items[Math.floor(rand() * items.length)];
     await resetStore(demo.slug);
 
+    // Numéro WhatsApp obligatoire (fictif) : sans lui, le tableau de bord renvoie vers l'étape du numéro.
+    const ownerPhone = `+23769900${String(storeIndex * 2 + 1).padStart(4, "0")}`;
+    const memberPhone = `+23769900${String(storeIndex * 2 + 2).padStart(4, "0")}`;
     const owner = await prisma.user.upsert({
       where: { email: `vendeur${storeIndex + 1}@example.test` },
-      update: { name: team[storeIndex][0], emailVerified: true },
-      create: { email: `vendeur${storeIndex + 1}@example.test`, name: team[storeIndex][0], emailVerified: true },
+      update: { name: team[storeIndex][0], emailVerified: true, phoneNumber: ownerPhone },
+      create: { email: `vendeur${storeIndex + 1}@example.test`, name: team[storeIndex][0], emailVerified: true, phoneNumber: ownerPhone },
     });
     const member = await prisma.user.upsert({
       where: { email: `equipe${storeIndex + 1}@example.test` },
-      update: { name: team[storeIndex][1], emailVerified: true },
-      create: { email: `equipe${storeIndex + 1}@example.test`, name: team[storeIndex][1], emailVerified: true },
+      update: { name: team[storeIndex][1], emailVerified: true, phoneNumber: memberPhone },
+      create: { email: `equipe${storeIndex + 1}@example.test`, name: team[storeIndex][1], emailVerified: true, phoneNumber: memberPhone },
     });
     await demoPasswordAccount(owner.id, isLocal);
     await demoPasswordAccount(member.id, isLocal);

@@ -2,7 +2,6 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { whatsappStepHref } from "@/config/routes";
-import { prisma } from "@/lib/prisma";
 
 /** Connexion avec Google disponible : identifiants OAuth renseignés sur le serveur (docs/google-oauth.md). */
 export function googleSignInEnabled() {
@@ -11,11 +10,9 @@ export function googleSignInEnabled() {
 
 
 /**
- * Compte Google sans numéro WhatsApp : l'étape du numéro passe avant le tableau de bord et l'assistant.
- * Une seule lecture en base, et seulement quand le numéro manque.
+ * Compte sans numéro WhatsApp (inscription avec Google, ou compte plus ancien que le numéro obligatoire) :
+ * l'étape du numéro passe avant le tableau de bord et l'assistant. Aucune lecture en base.
  */
 export async function requireWhatsappNumber(user: { id: string; phoneNumber?: string | null }) {
-  if (user.phoneNumber) return;
-  const google = await prisma.account.findFirst({ where: { userId: user.id, providerId: "google" }, select: { id: true } });
-  if (google) redirect(whatsappStepHref);
+  if (!user.phoneNumber?.trim()) redirect(whatsappStepHref);
 }

@@ -72,6 +72,9 @@ export function FramedImageInput({
   }
 
   const ratio = `${frame.width} / ${frame.height}`;
+  const divisor = gcd(frame.width, frame.height);
+  const shape = frame.width > frame.height ? "paysage" : frame.width < frame.height ? "portrait" : "carré";
+  const helpId = `${id}-taille`;
   return (
     <div className="framed-image-input">
       <label className="framed-image-drop" htmlFor={id} style={{ aspectRatio: ratio }}>
@@ -84,14 +87,23 @@ export function FramedImageInput({
             <ImagePlus aria-hidden="true" size={28} />
             <span>{label}</span>
             <small>
-              Format conseillé : {frame.width} × {frame.height} px. Les bords sont recadrés au centre.
+              {frame.width} × {frame.height} px recommandés
             </small>
           </span>
         )}
         {busy && <span className="framed-image-busy">Préparation de l’image…</span>}
       </label>
+      {/* Taille à utiliser de préférence : l'image est affichée exactement dans ce format, le reste est coupé. */}
+      <p className="framed-image-help" id={helpId}>
+        <strong>
+          Taille recommandée : {frame.width} × {frame.height} px
+        </strong>{" "}
+        (format {shape} {frame.width / divisor}:{frame.height / divisor}). Une image d’un autre format est recadrée au centre : gardez le texte, le logo et le
+        produit au milieu, loin des bords, pour ne rien perdre.
+      </p>
       <input
         accept={acceptedTypes.join(",")}
+        aria-describedby={helpId}
         className="visually-hidden"
         id={id}
         name={name}
@@ -108,4 +120,8 @@ export function FramedImageInput({
       {error && <p className="v-field-error" role="alert">{error}</p>}
     </div>
   );
+}
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
 }

@@ -20,7 +20,8 @@ import { publishStoreIfReady } from "@/modules/stores/publication";
 import { checkSlug, slugMessages, slugify } from "@/modules/stores/slug";
 import { isSlugTaken } from "@/modules/stores/slug-availability";
 import { findOwnedStore, requireVerifiedWizardSession, wizardStepHref } from "@/modules/stores/wizard";
-import { addCalendarPeriod } from "@/modules/subscriptions/dates";
+import { addCalendarMonths } from "@/modules/subscriptions/dates";
+import { freeMonths } from "@/config/pricing";
 import { isAccountVerified } from "@/modules/auth/phone-account";
 
 // Assistant de création (/boutiques/nouvelle). Chaque étape enregistre ses réponses dans un brouillon
@@ -331,7 +332,7 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
         },
       });
       await transaction.subscription.create({
-        data: { storeId, planId: plan.id, status: "TRIAL", trialStartedAt: now, trialEndsAt: addCalendarPeriod(now, "MONTHLY") },
+        data: { storeId, planId: plan.id, status: "TRIAL", trialStartedAt: now, trialEndsAt: addCalendarMonths(now, freeMonths) },
       });
       if (data.deliveryZones?.length) {
         await transaction.deliveryZone.createMany({
