@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
+import { FreshOnNavigate } from "@/components/ui/fresh-on-navigate";
 import { texts } from "@/config/texts";
 import { FeedbackLauncher } from "@/components/dashboard/community";
 import { EmailVerificationBanner } from "@/components/layout/email-verification-banner";
@@ -25,6 +27,9 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
   return (
     <div className="vendor-shell">
       <PwaRegistration />
+      <Suspense fallback={null}>
+        <FreshOnNavigate />
+      </Suspense>
       <header className="vendor-topbar">
         <Link aria-label="PrestAfrik, accueil de mon espace" className="vendor-logo" href="/dashboard">
           <Image alt="" height={34} priority src="/brand/logo-prestafrik.png" width={62} />

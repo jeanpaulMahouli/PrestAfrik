@@ -914,3 +914,22 @@
     font-size: 1.2rem;
   }
 }
+
+/* Flèches du diaporama : seulement au survol de la souris (ou au clavier) ; cachées sur écran tactile. */
+.announce-arrow {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.announce-carousel:hover .announce-arrow,
+.announce-arrow:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .announce-arrow {
+    display: none;
+  }
+}

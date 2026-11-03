@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { DashboardAnnouncement } from "@/modules/announcements/queries";
 
@@ -19,7 +20,7 @@ function Slide({ item, priority }: { item: DashboardAnnouncement; priority?: boo
 
 /**
  * Diaporama pleine largeur : une image toutes les 6 secondes, en pause au survol ou au clavier.
- * Pas de flèches : les points, et le glissement du doigt sur téléphone.
+ * Flèches visibles au survol (souris) ou au clavier ; sur écran tactile : les points et le glissement du doigt.
  */
 export function AnnouncementCarousel({ items }: { items: DashboardAnnouncement[] }) {
   const [index, setIndex] = useState(0);
@@ -62,11 +63,19 @@ export function AnnouncementCarousel({ items }: { items: DashboardAnnouncement[]
         ))}
       </div>
       {count > 1 && (
-        <div className="announce-dots">
-          {items.map((item, position) => (
-            <button aria-current={position === index} aria-label={`Afficher l’annonce ${position + 1}`} key={item.id} onClick={() => setIndex(position)} type="button" />
-          ))}
-        </div>
+        <>
+          <button aria-label="Annonce précédente" className="announce-arrow announce-arrow-prev" onClick={() => setIndex((index - 1 + count) % count)} type="button">
+            <ChevronLeft aria-hidden="true" size={20} />
+          </button>
+          <button aria-label="Annonce suivante" className="announce-arrow announce-arrow-next" onClick={() => setIndex((index + 1) % count)} type="button">
+            <ChevronRight aria-hidden="true" size={20} />
+          </button>
+          <div className="announce-dots">
+            {items.map((item, position) => (
+              <button aria-current={position === index} aria-label={`Afficher l’annonce ${position + 1}`} key={item.id} onClick={() => setIndex(position)} type="button" />
+            ))}
+          </div>
+        </>
       )}
     </section>
   );

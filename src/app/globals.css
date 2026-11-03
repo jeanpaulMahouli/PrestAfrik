@@ -285,3 +285,10 @@ select:not([multiple]):not([size])::-ms-expand {
     font-size: 16px !important;
   }
 }
+
+/* Navigation : barre de progression seule, sans voile ; la page reste cliquable. */
+.app-loading-bar {
+  inset: 0 0 auto;
+  height: 3px;
+  pointer-events: none;
+}

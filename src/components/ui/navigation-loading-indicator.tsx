@@ -79,10 +79,9 @@ export function NavigationLoadingIndicator() {
   if (!visible) return null;
 
   return (
-    <div aria-busy="true" aria-live="polite" className="app-loading" role="status">
-      <span aria-hidden="true" className="app-loading-veil" />
-      <span aria-hidden="true" className="loading-spinner loading-spinner-page" />
-      <p>Chargement en cours...</p>
+    // Barre fine en haut de l'écran seulement : la page reste visible et utilisable pendant le chargement.
+    <div aria-busy="true" aria-live="polite" className="app-loading app-loading-bar" role="status">
+      <span className="visually-hidden">Chargement en cours…</span>
     </div>
   );
 }

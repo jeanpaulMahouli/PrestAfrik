@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
+import { FreshOnNavigate } from "@/components/ui/fresh-on-navigate";
 import { AdminNavigation } from "@/components/admin/admin-navigation";
 import { NotificationBell } from "@/components/admin/notification-bell";
 import { UserMenu } from "@/components/layout/vendor-topbar-menus";
@@ -15,6 +17,9 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="vendor-shell admin-shell">
+      <Suspense fallback={null}>
+        <FreshOnNavigate />
+      </Suspense>
       <header className="vendor-topbar">
         <Link aria-label="PrestAfrik, accueil de l’administration" className="vendor-logo" href="/admin">
           <Image alt="" height={34} priority src="/brand/logo-prestafrik.png" width={62} />

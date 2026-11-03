@@ -67,7 +67,7 @@ function NavLinks({ role, onNavigate, exclude = [], locked = false }: { role: St
             );
           }
           return (
-            <Link aria-current={isActive(pathname, link.href) ? "page" : undefined} href={link.href} key={link.href} onClick={onNavigate}>
+            <Link aria-current={isActive(pathname, link.href) ? "page" : undefined} href={link.href} key={link.href} onClick={onNavigate} prefetch>
               <Icon aria-hidden="true" className="nav-link-icon" size={19} />
               {link.title}
             </Link>
@@ -143,7 +143,7 @@ export function VendorMobileNav({ role, storeName, locked = false }: { role: Sto
             );
           }
           return (
-            <Link aria-current={isActive(pathname, link.href) ? "page" : undefined} href={link.href} key={link.href}>
+            <Link aria-current={isActive(pathname, link.href) ? "page" : undefined} href={link.href} key={link.href} prefetch>
               <Icon aria-hidden="true" size={22} />
               <span>{link.title}</span>
             </Link>

@@ -38,6 +38,10 @@ const nextConfig: NextConfig = {
     // Next.js en lançait 63, chacun chargeant le moteur Prisma et ses threads, jusqu'à épuiser la limite de
     // threads du conteneur (« OS can't spawn worker thread »). Réglable avec NEXT_BUILD_WORKERS.
     cpus: Math.max(1, Number(process.env.NEXT_BUILD_WORKERS) || 2),
+    // Navigation instantanée dans l'espace vendeur et l'administration : les rubriques préchargées
+    // (Link prefetch) et les pages déjà vues restent dans le cache du navigateur ; FreshOnNavigate relit
+    // ensuite la page affichée en arrière-plan pour rester synchrone avec la base.
+    staleTimes: { dynamic: 30, static: 120 },
     serverActions: {
       // Boutiques en sous-domaine : le formulaire de commande est envoyé depuis mboa-style.prestafrik.com
       // alors que la requête arrive avec l'hôte prestafrik.com (Cloudflare réécrit l'en-tête Host).

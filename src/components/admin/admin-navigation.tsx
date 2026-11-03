@@ -30,7 +30,7 @@ export function AdminNavigation({ openAlerts, superAdmin, variant }: { openAlert
         .map((link) => {
           const active = link.href === "/admin" ? pathname === "/admin" : pathname.startsWith(link.href);
           return (
-            <Link aria-current={active ? "page" : undefined} href={link.href} key={link.href}>
+            <Link aria-current={active ? "page" : undefined} href={link.href} key={link.href} prefetch>
               {link.title}
               {link.href === "/admin/alertes" && openAlerts > 0 && <span className="admin-nav-count">{openAlerts}</span>}
             </Link>
