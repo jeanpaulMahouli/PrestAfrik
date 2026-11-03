@@ -42,7 +42,7 @@ export async function saveTemporaryPhoto(storeId: string, file: File) {
   const input = Buffer.from(await file.arrayBuffer());
   let metadata: SharpMetadata;
   try {
-    metadata = await sharp(input, { failOn: "error", limitInputPixels: 64_000_000 }).metadata();
+    metadata = await sharp(input, { failOn: "none", limitInputPixels: 64_000_000 }).metadata();
   } catch {
     throw new PhotoError("Ce fichier n’est pas une image lisible. Choisissez une photo JPG, PNG ou WebP.");
   }
@@ -56,17 +56,24 @@ export async function saveTemporaryPhoto(storeId: string, file: File) {
 
   const id = randomUUID();
   const directory = `${storeDir(storeId)}/tmp`;
-  await Promise.all(
-    photoSizes.map(async (size) => {
-      // rotate() applique l'orientation EXIF ; sharp ne recopie aucune métadonnée (dont la géolocalisation).
-      const body = await sharp(input, { failOn: "error", limitInputPixels: 64_000_000 })
-        .rotate()
-        .resize({ width: size, height: size, fit: "inside", withoutEnlargement: true })
-        .webp({ quality: 80, effort: 4 })
-        .toBuffer();
-      await storage.put(`${directory}/${fileName(id, size)}`, body);
-    }),
-  );
+  // Toutes les tailles sont calculées avant l'enregistrement. Photo tronquée (envoi WhatsApp interrompu…) :
+  // failOn « none » garde ce qui est lisible ; si rien ne l'est, message clair au lieu d'une erreur serveur.
+  let bodies: Buffer[];
+  try {
+    bodies = await Promise.all(
+      photoSizes.map((size) =>
+        // rotate() applique l'orientation EXIF ; sharp ne recopie aucune métadonnée (dont la géolocalisation).
+        sharp(input, { failOn: "none", limitInputPixels: 64_000_000 })
+          .rotate()
+          .resize({ width: size, height: size, fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 80, effort: 4 })
+          .toBuffer(),
+      ),
+    );
+  } catch {
+    throw new PhotoError("Cette photo est abîmée et ne peut pas être lue. Enregistrez-la de nouveau sur votre téléphone, puis réessayez.");
+  }
+  await Promise.all(photoSizes.map((size, index) => storage.put(`${directory}/${fileName(id, size)}`, bodies[index])));
   return {
     key: `tmp/${id}`,
     previewUrl: `/media/stores/${storeId}/tmp/${fileName(id, 320)}`,

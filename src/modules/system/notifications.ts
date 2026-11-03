@@ -54,6 +54,9 @@ export async function recordSystemNotification({
   message: string;
   context?: Prisma.InputJsonValue;
 }) {
+  // Seul le serveur de production alimente la cloche : les tests (qui provoquent volontairement des erreurs)
+  // et le serveur de développement (souvent branché sur la même base) n'y écrivent pas.
+  if (process.env.NODE_ENV !== "production" || process.env.VITEST) return;
   try {
     const text = normalizeMessage(message) || "Erreur sans message";
     const fingerprint = notificationFingerprint(type, text);

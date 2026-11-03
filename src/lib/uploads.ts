@@ -30,6 +30,9 @@ export function legacyUploadPath(storeId: string, filename: string) {
   return join(legacyUploadsRoot, uploadKey(storeId, filename));
 }
 
+/** Fichier abîmé (transfert interrompu…) : sharp lit ce qu'il peut (failOn « none »), sinon ce message. */
+const damagedImage = "Cette image est abîmée et ne peut pas être lue. Enregistrez-la de nouveau sur votre téléphone, puis réessayez.";
+
 /** Valide, réoriente et convertit l’image en WebP. Retourne null si aucun fichier n’est envoyé. */
 export async function saveStoreImage(
   file: FormDataEntryValue | null,
@@ -41,7 +44,7 @@ export async function saveStoreImage(
   if (file.size > maxImageBytes) throw new ImageUploadError("La photo ne peut pas dépasser 2 Mo.");
 
   const image = sharp(Buffer.from(await file.arrayBuffer()), {
-    failOn: "error",
+    failOn: "none",
     limitInputPixels: 25_000_000,
   });
   let metadata;
@@ -67,7 +70,10 @@ export async function saveStoreImage(
         : { width: maxSide, height: maxSide, fit: options.square ? "cover" : "inside", withoutEnlargement: !options.square },
     )
     .webp({ quality: 82, effort: 4 })
-    .toBuffer();
+    .toBuffer()
+    .catch(() => {
+      throw new ImageUploadError(damagedImage);
+    });
   const key = uploadKey(storeId, filename);
   await storage.put(key, body);
   return { key, url: `/media/${key}` };
@@ -96,7 +102,7 @@ export async function saveUserAvatar(file: FormDataEntryValue | null, userId: st
   if (!(file instanceof File)) throw new ImageUploadError("Le fichier image est invalide.");
   if (file.size > maxImageBytes) throw new ImageUploadError("La photo ne peut pas dépasser 2 Mo.");
 
-  const image = sharp(Buffer.from(await file.arrayBuffer()), { failOn: "error", limitInputPixels: 25_000_000 });
+  const image = sharp(Buffer.from(await file.arrayBuffer()), { failOn: "none", limitInputPixels: 25_000_000 });
   let metadata;
   try {
     metadata = await image.metadata();
@@ -110,7 +116,14 @@ export async function saveUserAvatar(file: FormDataEntryValue | null, userId: st
   const key = `users/${userId}/${randomUUID()}.webp`;
   if (!avatarPathPattern.test(key)) throw new ImageUploadError("Chemin d’image invalide.");
   // rotate() applique l'orientation EXIF ; la conversion WebP retire les métadonnées (position GPS…).
-  const body = await image.rotate().resize({ width: 512, height: 512, fit: "cover" }).webp({ quality: 82, effort: 4 }).toBuffer();
+  const body = await image
+    .rotate()
+    .resize({ width: 512, height: 512, fit: "cover" })
+    .webp({ quality: 82, effort: 4 })
+    .toBuffer()
+    .catch(() => {
+      throw new ImageUploadError(damagedImage);
+    });
   await storage.put(key, body);
   return `/media/${key}`;
 }

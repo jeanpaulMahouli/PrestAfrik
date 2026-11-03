@@ -22,6 +22,8 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
     const digest = typeof error === "object" && error !== null && "digest" in error ? String(error.digest) : "";
     if (/^NEXT_(REDIRECT|HTTP_ERROR_FALLBACK|NOT_FOUND)/.test(digest)) return;
     const message = error instanceof Error ? `${error.name} : ${error.message}` : String(error);
+    // Page abandonnée par le navigateur pendant l'envoi (retour, onglet fermé, préchargement annulé) : pas une erreur.
+    if (/destination stream errored|aborted|ECONNRESET|socket hang up/i.test(message)) return;
     const { recordSystemNotification } = await import("@/modules/system/notifications");
     await recordSystemNotification({
       type: "server-error",
