@@ -1,4 +1,4 @@
-import { Download, Upload } from "lucide-react";
+import { Download, FileSpreadsheet } from "lucide-react";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ProductList } from "@/components/catalog/product-list";
@@ -67,7 +67,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/dashboa
         {canManage && (
           <div className="v-page-actions v-page-actions-inline">
             <Link aria-label="Importer des produits (fichier CSV)" className="icon-button" href="/dashboard/produits/import" title="Importer des produits (CSV)">
-              <Upload aria-hidden="true" size={18} />
+              <FileSpreadsheet aria-hidden="true" size={18} />
             </Link>
             <a aria-label="Exporter mes produits (fichier CSV)" className="icon-button" download href="/api/dashboard/produits/export" title="Exporter mes produits (CSV)">
               <Download aria-hidden="true" size={18} />

@@ -431,10 +431,6 @@
   outline-offset: 2px;
 }
 
-.photo-dropzone-icon {
-  font-size: 1.25rem;
-  font-weight: 700;
-}
 
 .photo-grid {
   display: grid;

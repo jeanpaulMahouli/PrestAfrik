@@ -158,7 +158,6 @@ export function PhotoManager({ initialPhotos, error, uploadUrl = "/api/dashboard
             addFiles(event.dataTransfer.files);
           }}
         >
-          <span aria-hidden="true" className="photo-dropzone-icon">⬆</span>
           <strong>Glissez vos photos ici</strong>
           <span>
             ou <span className="v-link-inline">parcourez vos fichiers</span>
