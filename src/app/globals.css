@@ -292,3 +292,40 @@ select:not([multiple]):not([size])::-ms-expand {
   height: 3px;
   pointer-events: none;
 }
+
+/* ---------- Saisie sur téléphone : clavier ouvert (components/ui/keyboard-watcher.tsx) ----------
+   Le clavier recouvre la page (interactive-widget=resizes-visual) : rien de ce qui est collé en bas ne doit
+   remonter ni flotter pendant la saisie. Tout reprend sa place dès que le clavier se ferme. */
+
+/* 1. Barres d'actions collées en bas (« Enregistrer », assistant, panier) : à leur place dans la page. */
+html[data-clavier="ouvert"] :is(.v-sticky-actions, .vendor-shell .v-sticky-actions, .wizard-actions, .sf-actions-sticky, .sf-cart-bar) {
+  position: static;
+}
+
+/* 2. Boutons flottants : derrière le clavier, donc masqués. */
+html[data-clavier="ouvert"] :is(.vendor-tabbar, .feedback-launcher, .vendor-shell .feedback-launcher, .guide-toc-fab, .shop-assistant-launcher, .lp-support, .sf-chat-launcher) {
+  visibility: hidden;
+}
+
+/* 3. Fenêtres qui contiennent un champ : au-dessus du clavier, pour voir ce que l'on tape. */
+html[data-clavier="ouvert"] .dialog-layer {
+  bottom: var(--clavier-hauteur, 0px);
+}
+
+html[data-clavier="ouvert"] .dialog-layer .dialog-panel {
+  max-height: calc(100dvh - var(--clavier-hauteur, 0px) - 1rem);
+}
+
+html[data-clavier="ouvert"] :is(.feedback-panel, .shop-assistant) {
+  bottom: calc(var(--clavier-hauteur, 0px) + 0.75rem);
+  max-height: calc(100dvh - var(--clavier-hauteur, 0px) - 1.5rem);
+}
+
+html[data-clavier="ouvert"] .sf-chat {
+  bottom: var(--clavier-hauteur, 0px);
+}
+
+html[data-clavier="ouvert"] .combobox-popup {
+  bottom: var(--clavier-hauteur, 0px);
+  max-height: calc(100dvh - var(--clavier-hauteur, 0px) - 1rem);
+}

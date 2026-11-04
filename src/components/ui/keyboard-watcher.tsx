@@ -13,10 +13,10 @@ const isEditable = (element: Element | null) =>
     (element instanceof HTMLInputElement && !["button", "checkbox", "radio", "range", "submit", "reset", "file", "color", "image"].includes(element.type)));
 
 /**
- * Téléphone : pendant la saisie (clavier ouvert), <html data-clavier="ouvert">. Les barres fixées en bas
- * (menu de l'espace vendeur, bulle d'aide) sont alors masquées : elles restent derrière le clavier au lieu de
- * remonter ou de flotter au milieu de l'écran pendant le défilement (Safari sur iPhone), et réapparaissent à
- * leur place dès que le clavier se ferme.
+ * Téléphone : pendant la saisie (clavier ouvert), <html data-clavier="ouvert"> et --clavier-hauteur (px).
+ * Règles dans globals.css : les barres d'actions collées en bas (« Enregistrer »…) reprennent leur place dans
+ * la page, les boutons flottants (menu du bas, bulles) sont masqués, et les fenêtres qui contiennent un champ
+ * (discussions, fenêtres, listes de choix) remontent au-dessus du clavier. Tout revient dès qu'il se ferme.
  */
 export function KeyboardWatcher() {
   useEffect(() => {
@@ -27,20 +27,29 @@ export function KeyboardWatcher() {
     const update = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
+        const covered = Math.max(0, Math.round(window.innerHeight - viewport.height - viewport.offsetTop));
         const open = isEditable(document.activeElement) && window.innerHeight - viewport.height > keyboardThreshold;
-        if (open) root.dataset.clavier = "ouvert";
-        else delete root.dataset.clavier;
+        if (open) {
+          root.dataset.clavier = "ouvert";
+          root.style.setProperty("--clavier-hauteur", `${covered}px`);
+        } else {
+          delete root.dataset.clavier;
+          root.style.removeProperty("--clavier-hauteur");
+        }
       });
     };
     viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
     document.addEventListener("focusin", update);
     document.addEventListener("focusout", update);
     return () => {
       cancelAnimationFrame(frame);
       viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("scroll", update);
       document.removeEventListener("focusin", update);
       document.removeEventListener("focusout", update);
       delete root.dataset.clavier;
+      root.style.removeProperty("--clavier-hauteur");
     };
   }, []);
   return null;
