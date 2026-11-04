@@ -3738,3 +3738,36 @@
     font-size: 0.8rem;
   }
 }
+
+/* Fenêtre « Félicitations » : rien ne déborde. Le contenu prend la largeur de la fenêtre, jamais plus
+   (sur téléphone, le bouton de partage natif ajoute un 6e rond à la rangée). */
+.launch,
+.launch-section {
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.launch-section .share-link-row {
+  width: 100%;
+  min-width: 0;
+}
+
+.launch-section .share-link-row input {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.launch-section .social-share {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.launch-section .social-share-link {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.launch-view {
+  min-width: 0;
+  max-width: 100%;
+}
