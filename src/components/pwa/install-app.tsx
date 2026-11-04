@@ -1,9 +1,8 @@
 "use client";
 
-import { Check, Compass, Download, EllipsisVertical, Share, Smartphone, SquarePlus } from "lucide-react";
+import { Check, Compass, Download, EllipsisVertical, ExternalLink, Share, Smartphone, SquarePlus } from "lucide-react";
 import { useCallback, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { SocialShare } from "@/components/shared/social-share";
-import { freeMonths } from "@/config/pricing";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Dialog } from "@/components/ui/dialog";
 
@@ -145,22 +144,25 @@ function stepsFor(platform: Platform): Step[] {
   ];
 }
 
-/** Explication complète : les étapes numérotées pour cet appareil, chacune suivie de son icône. */
+/**
+ * Explication complète : les étapes pour cet appareil, dans l'ordre. Chaque ligne : numéro, titre et
+ * explication, puis l'icône à repérer à l'écran, alignée à droite. Un trait relie les numéros.
+ */
 function InstallSteps({ platform }: { platform: Platform }) {
   return (
     <div className="pwa-guide">
       <ol className="pwa-steps">
         {stepsFor(platform).map((step, index) => (
-          <li key={step.title}>
+          <li className="pwa-step" key={step.title}>
             <span aria-hidden="true" className="pwa-step-number">
               {index + 1}
             </span>
             <span className="pwa-step-text">
-              <strong>
-                {step.title}
-                <span aria-hidden="true" className="pwa-step-icon">{step.icon}</span>
-              </strong>
+              <strong>{step.title}</strong>
               <span>{step.text}</span>
+            </span>
+            <span aria-hidden="true" className="pwa-step-icon">
+              {step.icon}
             </span>
           </li>
         ))}
@@ -361,32 +363,51 @@ export function StoreLaunchDialog({ storeName, storeUrl, published }: { storeNam
   return (
     <Dialog centered onClose={() => setOpen(false)} open={open} size="sm" title={published ? "Félicitations, votre boutique prend vie ! 🎉" : "Félicitations, votre boutique est créée ! 🎉"}>
       <div className="launch">
-        <p className="launch-offer">
-          <span aria-hidden="true">🎁</span> Votre abonnement est offert pendant <strong>{freeMonths} mois</strong>.
-        </p>
-        <label className="launch-link">
-          <span>Le lien de votre boutique</span>
+        <section aria-labelledby="launch-link-title" className="launch-section">
+          <h3 className="launch-section-title" id="launch-link-title">
+            Le lien de votre boutique
+          </h3>
           <span className="share-link-row">
-            <input onFocus={(event) => event.currentTarget.select()} readOnly value={storeUrl.replace(/^https?:\/\//, "")} />
+            <input aria-labelledby="launch-link-title" onFocus={(event) => event.currentTarget.select()} readOnly value={storeUrl.replace(/^https?:\/\//, "")} />
             <CopyButton className="icon-button share-copy" iconOnly label="Copier le lien" value={storeUrl} />
           </span>
-        </label>
+          <a className="btn btn-secondary launch-view" href={storeUrl} rel="noreferrer" target="_blank">
+            <ExternalLink aria-hidden="true" size={18} />
+            Voir ma boutique
+          </a>
+        </section>
+
         {published ? (
-          <SocialShare text={`Découvrez ma boutique ${storeName}`} title={storeName} url={storeUrl} />
+          <section aria-labelledby="launch-share-title" className="launch-section">
+            <h3 className="launch-section-title" id="launch-share-title">
+              Partagez-la avec vos clients
+            </h3>
+            <SocialShare text={`Découvrez ma boutique ${storeName}`} title={storeName} url={storeUrl} />
+          </section>
         ) : (
           <p className="launch-note">Ajoutez un produit pour la mettre en ligne : « Pour bien démarrer » vous guide.</p>
         )}
+
         {ready && !isInstalled && (
-          <>
+          <section aria-labelledby="launch-install-title" className="launch-section launch-install-card">
             <div className="launch-install">
               <AppsIcon />
-              <p>Installez PrestAfrik sur votre écran d’accueil et gardez votre boutique à portée de main.</p>
+              <div>
+                <h3 className="launch-section-title" id="launch-install-title">
+                  Installez l’application
+                </h3>
+                <p>Votre boutique à portée de main, directement sur l’écran d’accueil de votre téléphone.</p>
+              </div>
             </div>
             {showSteps && <InstallSteps platform={platform} />}
             <button
               className="btn btn-glass launch-install-button"
               data-autofocus=""
               onClick={async () => {
+                if (showSteps) {
+                  setOpen(false);
+                  return;
+                }
                 if (canPrompt && (await promptInstall()) !== "unavailable") {
                   setOpen(false);
                   return;
@@ -395,9 +416,9 @@ export function StoreLaunchDialog({ storeName, storeUrl, published }: { storeNam
               }}
               type="button"
             >
-              Installer maintenant
+              {showSteps ? "J’ai compris" : "Installer maintenant"}
             </button>
-          </>
+          </section>
         )}
       </div>
     </Dialog>

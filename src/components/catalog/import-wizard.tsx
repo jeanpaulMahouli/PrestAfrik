@@ -96,7 +96,6 @@ export function ImportWizard() {
               onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
               onDrop={(event) => { event.preventDefault(); setDragging(false); choose(event.dataTransfer.files[0]); }}
             >
-              <span aria-hidden="true" className="photo-dropzone-icon">⬆</span>
               <strong>{pending ? "Vérification du fichier…" : "Glissez votre fichier CSV ici"}</strong>
               <span>ou <span className="v-link-inline">parcourez vos fichiers</span></span>
               <input accept=".csv,text/csv" className="visually-hidden" disabled={pending} onChange={(event) => choose(event.currentTarget.files?.[0])} ref={inputRef} type="file" />
