@@ -1027,3 +1027,10 @@
   opacity: 0.38;
   cursor: not-allowed;
 }
+
+/* Saisie sur téléphone (clavier ouvert, components/ui/keyboard-watcher.tsx) : le menu du bas et la bulle
+   d'aide restent derrière le clavier au lieu de remonter ou de flotter pendant le défilement. */
+html[data-clavier="ouvert"] .vendor-tabbar,
+html[data-clavier="ouvert"] .vendor-shell .feedback-launcher {
+  visibility: hidden;
+}

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { fontVariables } from "@/lib/fonts";
+import { KeyboardWatcher } from "@/components/ui/keyboard-watcher";
 import { NavigationLoadingIndicator } from "@/components/ui/navigation-loading-indicator";
 import { sharePreviewImage } from "@/lib/seo";
 import "./globals.css";
@@ -44,6 +45,9 @@ export const viewport: Viewport = {
   themeColor: "#FF9900",
   // Écrans arrondis et barre de gestes : les marges env(safe-area-inset-*) des barres fixes deviennent réelles.
   viewportFit: "cover",
+  // Clavier du téléphone : il recouvre la page au lieu de la rétrécir. Les barres fixées en bas (menu de
+  // l'espace vendeur) restent à leur place, derrière le clavier, comme dans une application.
+  interactiveWidget: "resizes-visual",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -54,6 +58,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Suspense fallback={null}>
           <NavigationLoadingIndicator />
         </Suspense>
+        <KeyboardWatcher />
       </body>
     </html>
   );
