@@ -698,11 +698,10 @@
   }
 }
 
-/* Barre d'actions collée en bas sur mobile (brief §4.2). */
+/* Boutons de l'assistant sur téléphone : à leur place en fin d'étape, jamais flottants (04/11/2026). */
 @media (max-width: 639px) {
   .wizard-actions {
-    position: sticky;
-    bottom: 0;
+    position: static;
     margin: 1.5rem -1.25rem -1.5rem;
     padding: 0.75rem 1.25rem calc(0.75rem + env(safe-area-inset-bottom));
     border-top: 1px solid var(--color-border);

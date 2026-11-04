@@ -1001,19 +1001,6 @@
     bottom: calc(9.5rem + var(--tabbar-safe));
   }
 
-  /* Page avec boutons collés en bas (formulaires) : la bulle remonte au-dessus. */
-  .vendor-shell:has(.v-sticky-actions) .feedback-launcher {
-    bottom: calc(9.75rem + var(--tabbar-safe));
-  }
-
-  .vendor-shell:has(.v-sticky-actions) .feedback-panel {
-    bottom: calc(14rem + var(--tabbar-safe));
-  }
-
-  .vendor-shell .v-sticky-actions {
-    bottom: calc(4.1rem + var(--tabbar-safe));
-    padding-bottom: 0.75rem;
-  }
 }
 
 @media (min-width: 1024px) {
