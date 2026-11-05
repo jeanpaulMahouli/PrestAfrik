@@ -227,7 +227,7 @@ function FeedbackChat({ firstName, onDone }: { firstName: string; onDone: () => 
                   event.currentTarget.form?.requestSubmit();
                 }
               }}
-              placeholder={kind === "REVIEW" ? "Un mot sur votre expérience (facultatif)" : "Écrivez votre message…"}
+              placeholder={kind === "REVIEW" ? "Un mot (facultatif)" : "Votre message…"}
               rows={1}
             />
             <button aria-label={pending ? "Envoi en cours" : "Envoyer"} className="chat-send" disabled={pending || (kind === "REVIEW" && !rating)} type="submit">
