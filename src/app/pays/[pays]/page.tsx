@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: PageProps<"/pays/[pays]">): P
   if (!page) return {};
   return {
     title: { absolute: `Créer une boutique en ligne ${page.locative} et vendre sur WhatsApp | PrestAfrik` },
-    description: `Créez gratuitement votre boutique en ligne ${page.locative} : commandes sur WhatsApp, paiement à la livraison, en FCFA.`,
+    description: `Créez votre boutique en ligne ${page.locative} en 5 minutes : commandes sur WhatsApp, paiement à la livraison, en FCFA.`,
     alternates: { canonical: `/pays/${page.slug}` },
     // Gabarit sans contenu propre au pays : pas d'indexation avant qu'il soit rédigé.
     robots: page.ready ? undefined : { index: false, follow: true },
@@ -35,7 +35,7 @@ export default async function CountryPage({ params }: PageProps<"/pays/[pays]">)
       hero={{
         title: `Votre boutique en ligne ${page.locative}`,
         subtitle: `Vendez ${page.locative} sans site compliqué : vos clients commandent sur votre boutique, vous confirmez sur WhatsApp, ils paient à la livraison en FCFA.`,
-        actions: <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Créer ma boutique gratuitement"}</LandingButton>,
+        actions: <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Créer ma boutique"}</LandingButton>,
       }}
       signedIn={signedIn}
     >

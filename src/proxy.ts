@@ -5,10 +5,11 @@ import {
   isAppHost,
   isAppPath,
   isMarketplaceHost,
+  isMarketplacePath,
   isPassthroughPath,
   marketplaceBasePath,
+  marketplacePublicPath,
   marketplaceRewritePath,
-  marketplaceSubdomain,
   proxyKeyHeader,
   storeRewritePath,
   storeSlugFromHost,
@@ -23,8 +24,9 @@ import {
  * l'en-tête posé par Cloudflare quand celui-ci réécrit Host vers le domaine principal (hébergement
  * Hostinger). Ce second en-tête n'est accepté qu'avec la clé partagée STORE_PROXY_SECRET.
  *
- * La marketplace a son propre sous-domaine réservé : shop.prestafrik.com/recherche affiche la page
- * /nos-boutiques/recherche ; prestafrik.com/nos-boutiques/… redirige vers shop.prestafrik.com/….
+ * La marketplace est l'accueil de prestafrik.com : « / » et « /recherche » affichent les pages de
+ * app/nos-boutiques. L'ancien shop.prestafrik.com/… redirige en 301 vers prestafrik.com/… (même chemin),
+ * l'ancienne adresse prestafrik.com/nos-boutiques/… aussi. La présentation pour les vendeurs est sur /boutique.
  *
  * Les espaces connectés ont le leur : app.prestafrik.com/dashboard (tableau de bord), /admin et
  * /boutiques/nouvelle ; prestafrik.com/dashboard/… y est redirigé, app.prestafrik.com/ ouvre le tableau
@@ -38,11 +40,28 @@ export function proxy(request: NextRequest) {
   const subdomains = process.env.FEATURE_SUBDOMAINS === "true";
   const root = process.env.STORE_ROOT_DOMAIN;
   const pathname = request.nextUrl.pathname;
+  // Protocole du site (derrière Cloudflare, la requête reçue peut être en http).
+  const protocol = (process.env.BETTER_AUTH_URL ?? "").startsWith("http://") ? "http:" : "https:";
+  const host = subdomains && root ? requestedHost(request) : null;
+
+  // Ancienne marketplace shop.prestafrik.com : chaque adresse redirige en 301 vers la même page sur
+  // prestafrik.com (chemin et paramètres conservés), en une seule étape. Les appels d'API en cours restent servis.
+  if (root && isMarketplaceHost(host, root) && !/^\/api(?:\/|$)/.test(pathname)) {
+    const target = new URL(`${protocol}//${root}`);
+    target.pathname = pathname;
+    target.search = request.nextUrl.search;
+    return NextResponse.redirect(target, request.method === "GET" || request.method === "HEAD" ? 301 : 308);
+  }
+
+  // Ancienne adresse interne prestafrik.com/nos-boutiques/… → la page publique (« / », « /recherche »).
+  if (pathname === marketplaceBasePath || pathname.startsWith(`${marketplaceBasePath}/`)) {
+    const url = request.nextUrl.clone();
+    url.pathname = marketplacePublicPath(pathname);
+    return NextResponse.redirect(url, 308);
+  }
+
   if (subdomains && root && !isPassthroughPath(pathname)) {
     const url = request.nextUrl.clone();
-    // Protocole du site (derrière Cloudflare, la requête reçue peut être en http).
-    const protocol = (process.env.BETTER_AUTH_URL ?? "").startsWith("http://") ? "http:" : "https:";
-    const host = requestedHost(request);
     if (isAppHost(host, root)) {
       // app.prestafrik.com : le tableau de bord ; les autres pages (connexion, aperçu des boutiques…) restent servies.
       if (pathname === "/") {
@@ -52,26 +71,25 @@ export function proxy(request: NextRequest) {
       // Espace connecté : jamais dans les résultats de recherche (les pages publiques ont leur adresse sur prestafrik.com).
       return withNoIndex(NextResponse.next({ request: { headers } }));
     }
-    if (isAppPath(pathname) && !isMarketplaceHost(host, root)) {
+    if (isAppPath(pathname)) {
       const target = new URL(`${protocol}//${appSubdomain}.${root}`);
       target.pathname = pathname;
       target.search = request.nextUrl.search;
       return NextResponse.redirect(target, 307);
     }
-    if (isMarketplaceHost(host, root)) {
-      url.pathname = marketplaceRewritePath(pathname);
-      return NextResponse.rewrite(url, { request: { headers } });
-    }
-    if (pathname === marketplaceBasePath || pathname.startsWith(`${marketplaceBasePath}/`)) {
-      const target = new URL(`${protocol}//${marketplaceSubdomain}.${root}`);
-      target.pathname = pathname.slice(marketplaceBasePath.length) || "/";
-      target.search = request.nextUrl.search;
-      return NextResponse.redirect(target, 308);
-    }
   }
 
   const slug = subdomains ? requestedStore(request) : null;
-  if (!slug || isPassthroughPath(request.nextUrl.pathname)) {
+  if (!slug) {
+    // Domaine principal : la marketplace est l'accueil (« / ») et sa recherche est « /recherche ».
+    if (isMarketplacePath(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = marketplaceRewritePath(pathname);
+      return NextResponse.rewrite(url, { request: { headers } });
+    }
+    return NextResponse.next({ request: { headers } });
+  }
+  if (isPassthroughPath(request.nextUrl.pathname)) {
     return NextResponse.next({ request: { headers } });
   }
 
@@ -93,7 +111,7 @@ function requestedHost(request: NextRequest) {
   const secret = process.env.STORE_PROXY_SECRET;
   const forwarded = request.headers.get(forwardedStoreHostHeader);
   if (forwarded && secret && request.headers.get(proxyKeyHeader) === secret) return forwarded;
-  return request.headers.get("host");
+  return request.headers.get("host") ?? request.nextUrl.host;
 }
 
 function requestedStore(request: NextRequest) {

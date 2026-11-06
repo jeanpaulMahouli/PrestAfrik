@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps<"/[slug]">): Promis
     openGraph: {
       type: "website",
       siteName: store.name,
-      locale: "fr_FR",
+      locale: "fr_CM",
       url,
       title: store.name,
       ...(image ? { images: [{ url: absoluteUrl(image), alt: store.name }] } : {}),

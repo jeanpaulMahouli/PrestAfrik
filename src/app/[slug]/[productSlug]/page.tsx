@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps<"/[slug]/[productSl
     openGraph: {
       type: "website",
       siteName: store.name,
-      locale: "fr_FR",
+      locale: "fr_CM",
       url,
       title: `${product.name} — ${formatXaf(currentPrice(product))}`,
       description,

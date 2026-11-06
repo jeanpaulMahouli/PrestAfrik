@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { fontVariables } from "@/lib/fonts";
+import { AttributionTracker, GoogleAnalytics } from "@/components/analytics/analytics";
 import { KeyboardWatcher } from "@/components/ui/keyboard-watcher";
 import { NavigationLoadingIndicator } from "@/components/ui/navigation-loading-indicator";
 import { sharePreviewImage } from "@/lib/seo";
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
     template: "%s | PrestAfrik",
   },
   description:
-    "PrestAfrik : créez gratuitement votre boutique en ligne en 5 minutes. Commandes sur WhatsApp, paiement à la livraison, dans toute la zone CEMAC.",
+    "PrestAfrik, la marketplace du Cameroun : trouvez un produit, écrivez directement au vendeur sur WhatsApp et payez à la livraison.",
   applicationName: "PrestAfrik",
   // Résultats Google détaillés : grande image, description complète et extraits vidéo autorisés.
   robots: {
@@ -29,10 +30,12 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "PrestAfrik",
-    locale: "fr_FR",
+    locale: "fr_CM",
     images: [sharePreviewImage],
   },
   twitter: { card: "summary_large_image" },
+  // Vérification du domaine dans Meta Business (WhatsApp Business, application Meta) : lue sur la page d'accueil.
+  other: { "facebook-domain-verification": "8vvpr2rgpc7l5hw1ml7itmdhaxx01i" },
   // Code de validation Google Search Console (balise HTML), facultatif si le domaine est validé par DNS.
   ...(process.env.GOOGLE_SITE_VERIFICATION ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } } : {}),
   // Icônes déclarées ici (et non par fichiers dans src/app) : chaque boutique peut les remplacer par son logo.
@@ -65,6 +68,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <NavigationLoadingIndicator />
         </Suspense>
         <KeyboardWatcher />
+        {/* Publicités : paramètres de campagne gardés jusqu'à l'inscription, clics « Devenir vendeur » mesurés. */}
+        <AttributionTracker />
+        {process.env.NEXT_PUBLIC_GA_ID ? <GoogleAnalytics id={process.env.NEXT_PUBLIC_GA_ID} /> : null}
       </body>
     </html>
   );

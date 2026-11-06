@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { categoryIcon } from "@/components/shop/category-icons";
 import { ProductGrid, ShopSectionHead, StoreTile } from "@/components/shop/shop-blocks";
 import { ShopShell, shopBudgets } from "@/components/shop/shop-shell";
+import { sharePreviewImage } from "@/lib/seo";
 import { shopUrl } from "@/lib/urls";
 import { getShopTicker, getShopTickerSeconds } from "@/modules/announcements/queries";
 import { getShopScope } from "@/modules/marketplace/country";
@@ -27,15 +28,40 @@ function readQuery(params: Params) {
   return { q, category, sort, min: amount(one(params, "min")), max: amount(one(params, "max")), promo: one(params, "promo") === "1" };
 }
 
+/** Une page catégorie n'est indexée qu'à partir de ce nombre de boutiques actives (contenu suffisant). */
+const indexableCategoryStores = 3;
+
 export async function generateMetadata({ searchParams }: PageProps<"/nos-boutiques/recherche">): Promise<Metadata> {
   const query = readQuery(await searchParams);
   const categories = query.category ? await getShopCategories(await getShopScope()) : [];
-  const label = categories.find((item) => item.slug === query.category)?.label;
+  const category = categories.find((item) => item.slug === query.category);
+  // Page catégorie seule (sans recherche, budget ni tri) : la seule page de résultats proposée à Google.
+  const categoryPage = category && !query.q && !query.min && !query.max && !query.promo && query.sort === "pertinence";
+  if (categoryPage) {
+    const label = category.label.toLocaleLowerCase("fr-FR");
+    return {
+      title: { absolute: `${category.label} au Cameroun : commandez sur WhatsApp | PrestAfrik` },
+      description: `${category.label} : ${category.productCount} produit${category.productCount > 1 ? "s" : ""} de ${category.storeCount} boutique${category.storeCount > 1 ? "s" : ""} sur PrestAfrik. Comparez, écrivez au vendeur sur WhatsApp et payez à la livraison.`.slice(0, 160),
+      alternates: { canonical: shopUrl(`/recherche?categorie=${category.slug}`) },
+      openGraph: {
+        type: "website",
+        siteName: "PrestAfrik",
+        locale: "fr_CM",
+        url: shopUrl(`/recherche?categorie=${category.slug}`),
+        title: `${category.label} sur PrestAfrik`,
+        description: `Les boutiques ${label} de PrestAfrik : commande sur WhatsApp, paiement à la livraison.`,
+        images: [sharePreviewImage],
+      },
+      // Trop peu de boutiques : la page reste accessible mais n'est pas proposée à Google.
+      robots: category.storeCount >= indexableCategoryStores ? undefined : { index: false, follow: true },
+    };
+  }
+  const title = query.q ? `« ${query.q} »` : category?.label ?? "Explorer la marketplace";
   return {
-    title: { absolute: `${query.q ? `« ${query.q} »` : label ?? "Explorer"} · PrestAfrik Shop` },
-    // Pages de résultats : utiles aux visiteurs, pas aux moteurs (sauf les rubriques).
-    robots: query.q || query.min || query.max ? { index: false, follow: true } : undefined,
-    alternates: label ? { canonical: shopUrl(`/recherche?categorie=${query.category}`) } : undefined,
+    title: { absolute: `${title} | PrestAfrik` },
+    description: "Trouvez un produit sur PrestAfrik, la marketplace du Cameroun : contactez directement le vendeur sur WhatsApp et payez à la livraison.",
+    // Recherche, tri et budget : pages utiles aux visiteurs, pas aux moteurs de recherche.
+    robots: { index: false, follow: true },
   };
 }
 
@@ -70,6 +96,7 @@ export default async function ShopSearchPage({ searchParams }: PageProps<"/nos-b
         <ShopSectionHead
           icon={result.category ? icon : PackageSearch}
           id="resultats-title"
+          level={1}
           subtitle={`${result.products.length} produit${result.products.length > 1 ? "s" : ""}${result.products.length === 48 ? " affichés (affinez pour en voir d’autres)" : ""}`}
           tint={result.category ? tint : undefined}
           title={title}

@@ -84,8 +84,8 @@ export default async function BlogArticlePage({ params }: PageProps<"/blog/[arti
         </div>
         <aside className="lp-article__cta">
           <h2>Passez à l’action dès aujourd’hui</h2>
-          <p>Votre boutique PrestAfrik est gratuite et prête en 5 minutes. Vos prochains clients vous attendent.</p>
-          <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Créer ma boutique gratuitement"}</LandingButton>
+          <p>Votre boutique PrestAfrik est prête en 5 minutes. Vos prochains clients vous attendent.</p>
+          <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Créer ma boutique"}</LandingButton>
         </aside>
         <nav aria-label="Autres articles" className="lp-article__more">
           <Link className="lp-article__back" href="/blog">

@@ -6,7 +6,7 @@ import { googleSignInEnabled } from "@/modules/auth/google";
 
 const t = texts.auth.signUp;
 
-export const metadata: Metadata = { title: t.metaTitle };
+export const metadata: Metadata = { title: t.metaTitle, robots: { index: false, follow: true } };
 
 export default async function SignUpPage({ searchParams }: PageProps<"/inscription">) {
   const params = await searchParams;

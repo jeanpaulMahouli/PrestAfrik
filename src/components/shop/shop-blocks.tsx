@@ -9,7 +9,8 @@ import { ScrollRail } from "./shop-widgets";
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr-FR")).join("");
 
 /** Titre de rubrique : icône (facultative), titre, sous-titre, lien « Voir tout ». */
-export function ShopSectionHead({ icon: Icon, title, subtitle, href, id, tint, aside, moreLabel = "Voir tout" }: { icon?: LucideIcon; title: ReactNode; subtitle?: string; href?: string; id: string; tint?: string; aside?: ReactNode; moreLabel?: string }) {
+export function ShopSectionHead({ icon: Icon, title, subtitle, href, id, tint, aside, moreLabel = "Voir tout", level = 2 }: { icon?: LucideIcon; title: ReactNode; subtitle?: string; href?: string; id: string; tint?: string; aside?: ReactNode; moreLabel?: string; /** 1 : titre principal de la page (pages de résultats). */ level?: 1 | 2 }) {
+  const Heading = level === 1 ? "h1" : "h2";
   return (
     <header className="shop-section-head" style={tint ? ({ "--tint": tint } as React.CSSProperties) : undefined}>
       {Icon && (
@@ -18,7 +19,7 @@ export function ShopSectionHead({ icon: Icon, title, subtitle, href, id, tint, a
         </span>
       )}
       <div className="shop-section-titles">
-        <h2 id={id}>{title}</h2>
+        <Heading id={id}>{title}</Heading>
         {subtitle && <p>{subtitle}</p>}
       </div>
       {aside}

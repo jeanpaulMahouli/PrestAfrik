@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isAppHost, isAppPath, isMarketplaceHost, isPassthroughPath, marketplaceRewritePath, storeHref, storeRewritePath, storeSlugFromHost } from "@/lib/store-host";
+import { isAppHost, isAppPath, isMarketplaceHost, isMarketplacePath, isPassthroughPath, marketplacePublicPath, marketplaceRewritePath, storeHref, storeRewritePath, storeSlugFromHost } from "@/lib/store-host";
 
 describe("storeSlugFromHost", () => {
   it("lit l'adresse de la boutique dans le sous-domaine", () => {
@@ -71,5 +71,19 @@ describe("espaces connectés sur app.prestafrik.com", () => {
     expect(isAppPath("/dashboards")).toBe(false);
     expect(isAppPath("/aide/guide")).toBe(false);
     expect(isAppPath("/mboa-style")).toBe(false);
+  });
+});
+
+describe("marketplace à la racine de prestafrik.com", () => {
+  it("sert l'accueil et la recherche de la marketplace à la racine", () => {
+    expect(isMarketplacePath("/")).toBe(true);
+    expect(isMarketplacePath("/recherche")).toBe(true);
+    expect(isMarketplacePath("/boutique")).toBe(false);
+    expect(isMarketplacePath("/mboa-style")).toBe(false);
+  });
+
+  it("traduit l'ancienne adresse interne en adresse publique", () => {
+    expect(marketplacePublicPath("/nos-boutiques")).toBe("/");
+    expect(marketplacePublicPath("/nos-boutiques/recherche")).toBe("/recherche");
   });
 });

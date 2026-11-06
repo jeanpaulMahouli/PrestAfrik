@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { DashboardAnnouncement } from "@/modules/announcements/queries";
 
@@ -39,14 +40,40 @@ function Banner({ slide, className, priority = false }: { slide: Slide; classNam
 }
 
 /**
- * Haut de la marketplace. Ordinateur : grand diaporama (5 s par image, pause au survol) et deux visuels à
- * côté. Téléphone : une seule bannière rectangulaire, gérée à part. Visuels et boutons gérés dans
+ * Bannière principale « Devenir vendeur » : un seul objectif, le bouton qui mène à /boutique. Toute la
+ * bannière est cliquable. Elle sert aussi de destination aux publicités : les paramètres de campagne
+ * sont ajoutés au lien au moment du clic (components/analytics/analytics.tsx, emplacement « heros »).
+ * Ordinateur : texte à gauche, téléphone à droite. Téléphone : format vertical, bouton pleine largeur.
+ */
+export function SellerBanner({ href, variant }: { href: string; variant: "desktop" | "mobile" }) {
+  return (
+    <a className={`shop-seller shop-seller--${variant}`} data-emplacement="heros" href={href}>
+      <span aria-hidden="true" className="shop-seller-glow" />
+      <span className="shop-seller-text">
+        <span className="shop-seller-kicker">Vendeurs, commerçants, artisans</span>
+        <strong className="shop-seller-title">Vendez en ligne sans limite</strong>
+        <span className="shop-seller-sub">Votre boutique en 5 minutes depuis votre téléphone. Vos clients vous écrivent sur WhatsApp et paient à la livraison.</span>
+        <span className="shop-seller-cta">
+          Devenir vendeur <ChevronRight aria-hidden="true" size={20} strokeWidth={2.6} />
+        </span>
+      </span>
+      <span aria-hidden="true" className="shop-seller-phone">
+        {/* Image prioritaire, légère (WebP redimensionné) : rien ne retarde l'affichage du bouton. */}
+        <Image alt="" fetchPriority="high" height={1495} loading="eager" sizes={variant === "desktop" ? "220px" : "140px"} src="/landing/screens/telephone-1-boutique-v2.webp" width={720} />
+      </span>
+    </a>
+  );
+}
+
+/**
+ * Haut de la marketplace (univers « Shopping »). Ordinateur : la bannière « Devenir vendeur » en grand, et à
+ * côté le diaporama des visuels de l'administration (5 s par image, pause au survol) puis un visuel fixe.
+ * Téléphone : la bannière « Devenir vendeur » seule, au format vertical. Visuels et boutons gérés dans
  * Administration → Annonces ; tant qu'il n'y a pas d'image, l'emplacement montre seulement son bouton.
  */
-export function ShopHero({ carousel, banners, mobile, drawn, drawnBanners }: { carousel: DashboardAnnouncement[]; banners: DashboardAnnouncement[]; mobile: DashboardAnnouncement | null; drawn: DrawnSlide[]; drawnBanners: DrawnSlide[] }) {
+export function ShopHero({ carousel, banners, drawn, drawnBanners, sellerHref }: { carousel: DashboardAnnouncement[]; banners: DashboardAnnouncement[]; drawn: DrawnSlide[]; drawnBanners: DrawnSlide[]; sellerHref: string }) {
   const slides: Slide[] = carousel.length ? carousel.map((item) => ({ kind: "image", item })) : drawn.map((item) => ({ kind: "drawn", item }));
-  const sides: Slide[] = banners.length ? banners.map((item) => ({ kind: "image", item })) : drawnBanners.map((item) => ({ kind: "drawn", item }));
-  const mobileSlide: Slide = mobile ? { kind: "image", item: mobile } : { kind: "drawn", item: drawn[0] };
+  const fixed: Slide = banners.length ? { kind: "image", item: banners[0] } : { kind: "drawn", item: drawnBanners[0] };
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchX = useRef(0);
@@ -62,53 +89,53 @@ export function ShopHero({ carousel, banners, mobile, drawn, drawnBanners }: { c
 
   return (
     <>
-      <section aria-label="À la une" className="shop-hero">
-        <div
-          aria-roledescription="diaporama"
-          className="shop-carousel"
-          onBlur={() => setPaused(false)}
-          onFocus={() => setPaused(true)}
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onTouchEnd={(event) => {
-            const dx = event.changedTouches[0].clientX - touchX.current;
-            if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1));
-          }}
-          onTouchStart={(event) => (touchX.current = event.touches[0].clientX)}
-        >
-          <div className="shop-carousel-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-            {slides.map((slide, position) => (
-              <div aria-hidden={position !== index} aria-label={`${position + 1} sur ${count}`} aria-roledescription="diapositive" className="shop-carousel-slide" inert={position !== index} key={slide.item.id} role="group">
-                <Banner className="shop-slide" priority={position === 0} slide={slide} />
-              </div>
-            ))}
-          </div>
-          {count > 1 && (
-            <>
-              <button aria-label="Diapositive précédente" className="shop-carousel-arrow shop-carousel-arrow--prev" onClick={() => go(index - 1)} type="button">
-                <ChevronLeft aria-hidden="true" size={22} />
-              </button>
-              <button aria-label="Diapositive suivante" className="shop-carousel-arrow shop-carousel-arrow--next" onClick={() => go(index + 1)} type="button">
-                <ChevronRight aria-hidden="true" size={22} />
-              </button>
-              <div className="shop-carousel-dots">
-                {slides.map((slide, position) => (
-                  <button aria-current={position === index} aria-label={`Afficher la diapositive ${position + 1}`} key={slide.item.id} onClick={() => go(position)} type="button" />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+      <section aria-label="Devenir vendeur sur PrestAfrik" className="shop-hero">
+        <SellerBanner href={sellerHref} variant="desktop" />
         <div className="shop-hero-side">
-          {sides.map((slide) => (
-            <div className="shop-hero-side-item" key={slide.item.id}>
-              <Banner className="shop-slide shop-slide--small" slide={slide} />
+          <div
+            aria-roledescription="diaporama"
+            aria-label="À la une"
+            className="shop-carousel shop-hero-side-item"
+            onBlur={() => setPaused(false)}
+            onFocus={() => setPaused(true)}
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onTouchEnd={(event) => {
+              const dx = event.changedTouches[0].clientX - touchX.current;
+              if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1));
+            }}
+            onTouchStart={(event) => (touchX.current = event.touches[0].clientX)}
+          >
+            <div className="shop-carousel-track" style={{ transform: `translateX(-${index * 100}%)` }}>
+              {slides.map((slide, position) => (
+                <div aria-hidden={position !== index} aria-label={`${position + 1} sur ${count}`} aria-roledescription="diapositive" className="shop-carousel-slide" inert={position !== index} key={slide.item.id} role="group">
+                  <Banner className="shop-slide" slide={slide} />
+                </div>
+              ))}
             </div>
-          ))}
+            {count > 1 && (
+              <>
+                <button aria-label="Diapositive précédente" className="shop-carousel-arrow shop-carousel-arrow--prev" onClick={() => go(index - 1)} type="button">
+                  <ChevronLeft aria-hidden="true" size={22} />
+                </button>
+                <button aria-label="Diapositive suivante" className="shop-carousel-arrow shop-carousel-arrow--next" onClick={() => go(index + 1)} type="button">
+                  <ChevronRight aria-hidden="true" size={22} />
+                </button>
+                <div className="shop-carousel-dots">
+                  {slides.map((slide, position) => (
+                    <button aria-current={position === index} aria-label={`Afficher la diapositive ${position + 1}`} key={slide.item.id} onClick={() => go(position)} type="button" />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          <div className="shop-hero-side-item">
+            <Banner className="shop-slide shop-slide--small" slide={fixed} />
+          </div>
         </div>
       </section>
-      <section aria-label="À la une" className="shop-hero-mobile">
-        <Banner className="shop-slide" priority slide={mobileSlide} />
+      <section aria-label="Devenir vendeur sur PrestAfrik" className="shop-hero-mobile">
+        <SellerBanner href={sellerHref} variant="mobile" />
       </section>
     </>
   );

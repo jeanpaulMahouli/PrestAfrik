@@ -7,7 +7,8 @@ import type { ReactNode } from "react";
 import { VendorSearch } from "@/components/marketplace/vendor-search";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { site } from "@/config/site";
-import { shopUrl } from "@/lib/urls";
+import { brandIdentity } from "@/lib/brand";
+import { sellerLandingPath, shopUrl } from "@/lib/urls";
 import { shopUniverses, type ShopUniverse } from "@/config/marketplace";
 import type { ShopScope } from "@/modules/marketplace/country";
 import type { ShopCategory } from "@/modules/marketplace/shop";
@@ -29,7 +30,8 @@ export const budgetHref = (budget: (typeof shopBudgets)[number]) => shopUrl(`/re
 export const categoryHref = (slug: string) => shopUrl(`/recherche?categorie=${slug}`);
 
 const siteHref = (path: string) => `${(process.env.BETTER_AUTH_URL ?? "").replace(/\/$/, "")}${path}`;
-const signupHref = () => siteHref("/inscription");
+/** « Devenir vendeur » : la page de présentation pour les vendeurs (prestafrik.com/boutique). */
+const signupHref = () => sellerLandingPath;
 
 type Rubrique = { id: string; href: string; label: string; icon: LucideIcon };
 
@@ -90,7 +92,7 @@ function promisesFor(universe: ShopUniverse) {
 }
 
 const ctaFor: Record<ShopUniverse, { label: string; icon: LucideIcon }> = {
-  vente: { label: "Vendre sur PrestAfrik", icon: Store },
+  vente: { label: "Devenir vendeur", icon: Store },
   immobilier: { label: "Publier une annonce", icon: House },
   services: { label: "Proposer mes services", icon: Handshake },
 };
@@ -131,7 +133,7 @@ export function ShopShell({
     : [
         { id: "livraison", text: "Paiement à la livraison partout au Cameroun", linkUrl: null },
         { id: "whatsapp", text: "Commandez sur WhatsApp : le vendeur vous répond vite", linkUrl: null },
-        { id: "vendre", text: "Vendeur ? Votre boutique en ligne gratuitement, en 5 minutes", linkUrl: signupHref() },
+        { id: "vendre", text: "Vendeur ? Votre boutique en ligne en 5 minutes", linkUrl: signupHref() },
       ];
 
   return (
@@ -151,7 +153,9 @@ export function ShopShell({
         <ShopTicker items={tickerItems} seconds={tickerSeconds} />
         <nav aria-label="Liens utiles" className="shop-topbar-links">
           <a href={siteHref("/aide")}>Aide</a>
-          <a href={siteHref("/")}>PrestAfrik.com</a>
+          <a data-emplacement="bandeau" href={signupHref()}>
+            Devenir vendeur
+          </a>
           {whatsapp && (
             <a href={whatsapp} rel="noopener noreferrer" target="_blank">
               Besoin d’aide ? WhatsApp
@@ -161,13 +165,13 @@ export function ShopShell({
       </div>
 
       <header className="shop-header">
-        <a aria-label="PrestAfrik Shop, accueil de la marketplace" className="shop-logo" href={shopUrl("/")}>
+        <a aria-label="PrestAfrik, accueil de la marketplace" className="shop-logo" href={shopUrl("/")}>
           <Image alt="" height={40} priority src="/brand/logo-prestafrik.png" width={73} />
           <span className="shop-logo-badge">Shop</span>
         </a>
         <CityPicker current={scope.city?.name ?? null} label={scope.universe === "vente" ? "Livrer à" : "Votre ville"} />
         <VendorSearch bare className="shop-search" defaultValue={query ?? ""} placeholder={scope.universe === "immobilier" ? "Maison, appartement, terrain…" : scope.universe === "services" ? "Coiffure, réparation, traiteur…" : "Rechercher un produit, une boutique…"} resultsPath={shopUrl("/recherche")} />
-        <a className="shop-btn shop-btn-glass shop-header-cta" href={signupHref()}>
+        <a className="shop-btn shop-btn-glass shop-header-cta" data-emplacement="en-tete" href={signupHref()}>
           <Cta aria-hidden="true" size={18} />
           <span>{ctaFor[scope.universe].label}</span>
         </a>
@@ -208,7 +212,7 @@ export function ShopShell({
       <footer className="shop-footer">
         <div className="shop-footer-brand">
           <Image alt="PrestAfrik" height={110} src="/brand/logo-white.webp" width={201} />
-          <p>Boutiques, immobilier et services près de chez vous. Contact direct sur WhatsApp, paiement à la livraison.</p>
+          <p>{brandIdentity} Paiement à la livraison.</p>
         </div>
         <nav aria-label="Catégories populaires">
           <h2>Catégories</h2>
@@ -233,6 +237,9 @@ export function ShopShell({
         <nav aria-label="PrestAfrik">
           <h2>PrestAfrik</h2>
           <ul>
+            <li data-emplacement="pied-de-page">
+              <a href={signupHref()}>Devenir vendeur</a>
+            </li>
             <li>
               <a href={siteHref("/a-propos")}>À propos</a>
             </li>

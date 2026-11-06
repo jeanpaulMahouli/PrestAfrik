@@ -123,10 +123,10 @@ export function ShopAssistant({ categories, budgets, searchHref, signupHref, wha
                 )}
                 {topic === "vendre" && (
                   <>
-                    <p className="shop-bubble">Bienvenue ! Votre boutique est prête en 5 minutes, gratuitement, et elle apparaît ici, sur la marketplace.</p>
+                    <p className="shop-bubble">Bienvenue ! Votre boutique est prête en 5 minutes, et vos produits apparaissent ici, sur la marketplace.</p>
                     <div className="shop-assistant-links">
-                      <a className="is-primary" href={signupHref}>
-                        Créer ma boutique gratuitement
+                      <a className="is-primary" data-emplacement="assistant" href={signupHref}>
+                        Devenir vendeur
                       </a>
                     </div>
                   </>

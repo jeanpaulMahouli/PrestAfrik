@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { formatDateTime, formatFcfa } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { absoluteUrl } from "@/lib/seo";
 import { shopUrl, storePublicUrl } from "@/lib/urls";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { getShopTickerSeconds } from "@/modules/announcements/queries";
@@ -50,7 +51,7 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
         <div>
           <h1 className="v-page-title">Marketplace</h1>
           <p className="v-page-subtitle">
-            Ce que l’équipe met en avant sur <a href={shopUrl("/")} rel="noopener noreferrer" target="_blank">la marketplace</a>. Les bannières se gèrent dans <Link href="/admin/annonces">Annonces</Link>.
+            Ce que l’équipe met en avant sur <a href={absoluteUrl(shopUrl("/"))} rel="noopener noreferrer" target="_blank">la marketplace</a>. Les bannières se gèrent dans <Link href="/admin/annonces">Annonces</Link>.
           </p>
         </div>
       </div>

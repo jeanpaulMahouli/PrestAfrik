@@ -7,20 +7,34 @@ import { BudgetSelect } from "@/components/shop/shop-menus";
 import { budgetHref, categoryHref, ShopShell, shopBudgets } from "@/components/shop/shop-shell";
 import { FlashCountdown, ScrollRail } from "@/components/shop/shop-widgets";
 import { shopUniverses } from "@/config/marketplace";
-import { shopUrl } from "@/lib/urls";
+import { brandStructuredData } from "@/lib/brand";
+import { jsonLd, sharePreviewImage } from "@/lib/seo";
+import { sellerLandingPath, shopUrl } from "@/lib/urls";
 import { getShopAnnouncements, getShopTicker, getShopTickerSeconds } from "@/modules/announcements/queries";
 import { getShopScope } from "@/modules/marketplace/country";
 import { getShopHome } from "@/modules/marketplace/shop";
 
+// Accueil de prestafrik.com : la page de la marque. Le titre commence par « PrestAfrik » : c'est lui que
+// Google montre (et compare) quand on cherche « PrestAfrik ».
 export const metadata: Metadata = {
-  title: { absolute: "PrestAfrik Shop : shopping, immobilier et services au Cameroun" },
-  description: "Mode, beauté, maison, téléphones, immobilier et services près de chez vous : promotions, meilleures ventes et prestataires les mieux notés. Contact direct sur WhatsApp, paiement à la livraison.",
-  alternates: { canonical: shopUrl("/") },
+  title: { absolute: "PrestAfrik – La marketplace du Cameroun : achetez aux vendeurs sur WhatsApp" },
+  description: "PrestAfrik, la marketplace du Cameroun : mode, beauté, téléphones, maison… Contactez directement le vendeur sur WhatsApp et payez à la livraison.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "PrestAfrik",
+    locale: "fr_CM",
+    title: "PrestAfrik – La marketplace du Cameroun",
+    description: "Tout le marché dans votre téléphone : trouvez un produit, écrivez au vendeur sur WhatsApp, payez à la livraison.",
+    images: [sharePreviewImage],
+  },
 };
 
 export const dynamic = "force-dynamic";
 
-const signupHref = () => `${(process.env.BETTER_AUTH_URL ?? "").replace(/\/$/, "")}/inscription`;
+/** « Devenir vendeur », « Publier une annonce », « Proposer mes services » : la page de présentation pour les vendeurs. */
+const signupHref = () => sellerLandingPath;
 
 /**
  * Accueil de la marketplace (shop.prestafrik.com), pour l'univers choisi (shopping, immobilier, services) et
@@ -78,8 +92,12 @@ export default async function ShopHomePage() {
 
   return (
     <ShopShell categories={home.categories} local={home.local} scope={scope} ticker={ticker} tickerSeconds={tickerSeconds}>
+      {/* Fiche d'identité de la marque : sur l'accueil seulement. */}
+      <script dangerouslySetInnerHTML={jsonLd(brandStructuredData())} type="application/ld+json" />
+      {/* Titre unique de la page, lu par Google et les lecteurs d'écran ; la bannière « Devenir vendeur » suit. */}
+      <h1 className="visually-hidden">PrestAfrik, la marketplace du Cameroun : achetez directement aux vendeurs, sur WhatsApp</h1>
       {universe === "vente" ? (
-        <ShopHero banners={visuals.banners} carousel={visuals.carousel} drawn={drawn} drawnBanners={drawnBanners} mobile={visuals.mobile} />
+        <ShopHero banners={visuals.banners} carousel={visuals.carousel} drawn={drawn} drawnBanners={drawnBanners} sellerHref={sellerLandingPath} />
       ) : (
         <ShopSingleBanner banner={universe === "immobilier" ? visuals.immo : visuals.services} fallback={drawn[0]} />
       )}
@@ -105,7 +123,7 @@ export default async function ShopHomePage() {
             <EmptyIcon size={40} strokeWidth={1.6} />
           </span>
           <h2>{universe === "immobilier" ? "Les premières annonces arrivent" : "Les premiers prestataires arrivent"}</h2>
-          <p>{universe === "immobilier" ? "Propriétaire ou agence ? Publiez vos biens gratuitement, les demandes arrivent sur WhatsApp." : "Coiffeur, artisan, traiteur, transporteur ? Votre vitrine est prête en 5 minutes."}</p>
+          <p>{universe === "immobilier" ? "Propriétaire ou agence ? Publiez vos biens en quelques minutes, les demandes arrivent sur WhatsApp." : "Coiffeur, artisan, traiteur, transporteur ? Votre vitrine est prête en 5 minutes."}</p>
           <a className="shop-btn shop-btn-primary" href={signupHref()}>
             {universe === "immobilier" ? "Publier une annonce" : "Proposer mes services"}
           </a>

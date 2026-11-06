@@ -44,7 +44,7 @@ export default async function FeaturesPage() {
         actions: (
           <>
             <DemoVideoButton fallbackHref="/demo" label="Voir la vidéo" />
-            <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Créer ma boutique gratuitement"}</LandingButton>
+            <LandingButton href={signedIn ? "/dashboard" : "/inscription"}>{signedIn ? "Aller à mon espace" : "Créer ma boutique"}</LandingButton>
           </>
         ),
       }}
