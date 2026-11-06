@@ -1,16 +1,12 @@
-import { ProductAvailability } from "@prisma/client";
 import type { MetadataRoute } from "next";
 import { blogPosts } from "@/components/landing/blog-posts";
 import { disabledPages } from "@/components/landing/content";
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl, sharePreviewImage } from "@/lib/seo";
-import { shopUrl, storePublicUrl } from "@/lib/urls";
+import { shopUrl } from "@/lib/urls";
 
-// Lu à chaque visite de Google : une boutique publiée ou un nouveau produit y figure aussitôt.
+// Lu à chaque visite de Google : une nouvelle rubrique de la marketplace y figure aussitôt.
 export const dynamic = "force-dynamic";
-
-/** Une sitemap contient au plus 50 000 adresses (protocole sitemaps.org). */
-const maxProducts = 45_000;
 
 const sitePages: { path: string; priority: number; changeFrequency: "daily" | "weekly" | "monthly" | "yearly" }[] = [
   { path: "/", priority: 1, changeFrequency: "weekly" },
@@ -55,56 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     images: [absoluteUrl(post.cover.src)],
   }));
 
-  // Boutiques en ligne uniquement : les brouillons et boutiques suspendues ne sont pas indexés.
-  const onlineStore = { isPublished: true, suspendedAt: null };
-  const [stores, products, pages] = await Promise.all([
-    prisma.store.findMany({
-      where: onlineStore,
-      select: { slug: true, updatedAt: true, logoUrl: true, bannerUrl: true },
-      orderBy: { createdAt: "asc" },
-    }),
-    prisma.product.findMany({
-      where: { store: onlineStore, status: "ACTIVE", availability: { not: ProductAvailability.SOLD_OUT } },
-      select: {
-        slug: true,
-        updatedAt: true,
-        store: { select: { slug: true } },
-        images: { orderBy: { position: "asc" }, take: 5, select: { url: true } },
-      },
-      orderBy: { updatedAt: "desc" },
-      take: maxProducts,
-    }),
-    prisma.storePage.findMany({
-      where: { store: onlineStore, status: "PUBLISHED" },
-      select: { slug: true, updatedAt: true, store: { select: { slug: true } } },
-    }),
-  ]);
-
-  const storeEntries: MetadataRoute.Sitemap = stores.map((store) => {
-    const images = [store.bannerUrl, store.logoUrl].filter((url): url is string => Boolean(url)).map(absoluteUrl);
-    return {
-      url: storePublicUrl(store.slug),
-      lastModified: store.updatedAt,
-      changeFrequency: "daily",
-      priority: 0.9,
-      ...(images.length ? { images } : {}),
-    };
-  });
-
-  const productEntries: MetadataRoute.Sitemap = products.map((product) => ({
-    url: `${storePublicUrl(product.store.slug)}/${product.slug}`,
-    lastModified: product.updatedAt,
-    changeFrequency: "weekly",
-    priority: 0.8,
-    ...(product.images.length ? { images: product.images.map((image) => absoluteUrl(image.url)) } : {}),
-  }));
-
-  const pageEntries: MetadataRoute.Sitemap = pages.map((page) => ({
-    url: `${storePublicUrl(page.store.slug)}/page/${page.slug}`,
-    lastModified: page.updatedAt,
-    changeFrequency: "monthly",
-    priority: 0.4,
-  }));
-
-  return [...site, ...shop, ...blog, ...storeEntries, ...productEntries, ...pageEntries];
+  // Les boutiques publiques (sous-domaines), leurs produits et leurs pages ne sont pas référencées :
+  // elles sont en noindex (app/[slug]/layout.tsx, proxy.ts) et absentes de cette liste.
+  return [...site, ...shop, ...blog];
 }

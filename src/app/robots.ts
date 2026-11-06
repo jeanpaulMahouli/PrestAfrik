@@ -1,7 +1,11 @@
 import type { MetadataRoute } from "next";
 import { absoluteUrl } from "@/lib/seo";
 
-/** Espaces privés (vendeurs, administration, API) fermés aux moteurs de recherche ; vitrines et site ouverts. */
+/**
+ * Espaces privés (vendeurs, administration, API) fermés aux moteurs de recherche ; site et marketplace ouverts.
+ * Les boutiques publiques restent lisibles par Google, mais en « noindex » (app/[slug]/layout.tsx, proxy.ts) :
+ * les bloquer ici l'empêcherait de lire cette consigne, et leurs adresses déjà connues resteraient dans ses résultats.
+ */
 const privateSections = ["/dashboard", "/admin", "/dev", "/invitations", "/commande", "/reinitialiser", "/mot-de-passe-oublie", "/boutiques"];
 
 export default function robots(): MetadataRoute.Robots {

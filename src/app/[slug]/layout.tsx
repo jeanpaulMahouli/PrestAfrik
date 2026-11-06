@@ -32,10 +32,12 @@ const findStoreBySlug = cache((slug: string) =>
 export async function generateMetadata({ params }: LayoutProps<"/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const store = await findStoreBySlug(slug);
-  // Une boutique hors ligne (brouillon ou suspendue) n'est pas indexée par les moteurs de recherche.
-  const robots = store && (!store.isPublished || store.suspendedAt) ? { index: false, follow: false } : undefined;
+  // Les boutiques publiques ne sont pas indexées par les moteurs de recherche : seuls prestafrik.com et la
+  // marketplace le sont. Une boutique en ligne laisse suivre ses liens (vers PrestAfrik) ; hors ligne, rien.
+  // Pages filles : elles héritent de cette règle ; celles qui posent leur propre « robots » restent en noindex.
+  const robots = store && (!store.isPublished || store.suspendedAt) ? { index: false, follow: false } : { index: false, follow: true };
   // Pas de manifeste de l'application vendeur sur une boutique : un client n'installe pas l'espace vendeur.
-  if (!store?.logoUrl) return { manifest: null, ...(robots ? { robots } : {}) };
+  if (!store?.logoUrl) return { manifest: null, robots };
   // L'identifiant du fichier change à chaque nouveau logo : le navigateur ne garde pas l'ancienne icône.
   const version = store.logoUrl.split("/").pop()?.replace(/\.webp$/, "") ?? "1";
   const icon = (size: number) => `/api/boutique/${encodeURIComponent(slug)}/icone?taille=${size}&v=${version}`;
@@ -48,7 +50,7 @@ export async function generateMetadata({ params }: LayoutProps<"/[slug]">): Prom
       ],
       apple: { url: icon(180), sizes: "180x180" },
     },
-    ...(robots ? { robots } : {}),
+    robots,
   };
 }
 

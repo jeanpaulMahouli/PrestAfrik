@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   description:
     "PrestAfrik : créez gratuitement votre boutique en ligne en 5 minutes. Commandes sur WhatsApp, paiement à la livraison, dans toute la zone CEMAC.",
   applicationName: "PrestAfrik",
+  // Résultats Google détaillés : grande image, description complète et extraits vidéo autorisés.
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+  },
   // Application installable (PWA) : public/manifest.webmanifest, ouverte sur le tableau de bord.
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "PrestAfrik", statusBarStyle: "default" },

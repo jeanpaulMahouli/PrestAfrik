@@ -49,7 +49,8 @@ export function proxy(request: NextRequest) {
         url.pathname = "/dashboard";
         return NextResponse.redirect(url, 307);
       }
-      return NextResponse.next({ request: { headers } });
+      // Espace connecté : jamais dans les résultats de recherche (les pages publiques ont leur adresse sur prestafrik.com).
+      return withNoIndex(NextResponse.next({ request: { headers } }));
     }
     if (isAppPath(pathname) && !isMarketplaceHost(host, root)) {
       const target = new URL(`${protocol}//${appSubdomain}.${root}`);
@@ -77,7 +78,14 @@ export function proxy(request: NextRequest) {
   headers.set(subdomainStoreHeader, slug);
   const url = request.nextUrl.clone();
   url.pathname = storeRewritePath(slug, url.pathname);
-  return NextResponse.rewrite(url, { request: { headers } });
+  // Boutiques publiques non indexées (en plus de la balise robots des pages) : seuls prestafrik.com et la
+  // marketplace apparaissent dans Google. Les liens restent suivis (vers PrestAfrik).
+  return withNoIndex(NextResponse.rewrite(url, { request: { headers } }));
+}
+
+function withNoIndex(response: NextResponse) {
+  response.headers.set("X-Robots-Tag", "noindex, follow");
+  return response;
 }
 
 /** Hôte demandé par le visiteur : en-tête Host, ou celui transmis par Cloudflare avec la clé partagée. */
