@@ -82,6 +82,21 @@ describe("marketplace à la racine de prestafrik.com", () => {
     expect(isMarketplacePath("/mboa-style")).toBe(false);
   });
 
+  it("sert les fiches produit de la marketplace sous /produit/{boutique}/{produit}", () => {
+    expect(isMarketplacePath("/produit/mboa-style/robe-kaba")).toBe(true);
+    expect(marketplaceRewritePath("/produit/mboa-style/robe-kaba")).toBe("/nos-boutiques/produit/mboa-style/robe-kaba");
+    expect(isMarketplacePath("/produit")).toBe(false);
+    expect(isMarketplacePath("/produit/mboa-style")).toBe(false);
+    expect(isMarketplacePath("/mboa-style/robe-kaba")).toBe(false);
+  });
+
+  it("sert le panier et la commande de la marketplace", () => {
+    expect(isMarketplacePath("/panier")).toBe(true);
+    expect(isMarketplacePath("/commande")).toBe(true);
+    expect(marketplaceRewritePath("/panier")).toBe("/nos-boutiques/panier");
+    expect(isMarketplacePath("/mboa-style/panier")).toBe(false);
+  });
+
   it("traduit l'ancienne adresse interne en adresse publique", () => {
     expect(marketplacePublicPath("/nos-boutiques")).toBe("/");
     expect(marketplacePublicPath("/nos-boutiques/recherche")).toBe("/recherche");

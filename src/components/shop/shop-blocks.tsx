@@ -1,8 +1,7 @@
-import { ArrowRight, MapPin, Package, Star, type LucideIcon } from "lucide-react";
+import { ArrowRight, MapPin, type LucideIcon } from "@/components/ui/icon-set";
 import type { ReactNode } from "react";
 import { countryName } from "@/modules/marketplace/search";
 import type { ShopProduct, ShopStore } from "@/modules/marketplace/shop";
-import { categoryIcon } from "./category-icons";
 import { ShopProductCard } from "./product-card";
 import { ScrollRail } from "./shop-widgets";
 
@@ -42,50 +41,6 @@ export function ProductRail({ products, label, variant }: { products: ShopProduc
         </li>
       ))}
     </ScrollRail>
-  );
-}
-
-/** Grille de produits (pages de résultats). */
-export function ProductGrid({ products, label }: { products: ShopProduct[]; label: string }) {
-  return (
-    <ul aria-label={label} className="shop-grid">
-      {products.map((product, index) => (
-        <li key={product.id}>
-          <ShopProductCard priority={index < 4} product={product} />
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/** Grande carte de boutique « à la une » : bandeau à la couleur de l'activité, logo, note, nombre de produits. */
-export function FeaturedStoreCard({ store }: { store: ShopStore }) {
-  const { icon: Icon, tint } = categoryIcon(store.activitySlug);
-  return (
-    <a className="shop-store-card" href={store.href} style={{ "--tint": tint } as React.CSSProperties}>
-      <span aria-hidden="true" className="shop-store-cover">
-        <Icon size={64} strokeWidth={1.3} />
-      </span>
-      <span aria-hidden="true" className="shop-store-logo">
-        {/* Logo déjà optimisé (WebP carré). */}
-        {store.logoUrl ? <img alt="" height={72} loading="lazy" src={store.logoUrl} width={72} /> : initials(store.name)}
-      </span>
-      <strong>{store.name}</strong>
-      <small>
-        <MapPin aria-hidden="true" size={13} /> {[store.city, countryName(store.country)].filter(Boolean).join(", ")}
-      </small>
-      <span className="shop-store-meta">
-        {store.rating !== null && (
-          <span>
-            <Star aria-hidden="true" fill="currentColor" size={13} /> {store.rating.toLocaleString("fr-FR")}
-          </span>
-        )}
-        <span>
-          <Package aria-hidden="true" size={13} /> {store.productCount} produit{store.productCount > 1 ? "s" : ""}
-        </span>
-      </span>
-      {store.activity && <span className="shop-store-activity">{store.activity}</span>}
-    </a>
   );
 }
 

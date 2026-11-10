@@ -28,7 +28,9 @@ type CartContextValue = {
   clear: () => void;
 };
 
-const storageKey = "prestafrik-panier-v1";
+export const storageKey = "prestafrik-panier-v1";
+/** Événement envoyé à chaque modification d'un panier (même onglet). */
+export const cartChangeEvent = "prestafrik-panier";
 const cartSchema = z.array(
   z.object({
     productId: z.string().cuid(),
@@ -84,6 +86,8 @@ export function StoreCartProvider({
     try {
       if (nextItems.length) localStorage.setItem(key, JSON.stringify(nextItems));
       else localStorage.removeItem(key);
+      // Compteur du panier de la marketplace (en-tête) : mis à jour sans recharger la page.
+      window.dispatchEvent(new Event(cartChangeEvent));
       return true;
     } catch {
       setError("Le panier n’a pas pu être enregistré sur cet appareil.");

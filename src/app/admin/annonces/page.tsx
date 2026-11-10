@@ -1,5 +1,5 @@
 import "@/styles/admin-content.css";
-import { ArrowDown, ArrowUp, Building2, Eye, EyeOff, Handshake, ImagePlus, LayoutDashboard, Link2, Monitor, MousePointerClick, ShoppingBag, Smartphone, Store, Trash2, type LucideIcon } from "lucide-react";
+import { ArrowDown, ArrowUp, Building2, Eye, EyeOff, Handshake, ImagePlus, LayoutDashboard, LayoutTemplate, Link2, Monitor, MousePointerClick, Search, ShoppingBag, Smartphone, Store, Trash2, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import type { AnnouncementPlacement, PlatformAnnouncement } from "@prisma/client";
 import { AdminFeedback } from "@/components/admin/admin-feedback";
@@ -23,11 +23,34 @@ const spaces: Record<"marketplace" | "tableau-de-bord", { label: string; icon: L
         id: "shopping",
         title: "Shopping",
         icon: ShoppingBag,
-        text: "Ordinateur : grand diaporama et deux visuels à côté. Téléphone : une seule bannière.",
+        text: "Haut de l’accueil : grand diaporama, et à droite « Devenir vendeur » puis un visuel. Sur téléphone, « Devenir vendeur » passe en premier.",
         slots: [
-          { placement: "SHOP_CAROUSEL", title: "Grand diaporama", device: "ordinateur", size: "1600 × 600 px", max: 6, help: "Une image toutes les 5 secondes." },
-          { placement: "SHOP_BANNER", title: "Visuels à côté", device: "ordinateur", size: "1200 × 450 px", max: 2, help: "Deux visuels empilés à droite du diaporama." },
-          { placement: "SHOP_MOBILE", title: "Bannière téléphone", device: "téléphone", size: "1200 × 600 px", max: 1, help: "Remplace le diaporama et les visuels sur téléphone." },
+          { placement: "SHOP_CAROUSEL", title: "Grand diaporama du héros", device: "tous", size: "1744 × 1040 px", max: 6, help: "Une image toutes les 6 secondes. Sans image : le visuel provisoire de la maquette." },
+          { placement: "SHOP_SELLER", title: "Bannière « Devenir vendeur »", device: "tous", size: "848 × 496 px", max: 1, help: "Toujours vers /boutique (destination des publicités). Le lien saisi est ignoré." },
+          { placement: "SHOP_BANNER", title: "Visuel sous « Devenir vendeur »", device: "tous", size: "848 × 496 px", max: 1, help: "À droite du diaporama, sous la bannière vendeur." },
+        ],
+      },
+      {
+        id: "blocs",
+        title: "Blocs publicitaires de l’accueil",
+        icon: LayoutTemplate,
+        text: "Les emplacements entre les produits, dans l’ordre de la page. Sans image : le visuel provisoire de la maquette.",
+        slots: [
+          { placement: "SHOP_FEATURED_COLUMN", title: "Colonne à gauche des « Produits phares »", device: "ordinateur", size: "624 × 1432 px", max: 1, help: "Grande colonne verticale. Masquée sur tablette et téléphone." },
+          { placement: "SHOP_DUO", title: "Deux bannières côte à côte", device: "tous", size: "1296 × 672 px", max: 2, help: "Sous les « Produits phares ». L’une sous l’autre sur téléphone." },
+          { placement: "SHOP_COLUMN_TOP", title: "Colonne de droite, visuel du haut", device: "tous", size: "624 × 856 px", max: 1, help: "À droite du second bloc de produits." },
+          { placement: "SHOP_COLUMN_BOTTOM", title: "Colonne de droite, visuel du bas", device: "tous", size: "624 × 528 px", max: 1, help: "Sous le visuel du haut." },
+          { placement: "SHOP_WIDE", title: "Grande bannière", device: "tous", size: "2876 × 848 px", max: 1, help: "Pleine largeur, avant les mini-listes." },
+        ],
+      },
+      {
+        id: "pages",
+        title: "Recherche et menu",
+        icon: Search,
+        text: "Visuels de la page de recherche et du grand menu des catégories.",
+        slots: [
+          { placement: "SHOP_SEARCH_SIDE", title: "Colonne des filtres (recherche)", device: "ordinateur", size: "624 × 1150 px", max: 1, help: "Sous les filtres de la page de recherche." },
+          { placement: "SHOP_MENU", title: "Grand menu « Toutes les catégories »", device: "ordinateur", size: "624 × 768 px", max: 1, help: "À droite des produits de la catégorie survolée." },
         ],
       },
       {

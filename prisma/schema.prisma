@@ -449,6 +449,7 @@ model Product {
   orderItems          OrderItem[]
   reservations        StockReservation[]
   reviews             ProductReview[]
+  likes               ProductLike[]
   banners             StoreBanner[]
   popups              StorePopup[]
   marketplacePicks    MarketplacePick[]
@@ -1085,6 +1086,17 @@ model ProductReview {
   @@index([storeId, status, createdAt])
 }
 
+/// « J'aime » laissé par un visiteur de la marketplace sur un produit : un par visiteur (cookie anonyme
+/// « pa_visiteur ») et par produit. Le total est affiché sur la fiche produit.
+model ProductLike {
+  productId String
+  visitorId String   @db.VarChar(64)
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([productId, visitorId])
+}
+
 /// Anciennes adresses d'une boutique (après un changement de nom) : elles redirigent vers l'adresse actuelle,
 /// pour que les liens déjà partagés et les QR codes imprimés continuent de fonctionner.
 model StoreSlugAlias {
@@ -1214,6 +1226,21 @@ enum AnnouncementPlacement {
   SHOP_IMMO
   /// Marketplace, univers Services : une seule bannière (ordinateur et téléphone).
   SHOP_SERVICES
+  /// Marketplace : bannière « Devenir vendeur » du héros (ordinateur et téléphone).
+  SHOP_SELLER
+  /// Marketplace : grande colonne à gauche des « Produits phares ».
+  SHOP_FEATURED_COLUMN
+  /// Marketplace : deux bannières côte à côte.
+  SHOP_DUO
+  /// Marketplace : colonne à droite du second bloc de produits (visuel du haut, puis du bas).
+  SHOP_COLUMN_TOP
+  SHOP_COLUMN_BOTTOM
+  /// Marketplace : grande bannière pleine largeur.
+  SHOP_WIDE
+  /// Marketplace : visuel de la colonne des filtres (page de recherche).
+  SHOP_SEARCH_SIDE
+  /// Marketplace : visuel du grand menu « Toutes les catégories ».
+  SHOP_MENU
 }
 
 /// Annonce de PrestAfrik affichée en haut du tableau de bord des vendeurs (Administration → Annonces) :
@@ -1280,8 +1307,12 @@ enum MarketplacePickSection {
   FLASH
   /// Offres exclusives PrestAfrik : produits.
   EXCLUSIVE
-  /// Boutiques à la une : boutiques.
+  /// Boutiques à la une : boutiques (leurs produits passent aussi devant les autres).
   FEATURED_STORE
+  /// Bonne affaire vedette : le grand produit, à gauche du bloc « Les bonnes affaires ».
+  DEAL_LEAD
+  /// Boutique exclue de la marketplace (sa vitrine reste en ligne).
+  EXCLUDED_STORE
 }
 
 /// Sélection de l'administration pour la marketplace (seule l'administration la gère) : un produit

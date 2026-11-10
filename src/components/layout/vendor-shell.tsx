@@ -57,6 +57,17 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
         <UserMenu adminLink={showAdminLink} userEmail={accountContact(session.user)} userImage={session.user.image ?? null} userName={session.user.name} />
       </header>
       {!isAccountVerified(session.user) && <EmailVerificationBanner />}
+      {/* Boutique pas encore publiée : rappel sur toutes les pages ; les étapes sont sur l'accueil. */}
+      {!store.isPublished && !store.suspendedAt && (
+        <p className="v-banner v-banner-warning vendor-unpublished-banner" role="status">
+          <span>
+            <strong>{store.name} n’est pas encore en ligne :</strong> vos clients ne la voient pas encore, et elle n’apparaît pas sur la marketplace.
+          </span>
+          <Link className="btn btn-primary btn-sm" href="/dashboard#publication-title">
+            Voir les étapes pour la publier
+          </Link>
+        </p>
+      )}
       {store.suspendedAt && (
         <p className="v-banner v-banner-danger vendor-suspension-banner" role="alert">
           <strong>{store.name} est suspendue par l’équipe PrestAfrik.</strong> Vos clients ne la voient plus. Motif : {store.suspensionReason ?? "non précisé"}. Répondez à l’e-mail reçu pour la rétablir.

@@ -1,4 +1,4 @@
-import { Apple, Baby, BookOpen, Building2, Car, Dumbbell, Footprints, Gem, Glasses, HeartPulse, Palette, Shirt, Smartphone, Sofa, Sparkles, Store, Tv, Wrench, type LucideIcon } from "lucide-react";
+import { Apple, Baby, BookOpen, Building2, Car, Dumbbell, Footprints, Gem, Glasses, HeartPulse, Palette, Shirt, Smartphone, Sofa, Sparkles, Store, Tv, Wrench, type LucideIcon } from "@/components/ui/icon-set";
 
 /**
  * Icône et teinte de chaque rubrique de la marketplace (activités des boutiques, migration

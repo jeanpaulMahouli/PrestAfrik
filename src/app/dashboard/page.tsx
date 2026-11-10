@@ -6,6 +6,7 @@ import { AnnouncementBanner, AnnouncementCarousel } from "@/components/dashboard
 import { CommunityBlock } from "@/components/dashboard/community";
 import { dayMoment } from "@/components/dashboard/greeting";
 import { LiveGreeting } from "@/components/dashboard/live-greeting";
+import { UnpublishedNotice } from "@/components/dashboard/unpublished-notice";
 import { WelcomeNoStore } from "@/components/dashboard/welcome-no-store";
 import { InstallAppCard, StoreLaunchDialog } from "@/components/pwa/install-app";
 import { TimeSeriesChart } from "@/components/dashboard/time-series-chart";
@@ -21,6 +22,8 @@ import { formatDateTime, formatFcfa, formatReference, plural } from "@/lib/forma
 import { photoVariant } from "@/lib/product-photos";
 import { storePublicUrl } from "@/lib/urls";
 import { hasPermission } from "@/modules/auth/permissions";
+import { isAccountVerified } from "@/modules/auth/phone-account";
+import { getPublicationChecklist } from "@/modules/stores/publication";
 import { requireWhatsappNumber } from "@/modules/auth/google";
 import { auth } from "@/modules/auth/server";
 import { isPlatformAdmin } from "@/modules/admin/context";
@@ -61,11 +64,13 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   const { session, store, membership } = await getStoreContext();
   const period = resolveDashboardPeriod(params.periode);
-  const [stats, overview, draft, announcements] = await Promise.all([
+  const [stats, overview, draft, announcements, publication] = await Promise.all([
     getDashboardStats(store.id, period),
     getDashboardOverview(store.id, period.from, period.to),
     findDraft(session.user.id),
     getDashboardAnnouncements(),
+    // Boutique pas encore publiée : ce qui manque, affiché en tête de l'accueil.
+    store.isPublished ? null : getPublicationChecklist(store.id, isAccountVerified(session.user)),
   ]);
   const can = (permission: Parameters<typeof hasPermission>[1]) => hasPermission(membership.role, permission);
   const firstName = session.user.name.trim().split(/\s+/)[0] || session.user.name;
@@ -100,6 +105,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <ShareStoreButton className="btn btn-primary" label="Partager" published={store.isPublished} storeName={store.name} storeUrl={publicUrl} />
         </div>
       </div>
+
+      {publication && <UnpublishedNotice canPublish={hasPermission(membership.role, "store.manage")} checklist={publication} previewHref={publicUrl} />}
 
       <InstallAppCard />
 

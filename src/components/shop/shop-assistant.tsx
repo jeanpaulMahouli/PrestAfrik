@@ -1,18 +1,19 @@
 "use client";
 
-import { Bot, HandCoins, PackageSearch, Rocket, Search, Truck, Wallet, X } from "lucide-react";
+import type { Icon } from "@phosphor-icons/react";
+import { ChatCircleDots, HandCoins, MagnifyingGlass, Package, RocketLaunch, Truck, Wallet, X } from "@phosphor-icons/react/ssr";
 import { useEffect, useRef, useState } from "react";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { WhatsappMark } from "./whatsapp-mark";
 
 type Link = { label: string; href: string };
 type Topic = "produit" | "budget" | "commander" | "suivi" | "vendre";
 
-const topics: { id: Topic; icon: typeof Bot; label: string }[] = [
-  { id: "produit", icon: PackageSearch, label: "Je cherche un produit" },
+const topics: { id: Topic; icon: Icon; label: string }[] = [
+  { id: "produit", icon: Package, label: "Je cherche un produit" },
   { id: "budget", icon: Wallet, label: "J’ai un petit budget" },
   { id: "commander", icon: HandCoins, label: "Comment commander ?" },
   { id: "suivi", icon: Truck, label: "Suivre ma commande" },
-  { id: "vendre", icon: Rocket, label: "Je veux vendre ici" },
+  { id: "vendre", icon: RocketLaunch, label: "Je veux vendre ici" },
 ];
 
 /**
@@ -51,14 +52,14 @@ export function ShopAssistant({ categories, budgets, searchHref, signupHref, wha
         <section aria-labelledby="shop-assistant-title" className="shop-assistant" role="dialog">
           <header className="shop-assistant-head">
             <span aria-hidden="true" className="shop-assistant-avatar">
-              <Bot size={20} />
+              <ChatCircleDots size={22} weight="fill" />
             </span>
             <div>
               <h2 id="shop-assistant-title">Votre guide PrestAfrik</h2>
               <p>Assistant automatique · répond tout de suite</p>
             </div>
             <button aria-label="Fermer l’assistant" className="shop-assistant-close" onClick={() => setOpen(false)} type="button">
-              <X aria-hidden="true" size={18} />
+              <X aria-hidden="true" size={20} />
             </button>
           </header>
           <div aria-live="polite" className="shop-assistant-log">
@@ -67,7 +68,7 @@ export function ShopAssistant({ categories, budgets, searchHref, signupHref, wha
               <div className="shop-assistant-choices">
                 {topics.map(({ id, icon: Icon, label: text }) => (
                   <button key={id} onClick={() => setTopic(id)} type="button">
-                    <Icon aria-hidden="true" size={17} /> {text}
+                    <Icon aria-hidden="true" size={20} /> {text}
                   </button>
                 ))}
               </div>
@@ -89,7 +90,7 @@ export function ShopAssistant({ categories, budgets, searchHref, signupHref, wha
                       </label>
                       <input id="shop-assistant-query" onChange={(event) => setQuery(event.target.value)} placeholder="Ex. robe wax, savon, chaussures…" value={query} />
                       <button aria-label="Rechercher" type="submit">
-                        <Search aria-hidden="true" size={18} />
+                        <MagnifyingGlass aria-hidden="true" size={20} />
                       </button>
                     </form>
                     <div className="shop-assistant-links">
@@ -115,7 +116,7 @@ export function ShopAssistant({ categories, budgets, searchHref, signupHref, wha
                 )}
                 {topic === "commander" && (
                   <p className="shop-bubble">
-                    C’est simple : 1. choisissez un produit, 2. commandez sur la boutique du vendeur (sans créer de compte), 3. le vendeur vous confirme sur WhatsApp, 4. vous payez à la livraison.
+                    C’est simple : 1. choisissez un produit et ajoutez-le au panier, 2. commandez ici, sur PrestAfrik (sans créer de compte), 3. le vendeur vous confirme sur WhatsApp, 4. vous payez à la livraison.
                   </p>
                 )}
                 {topic === "suivi" && (
@@ -134,7 +135,7 @@ export function ShopAssistant({ categories, budgets, searchHref, signupHref, wha
                 <div className="shop-assistant-links">
                   {whatsapp && (
                     <a href={whatsapp} rel="noopener noreferrer" target="_blank">
-                      <WhatsAppIcon size={16} variant="logo" /> Écrire à l’équipe
+                      <WhatsappMark size={18} /> Écrire à l’équipe
                     </a>
                   )}
                   <button onClick={() => setTopic(null)} type="button">
@@ -155,7 +156,7 @@ export function ShopAssistant({ categories, budgets, searchHref, signupHref, wha
         ref={buttonRef}
         type="button"
       >
-        {open ? <X aria-hidden="true" size={24} /> : <Bot aria-hidden="true" size={26} />}
+        {open ? <X aria-hidden="true" size={26} /> : <ChatCircleDots aria-hidden="true" size={30} weight="fill" />}
       </button>
     </>
   );

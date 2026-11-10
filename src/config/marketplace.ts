@@ -8,6 +8,19 @@ export const shopUniverses = {
 } as const;
 
 export type ShopUniverse = keyof typeof shopUniverses;
+
+/**
+ * Catégories prioritaires sur la marketplace, dans l'ordre : vêtements et beauté, puis électronique et
+ * accessoires. Elles passent en premier (catégories, rangées de produits, bonnes affaires, résultats) ;
+ * les autres suivent dans l'ordre de l'administration.
+ */
+export const categoryPriority = ["vetements-mode", "beaute-cosmetiques", "electronique", "accessoires"] as const;
+
+/** Rang d'une catégorie (0 = la plus prioritaire). */
+export function categoryRank(slug: string | null | undefined) {
+  const index = slug ? (categoryPriority as readonly string[]).indexOf(slug) : -1;
+  return index === -1 ? categoryPriority.length : index;
+}
 export const shopUniverseKeys = Object.keys(shopUniverses) as ShopUniverse[];
 export const shopUniverseCookie = "shop_univers";
 export const shopCityCookie = "shop_ville";
