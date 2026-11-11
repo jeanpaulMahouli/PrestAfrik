@@ -1,14 +1,15 @@
 import { Store } from "lucide-react";
 import { storePublicUrl } from "@/lib/urls";
-import { getTopStores } from "@/modules/marketplace/search";
+import { getMostVisitedStores } from "@/modules/marketplace/search";
 import { bestStores } from "./content";
 
 /**
- * « Visitez nos meilleures boutiques » : les 5 boutiques en ligne les mieux classées (avis clients, puis
- * produits en ligne ; voir getTopStores), chacune dans un cercle avec son logo. Rien n'est affiché sans boutique.
+ * « Visitez nos meilleures boutiques » : les 5 boutiques en ligne les plus visitées (voir getMostVisitedStores),
+ * de la plus visitée à la moins visitée, chacune dans un cercle avec son logo. Le nom reste lu par les lecteurs
+ * d'écran et s'affiche au survol. Rien n'est affiché sans boutique.
  */
 export async function BestStores() {
-  const stores = await getTopStores(bestStores.count).catch(() => []);
+  const stores = await getMostVisitedStores(bestStores.count).catch(() => []);
   if (!stores.length) return null;
 
   return (
@@ -16,7 +17,7 @@ export async function BestStores() {
       <h2 className="lp-best-stores__title" id="best-stores-title">
         {bestStores.title}
       </h2>
-      <ul className="lp-best-stores__list">
+      <ol className="lp-best-stores__list">
         {stores.map((store) => {
           const initials = store.name
             .split(/\s+/)
@@ -24,20 +25,17 @@ export async function BestStores() {
             .slice(0, 2)
             .map((part) => part[0]?.toLocaleUpperCase("fr-FR"))
             .join("");
+          const label = store.city ? `${store.name}, ${store.city}` : store.name;
           return (
             <li key={store.id}>
-              <a className="lp-best-store" href={storePublicUrl(store.slug)} rel="noopener" target="_blank">
-                <span aria-hidden="true" className="lp-best-store__circle">
-                  {/* Logos déjà optimisés (WebP) : affichés tels quels. */}
-                  {store.logoUrl ? <img alt="" height={120} loading="lazy" src={store.logoUrl} width={120} /> : initials || <Store size={32} />}
-                </span>
-                <span className="lp-best-store__name">{store.name}</span>
-                {store.city && <span className="lp-best-store__city">{store.city}</span>}
+              <a aria-label={`${label} (nouvel onglet)`} className="lp-best-store" href={storePublicUrl(store.slug)} rel="noopener" target="_blank" title={label}>
+                {/* Logos déjà optimisés (WebP) : affichés tels quels. */}
+                {store.logoUrl ? <img alt="" height={96} loading="lazy" src={store.logoUrl} width={96} /> : <span aria-hidden="true">{initials || <Store size={24} />}</span>}
               </a>
             </li>
           );
         })}
-      </ul>
+      </ol>
     </section>
   );
 }

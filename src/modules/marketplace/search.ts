@@ -1,6 +1,7 @@
 import "server-only";
 
 import { z } from "zod";
+import { dayColumn } from "@/lib/dashboard-periods";
 import { prisma } from "@/lib/prisma";
 import { photoVariant } from "@/lib/product-photos";
 import { storePublicUrl } from "@/lib/urls";
@@ -202,4 +203,32 @@ export async function getTopStores(take = 10): Promise<SearchableStore[]> {
     .filter((store) => (productCount.get(store.id) ?? 0) > 0)
     .sort((a, b) => (ratingScore.get(b.id) ?? 0) - (ratingScore.get(a.id) ?? 0) || (productCount.get(b.id) ?? 0) - (productCount.get(a.id) ?? 0) || a.createdAt.getTime() - b.createdAt.getTime())
     .slice(0, take);
+}
+
+/**
+ * Boutiques les plus visitées (accueil, « Visitez nos meilleures boutiques ») : visites des 30 derniers jours,
+ * puis visites depuis l'ouverture. Seules les boutiques en ligne avec au moins un produit sont retenues ; s'il
+ * en manque, la liste est complétée par le classement de getTopStores.
+ */
+export async function getMostVisitedStores(take = 5, now = new Date()): Promise<SearchableStore[]> {
+  const stores = await loadIndex();
+  if (!stores.length) return [];
+  const ids = stores.map((store) => store.id);
+  const since = dayColumn(new Date(now.getTime() - 30 * 86_400_000));
+  const [recent, allTime, products] = await Promise.all([
+    prisma.storeVisitDay.groupBy({ by: ["storeId"], where: { storeId: { in: ids }, day: { gte: since } }, _sum: { visits: true } }),
+    prisma.storeVisitDay.groupBy({ by: ["storeId"], where: { storeId: { in: ids } }, _sum: { visits: true } }),
+    prisma.product.groupBy({ by: ["storeId"], where: { storeId: { in: ids }, status: "ACTIVE", archivedAt: null }, _count: { _all: true } }),
+  ]);
+  const recentVisits = new Map(recent.map((row) => [row.storeId, row._sum.visits ?? 0]));
+  const totalVisits = new Map(allTime.map((row) => [row.storeId, row._sum.visits ?? 0]));
+  const withProducts = new Set(products.filter((row) => row._count._all > 0).map((row) => row.storeId));
+  const visited = stores
+    .filter((store) => withProducts.has(store.id) && (totalVisits.get(store.id) ?? 0) > 0)
+    .sort((a, b) => (recentVisits.get(b.id) ?? 0) - (recentVisits.get(a.id) ?? 0) || (totalVisits.get(b.id) ?? 0) - (totalVisits.get(a.id) ?? 0))
+    .slice(0, take);
+  if (visited.length >= take) return visited;
+  const chosen = new Set(visited.map((store) => store.id));
+  const fill = (await getTopStores(take * 2)).filter((store) => !chosen.has(store.id));
+  return [...visited, ...fill].slice(0, take);
 }

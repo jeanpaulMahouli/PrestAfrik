@@ -1795,25 +1795,17 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: clamp(18px, 3vw, 56px);
+  gap: clamp(14px, 2.4vw, 40px);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* Un cercle par boutique (logo, sinon initiales) ; nom au survol et pour les lecteurs d'écran. */
 .lp-best-store {
   display: grid;
-  justify-items: center;
-  gap: 8px;
-  width: clamp(104px, 10vw, 168px);
-  color: var(--lp-ink);
-  text-decoration: none;
-}
-
-.lp-best-store__circle {
-  display: grid;
   place-items: center;
-  width: clamp(88px, 8.4vw, 144px);
+  width: clamp(64px, 6vw, 104px);
   aspect-ratio: 1;
   overflow: hidden;
   border: 3px solid #fff;
@@ -1821,37 +1813,46 @@
   background: linear-gradient(135deg, var(--lp-peach), var(--lp-orange));
   box-shadow:
     0 0 0 2px rgba(255, 153, 0, 0.55),
-    0 12px 28px rgba(0, 0, 38, 0.12);
+    0 10px 24px rgba(0, 0, 38, 0.12);
   color: var(--lp-navy);
-  font: 700 clamp(1.4rem, 2.2vw, 2.4rem) / 1 var(--lp-ui);
+  font: 700 clamp(1.1rem, 1.6vw, 1.75rem) / 1 var(--lp-ui);
+  text-decoration: none;
   transition:
     transform 0.25s ease,
     box-shadow 0.25s ease;
 }
 
-.lp-best-store__circle img {
+.lp-best-store img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   background: #fff;
 }
 
-.lp-best-store:is(:hover, :focus-visible) .lp-best-store__circle {
-  transform: translateY(-4px) scale(1.04);
+.lp-best-store:is(:hover, :focus-visible) {
+  transform: translateY(-4px) scale(1.05);
   box-shadow:
     0 0 0 3px var(--lp-orange),
-    0 16px 32px rgba(0, 0, 38, 0.16);
+    0 14px 28px rgba(0, 0, 38, 0.16);
 }
 
-.lp-best-store__name {
-  font: 600 clamp(0.9rem, 1vw, 1.1rem) / 1.25 var(--lp-ui);
-  overflow-wrap: anywhere;
-}
+/* Téléphone : les cinq cercles sur une seule ligne. */
+@media (max-width: 767px) {
+  .lp-best-stores__list {
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
 
-.lp-best-store__city {
-  margin-top: -4px;
-  color: var(--lp-ink-soft);
-  font-size: 0.85rem;
+  .lp-best-stores__list li {
+    flex: 0 1 56px;
+    min-width: 0;
+  }
+
+  .lp-best-store {
+    width: 100%;
+    border-width: 2px;
+    font-size: 1rem;
+  }
 }
 
 /* ---------- Tableau de bord : fenêtre Windows ---------- */
