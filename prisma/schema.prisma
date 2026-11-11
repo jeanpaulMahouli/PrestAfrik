@@ -176,7 +176,10 @@ model User {
   appInstalledAt             DateTime?
   appLastOpenedAt            DateTime?
   appPlatform                String?                @db.VarChar(12)
+  /// Dernier rappel push « Vous nous manquez » (vendeur absent depuis 2 jours) : un seul par absence.
+  lastInactivityPushAt       DateTime?
   appUsageDays               AppUsageDay[]
+  pushSubscriptions          PushSubscription[]
   supportTickets             SupportTicket[]        @relation("SupportTicketRequester")
   assignedTickets            SupportTicket[]        @relation("SupportTicketAssignee")
   supportReplies             SupportTicketMessage[]
@@ -1319,4 +1322,57 @@ model ProspectionMessage {
   key       String   @id @db.VarChar(24)
   body      String   @db.VarChar(1000)
   updatedAt DateTime @updatedAt
+}
+
+enum PushNotificationKind {
+  /// Vendeur sans connexion depuis 2 jours : « Vous nous manquez ».
+  INACTIVITY
+  NEW_ORDER
+  /// Réponse de l'équipe PrestAfrik à un message du vendeur.
+  NEW_MESSAGE
+  /// Nouveauté de PrestAfrik, envoyée à la main depuis l'administration.
+  NEWS
+}
+
+/// Appareil d'un vendeur abonné aux notifications push (navigateur ou application installée).
+/// Les clés viennent du navigateur (PushSubscription) ; l'appareil est retiré dès que le service push le refuse.
+model PushSubscription {
+  id            String    @id @default(cuid())
+  userId        String
+  endpoint      String    @unique
+  p256dh        String    @db.VarChar(200)
+  auth          String    @db.VarChar(100)
+  userAgent     String?   @db.VarChar(300)
+  createdAt     DateTime  @default(now())
+  lastSuccessAt DateTime?
+  failureCount  Int       @default(0)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Textes des notifications push, modifiables dans l'administration (Notifications push).
+/// Sans ligne en base, le texte par défaut du code est utilisé (src/modules/push/templates.ts).
+model PushNotificationTemplate {
+  kind      PushNotificationKind @id
+  enabled   Boolean              @default(true)
+  title     String               @db.VarChar(80)
+  body      String               @db.VarChar(240)
+  url       String               @db.VarChar(200)
+  updatedAt DateTime             @updatedAt
+}
+
+/// Historique des envois (un par notification automatique ou par envoi manuel de l'administration).
+model PushNotificationLog {
+  id         String               @id @default(cuid())
+  kind       PushNotificationKind
+  title      String               @db.VarChar(80)
+  body       String               @db.VarChar(240)
+  recipients Int                  @default(0)
+  delivered  Int                  @default(0)
+  sentById   String?
+  createdAt  DateTime             @default(now())
+
+  @@index([createdAt])
+  @@index([kind, createdAt])
 }

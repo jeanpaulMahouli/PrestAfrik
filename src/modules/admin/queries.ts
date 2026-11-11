@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Prisma, StoreRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { userCityFromStores } from "@/modules/geo";
 import { classifyFailure, subscriptionDisplay, type FailureReason } from "@/modules/admin/display";
 import { isStoreSubscriptionPaused } from "@/modules/subscriptions/dates";
 
@@ -189,10 +190,27 @@ export async function listFailedMessages(hours: number, reason?: FailureReason) 
 
 /* ---------- Utilisateurs ---------- */
 
-export async function listAdminUsers({ query = "", page = 1, take = adminPageSize }: { query?: string; page?: number; take?: number }) {
-  const where: Prisma.UserWhereInput = query
+export const userFilters = ["all", "whatsapp-to-validate", "whatsapp-validated", "whatsapp-missing"] as const;
+export type UserFilter = (typeof userFilters)[number];
+
+const userFilterWhere: Record<UserFilter, Prisma.UserWhereInput> = {
+  all: {},
+  "whatsapp-to-validate": { phoneNumber: { not: null }, phoneNumberVerified: false },
+  "whatsapp-validated": { phoneNumber: { not: null }, phoneNumberVerified: true },
+  "whatsapp-missing": { phoneNumber: null },
+};
+
+/** Nombre de comptes par filtre (onglets de la page Utilisateurs). */
+export async function countAdminUsersByFilter() {
+  const counts = await Promise.all(userFilters.map((filter) => prisma.user.count({ where: userFilterWhere[filter] })));
+  return Object.fromEntries(userFilters.map((filter, i) => [filter, counts[i]])) as Record<UserFilter, number>;
+}
+
+export async function listAdminUsers({ query = "", page = 1, take = adminPageSize, filter = "all" }: { query?: string; page?: number; take?: number; filter?: UserFilter }) {
+  const search: Prisma.UserWhereInput = query
     ? { OR: [{ name: { contains: query, mode: "insensitive" } }, { email: { contains: query, mode: "insensitive" } }, { phoneNumber: { contains: query.replace(/[^\d+]/g, "") || query } }] }
     : {};
+  const where: Prisma.UserWhereInput = { AND: [search, userFilterWhere[filter]] };
   const [total, users] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
@@ -212,7 +230,7 @@ export async function listAdminUsers({ query = "", page = 1, take = adminPageSiz
         platformRole: true,
         suspendedAt: true,
         createdAt: true,
-        memberships: { orderBy: { createdAt: "asc" }, select: { role: true, store: { select: { name: true } } } },
+        memberships: { orderBy: { createdAt: "asc" }, select: { role: true, store: { select: { name: true, city: true } } } },
       },
     }),
   ]);
@@ -224,7 +242,8 @@ export async function listAdminUsers({ query = "", page = 1, take = adminPageSiz
     total,
     users: users.map((user) => ({
       ...user,
-      memberships: user.memberships as { role: StoreRole; store: { name: string } }[],
+      memberships: user.memberships as { role: StoreRole; store: { name: string; city: string | null } }[],
+      city: userCityFromStores(user.memberships.map((membership) => ({ city: membership.store.city, owner: membership.role === "OWNER" }))),
       lastSeenAt: lastSeen.get(user.id) ?? null,
     })),
   };

@@ -5,6 +5,7 @@ import { formatFcfa, formatReference } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { storePublicUrl } from "@/lib/urls";
 import { sendEmailQuietly } from "@/modules/email/server";
+import { pushNewOrder } from "@/modules/push/triggers";
 
 const appUrl = (path: string) => new URL(path, process.env.BETTER_AUTH_URL ?? "http://localhost:3000").toString();
 
@@ -24,8 +25,9 @@ export function notifyStorePublished(storeId: string) {
   });
 }
 
-/** E21 — nouvelle commande, au propriétaire (envoyé après la réponse au client). */
+/** E21 — nouvelle commande, au propriétaire (envoyé après la réponse au client), et notification push à l’équipe. */
 export function notifyNewOrder(orderReference: string, storeId: string) {
+  after(() => pushNewOrder(storeId, orderReference));
   after(async () => {
     const order = await prisma.order.findUnique({
       where: { storeId_reference: { storeId, reference: orderReference } },

@@ -8,13 +8,22 @@ import { Pagination } from "@/components/ui/pagination";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { formatDate, formatTime } from "@/lib/format";
 import { restoreUser, sendUserPasswordReset, suspendUser } from "@/modules/admin/actions";
+import { unverifyUserPhone, verifyUserPhone } from "@/modules/admin/account-actions";
 import { isAdminRole, requirePlatformAdmin } from "@/modules/admin/context";
-import { adminPageSize, listAdminUsers } from "@/modules/admin/queries";
-import { accountContact, isAccountVerified } from "@/modules/auth/phone-account";
+import { adminPageSize, countAdminUsersByFilter, listAdminUsers, userFilters, type UserFilter } from "@/modules/admin/queries";
+import { accountContact, formatPhoneForDisplay, isAccountVerified, isPlaceholderEmail } from "@/modules/auth/phone-account";
+import { buildWaMeUrl } from "@/modules/whatsapp/wa-me";
 
 export const metadata = { title: "Utilisateurs" };
 
 const roleLabels = { OWNER: "Propriétaire", MANAGER: "Gestionnaire", ORDER_PREPARER: "Préparateur" } as const;
+
+const filterLabels: Record<UserFilter, string> = {
+  all: "Tous",
+  "whatsapp-to-validate": "WhatsApp à valider",
+  "whatsapp-validated": "WhatsApp validé",
+  "whatsapp-missing": "Sans numéro",
+};
 
 function lastSeen(date: Date | null, now = new Date()) {
   if (!date) return "Jamais";
@@ -30,15 +39,26 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
   const params = await searchParams;
   const query = searchValue(params, "q");
   const page = Math.max(1, Math.min(1000, Number(searchValue(params, "page")) || 1));
-  const result = await listAdminUsers({ query, page });
+  const requested = searchValue(params, "filtre") as UserFilter;
+  const filter: UserFilter = userFilters.includes(requested) ? requested : "all";
+  const [result, counts] = await Promise.all([listAdminUsers({ query, page, filter }), countAdminUsersByFilter()]);
   const retour = currentPath("/admin/utilisateurs", params);
+  const listHref = (next: { filtre?: UserFilter; page?: number }) => {
+    const search = new URLSearchParams();
+    if (query) search.set("q", query);
+    const nextFilter = next.filtre ?? filter;
+    if (nextFilter !== "all") search.set("filtre", nextFilter);
+    if (next.page && next.page > 1) search.set("page", String(next.page));
+    const value = search.toString();
+    return value ? `/admin/utilisateurs?${value}` : "/admin/utilisateurs";
+  };
 
   return (
     <>
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Utilisateurs</h1>
-          <p className="v-page-subtitle">Retrouvez les comptes de la plateforme, leurs boutiques et leurs rôles.</p>
+          <p className="v-page-subtitle">Retrouvez les comptes de la plateforme, leurs boutiques et leurs rôles, et validez leur numéro WhatsApp.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <a
@@ -54,13 +74,22 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
       </div>
       <AdminFeedback params={params} />
       <p className="v-banner v-banner-info">
-        Ouvrez <strong>Gérer le compte</strong> pour modifier les informations d’un compte, le confirmer, le déconnecter, le suspendre ou le supprimer. Les mots de passe ne sont jamais visibles.
+        Le <strong>numéro WhatsApp</strong> est notre contact principal avec chaque vendeur : écrivez-lui (clic sur le numéro), puis cliquez sur <strong>Valider le numéro</strong> quand il répond. Ouvrez <strong>Gérer le compte</strong> pour corriger un numéro, confirmer, déconnecter, suspendre ou supprimer un compte. Les mots de passe ne sont jamais visibles.
       </p>
+
+      <nav aria-label="Filtrer les utilisateurs" className="pill-tabs">
+        {userFilters.map((key) => (
+          <Link aria-current={filter === key ? "page" : undefined} href={listHref({ filtre: key })} key={key}>
+            {filterLabels[key]} ({counts[key]})
+          </Link>
+        ))}
+      </nav>
 
       <section className="v-card v-card-flush">
         <form className="admin-search" role="search">
           <label className="visually-hidden" htmlFor="admin-user-search">Rechercher un compte</label>
-          <input defaultValue={query} id="admin-user-search" maxLength={100} name="q" placeholder="Rechercher par nom ou adresse e-mail" type="search" />
+          {filter !== "all" && <input name="filtre" type="hidden" value={filter} />}
+          <input defaultValue={query} id="admin-user-search" maxLength={100} name="q" placeholder="Rechercher par nom, e-mail ou numéro" type="search" />
           <button className="btn btn-secondary" type="submit">Rechercher</button>
         </form>
         {result.users.length ? (
@@ -68,8 +97,10 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
             <thead>
               <tr>
                 <th scope="col">Nom</th>
-                <th scope="col">Contact</th>
+                <th scope="col">Numéro WhatsApp</th>
+                <th scope="col">E-mail</th>
                 <th scope="col">Boutiques et rôles</th>
+                <th scope="col">Ville</th>
                 <th scope="col">Dernière connexion</th>
                 <th scope="col">Statut</th>
                 <th scope="col">Actions</th>
@@ -89,13 +120,40 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                       </span>
                     </span>
                   </td>
-                  <td data-label="Contact">
-                    {accountContact(user)}
+                  <td data-label="Numéro WhatsApp">
+                    {user.phoneNumber ? (
+                      <span className="admin-phone-check">
+                        <span className="admin-phone-check-line">
+                          <a
+                            href={buildWaMeUrl(user.phoneNumber, `Bonjour ${user.name.trim().split(/\s+/)[0]}, ici l’équipe PrestAfrik.`)}
+                            rel="noopener noreferrer"
+                            target="_blank"
+                            title="Écrire sur WhatsApp (nouvel onglet)"
+                          >
+                            {formatPhoneForDisplay(user.phoneNumber)}
+                          </a>
+                          <Badge tone={user.phoneNumberVerified ? "success" : "warning"}>{user.phoneNumberVerified ? "Validé" : "À valider"}</Badge>
+                        </span>
+                        <form action={user.phoneNumberVerified ? unverifyUserPhone : verifyUserPhone}>
+                          <input name="userId" type="hidden" value={user.id} />
+                          <input name="retour" type="hidden" value={retour} />
+                          <SubmitButton className={user.phoneNumberVerified ? "v-link-button admin-row-action" : "btn btn-primary admin-phone-check-btn"} pendingLabel="Enregistrement…">
+                            {user.phoneNumberVerified ? "Retirer la validation" : "Valider le numéro"}
+                          </SubmitButton>
+                        </form>
+                      </span>
+                    ) : (
+                      <span className="v-muted">Aucun numéro</span>
+                    )}
+                  </td>
+                  <td data-label="E-mail">
+                    {isPlaceholderEmail(user.email) ? "—" : accountContact(user)}
                     {!isAccountVerified(user) && <span className="v-cell-sub">Compte non confirmé</span>}
                   </td>
                   <td data-label="Boutiques et rôles">
                     {user.memberships.length ? user.memberships.map((membership) => `${membership.store.name} (${roleLabels[membership.role]})`).join(", ") : "—"}
                   </td>
+                  <td data-label="Ville">{user.city ?? "—"}</td>
                   <td data-label="Dernière connexion">{lastSeen(user.lastSeenAt)}</td>
                   <td className="v-cell-badges" data-label="Statut">
                     <Badge tone={user.suspendedAt ? "danger" : "success"}>{user.suspendedAt ? "Suspendu" : "Actif"}</Badge>
@@ -143,7 +201,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
         )}
       </section>
       <Pagination
-        href={(next) => `/admin/utilisateurs?${new URLSearchParams({ ...(query ? { q: query } : {}), page: String(next) }).toString()}`}
+        href={(next) => listHref({ page: next })}
         page={page}
         pageSize={adminPageSize}
         total={result.total}

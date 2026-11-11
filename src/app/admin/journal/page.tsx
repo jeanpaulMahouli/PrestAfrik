@@ -23,12 +23,16 @@ const actionLabels: Record<string, string> = {
   "prospection.messages": "Messages de prospection modifiés",
   "user.update": "Compte modifié",
   "user.verify-email": "Adresse e-mail confirmée",
+  "user.verify-phone": "Numéro WhatsApp validé",
+  "user.unverify-phone": "Validation du numéro WhatsApp retirée",
+  "push.template": "Message de notification push modifié",
+  "push.broadcast": "Notification push envoyée aux vendeurs",
   "user.sign-out": "Compte déconnecté de tous les appareils",
   "user.delete": "Compte supprimé",
   "prospection.messages_reset": "Messages de prospection rétablis",
 };
 
-const targetLabels: Record<string, string> = { store: "Boutique", user: "Compte", subscription: "Abonnement", alert: "Alerte", message: "Message", ticket: "Message reçu", announcement: "Annonce", marketplace: "Marketplace", prospection: "Prospection" };
+const targetLabels: Record<string, string> = { store: "Boutique", user: "Compte", subscription: "Abonnement", alert: "Alerte", message: "Message", ticket: "Message reçu", announcement: "Annonce", marketplace: "Marketplace", prospection: "Prospection", push: "Notifications push" };
 
 function detailText(details: unknown) {
   if (!details || typeof details !== "object" || Array.isArray(details)) return "";

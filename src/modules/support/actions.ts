@@ -2,10 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminRole, logAdminAction, requirePlatformAdmin } from "@/modules/admin/context";
 import { sendEmailQuietly } from "@/modules/email/server";
+import { pushSupportReply } from "@/modules/push/triggers";
 
 // Demandes d'aide (Alertes → Tickets) : réponse par e-mail, statut, administrateur assigné.
 
@@ -43,6 +45,8 @@ export async function replyToTicket(formData: FormData) {
     });
     await logAdminAction(admin.id, { action: "ticket.reply", targetType: "ticket", targetId: ticket.id }, tx);
   });
+  // Notification push au vendeur (s'il a écrit depuis son compte et activé les notifications).
+  after(() => pushSupportReply(ticket.id));
   // null = échec de l'envoi (les adresses de test et l'absence de SMTP en développement ne sont pas des échecs).
   const sent = null !== await sendEmailQuietly("E27", ticket.requesterEmail, { prenom: ticket.requesterName.split(/\s+/)[0], sujet: ticket.subject, reponse: body.data });
   revalidatePath("/admin", "layout");

@@ -1,7 +1,7 @@
 "use client";
 
-import { Clock } from "lucide-react";
-import { useId, useState } from "react";
+import { Clock, Maximize2, Minimize2 } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 import { demoPage, type DemoVideo } from "./content";
 import { demoVideoSource, youtubeThumbnail } from "./demo-video";
 
@@ -66,18 +66,74 @@ function Player({ video, playing, onPlay }: { video: DemoVideo; playing: boolean
 export function DemoVideos() {
   const [activeId, setActiveId] = useState(demoPage.videos[0].id);
   const [playing, setPlaying] = useState(false);
+  // Vidéo agrandie : plein écran du navigateur, ou cadre étendu à toute la fenêtre quand le plein écran
+  // n'existe pas (iPhone : seule la balise <video> peut passer en plein écran).
+  const [expanded, setExpanded] = useState(false);
+  const playerRef = useRef<HTMLDivElement>(null);
   const baseId = useId();
   const active = demoPage.videos.find((video) => video.id === activeId) ?? demoPage.videos[0];
+  const playable = Boolean(demoVideoSource(active.url));
+
+  useEffect(() => {
+    const onChange = () => setExpanded(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  // Cadre étendu (sans plein écran) : Échap le referme et la page ne défile plus derrière.
+  useEffect(() => {
+    if (!expanded || document.fullscreenElement) return;
+    const onKey = (event: KeyboardEvent) => event.key === "Escape" && setExpanded(false);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [expanded]);
+
+  const toggleExpanded = async () => {
+    if (expanded) {
+      if (document.fullscreenElement) await document.exitFullscreen().catch(() => undefined);
+      setExpanded(false);
+      return;
+    }
+    setPlaying(true);
+    const player = playerRef.current;
+    if (player?.requestFullscreen && document.fullscreenEnabled) {
+      try {
+        await player.requestFullscreen();
+        return;
+      } catch {
+        // Plein écran refusé : on étend le cadre à la place.
+      }
+    }
+    setExpanded(true);
+  };
 
   const select = (id: string) => {
     setActiveId(id);
     setPlaying(false);
   };
+  const expandLabel = expanded ? "Réduire la vidéo" : "Agrandir la vidéo";
 
   return (
     <section aria-label="Vidéos de démonstration" className="lp-demo">
-      <div aria-labelledby={`${baseId}-tab-${active.id}`} className="lp-player" id={`${baseId}-panel`} role="tabpanel">
+      <div
+        aria-labelledby={`${baseId}-tab-${active.id}`}
+        className={`lp-player${expanded ? " is-expanded" : ""}`}
+        id={`${baseId}-panel`}
+        ref={playerRef}
+        role="tabpanel"
+      >
         <Player key={active.id} onPlay={() => setPlaying(true)} playing={playing} video={active} />
+        {playable && (
+          <button aria-label={expandLabel} className="lp-player__expand" onClick={() => void toggleExpanded()} title={expandLabel} type="button">
+            {expanded ? <Minimize2 aria-hidden="true" size={20} /> : <Maximize2 aria-hidden="true" size={20} />}
+            <span>{expanded ? "Réduire" : "Agrandir"}</span>
+          </button>
+        )}
       </div>
 
       <h2 className="lp-demo__choose">{demoPage.chooseTitle}</h2>

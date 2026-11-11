@@ -13,6 +13,7 @@ const links = [
   { title: "Messages et avis", href: "/admin/avis" },
   { title: "Marketplace", href: "/admin/marketplace" },
   { title: "Annonces", href: "/admin/annonces" },
+  { title: "Notifications push", href: "/admin/notifications-push" },
   { title: "Messages échoués", href: "/admin/messages" },
   { title: "Alertes", href: "/admin/alertes" },
   { title: "Utilisateurs", href: "/admin/utilisateurs" },

@@ -7,9 +7,13 @@ import type { Instrumentation } from "next";
  * HTTP simple : « failed to get redirect response TypeError: fetch failed » à chaque formulaire.
  * On lui donne l'adresse interne réelle (HTTP, boucle locale). Variable lue par Next à chaque action.
  */
-export function register() {
+export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs" && !process.env.__NEXT_PRIVATE_ORIGIN && process.env.PORT && /^\d+$/.test(process.env.PORT)) {
     process.env.__NEXT_PRIVATE_ORIGIN = `http://127.0.0.1:${process.env.PORT}`;
+  }
+  // Rappels push « Vous nous manquez » : vérification toutes les heures (serveur Node de production).
+  if (process.env.NEXT_RUNTIME === "nodejs" && process.env.NODE_ENV === "production") {
+    void import("@/modules/push/triggers").then(({ startPushScheduler }) => startPushScheduler()).catch(() => undefined);
   }
 }
 

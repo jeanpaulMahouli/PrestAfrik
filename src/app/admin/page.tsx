@@ -10,7 +10,6 @@ export const metadata = { title: { absolute: "Tableau de bord · Administration 
 export default async function AdminDashboardPage() {
   await requirePlatformAdmin();
   const data = await getAdminDashboard();
-  const maxCity = Math.max(1, ...data.cities.map((row) => row.count));
 
   return (
     <>
@@ -29,25 +28,14 @@ export default async function AdminDashboardPage() {
       </section>
 
       <div className="home-charts">
-        <section aria-labelledby="users-by-city" className="v-card">
-          <h2 className="v-card-title" id="users-by-city">Utilisateurs par ville</h2>
-          <p className="v-small v-muted">Ville de la première boutique de chaque utilisateur (l’inscription ne demande pas de ville).</p>
-          {data.cities.length ? (
-            <ul className="city-bars">
-              {data.cities.map((row) => (
-                <li key={row.city}>
-                  <span className="city-bars-label">{row.city}</span>
-                  <span className="city-bars-track">
-                    <span className="city-bars-fill" style={{ width: `${Math.max(2, (row.count / maxCity) * 100)}%` }} />
-                  </span>
-                  <strong className="city-bars-value">{formatNumber(row.count)}</strong>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="v-muted">Aucun utilisateur pour le moment.</p>
-          )}
-        </section>
+        <CityBars
+          empty="Aucun utilisateur pour le moment."
+          help="Ville croisée avec les boutiques de chaque utilisateur : celle des boutiques dont il est propriétaire, sinon celle des boutiques où il travaille."
+          id="users-by-city"
+          rows={data.cities}
+          title="Utilisateurs par ville"
+        />
+        <CityBars empty="Aucune boutique pour le moment." help="Ville renseignée dans chaque boutique (même écriture que ci-contre)." id="stores-by-city" rows={data.storeCities} title="Boutiques par ville" />
 
         <section aria-labelledby="top-stores" className="v-card">
           <h2 className="v-card-title" id="top-stores">Top 10 des boutiques les plus visitées (30 jours)</h2>
@@ -106,5 +94,31 @@ export default async function AdminDashboardPage() {
         )}
       </section>
     </>
+  );
+}
+
+/** Barres horizontales « par ville » (villes déjà normalisées par le module geo). */
+function CityBars({ id, title, help, empty, rows }: { id: string; title: string; help: string; empty: string; rows: { city: string; count: number }[] }) {
+  const max = Math.max(1, ...rows.map((row) => row.count));
+  return (
+    <section aria-labelledby={id} className="v-card">
+      <h2 className="v-card-title" id={id}>{title}</h2>
+      <p className="v-small v-muted">{help}</p>
+      {rows.length ? (
+        <ul className="city-bars">
+          {rows.map((row) => (
+            <li key={row.city}>
+              <span className="city-bars-label">{row.city}</span>
+              <span className="city-bars-track">
+                <span className="city-bars-fill" style={{ width: `${Math.max(2, (row.count / max) * 100)}%` }} />
+              </span>
+              <strong className="city-bars-value">{formatNumber(row.count)}</strong>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="v-muted">{empty}</p>
+      )}
+    </section>
   );
 }

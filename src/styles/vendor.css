@@ -3771,3 +3771,64 @@
   min-width: 0;
   max-width: 100%;
 }
+
+/* Notifications push : bannière « Activer les notifications » et réglage de « Mon profil ». */
+.push-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  border: 1px solid rgba(255, 153, 0, 0.35);
+  border-radius: 14px;
+  background: #fff8ec;
+}
+
+.push-banner p {
+  flex: 1 1 18rem;
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.push-banner-icon {
+  flex: none;
+  color: #e08600;
+}
+
+.push-banner-action {
+  min-height: 2.25rem;
+  padding-inline: 1.1rem;
+}
+
+.push-banner-close {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.push-banner-close:hover {
+  background: rgba(0, 0, 38, 0.06);
+}
+
+.push-settings {
+  justify-items: start;
+}
+
+.push-settings p {
+  margin: 0;
+}
+
+.push-settings button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}

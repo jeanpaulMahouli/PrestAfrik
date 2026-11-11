@@ -9,9 +9,10 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { storePublicUrl } from "@/lib/urls";
 import { restoreUser, sendUserPasswordReset, suspendUser } from "@/modules/admin/actions";
-import { deleteUserAccount, signOutUserEverywhere, updateUserAccount, verifyUserEmail } from "@/modules/admin/account-actions";
+import { deleteUserAccount, signOutUserEverywhere, unverifyUserPhone, updateUserAccount, verifyUserEmail, verifyUserPhone } from "@/modules/admin/account-actions";
 import { isAdminRole, requirePlatformAdmin } from "@/modules/admin/context";
-import { formatWhatsappNumber } from "@/modules/whatsapp/wa-me";
+import { userCityFromStores } from "@/modules/geo";
+import { buildWaMeUrl, formatWhatsappNumber } from "@/modules/whatsapp/wa-me";
 
 export const metadata = { title: "Gérer le compte" };
 
@@ -31,6 +32,7 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
       image: true,
       emailVerified: true,
       phoneNumber: true,
+      phoneNumberVerified: true,
       platformRole: true,
       suspendedAt: true,
       suspensionReason: true,
@@ -48,6 +50,7 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
               id: true,
               name: true,
               slug: true,
+              city: true,
               isPublished: true,
               _count: { select: { products: true, orders: true } },
               memberships: { where: { role: "OWNER" }, select: { userId: true } },
@@ -83,6 +86,7 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <Badge tone={user.suspendedAt ? "danger" : "success"}>{user.suspendedAt ? "Suspendu" : "Actif"}</Badge>
+          {user.phoneNumber && <Badge tone={user.phoneNumberVerified ? "success" : "warning"}>{user.phoneNumberVerified ? "WhatsApp validé" : "WhatsApp à valider"}</Badge>}
           <Badge tone={user.emailVerified ? "success" : "warning"}>{user.emailVerified ? "E-mail confirmé" : "E-mail non confirmé"}</Badge>
         </div>
       </div>
@@ -117,7 +121,7 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
                 name="phone"
                 placeholder="+237 6 99 00 00 00"
               />
-              <span className="v-field-help">Avec l’indicatif du pays. Vide : la personne devra le saisir à sa prochaine connexion.</span>
+              <span className="v-field-help">Avec l’indicatif du pays. Vide : la personne devra le saisir à sa prochaine connexion. Un nouveau numéro repasse « à valider ».</span>
             </label>
             {!protectedAdmin && (
               <SubmitButton className="btn btn-primary" pendingLabel="Enregistrement…">
@@ -130,6 +134,25 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
         <section aria-labelledby="account-access" className="v-card">
           <h2 className="v-card-title" id="account-access">Accès et sécurité</h2>
           <dl className="admin-account-facts">
+            <div>
+              <dt>Numéro WhatsApp</dt>
+              <dd>
+                {user.phoneNumber ? (
+                  <>
+                    <a href={buildWaMeUrl(user.phoneNumber, `Bonjour ${user.name.trim().split(/\s+/)[0]}, ici l’équipe PrestAfrik.`)} rel="noopener noreferrer" target="_blank">
+                      {formatWhatsappNumber(user.phoneNumber)}
+                    </a>{" "}
+                    · {user.phoneNumberVerified ? "validé" : "à valider"}
+                  </>
+                ) : (
+                  "Aucun"
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Ville (d’après ses boutiques)</dt>
+              <dd>{userCityFromStores(user.memberships.map(({ role, store }) => ({ city: store.city, owner: role === "OWNER" }))) ?? "Non renseignée"}</dd>
+            </div>
             <div>
               <dt>Dernière activité</dt>
               <dd>{user.lastActiveAt ? formatDateTime(user.lastActiveAt) : "Jamais"}</dd>
@@ -145,6 +168,14 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
           </dl>
           {!protectedAdmin && (
             <div className="admin-account-actions">
+              {user.phoneNumber && (
+                <form action={user.phoneNumberVerified ? unverifyUserPhone : verifyUserPhone}>
+                  <input name="userId" type="hidden" value={user.id} />
+                  <SubmitButton className={user.phoneNumberVerified ? "btn btn-secondary" : "btn btn-primary"} pendingLabel="Enregistrement…">
+                    {user.phoneNumberVerified ? "Retirer la validation du WhatsApp" : "Valider le numéro WhatsApp"}
+                  </SubmitButton>
+                </form>
+              )}
               {!user.emailVerified && (
                 <form action={verifyUserEmail}>
                   <input name="userId" type="hidden" value={user.id} />

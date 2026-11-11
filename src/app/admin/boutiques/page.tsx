@@ -10,6 +10,7 @@ import { storePublicUrl } from "@/lib/urls";
 import { restoreStore, suspendStore } from "@/modules/admin/actions";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { storeStateDisplay } from "@/modules/admin/display";
+import { canonicalCity } from "@/modules/geo";
 import { adminPageSize, getPlatformStats, listAdminStores } from "@/modules/admin/queries";
 
 export const metadata = { title: "Boutiques" };
@@ -74,7 +75,7 @@ export default async function AdminStoresPage({ searchParams }: PageProps<"/admi
                 <tr key={store.id}>
                   <td className="v-cell-primary">
                     <a className="admin-store-name" href={storePublicUrl(store.slug)} rel="noreferrer" target="_blank">{store.name}</a>
-                    <span className="v-cell-sub">{[store.city, `créée le ${formatDate(store.createdAt)}`].filter(Boolean).join(" · ")}</span>
+                    <span className="v-cell-sub">{[canonicalCity(store.city), `créée le ${formatDate(store.createdAt)}`].filter(Boolean).join(" · ")}</span>
                     {store.suspendedAt && <span className="v-cell-sub admin-suspension">Suspendue le {formatDate(store.suspendedAt)} : {store.suspensionReason}</span>}
                   </td>
                   <td data-label="Propriétaire">

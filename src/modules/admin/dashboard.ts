@@ -2,9 +2,11 @@ import "server-only";
 
 import { dayColumn } from "@/lib/dashboard-periods";
 import { prisma } from "@/lib/prisma";
+import { cityLabel, unknownCityLabel, userCityFromStores } from "@/modules/geo";
 
-// Tableau de bord de l'administration. L'inscription ne demande pas de ville : la ville d'un utilisateur
-// est celle de sa première boutique (renseignée dans l'assistant de création).
+// Tableau de bord de l'administration. L'inscription ne demande pas de ville : la ville d'un utilisateur est
+// croisée avec ses boutiques (voir userCityFromStores) et toutes les villes passent par canonicalCity, pour que
+// « douala », « Douala » et « DOUALA » comptent pour une seule ville dans chaque tableau.
 
 const day = 86_400_000;
 export const topCitiesCount = 15;
@@ -13,7 +15,7 @@ export async function getAdminDashboard(now = new Date()) {
   const since30 = new Date(now.getTime() - 30 * day);
   const since7 = new Date(now.getTime() - 7 * day);
 
-  const [stores, publishedStores, users, newUsers, memberships, sessions, events, products, visits] = await Promise.all([
+  const [stores, publishedStores, users, newUsers, memberships, sessions, events, products, visits, storeCities] = await Promise.all([
     prisma.store.count(),
     prisma.store.count({ where: { isPublished: true, suspendedAt: null } }),
     prisma.user.count(),
@@ -26,27 +28,24 @@ export async function getAdminDashboard(now = new Date()) {
     prisma.orderEvent.groupBy({ by: ["actorId"], where: { createdAt: { gte: since30 }, actorId: { not: null } }, _count: { _all: true } }),
     prisma.product.groupBy({ by: ["storeId"], where: { createdAt: { gte: since30 } }, _count: { _all: true } }),
     prisma.storeVisitDay.groupBy({ by: ["storeId"], where: { day: { gte: dayColumn(since30) } }, _sum: { visits: true } }),
+    prisma.store.findMany({ select: { city: true } }),
   ]);
 
-  // Première boutique de chaque utilisateur (ville, nom).
-  const firstStore = new Map<string, { id: string; name: string; city: string | null }>();
+  // Boutiques de chaque utilisateur (de la plus ancienne à la plus récente) : nom affiché et ville croisée.
+  const firstStore = new Map<string, { id: string; name: string }>();
+  const userStores = new Map<string, { city: string | null; owner: boolean }[]>();
   const ownedStores = new Map<string, string[]>();
   for (const membership of memberships) {
     if (!firstStore.has(membership.userId)) firstStore.set(membership.userId, membership.store);
+    userStores.set(membership.userId, [...(userStores.get(membership.userId) ?? []), { city: membership.store.city, owner: membership.role === "OWNER" }]);
     if (membership.role === "OWNER") ownedStores.set(membership.userId, [...(ownedStores.get(membership.userId) ?? []), membership.store.id]);
   }
+  const userCity = (userId: string) => userCityFromStores(userStores.get(userId) ?? []);
 
-  // Utilisateurs par ville : les 15 premières, le reste dans « Autres ».
+  // Utilisateurs par ville et boutiques par ville : les 15 premières, le reste dans « Autres ».
   const allUsers = await prisma.user.findMany({ select: { id: true } });
-  const cityCounts = new Map<string, number>();
-  for (const user of allUsers) {
-    const city = firstStore.get(user.id)?.city?.trim() || "Ville non renseignée";
-    cityCounts.set(city, (cityCounts.get(city) ?? 0) + 1);
-  }
-  const sortedCities = [...cityCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"));
-  const cities = sortedCities.slice(0, topCitiesCount).map(([city, count]) => ({ city, count }));
-  const others = sortedCities.slice(topCitiesCount).reduce((total, [, count]) => total + count, 0);
-  if (others) cities.push({ city: "Autres", count: others });
+  const cities = topCities(allUsers.map((user) => userCity(user.id) ?? unknownCityLabel));
+  const citiesOfStores = topCities(storeCities.map((store) => cityLabel(store.city)));
 
   // Utilisateurs les plus actifs sur 30 jours : connexions + produits ajoutés dans leurs boutiques + commandes traitées.
   const productsByStore = new Map(products.map((row) => [row.storeId, row._count._all]));
@@ -70,7 +69,7 @@ export async function getAdminDashboard(now = new Date()) {
     if (!user) return [];
     const store = firstStore.get(row.userId);
     const lastActivity = [user.lastActiveAt, row.lastSeen].filter((date): date is Date => Boolean(date)).sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
-    return [{ ...row, name: user.name, email: user.email, storeName: store?.name ?? null, city: store?.city ?? null, lastActivity }];
+    return [{ ...row, name: user.name, email: user.email, storeName: store?.name ?? null, city: userCity(row.userId), lastActivity }];
   });
 
   // Boutiques les plus visitées sur 30 jours.
@@ -89,5 +88,16 @@ export async function getAdminDashboard(now = new Date()) {
     return store ? [{ id: store.id, name: store.name, slug: store.slug, owner: store.memberships[0]?.user.name ?? null, visits: row.visits }] : [];
   });
 
-  return { kpis: { stores, publishedStores, users, newUsers }, cities, topUsers, topStores };
+  return { kpis: { stores, publishedStores, users, newUsers }, cities, storeCities: citiesOfStores, topUsers, topStores };
+}
+
+/** Classement des villes (déjà normalisées) : les 15 premières, le reste regroupé dans « Autres ». */
+function topCities(labels: string[]) {
+  const counts = new Map<string, number>();
+  for (const city of labels) counts.set(city, (counts.get(city) ?? 0) + 1);
+  const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "fr"));
+  const rows = sorted.slice(0, topCitiesCount).map(([city, count]) => ({ city, count }));
+  const others = sorted.slice(topCitiesCount).reduce((total, [, count]) => total + count, 0);
+  if (others) rows.push({ city: "Autres", count: others });
+  return rows;
 }

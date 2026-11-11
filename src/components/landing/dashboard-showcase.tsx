@@ -80,19 +80,33 @@ export function DashboardShowcase() {
         </Reveal>
       </header>
 
-      <div className="lp-dashboard__frame" ref={frameRef}>
-        {dashboard.features.map((feature, i) => (
-          <Image
-            alt={i === active ? `Aperçu : ${feature.title}` : ""}
-            className={`lp-dashboard__shot${i === active ? " is-active" : ""}`}
-            height={957}
-            key={feature.image}
-            priority={i === 0}
-            sizes="(max-width: 1024px) 94vw, 1600px"
-            src={feature.image}
-            width={1595}
-          />
-        ))}
+      {/* La capture est présentée dans une fenêtre d'application Windows (barre de titre et ses trois boutons). */}
+      <div className="lp-dashboard__frame lp-window" ref={frameRef}>
+        <div aria-hidden="true" className="lp-window__bar">
+          <span className="lp-window__app">
+            <Image alt="" height={16} src="/brand/logo-prestafrik.png" width={29} />
+            <span>PrestAfrik · {dashboard.features[active]?.title ?? "Tableau de bord"}</span>
+          </span>
+          <span className="lp-window__controls">
+            <span className="lp-window__btn lp-window__btn--min" />
+            <span className="lp-window__btn lp-window__btn--max" />
+            <span className="lp-window__btn lp-window__btn--close" />
+          </span>
+        </div>
+        <div className="lp-window__body">
+          {dashboard.features.map((feature, i) => (
+            <Image
+              alt={i === active ? `Aperçu : ${feature.title}` : ""}
+              className={`lp-dashboard__shot${i === active ? " is-active" : ""}`}
+              height={957}
+              key={feature.image}
+              priority={i === 0}
+              sizes="(max-width: 1024px) 94vw, 1600px"
+              src={feature.image}
+              width={1595}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="lp-dashboard__cards">

@@ -58,6 +58,59 @@ export function countryCities(countryIso: string): string[] {
   return [...cities].sort((a, b) => a.localeCompare(b, "fr"));
 }
 
+/** Libellé commun des boutiques et comptes sans ville connue (tableaux de bord de l'administration). */
+export const unknownCityLabel = "Ville non renseignée";
+
+let cityIndex: Map<string, string> | null = null;
+
+/** « yaounde » → « Yaoundé » pour toutes les villes connues (tous pays ; le premier pays listé l'emporte). */
+function knownCities() {
+  if (!cityIndex) {
+    cityIndex = new Map();
+    for (const dataset of Object.values(datasets)) {
+      for (const region of dataset.regions) for (const city of region.cities) if (!cityIndex.has(normalizeSearch(city))) cityIndex.set(normalizeSearch(city), city);
+    }
+  }
+  return cityIndex;
+}
+
+/**
+ * Ville telle qu'elle doit s'afficher et se compter partout : « douala », « DOUALA » et « Douala  » donnent
+ * « Douala », « Yaounde » donne « Yaoundé ». Les villes hors liste gardent leur écriture (espaces nettoyés,
+ * première lettre en majuscule). null si la ville est vide.
+ */
+export function canonicalCity(city: string | null | undefined): string | null {
+  const value = city?.replace(/\s+/g, " ").trim();
+  if (!value) return null;
+  const known = knownCities().get(normalizeSearch(value));
+  if (known) return known;
+  return value.charAt(0).toLocaleUpperCase("fr-FR") + value.slice(1);
+}
+
+/** Ville d'affichage, ou « Ville non renseignée ». */
+export function cityLabel(city: string | null | undefined) {
+  return canonicalCity(city) ?? unknownCityLabel;
+}
+
+/**
+ * Ville d'un utilisateur, croisée avec ses boutiques : la ville la plus fréquente parmi les boutiques dont il
+ * est propriétaire, sinon parmi toutes ses boutiques (à égalité : la plus ancienne). Les boutiques doivent être
+ * données de la plus ancienne à la plus récente.
+ */
+export function userCityFromStores(stores: { city: string | null; owner: boolean }[]): string | null {
+  const pick = (list: typeof stores) => {
+    const counts = new Map<string, number>();
+    for (const store of list) {
+      const city = canonicalCity(store.city);
+      if (city) counts.set(city, (counts.get(city) ?? 0) + 1);
+    }
+    let best: string | null = null;
+    for (const [city, count] of counts) if (!best || count > (counts.get(best) ?? 0)) best = city;
+    return best;
+  };
+  return pick(stores.filter((store) => store.owner)) ?? pick(stores);
+}
+
 /** La ville fait-elle partie de la liste du pays ? (les villes ne se saisissent jamais à la main) */
 export function isKnownCity(countryIso: string, city: string) {
   return (datasets[countryIso]?.regions ?? []).some((region) => region.cities.includes(city));

@@ -56,7 +56,7 @@ const structuredData = {
       telephone: site.phones[0],
       areaServed: cemac.map((name) => ({ "@type": "Country", name })),
       knowsLanguage: "fr",
-      sameAs: [...footer.socials.map((social) => social.href), site.youtube, shopUrl("/")].filter((url) => /^https?:\/\//.test(url)),
+      sameAs: [...new Set([...footer.socials.map((social) => social.href), site.youtube, shopUrl("/")])].filter((url) => /^https?:\/\//.test(url)),
       contactPoint: site.phones.map((telephone) => ({
         "@type": "ContactPoint",
         telephone,

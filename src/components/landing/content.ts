@@ -38,7 +38,6 @@ export const hero = {
   subtitle:
     "Une boutique en ligne gratuite, professionnelle et prête en 5 minutes. Les commandes arrivent sur WhatsApp, le paiement se fait à la livraison.",
   primaryCta: { label: "Créer ma boutique gratuitement", href: "/inscription" },
-  secondaryCta: { label: "Voir la démo", href: "/demo" },
   phoneScreen: "/landing/screens/hero-boutique.webp",
   /** Petites photos de la carte flottante à gauche du téléphone. */
   community: [
@@ -105,6 +104,12 @@ export const partners = {
     { src: "/landing/logos/ndolo-kids.svg", alt: "Ndolo Kids", width: 156, height: 40 },
     { src: "/landing/logos/atelier-ndop.svg", alt: "Atelier Ndop", width: 178, height: 40 },
   ],
+};
+
+/** Bloc sous les logos qui défilent : les meilleures boutiques en ligne (vraies boutiques, lues en base). */
+export const bestStores = {
+  title: "Visitez nos meilleures boutiques",
+  count: 5,
 };
 
 /** Comparatif de l'accueil : vendre seulement dans les discussions, ou avec une boutique PrestAfrik. */
@@ -286,6 +291,7 @@ export const footer = {
   socials: [
     { label: "PrestAfrik sur TikTok", href: "https://www.tiktok.com/@prestafrik1", icon: "/landing/icons/tiktok.svg" },
     { label: "PrestAfrik sur Facebook", href: "https://www.facebook.com/share/19Wt8Ra1nd/", icon: "/landing/icons/facebook.svg" },
+    { label: "PrestAfrik sur YouTube", href: "https://www.youtube.com/@prestafrik", icon: "/landing/icons/youtube.svg" },
     { label: "Chaîne WhatsApp « Club des 1000 »", href: "https://whatsapp.com/channel/0029Vb9M5ZPEwEjzoo7OsM3y", icon: "/landing/icons/whatsapp.svg" },
   ],
   copyright: "© 2026 PrestAfrik. Tous droits réservés.",

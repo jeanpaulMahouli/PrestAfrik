@@ -2,11 +2,12 @@ import "server-only";
 
 import { activeUserDays, assistanceCriteria, prospectionMessageKeys, prospectionMessages, type ProspectionMessageKey } from "@/config/prospection";
 import { prisma } from "@/lib/prisma";
+import { userCityFromStores } from "@/modules/geo";
 import { buildWaMeUrl, formatWhatsappNumber } from "@/modules/whatsapp/wa-me";
 
 // Onglet Prospection : tous les utilisateurs (du plus récent au plus ancien), filtres combinables,
 // recherche, et contact WhatsApp. Le téléphone est le numéro WhatsApp du compte (demandé à l'inscription),
-// sinon celui de sa première boutique ; la ville est celle de la première boutique.
+// sinon celui de sa première boutique ; la ville est croisée avec ses boutiques (userCityFromStores).
 
 export const prospectionFilters = ["actifs", "non-publiee", "assistance", "sans-whatsapp"] as const;
 export type ProspectionFilter = (typeof prospectionFilters)[number];
@@ -102,7 +103,7 @@ export async function listProspects({ filters = [], query = "", now = new Date()
       active: Boolean(lastActivity && lastActivity >= since),
       storeCount: user.memberships.length,
       storeName: (unpublished[0] ?? owned[0] ?? first)?.name ?? null,
-      city: first?.city ?? null,
+      city: userCityFromStores(user.memberships.map((membership) => ({ city: membership.store.city, owner: membership.role === "OWNER" }))),
       country: first?.country ? (countryNames.of(first.country) ?? first.country) : null,
       phone: phone ? formatWhatsappNumber(phone) : null,
       phoneDigits: phone ? phone.replace(/\D/g, "") : null,

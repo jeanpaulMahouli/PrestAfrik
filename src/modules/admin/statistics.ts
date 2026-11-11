@@ -2,6 +2,7 @@ import "server-only";
 
 import { dayColumn, evolution, fillBuckets, type DashboardPeriod } from "@/lib/dashboard-periods";
 import { prisma } from "@/lib/prisma";
+import { cityLabel } from "@/modules/geo";
 
 // Administration → Statistiques : les indicateurs de performance de PrestAfrik sur une période glissante
 // (7 jours, 30 jours, 3 mois), comparés à la période précédente de même durée.
@@ -164,12 +165,12 @@ export async function getPlatformStatistics(period: DashboardPeriod) {
   const storeById = new Map(storeNames.map((store) => [store.id, store]));
   const topStores = topStoreIds.flatMap(([id, value]) => {
     const store = storeById.get(id);
-    return store ? [{ ...store, ...value }] : [];
+    return store ? [{ ...store, city: cityLabel(store.city), ...value }] : [];
   });
 
   const cityCounts = new Map<string, number>();
   for (const order of orders) {
-    const city = order.deliveryCity.trim() || "Ville non renseignée";
+    const city = cityLabel(order.deliveryCity);
     cityCounts.set(city, (cityCounts.get(city) ?? 0) + 1);
   }
   const topCities = [...cityCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([label, value]) => ({ label, value }));

@@ -1,6 +1,8 @@
 import { AvatarForm } from "@/components/account/avatar-form";
 import { NameForm } from "@/components/account/name-form";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { PushSettings } from "@/components/pwa/push-notifications";
+import { pushPublicKey } from "@/modules/push/sender";
 import { getStoreContext } from "@/modules/stores/context";
 import { formatPhoneForDisplay, isPlaceholderEmail } from "@/modules/auth/phone-account";
 
@@ -46,6 +48,7 @@ export default async function ProfilePage() {
           <span>Rôle dans {store.name}</span>
           <strong>{roleLabels[membership.role]}</strong>
         </div>
+        <PushSettings publicKey={pushPublicKey()} />
         <div className="profile-password">
           <p className="dashboard-copy">Pour sécuriser ton compte, tu peux demander un lien de modification du mot de passe.</p>
           <a className="secondary-button" href="/mot-de-passe-oublie">Modifier mon mot de passe</a>

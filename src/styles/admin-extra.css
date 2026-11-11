@@ -681,3 +681,75 @@
 .admin-danger-form .v-field {
   width: 100%;
 }
+
+/* Utilisateurs : numéro WhatsApp, son statut et le bouton de validation. */
+.admin-phone-check {
+  display: grid;
+  gap: 0.4rem;
+  justify-items: start;
+}
+
+.admin-phone-check-line {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.admin-phone-check-btn {
+  min-height: 0;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+/* Administration → Notifications push. */
+.push-admin-title {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.push-admin-grid {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .push-admin-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.push-admin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.push-admin-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.push-admin-form textarea {
+  resize: vertical;
+}
+
+.push-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.push-admin-var {
+  margin-right: 0.35rem;
+}
+
+#push-news {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

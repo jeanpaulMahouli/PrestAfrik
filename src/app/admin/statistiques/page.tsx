@@ -193,7 +193,7 @@ export default async function AdminStatisticsPage({ searchParams }: PageProps<"/
                   <span>
                     <a href={storePublicUrl(store.slug)} rel="noreferrer" target="_blank">{store.name}</a>
                     <small>
-                      {store.city ?? "Ville non renseignée"} · {formatNumber(store.orders)} commande{store.orders > 1 ? "s" : ""}
+                      {store.city} · {formatNumber(store.orders)} commande{store.orders > 1 ? "s" : ""}
                     </small>
                   </span>
                   <strong>{formatFcfa(store.gmv)}</strong>

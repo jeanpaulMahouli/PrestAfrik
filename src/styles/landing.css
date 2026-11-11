@@ -1779,3 +1779,197 @@
 .lp-partners .lp-marquee:is(:hover, :focus-within) .lp-marquee__track {
   animation-play-state: paused;
 }
+
+/* ---------- Meilleures boutiques (sous les logos qui défilent) ---------- */
+.lp-best-stores {
+  margin: clamp(40px, 5vw, 96px) auto 0;
+  padding: 0 var(--lp-gutter);
+}
+
+.lp-best-stores__title {
+  margin: 0 0 clamp(24px, 2.6vw, 48px);
+  font: 600 clamp(1.25rem, 2vw, 2.25rem) / 1.2 var(--lp-ui);
+}
+
+.lp-best-stores__list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(18px, 3vw, 56px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lp-best-store {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  width: clamp(104px, 10vw, 168px);
+  color: var(--lp-ink);
+  text-decoration: none;
+}
+
+.lp-best-store__circle {
+  display: grid;
+  place-items: center;
+  width: clamp(88px, 8.4vw, 144px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--lp-peach), var(--lp-orange));
+  box-shadow:
+    0 0 0 2px rgba(255, 153, 0, 0.55),
+    0 12px 28px rgba(0, 0, 38, 0.12);
+  color: var(--lp-navy);
+  font: 700 clamp(1.4rem, 2.2vw, 2.4rem) / 1 var(--lp-ui);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.lp-best-store__circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #fff;
+}
+
+.lp-best-store:is(:hover, :focus-visible) .lp-best-store__circle {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow:
+    0 0 0 3px var(--lp-orange),
+    0 16px 32px rgba(0, 0, 38, 0.16);
+}
+
+.lp-best-store__name {
+  font: 600 clamp(0.9rem, 1vw, 1.1rem) / 1.25 var(--lp-ui);
+  overflow-wrap: anywhere;
+}
+
+.lp-best-store__city {
+  margin-top: -4px;
+  color: var(--lp-ink-soft);
+  font-size: 0.85rem;
+}
+
+/* ---------- Tableau de bord : fenêtre Windows ---------- */
+.lp .lp-dashboard__frame.lp-window {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 38, 0.14);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow:
+    0 30px 60px rgba(0, 0, 38, 0.16),
+    0 2px 6px rgba(0, 0, 38, 0.08);
+}
+
+.lp-window__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: clamp(30px, 2.3vw, 40px);
+  padding-left: clamp(10px, 0.9vw, 16px);
+  border-bottom: 1px solid rgba(0, 0, 38, 0.08);
+  background: #f3f3f3;
+  user-select: none;
+}
+
+.lp-window__app {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: #1f1f1f;
+  font: 400 clamp(0.72rem, 0.8vw, 0.875rem) / 1 "Segoe UI", var(--lp-ui);
+  white-space: nowrap;
+}
+
+.lp-window__app span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lp-window__app img {
+  width: auto;
+  height: clamp(12px, 1vw, 16px);
+}
+
+.lp-window__controls {
+  display: flex;
+  align-self: stretch;
+}
+
+/* Les trois boutons de Windows 11 : réduire, agrandir, fermer (dessinés en CSS). */
+.lp-window__btn {
+  position: relative;
+  display: block;
+  width: clamp(36px, 3.2vw, 48px);
+}
+
+.lp-window__btn::before,
+.lp-window__btn::after {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  content: "";
+  translate: -50% -50%;
+}
+
+.lp-window__btn--min::before {
+  width: 10px;
+  height: 1px;
+  background: #1f1f1f;
+}
+
+.lp-window__btn--max::before {
+  width: 9px;
+  height: 9px;
+  border: 1px solid #1f1f1f;
+  border-radius: 1px;
+}
+
+.lp-window__btn--close::before,
+.lp-window__btn--close::after {
+  width: 12px;
+  height: 1px;
+  background: #1f1f1f;
+  rotate: 45deg;
+}
+
+.lp-window__btn--close::after {
+  rotate: -45deg;
+}
+
+.lp-window__body {
+  display: grid;
+}
+
+.lp .lp-window .lp-dashboard__shot {
+  border-radius: 0;
+}
+
+/* ---------- Côté client : écrans qui glissent de droite à gauche toutes les 4 secondes ---------- */
+.lp-client__phone {
+  transform: translateX(18%);
+  transition:
+    opacity 0.7s ease,
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lp-client__phone.is-active {
+  transform: none;
+}
+
+.lp-client__phone.is-before {
+  transform: translateX(-18%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-client__phone,
+  .lp-client__phone.is-before {
+    transform: none;
+  }
+}

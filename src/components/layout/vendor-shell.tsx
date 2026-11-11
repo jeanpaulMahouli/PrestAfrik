@@ -6,11 +6,13 @@ import { texts } from "@/config/texts";
 import { FeedbackLauncher } from "@/components/dashboard/community";
 import { EmailVerificationBanner } from "@/components/layout/email-verification-banner";
 import { PwaRegistration } from "@/components/pwa/install-app";
+import { PushOptInBanner } from "@/components/pwa/push-notifications";
 import { VendorMobileNav, VendorSidebar } from "@/components/layout/vendor-navigation";
 import { MobileSearchButton, StoreSwitcher, UserMenu, VisitStoreLinks } from "@/components/layout/vendor-topbar-menus";
 import { storePublicUrl } from "@/lib/urls";
 import { isPlatformAdmin } from "@/modules/admin/context";
 import { accountContact, isAccountVerified } from "@/modules/auth/phone-account";
+import { pushPublicKey } from "@/modules/push/sender";
 import { getStoreContext } from "@/modules/stores/context";
 
 const t = texts.vendor.shell;
@@ -65,6 +67,7 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
       <div className="vendor-body">
         <VendorSidebar role={membership.role} />
         <main className="vendor-main" id="contenu">
+          <PushOptInBanner publicKey={pushPublicKey()} />
           {children}
         </main>
       </div>

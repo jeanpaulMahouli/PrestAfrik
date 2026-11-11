@@ -29,7 +29,7 @@ async function targetAccount(formData: FormData, { allowSelf = true } = {}) {
   if (!userId.success) back(listPath, "Compte introuvable.", "erreur");
   const user = await prisma.user.findUnique({
     where: { id: userId.data },
-    select: { id: true, name: true, email: true, phoneNumber: true, platformRole: true, emailVerified: true },
+    select: { id: true, name: true, email: true, phoneNumber: true, phoneNumberVerified: true, platformRole: true, emailVerified: true },
   });
   if (!user) back(listPath, "Compte introuvable.", "erreur");
   if (!allowSelf && user.id === admin.id) back(accountPath(user.id), "Vous ne pouvez pas faire cela sur votre propre compte.", "erreur");
@@ -67,7 +67,8 @@ export async function updateUserAccount(formData: FormData) {
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.user.update({ where: { id: user.id }, data: { name, email, phoneNumber } });
+    // Nouveau numéro : il redevient « à valider ».
+    await tx.user.update({ where: { id: user.id }, data: { name, email, phoneNumber, ...(phoneNumber !== user.phoneNumber ? { phoneNumberVerified: false } : {}) } });
     await logAdminAction(
       admin.id,
       { action: "user.update", targetType: "user", targetId: user.id, details: { before: { name: user.name, email: user.email, phone: user.phoneNumber }, after: { name, email, phone: phoneNumber } } },
@@ -87,6 +88,53 @@ export async function verifyUserEmail(formData: FormData) {
     await logAdminAction(admin.id, { action: "user.verify-email", targetType: "user", targetId: user.id }, tx);
   });
   back(accountPath(user.id), `L’adresse ${user.email} est confirmée.`);
+}
+
+/**
+ * Retour après la validation d'un numéro : la liste des utilisateurs (avec ses filtres) quand l'action y a été
+ * lancée, sinon la fiche du compte. Seules les adresses de l'administration des utilisateurs sont acceptées.
+ */
+function returnPath(formData: FormData, userId: string) {
+  const value = String(formData.get("retour") ?? "");
+  return /^\/admin\/utilisateurs(\/[A-Za-z0-9_-]+)?(\?[\w=&%.+-]*)?$/.test(value) ? value : accountPath(userId);
+}
+
+function backWith(path: string, message: string, kind: "succes" | "erreur" = "succes"): never {
+  const url = new URL(path, "http://admin.local");
+  url.searchParams.delete("succes");
+  url.searchParams.delete("erreur");
+  url.searchParams.set(kind, message);
+  redirect(`${url.pathname}${url.search}`);
+}
+
+/**
+ * Numéro WhatsApp validé par l'équipe (vérifié par appel ou message) : c'est le contact principal du vendeur.
+ * Un numéro validé confirme aussi le compte.
+ */
+export async function verifyUserPhone(formData: FormData) {
+  const { admin, user } = await targetAccount(formData);
+  const path = returnPath(formData, user.id);
+  if (!user.phoneNumber) backWith(path, `${user.name} n’a pas encore de numéro WhatsApp : ajoutez-le dans « Gérer le compte ».`, "erreur");
+  if (user.phoneNumberVerified) backWith(path, `Le numéro WhatsApp de ${user.name} est déjà validé.`, "erreur");
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: user.id }, data: { phoneNumberVerified: true } });
+    await logAdminAction(admin.id, { action: "user.verify-phone", targetType: "user", targetId: user.id, details: { phone: user.phoneNumber } }, tx);
+  });
+  revalidatePath("/admin", "layout");
+  backWith(path, `Numéro WhatsApp de ${user.name} validé.`);
+}
+
+/** Validation retirée (numéro erroné ou injoignable) : le numéro repasse « à valider ». */
+export async function unverifyUserPhone(formData: FormData) {
+  const { admin, user } = await targetAccount(formData);
+  const path = returnPath(formData, user.id);
+  if (!user.phoneNumberVerified) backWith(path, `Le numéro WhatsApp de ${user.name} n’est pas validé.`, "erreur");
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: user.id }, data: { phoneNumberVerified: false } });
+    await logAdminAction(admin.id, { action: "user.unverify-phone", targetType: "user", targetId: user.id, details: { phone: user.phoneNumber } }, tx);
+  });
+  revalidatePath("/admin", "layout");
+  backWith(path, `Validation du numéro WhatsApp de ${user.name} retirée.`);
 }
 
 /** Déconnexion sur tous les appareils (sans suspendre le compte). */

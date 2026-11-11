@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { shopUrl } from "@/lib/urls";
 import { getSocialProof } from "@/modules/marketplace/social-proof";
+import { BestStores } from "./best-stores";
 import { LandingButton } from "./buttons";
 import { partners } from "./content";
 
@@ -9,7 +10,10 @@ import { partners } from "./content";
  * en continu, compteurs réels en dessous, et un lien vers toutes les boutiques.
  */
 export async function Partners() {
-  const { counters } = await getSocialProof().catch(() => ({ counters: [] }));
+  // Le nombre de boutiques en ligne n'est plus affiché pour le moment : seuls les autres compteurs restent.
+  const { counters } = await getSocialProof()
+    .then((proof) => ({ counters: proof.counters.filter((counter) => counter.id !== "stores") }))
+    .catch(() => ({ counters: [] }));
   const logos = partners.logos;
 
   const row = (reverse: boolean) => (
@@ -42,6 +46,7 @@ export async function Partners() {
       )}
       {row(false)}
       <div className="lp-partners__second">{row(true)}</div>
+      <BestStores />
       {partners.showStoresLink && (
         <div className="lp-find-stores">
           <LandingButton href={shopUrl("/")} variant="glass">
