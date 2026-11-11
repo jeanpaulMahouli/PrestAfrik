@@ -8,7 +8,7 @@ import { EmailCodeStep, emailCodeResendDelayMs } from "@/components/auth/email-c
 import { GoogleButton } from "@/components/auth/google-button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { welcomeHref, whatsappStepHref } from "@/config/routes";
+import { acquisitionStepHref, whatsappStepHref } from "@/config/routes";
 import { texts } from "@/config/texts";
 import { parsePhone } from "@/lib/phone";
 import { authClient } from "@/modules/auth/client";
@@ -91,7 +91,7 @@ export function AuthForm({ mode, invitationToken, next, googleEnabled = false }:
   const canSubmit = missing.length === 0;
   const destination = validInvitation
     ? `/invitations/accepter?token=${encodeURIComponent(validInvitation)}`
-    : (safeInternalPath(next) ?? (isSignUp ? welcomeHref : "/dashboard"));
+    : (safeInternalPath(next) ?? (isSignUp ? acquisitionStepHref : "/dashboard"));
 
   // Reprise après une actualisation : l'écran du code s'affiche de nouveau (inscription seulement).
   useEffect(() => {

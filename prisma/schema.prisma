@@ -178,6 +178,9 @@ model User {
   appPlatform                String?                @db.VarChar(12)
   /// Dernier rappel push « Vous nous manquez » (vendeur absent depuis 2 jours) : un seul par absence.
   lastInactivityPushAt       DateTime?
+  /// Comment la personne a connu PrestAfrik (question posée une fois, à l'inscription).
+  acquisitionSource          AcquisitionSource?
+  acquisitionAnsweredAt      DateTime?
   appUsageDays               AppUsageDay[]
   pushSubscriptions          PushSubscription[]
   supportTickets             SupportTicket[]        @relation("SupportTicketRequester")
@@ -1324,6 +1327,16 @@ model ProspectionMessage {
   updatedAt DateTime @updatedAt
 }
 
+/// Réponses à « Comment avez-vous connu PrestAfrik ? ».
+enum AcquisitionSource {
+  FACEBOOK
+  YOUTUBE
+  TIKTOK
+  WHATSAPP
+  GOOGLE
+  WORD_OF_MOUTH
+}
+
 enum PushNotificationKind {
   /// Vendeur sans connexion depuis 2 jours : « Vous nous manquez ».
   INACTIVITY
@@ -1368,6 +1381,9 @@ model PushNotificationLog {
   kind       PushNotificationKind
   title      String               @db.VarChar(80)
   body       String               @db.VarChar(240)
+  /// Envois manuels : page ouverte au clic et photo (repris dans le formulaire pour le prochain envoi).
+  url        String?              @db.VarChar(200)
+  imageUrl   String?              @db.VarChar(500)
   recipients Int                  @default(0)
   delivered  Int                  @default(0)
   sentById   String?

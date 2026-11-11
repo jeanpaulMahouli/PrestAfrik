@@ -9,7 +9,9 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { storePublicUrl } from "@/lib/urls";
 import { restoreUser, sendUserPasswordReset, suspendUser } from "@/modules/admin/actions";
-import { deleteUserAccount, signOutUserEverywhere, unverifyUserPhone, updateUserAccount, verifyUserEmail, verifyUserPhone } from "@/modules/admin/account-actions";
+import { deleteUserAccount, emailConfirmedByAdmin, signOutUserEverywhere, unverifyUserEmail, updateUserAccount, verifyUserEmail } from "@/modules/admin/account-actions";
+import { acquisitionLabel } from "@/modules/auth/acquisition";
+import { isPlaceholderEmail } from "@/modules/auth/phone-account";
 import { isAdminRole, requirePlatformAdmin } from "@/modules/admin/context";
 import { userCityFromStores } from "@/modules/geo";
 import { buildWaMeUrl, formatWhatsappNumber } from "@/modules/whatsapp/wa-me";
@@ -32,7 +34,7 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
       image: true,
       emailVerified: true,
       phoneNumber: true,
-      phoneNumberVerified: true,
+      acquisitionSource: true,
       platformRole: true,
       suspendedAt: true,
       suspensionReason: true,
@@ -63,6 +65,7 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
   if (!user) notFound();
 
   const self = user.id === admin.id;
+  const adminConfirmed = user.emailVerified && (await emailConfirmedByAdmin([user.id])).has(user.id);
   const protectedAdmin = !self && isAdminRole(user.platformRole) && admin.platformRole !== "SUPER_ADMIN";
   const soloStores = user.memberships.filter((membership) => membership.role === "OWNER" && membership.store.memberships.every((owner) => owner.userId === user.id));
   const providers = user.accounts.map((account) => (account.providerId === "google" ? "Google" : account.providerId === "credential" ? "E-mail et mot de passe" : account.providerId));
@@ -86,8 +89,7 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <Badge tone={user.suspendedAt ? "danger" : "success"}>{user.suspendedAt ? "Suspendu" : "Actif"}</Badge>
-          {user.phoneNumber && <Badge tone={user.phoneNumberVerified ? "success" : "warning"}>{user.phoneNumberVerified ? "WhatsApp validé" : "WhatsApp à valider"}</Badge>}
-          <Badge tone={user.emailVerified ? "success" : "warning"}>{user.emailVerified ? "E-mail confirmé" : "E-mail non confirmé"}</Badge>
+          {!isPlaceholderEmail(user.email) && <Badge tone={user.emailVerified ? "success" : "warning"}>{user.emailVerified ? "E-mail confirmé" : "E-mail à confirmer"}</Badge>}
         </div>
       </div>
       <AdminFeedback params={query} />
@@ -141,13 +143,16 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
                   <>
                     <a href={buildWaMeUrl(user.phoneNumber, `Bonjour ${user.name.trim().split(/\s+/)[0]}, ici l’équipe PrestAfrik.`)} rel="noopener noreferrer" target="_blank">
                       {formatWhatsappNumber(user.phoneNumber)}
-                    </a>{" "}
-                    · {user.phoneNumberVerified ? "validé" : "à valider"}
+                    </a>
                   </>
                 ) : (
                   "Aucun"
                 )}
               </dd>
+            </div>
+            <div>
+              <dt>A connu PrestAfrik par</dt>
+              <dd>{acquisitionLabel(user.acquisitionSource) ?? "Pas de réponse"}</dd>
             </div>
             <div>
               <dt>Ville (d’après ses boutiques)</dt>
@@ -168,18 +173,16 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
           </dl>
           {!protectedAdmin && (
             <div className="admin-account-actions">
-              {user.phoneNumber && (
-                <form action={user.phoneNumberVerified ? unverifyUserPhone : verifyUserPhone}>
-                  <input name="userId" type="hidden" value={user.id} />
-                  <SubmitButton className={user.phoneNumberVerified ? "btn btn-secondary" : "btn btn-primary"} pendingLabel="Enregistrement…">
-                    {user.phoneNumberVerified ? "Retirer la validation du WhatsApp" : "Valider le numéro WhatsApp"}
-                  </SubmitButton>
-                </form>
-              )}
-              {!user.emailVerified && (
+              {!user.emailVerified && !isPlaceholderEmail(user.email) && (
                 <form action={verifyUserEmail}>
                   <input name="userId" type="hidden" value={user.id} />
                   <SubmitButton className="btn btn-secondary" pendingLabel="Confirmation…">Confirmer l’adresse e-mail</SubmitButton>
+                </form>
+              )}
+              {user.emailVerified && adminConfirmed && (
+                <form action={unverifyUserEmail}>
+                  <input name="userId" type="hidden" value={user.id} />
+                  <SubmitButton className="btn btn-secondary" pendingLabel="Annulation…">Annuler la confirmation de l’e-mail</SubmitButton>
                 </form>
               )}
               {!user.suspendedAt && (

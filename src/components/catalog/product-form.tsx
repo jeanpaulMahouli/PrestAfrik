@@ -46,9 +46,19 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
   const [dirty, setDirty] = useState(false);
   const [creatingCategory, setCreatingCategory] = useState(false);
   const [trackInventory, setTrackInventory] = useState(values.trackInventory);
-  // Saisie gardée si la page est actualisée avant l'enregistrement.
+  // Modification : saisie gardée si la page est actualisée avant l'enregistrement. Nouveau produit : le
+  // formulaire s'ouvre toujours vide (rien n'est repris d'une saisie précédente).
   const formRef = useRef<HTMLFormElement>(null);
-  useFormPersistence(formRef, `produit:${values.id ?? "nouveau"}`);
+  useFormPersistence(formRef, values.id ? `produit:${values.id}` : null);
+  useEffect(() => {
+    if (values.id) return;
+    try {
+      // Ancienne saisie d'un nouveau produit, gardée par les versions précédentes.
+      sessionStorage.removeItem("prestafrik:formulaire:produit:nouveau");
+    } catch {
+      // Stockage indisponible : rien à effacer.
+    }
+  }, [values.id]);
   const isEdit = Boolean(values.id);
   const errors = state && !state.ok ? state.error.fields ?? {} : {};
   const invalid = (name: string) => (errors[name] ? { "aria-invalid": true, "aria-describedby": `${name}-error` } : {});

@@ -2,6 +2,7 @@ import "server-only";
 
 import type { Prisma, StoreRole } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { placeholderEmailSuffix } from "@/modules/auth/phone-account";
 import { userCityFromStores } from "@/modules/geo";
 import { classifyFailure, subscriptionDisplay, type FailureReason } from "@/modules/admin/display";
 import { isStoreSubscriptionPaused } from "@/modules/subscriptions/dates";
@@ -190,14 +191,15 @@ export async function listFailedMessages(hours: number, reason?: FailureReason) 
 
 /* ---------- Utilisateurs ---------- */
 
-export const userFilters = ["all", "whatsapp-to-validate", "whatsapp-validated", "whatsapp-missing"] as const;
+export const userFilters = ["all", "email-to-confirm", "email-confirmed", "email-missing"] as const;
 export type UserFilter = (typeof userFilters)[number];
 
 const userFilterWhere: Record<UserFilter, Prisma.UserWhereInput> = {
   all: {},
-  "whatsapp-to-validate": { phoneNumber: { not: null }, phoneNumberVerified: false },
-  "whatsapp-validated": { phoneNumber: { not: null }, phoneNumberVerified: true },
-  "whatsapp-missing": { phoneNumber: null },
+  // Comptes créés avec WhatsApp : adresse technique en « .invalid », sans vraie adresse e-mail.
+  "email-to-confirm": { emailVerified: false, NOT: { email: { endsWith: placeholderEmailSuffix } } },
+  "email-confirmed": { emailVerified: true, NOT: { email: { endsWith: placeholderEmailSuffix } } },
+  "email-missing": { email: { endsWith: placeholderEmailSuffix } },
 };
 
 /** Nombre de comptes par filtre (onglets de la page Utilisateurs). */
@@ -227,6 +229,7 @@ export async function listAdminUsers({ query = "", page = 1, take = adminPageSiz
         emailVerified: true,
         phoneNumber: true,
         phoneNumberVerified: true,
+        acquisitionSource: true,
         platformRole: true,
         suspendedAt: true,
         createdAt: true,

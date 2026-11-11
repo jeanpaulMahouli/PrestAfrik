@@ -1885,7 +1885,7 @@
   gap: 10px;
   min-width: 0;
   color: #1f1f1f;
-  font: 400 clamp(0.72rem, 0.8vw, 0.875rem) / 1 "Segoe UI", var(--lp-ui);
+  font: 400 clamp(0.72rem, 0.8vw, 0.875rem) / 1 var(--lp-ui);
   white-space: nowrap;
 }
 

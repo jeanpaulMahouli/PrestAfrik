@@ -35,6 +35,13 @@ export default async function AdminDashboardPage() {
           rows={data.cities}
           title="Utilisateurs par ville"
         />
+        <CityBars
+          empty="Aucune réponse pour le moment."
+          help={`Réponses à « Comment avez-vous connu PrestAfrik ? », posée à l’inscription (${formatNumber(data.acquisition.answered)} réponse${data.acquisition.answered > 1 ? "s" : ""}).`}
+          id="acquisition"
+          rows={data.acquisition.answered ? data.acquisition.rows : []}
+          title="Comment ils ont connu PrestAfrik"
+        />
         <CityBars empty="Aucune boutique pour le moment." help="Ville renseignée dans chaque boutique (même écriture que ci-contre)." id="stores-by-city" rows={data.storeCities} title="Boutiques par ville" />
 
         <section aria-labelledby="top-stores" className="v-card">

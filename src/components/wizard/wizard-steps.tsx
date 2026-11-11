@@ -362,7 +362,7 @@ export function ThemeStep({ draftId, initialTheme }: { draftId: string; initialT
   const { update } = useWizardPreview();
   const [theme, setTheme] = useState(initialTheme);
   return (
-    <WizardStepForm action={saveThemeStep} backHref={back(draftId, 4)} draftId={draftId} step={5} subtitle="Les quatre thèmes offrent exactement les mêmes fonctions. Seule la mise en page change. Vous pourrez en changer plus tard sans perdre vos produits ni vos commandes." title="Choisissez le style de votre boutique">
+    <WizardStepForm action={saveThemeStep} backHref={back(draftId, 5)} draftId={draftId} step={6} subtitle="Les quatre thèmes offrent exactement les mêmes fonctions. Seule la mise en page change. Vous pourrez en changer plus tard sans perdre vos produits ni vos commandes." title="Choisissez le style de votre boutique">
       {() => (
         <div className="wizard-themes" role="radiogroup">
           {themes.map((item) => (
@@ -420,7 +420,7 @@ export function BrandingStep({ draftId, initial }: { draftId: string; initial: {
   };
 
   return (
-    <WizardStepForm action={saveBrandingStep} backHref={back(draftId, 5)} draftId={draftId} step={6} subtitle="Ajoutez votre logo (c’est vous qui le choisissez) et personnalisez les couleurs. Nous vérifions que vos textes restent bien lisibles." title="Votre logo et vos couleurs">
+    <WizardStepForm action={saveBrandingStep} backHref={back(draftId, 4)} draftId={draftId} step={5} subtitle="Ajoutez votre logo (c’est vous qui le choisissez) et personnalisez les couleurs. Nous vérifions que vos textes restent bien lisibles." title="Votre logo et vos couleurs">
       {(fieldError) => (
         <>
           <p className="wizard-label">Logo de votre boutique</p>

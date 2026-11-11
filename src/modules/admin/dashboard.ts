@@ -2,6 +2,7 @@ import "server-only";
 
 import { dayColumn } from "@/lib/dashboard-periods";
 import { prisma } from "@/lib/prisma";
+import { acquisitionOptions, acquisitionSources } from "@/modules/auth/acquisition";
 import { cityLabel, unknownCityLabel, userCityFromStores } from "@/modules/geo";
 
 // Tableau de bord de l'administration. L'inscription ne demande pas de ville : la ville d'un utilisateur est
@@ -43,7 +44,7 @@ export async function getAdminDashboard(now = new Date()) {
   const userCity = (userId: string) => userCityFromStores(userStores.get(userId) ?? []);
 
   // Utilisateurs par ville et boutiques par ville : les 15 premières, le reste dans « Autres ».
-  const allUsers = await prisma.user.findMany({ select: { id: true } });
+  const allUsers = await prisma.user.findMany({ select: { id: true, acquisitionSource: true } });
   const cities = topCities(allUsers.map((user) => userCity(user.id) ?? unknownCityLabel));
   const citiesOfStores = topCities(storeCities.map((store) => cityLabel(store.city)));
 
@@ -88,7 +89,15 @@ export async function getAdminDashboard(now = new Date()) {
     return store ? [{ id: store.id, name: store.name, slug: store.slug, owner: store.memberships[0]?.user.name ?? null, visits: row.visits }] : [];
   });
 
-  return { kpis: { stores, publishedStores, users, newUsers }, cities, storeCities: citiesOfStores, topUsers, topStores };
+  // « Comment avez-vous connu PrestAfrik ? » (question posée à l'inscription depuis novembre 2026).
+  const sourceCounts = new Map<string, number>();
+  for (const user of allUsers) if (user.acquisitionSource) sourceCounts.set(user.acquisitionSource, (sourceCounts.get(user.acquisitionSource) ?? 0) + 1);
+  const acquisition = {
+    answered: [...sourceCounts.values()].reduce((total, count) => total + count, 0),
+    rows: acquisitionSources.map((source) => ({ city: acquisitionOptions[source].label, count: sourceCounts.get(source) ?? 0 })).sort((a, b) => b.count - a.count),
+  };
+
+  return { kpis: { stores, publishedStores, users, newUsers }, cities, storeCities: citiesOfStores, acquisition, topUsers, topStores };
 }
 
 /** Classement des villes (déjà normalisées) : les 15 premières, le reste regroupé dans « Autres ». */

@@ -35,7 +35,8 @@ export async function getPushTemplate(kind: PushNotificationKind): Promise<PushT
   return row ? { kind, enabled: row.enabled, title: row.title, body: row.body, url: row.url } : defaultPushTemplates[kind];
 }
 
-export type PushMessage = { title: string; body: string; url: string; tag?: string };
+/** image : grande photo sous le texte (facultative) ; sans photo, seul le logo PrestAfrik s'affiche. */
+export type PushMessage = { title: string; body: string; url: string; tag?: string; image?: string | null };
 
 /** Après 5 échecs de suite (hors refus définitif), l'appareil est retiré. */
 const maxFailures = 5;
@@ -49,7 +50,7 @@ export async function sendPushToUsers(userIds: string[], message: PushMessage) {
   if (!userIds.length || !configure()) return result;
   const subscriptions = await prisma.pushSubscription.findMany({ where: { userId: { in: [...new Set(userIds)] } } });
   result.recipients = new Set(subscriptions.map((subscription) => subscription.userId)).size;
-  const payload = JSON.stringify({ title: message.title, body: message.body, url: safePushUrl(message.url), tag: message.tag });
+  const payload = JSON.stringify({ title: message.title, body: message.body, url: safePushUrl(message.url), tag: message.tag, image: message.image || undefined });
 
   await Promise.all(
     subscriptions.map(async (subscription) => {
@@ -77,7 +78,7 @@ export async function sendPushToUsers(userIds: string[], message: PushMessage) {
 export async function sendTemplatedPush(
   kind: PushNotificationKind,
   recipients: { userId: string; vars: Record<string, string | null | undefined> }[],
-  options: { url?: string; tag?: string; template?: PushTemplate; sentById?: string } = {},
+  options: { url?: string; tag?: string; template?: PushTemplate; sentById?: string; image?: string | null; logManual?: boolean } = {},
 ) {
   const total = { recipients: 0, delivered: 0 };
   if (!recipients.length || !isPushConfigured()) return total;
@@ -90,13 +91,24 @@ export async function sendTemplatedPush(
       body: renderPushText(template.body, recipient.vars).slice(0, 300),
       url: options.url ?? renderPushText(template.url, recipient.vars),
       tag: options.tag,
+      image: options.image,
     });
     total.recipients += result.recipients;
     total.delivered += result.delivered;
   }
-  if (total.recipients) {
+  if (total.recipients || options.logManual) {
     await prisma.pushNotificationLog
-      .create({ data: { kind, title: template.title.slice(0, 80), body: template.body.slice(0, 240), recipients: total.recipients, delivered: total.delivered, sentById: options.sentById ?? null } })
+      .create({
+        data: {
+          kind,
+          title: template.title.slice(0, 80),
+          body: template.body.slice(0, 240),
+          ...(options.logManual ? { url: template.url.slice(0, 200), imageUrl: options.image?.slice(0, 500) ?? null } : {}),
+          recipients: total.recipients,
+          delivered: total.delivered,
+          sentById: options.sentById ?? null,
+        },
+      })
       .catch(() => undefined);
   }
   return total;

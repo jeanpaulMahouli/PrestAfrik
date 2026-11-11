@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthHeading, AuthShell } from "@/components/auth/auth-shell";
 import { WhatsappNumberForm } from "@/components/auth/whatsapp-number-form";
-import { welcomeHref } from "@/config/routes";
+import { acquisitionStepHref } from "@/config/routes";
 import { prisma } from "@/lib/prisma";
 import { adoptOwnedStoreWhatsappNumber } from "@/modules/auth/google";
 import { auth } from "@/modules/auth/server";
@@ -34,7 +34,7 @@ export default async function WhatsappStepPage() {
         }
         title={hasStore ? `${firstName}, votre numéro WhatsApp ?` : `Bienvenue ${firstName} ! Votre numéro WhatsApp ?`}
       />
-      <WhatsappNumberForm next={hasStore ? "/dashboard" : welcomeHref} />
+      <WhatsappNumberForm next={hasStore ? "/dashboard" : acquisitionStepHref} />
     </AuthShell>
   );
 }

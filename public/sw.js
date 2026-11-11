@@ -18,6 +18,7 @@ self.addEventListener("push", (event) => {
       body: data.body || "",
       icon: "/brand/pwa/icon-192.png",
       badge: "/brand/pwa/icon-192.png",
+      image: typeof data.image === "string" && data.image ? data.image : undefined,
       tag: data.tag || undefined,
       renotify: Boolean(data.tag),
       data: { url: typeof data.url === "string" && data.url.startsWith("/") ? data.url : "/dashboard" },

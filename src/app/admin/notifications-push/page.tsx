@@ -6,7 +6,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/modules/admin/context";
-import { broadcastPush, resetPushTemplate, updatePushTemplate } from "@/modules/push/admin-actions";
+import { broadcastPush, lastManualPush, resetPushTemplate, updatePushTemplate } from "@/modules/push/admin-actions";
 import { getPushTemplate, isPushConfigured } from "@/modules/push/sender";
 import { defaultPushTemplates, pushKindInfo, pushKinds } from "@/modules/push/templates";
 
@@ -20,16 +20,19 @@ export default async function AdminPushPage({ searchParams }: PageProps<"/admin/
   await requirePlatformAdmin();
   const params = await searchParams;
   const configured = isPushConfigured();
-  const [templates, devices, vendors, logs, customized] = await Promise.all([
+  const [templates, devices, vendors, logs, customized, last] = await Promise.all([
     Promise.all(pushKinds.map((kind) => getPushTemplate(kind))),
     prisma.pushSubscription.count(),
     prisma.user.count({ where: { pushSubscriptions: { some: {} } } }),
     prisma.pushNotificationLog.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
     prisma.pushNotificationTemplate.findMany({ select: { kind: true } }),
+    lastManualPush(),
   ]);
   const customizedKinds = new Set(customized.map((row) => row.kind));
   const automatic = templates.filter((template) => template.kind !== "NEWS");
   const news = templates.find((template) => template.kind === "NEWS") ?? defaultPushTemplates.NEWS;
+  // Le formulaire reprend le dernier message envoyé (essai compris), sinon le texte « Nouveauté ».
+  const draft = last ? { title: last.title, body: last.body, url: last.url ?? news.url, image: last.imageUrl } : { ...news, image: null };
 
   return (
     <>
@@ -60,8 +63,24 @@ export default async function AdminPushPage({ searchParams }: PageProps<"/admin/
         <p className="v-small v-muted">
           À tous les vendeurs qui ont activé les notifications. Variables : <code>{"{prenom}"}</code>, <code>{"{boutique}"}</code>. Utilisez « Essai » pour la recevoir d’abord sur vos propres appareils.
         </p>
-        <form action={broadcastPush} className="push-admin-form">
-          <PushFields body={news.body} title={news.title} url={news.url} />
+        <form action={broadcastPush} className="push-admin-form" encType="multipart/form-data">
+          <PushFields body={draft.body} title={draft.title} url={draft.url} />
+          <div className="v-field">
+            Photo (facultative)
+            {draft.image && (
+              <label className="push-admin-photo">
+                {/* Photo déjà optimisée (WebP 1200 × 600). */}
+                <img alt="" height={60} src={draft.image} width={120} />
+                <span className="v-check">
+                  <input defaultChecked name="keepImage" type="checkbox" /> Garder la photo du dernier envoi
+                </span>
+              </label>
+            )}
+            <input accept="image/png,image/jpeg,image/webp" name="image" type="file" />
+            <span className="v-field-help">
+              Grande image sous le texte (recadrée en 1200 × 600 px, 2 Mo au plus). Sans photo, la notification montre le logo PrestAfrik. Elle ne s’affiche pas sur iPhone.
+            </span>
+          </div>
           <div className="push-admin-actions">
             <SubmitButton className="btn btn-secondary" name="mode" pendingLabel="Envoi…" value="test">
               Essai sur mes appareils

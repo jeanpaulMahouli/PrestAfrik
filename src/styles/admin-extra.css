@@ -682,22 +682,25 @@
   width: 100%;
 }
 
-/* Utilisateurs : numéro WhatsApp, son statut et le bouton de validation. */
-.admin-phone-check {
+/* Utilisateurs : adresse e-mail, son statut et le bouton de confirmation. */
+.admin-email-check {
   display: grid;
   gap: 0.4rem;
   justify-items: start;
 }
 
-.admin-phone-check-line {
+.admin-email-check-line {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
-  white-space: nowrap;
 }
 
-.admin-phone-check-btn {
+.admin-email-check-address {
+  overflow-wrap: anywhere;
+}
+
+.admin-email-check-btn {
   min-height: 0;
   padding: 0.35rem 0.75rem;
   font-size: 0.8125rem;
@@ -752,4 +755,17 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.push-admin-photo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.push-admin-photo img {
+  width: 120px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
 }

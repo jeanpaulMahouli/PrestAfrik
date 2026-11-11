@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { isAdminRole, logAdminAction, requirePlatformAdmin } from "@/modules/admin/context";
+import { isPlaceholderEmail } from "@/modules/auth/phone-account";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
 
 // Administration → Utilisateurs → Gérer le compte : l'administration a la main sur chaque compte
@@ -79,20 +80,9 @@ export async function updateUserAccount(formData: FormData) {
   back(accountPath(user.id), "Informations du compte enregistrées.");
 }
 
-/** Adresse e-mail confirmée sans le code (personne identifiée par un autre moyen). */
-export async function verifyUserEmail(formData: FormData) {
-  const { admin, user } = await targetAccount(formData);
-  if (user.emailVerified) back(accountPath(user.id), "L’adresse e-mail est déjà confirmée.", "erreur");
-  await prisma.$transaction(async (tx) => {
-    await tx.user.update({ where: { id: user.id }, data: { emailVerified: true } });
-    await logAdminAction(admin.id, { action: "user.verify-email", targetType: "user", targetId: user.id }, tx);
-  });
-  back(accountPath(user.id), `L’adresse ${user.email} est confirmée.`);
-}
-
 /**
- * Retour après la validation d'un numéro : la liste des utilisateurs (avec ses filtres) quand l'action y a été
- * lancée, sinon la fiche du compte. Seules les adresses de l'administration des utilisateurs sont acceptées.
+ * Retour après une action lancée depuis la liste des utilisateurs (avec ses filtres), sinon la fiche du compte.
+ * Seules les adresses de l'administration des utilisateurs sont acceptées.
  */
 function returnPath(formData: FormData, userId: string) {
   const value = String(formData.get("retour") ?? "");
@@ -108,33 +98,52 @@ function backWith(path: string, message: string, kind: "succes" | "erreur" = "su
 }
 
 /**
- * Numéro WhatsApp validé par l'équipe (vérifié par appel ou message) : c'est le contact principal du vendeur.
- * Un numéro validé confirme aussi le compte.
+ * La confirmation actuelle de l'adresse vient-elle de l'administration ? (dernière action de confirmation ou
+ * d'annulation inscrite au journal). Une adresse confirmée par la personne elle-même (code reçu) n'y figure pas.
  */
-export async function verifyUserPhone(formData: FormData) {
-  const { admin, user } = await targetAccount(formData);
-  const path = returnPath(formData, user.id);
-  if (!user.phoneNumber) backWith(path, `${user.name} n’a pas encore de numéro WhatsApp : ajoutez-le dans « Gérer le compte ».`, "erreur");
-  if (user.phoneNumberVerified) backWith(path, `Le numéro WhatsApp de ${user.name} est déjà validé.`, "erreur");
-  await prisma.$transaction(async (tx) => {
-    await tx.user.update({ where: { id: user.id }, data: { phoneNumberVerified: true } });
-    await logAdminAction(admin.id, { action: "user.verify-phone", targetType: "user", targetId: user.id, details: { phone: user.phoneNumber } }, tx);
+export async function emailConfirmedByAdmin(userIds: string[]) {
+  if (!userIds.length) return new Set<string>();
+  const logs = await prisma.auditLog.findMany({
+    where: { targetType: "user", targetId: { in: userIds }, action: { in: ["user.verify-email", "user.unverify-email"] } },
+    orderBy: { createdAt: "desc" },
+    select: { targetId: true, action: true },
   });
-  revalidatePath("/admin", "layout");
-  backWith(path, `Numéro WhatsApp de ${user.name} validé.`);
+  const latest = new Map<string, string>();
+  for (const log of logs) if (!latest.has(log.targetId)) latest.set(log.targetId, log.action);
+  return new Set([...latest].filter(([, action]) => action === "user.verify-email").map(([userId]) => userId));
 }
 
-/** Validation retirée (numéro erroné ou injoignable) : le numéro repasse « à valider ». */
-export async function unverifyUserPhone(formData: FormData) {
+/** Adresse e-mail confirmée par l'administration, sans le code (personne identifiée par un autre moyen). */
+export async function verifyUserEmail(formData: FormData) {
   const { admin, user } = await targetAccount(formData);
   const path = returnPath(formData, user.id);
-  if (!user.phoneNumberVerified) backWith(path, `Le numéro WhatsApp de ${user.name} n’est pas validé.`, "erreur");
+  if (isPlaceholderEmail(user.email)) backWith(path, `${user.name} n’a pas d’adresse e-mail (compte créé avec WhatsApp).`, "erreur");
+  if (user.emailVerified) backWith(path, `L’adresse ${user.email} est déjà confirmée.`, "erreur");
   await prisma.$transaction(async (tx) => {
-    await tx.user.update({ where: { id: user.id }, data: { phoneNumberVerified: false } });
-    await logAdminAction(admin.id, { action: "user.unverify-phone", targetType: "user", targetId: user.id, details: { phone: user.phoneNumber } }, tx);
+    await tx.user.update({ where: { id: user.id }, data: { emailVerified: true } });
+    await logAdminAction(admin.id, { action: "user.verify-email", targetType: "user", targetId: user.id, details: { email: user.email } }, tx);
   });
   revalidatePath("/admin", "layout");
-  backWith(path, `Validation du numéro WhatsApp de ${user.name} retirée.`);
+  backWith(path, `L’adresse ${user.email} est confirmée.`);
+}
+
+/**
+ * Annule une confirmation faite par l'administration (erreur de clic, adresse douteuse). Une adresse confirmée
+ * par la personne elle-même ne peut pas être remise « à confirmer » ici.
+ */
+export async function unverifyUserEmail(formData: FormData) {
+  const { admin, user } = await targetAccount(formData);
+  const path = returnPath(formData, user.id);
+  if (!user.emailVerified) backWith(path, `L’adresse ${user.email} n’est pas confirmée.`, "erreur");
+  if (!(await emailConfirmedByAdmin([user.id])).has(user.id)) {
+    backWith(path, `L’adresse ${user.email} a été confirmée par ${user.name} : elle ne peut pas être remise à confirmer.`, "erreur");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: user.id }, data: { emailVerified: false } });
+    await logAdminAction(admin.id, { action: "user.unverify-email", targetType: "user", targetId: user.id, details: { email: user.email } }, tx);
+  });
+  revalidatePath("/admin", "layout");
+  backWith(path, `L’adresse ${user.email} est repassée « à confirmer ».`);
 }
 
 /** Déconnexion sur tous les appareils (sans suspendre le compte). */

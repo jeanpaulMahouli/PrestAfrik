@@ -5,6 +5,8 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 // aucun e-mail. Elle n'est jamais affichée : on montre le numéro à la place.
 
 const placeholderDomain = "whatsapp.prestafrik.invalid";
+/** Fin des adresses techniques (filtres de l'administration). */
+export const placeholderEmailSuffix = `@${placeholderDomain}`;
 
 export function placeholderEmailFor(phoneE164: string) {
   return `${phoneE164.replace(/\D/g, "")}@${placeholderDomain}`;

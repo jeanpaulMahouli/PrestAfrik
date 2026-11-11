@@ -493,3 +493,83 @@
   background: var(--color-border);
   content: "";
 }
+
+/* Inscription : « Comment avez-vous connu PrestAfrik ? » (un choix parmi six, en grille). */
+.auth-sources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.auth-source {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 3.25rem;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid var(--color-divider);
+  border-radius: var(--radius-xs);
+  background: var(--color-surface, #fff);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.auth-source:hover {
+  border-color: var(--color-brand-primary);
+}
+
+.auth-source.is-selected {
+  border-color: var(--color-brand-primary);
+  background: #fff8ec;
+  box-shadow: 0 0 0 1px var(--color-brand-primary);
+}
+
+/* Bouton radio invisible mais accessible au clavier : le focus se voit sur la carte. */
+.auth-source input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.auth-source:has(input:focus-visible) {
+  outline: 3px solid var(--color-brand-secondary);
+  outline-offset: 2px;
+}
+
+.auth-source img,
+.auth-source-icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
+}
+
+.auth-source-icon {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.auth-source-icon--google {
+  background: conic-gradient(from -45deg, #ea4335 0 25%, #fbbc05 0 50%, #34a853 0 75%, #4285f4 0);
+}
+
+.auth-source-icon--word_of_mouth {
+  background: var(--color-brand-primary);
+}
+
+@media (max-width: 340px) {
+  .auth-sources {
+    grid-template-columns: 1fr;
+  }
+}

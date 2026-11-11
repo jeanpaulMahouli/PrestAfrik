@@ -5,11 +5,22 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { ImageUploadError, saveStoreImage } from "@/lib/uploads";
 import { logAdminAction, requirePlatformAdmin } from "@/modules/admin/context";
 import { isPushConfigured, sendTemplatedPush } from "@/modules/push/sender";
 import { defaultPushTemplates, pushKinds, safePushUrl } from "@/modules/push/templates";
 
 // Administration → Notifications push : textes des notifications automatiques et envoi d'une nouveauté.
+
+/** Dossier des photos jointes aux notifications (même rangement que les images des annonces). */
+const pushMediaId = "prestafriknotifications0";
+/** Format conseillé par les navigateurs pour la grande image d'une notification (2:1). */
+const pushImageFrame = { width: 1200, height: 600 };
+
+/** Dernier envoi manuel (essai compris) : repris dans le formulaire pour le prochain envoi. */
+export async function lastManualPush() {
+  return prisma.pushNotificationLog.findFirst({ where: { kind: "NEWS", url: { not: null } }, orderBy: { createdAt: "desc" }, select: { title: true, body: true, url: true, imageUrl: true } });
+}
 
 const pagePath = "/admin/notifications-push";
 
@@ -63,6 +74,18 @@ export async function broadcastPush(formData: FormData) {
   const testOnly = formData.get("mode") === "test";
   const kind: PushNotificationKind = "NEWS";
 
+  // Photo facultative : nouvelle photo choisie, sinon celle du dernier envoi si elle est gardée, sinon aucune
+  // (la notification montre alors seulement le logo PrestAfrik).
+  let image: string | null = null;
+  try {
+    const saved = await saveStoreImage(formData.get("image"), pushMediaId, { frame: pushImageFrame });
+    image = saved?.url ?? null;
+  } catch (error) {
+    if (error instanceof ImageUploadError) back(error.message, "erreur");
+    throw error;
+  }
+  if (!image && formData.get("keepImage") === "on") image = (await lastManualPush())?.imageUrl ?? null;
+
   const users = await prisma.user.findMany({
     where: { suspendedAt: null, pushSubscriptions: { some: {} }, ...(testOnly ? { id: admin.id } : { memberships: { some: {} } }) },
     select: { id: true, name: true, lastActiveStore: { select: { name: true } }, memberships: { orderBy: { createdAt: "asc" }, take: 1, select: { store: { select: { name: true } } } } },
@@ -72,10 +95,10 @@ export async function broadcastPush(formData: FormData) {
   const result = await sendTemplatedPush(
     kind,
     users.map((user) => ({ userId: user.id, vars: { prenom: user.name.trim().split(/\s+/)[0], boutique: user.lastActiveStore?.name ?? user.memberships[0]?.store.name ?? "votre boutique" } })),
-    { template: { kind, enabled: true, title: parsed.data.title, body: parsed.data.body, url: safePushUrl(parsed.data.url) }, sentById: admin.id, tag: testOnly ? "essai" : "nouveaute" },
+    { template: { kind, enabled: true, title: parsed.data.title, body: parsed.data.body, url: safePushUrl(parsed.data.url) }, sentById: admin.id, tag: testOnly ? "essai" : "nouveaute", image, logManual: true },
   );
   if (!testOnly) {
-    await logAdminAction(admin.id, { action: "push.broadcast", targetType: "push", targetId: kind, details: { title: parsed.data.title, recipients: result.recipients, delivered: result.delivered } });
+    await logAdminAction(admin.id, { action: "push.broadcast", targetType: "push", targetId: kind, details: { title: parsed.data.title, image, recipients: result.recipients, delivered: result.delivered } });
   }
   revalidatePath(pagePath);
   back(

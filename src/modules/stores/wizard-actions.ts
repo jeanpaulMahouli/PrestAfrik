@@ -149,17 +149,17 @@ export async function saveContactStep(_previous: WizardState, formData: FormData
   );
 }
 
-/* ---------- 5. Thème ---------- */
+/* ---------- 6. Thème (après le logo : le style se choisit avec son logo en tête) ---------- */
 
 export async function saveThemeStep(_previous: WizardState, formData: FormData): Promise<WizardState> {
   const { draft } = await currentDraft(formData);
   if (!draft) return missingDraft();
   const theme = z.nativeEnum(StoreTheme).safeParse(text(formData, "theme"));
   if (!theme.success) return fail("Choisissez l’un des trois thèmes pour continuer.", "theme");
-  return saveAndContinue(draft, { theme: theme.data }, 5);
+  return saveAndContinue(draft, { theme: theme.data }, 6);
 }
 
-/* ---------- 6. Couleurs et logo ---------- */
+/* ---------- 5. Couleurs et logo ---------- */
 
 const colorSchema = z.string().regex(/^#[\da-f]{6}$/i);
 
@@ -186,7 +186,7 @@ export async function saveBrandingStep(_previous: WizardState, formData: FormDat
     throw error;
   }
   if (logoUrl && draft.data.logoUrl) await deleteStoreImage(draft.data.logoUrl);
-  return saveAndContinue(draft, { ...colors, ...(logoUrl ? { logoUrl } : {}) }, 6);
+  return saveAndContinue(draft, { ...colors, ...(logoUrl ? { logoUrl } : {}) }, 5);
 }
 
 /* ---------- 7. Premier produit (facultatif) ---------- */

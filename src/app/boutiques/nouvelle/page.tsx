@@ -92,9 +92,9 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
         whatsapp={data.whatsapp ? { country: data.whatsapp.country, national: data.whatsapp.national } : null}
       />
     );
-  } else if (step === 5) {
-    content = <ThemeStep draftId={draft.id} initialTheme={data.theme ?? "CATALOGUE_EXPRESS"} />;
   } else if (step === 6) {
+    content = <ThemeStep draftId={draft.id} initialTheme={data.theme ?? "CATALOGUE_EXPRESS"} />;
+  } else if (step === 5) {
     content = (
       <BrandingStep
         draftId={draft.id}
@@ -141,8 +141,8 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
       { label: "Description", value: data.description ? (data.description.length > 90 ? `${data.description.slice(0, 90)}…` : data.description) : "Aucune (facultatif, vous pourrez l’ajouter ensuite)", step: 2, done: Boolean(data.description) },
       { label: "Localisation", value: [data.city, data.region].filter(Boolean).join(", ") || "À préciser", step: 3, done: Boolean(data.city) },
       { label: "Coordonnées", value: phone ? phone.replace(/(\+\d{3})(\d)\d+(\d{2})$/, "$1 $2 •• •• •• $3") : "À préciser", step: 4, done: Boolean(phone) },
-      { label: "Thème", value: themeNames[data.theme ?? "CATALOGUE_EXPRESS"], step: 5, done: true },
-      { label: "Logo et couleurs", value: `${data.logoUrl ? "Logo ajouté" : "Initiales affichées"} · ${(data.primaryColor ?? defaultColors.primaryColor) === defaultColors.primaryColor ? "couleurs PrestAfrik" : "couleurs personnalisées"}`, step: 6, done: true },
+      { label: "Logo et couleurs", value: `${data.logoUrl ? "Logo ajouté" : "Initiales affichées"} · ${(data.primaryColor ?? defaultColors.primaryColor) === defaultColors.primaryColor ? "couleurs PrestAfrik" : "couleurs personnalisées"}`, step: 5, done: true },
+      { label: "Thème", value: themeNames[data.theme ?? "CATALOGUE_EXPRESS"], step: 6, done: true },
       {
         label: "Premier produit",
         value: data.product ? `${data.product.name} · ${formatFcfa(data.product.priceXaf)} · ${data.product.photos.length} photo${data.product.photos.length > 1 ? "s" : ""}` : "Aucun produit pour l’instant (vous pourrez en ajouter ensuite)",

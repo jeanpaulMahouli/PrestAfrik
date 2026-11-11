@@ -38,6 +38,14 @@ optgroup {
   font: inherit;
 }
 
+/* Une seule police partout, y compris pour le code et les variables affichées ({prenom}…). */
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-body);
+}
+
 button,
 a,
 input,

@@ -8,10 +8,11 @@ import { Pagination } from "@/components/ui/pagination";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { formatDate, formatTime } from "@/lib/format";
 import { restoreUser, sendUserPasswordReset, suspendUser } from "@/modules/admin/actions";
-import { unverifyUserPhone, verifyUserPhone } from "@/modules/admin/account-actions";
+import { emailConfirmedByAdmin, unverifyUserEmail, verifyUserEmail } from "@/modules/admin/account-actions";
 import { isAdminRole, requirePlatformAdmin } from "@/modules/admin/context";
 import { adminPageSize, countAdminUsersByFilter, listAdminUsers, userFilters, type UserFilter } from "@/modules/admin/queries";
-import { accountContact, formatPhoneForDisplay, isAccountVerified, isPlaceholderEmail } from "@/modules/auth/phone-account";
+import { acquisitionLabel } from "@/modules/auth/acquisition";
+import { formatPhoneForDisplay, isPlaceholderEmail } from "@/modules/auth/phone-account";
 import { buildWaMeUrl } from "@/modules/whatsapp/wa-me";
 
 export const metadata = { title: "Utilisateurs" };
@@ -20,9 +21,9 @@ const roleLabels = { OWNER: "Propriétaire", MANAGER: "Gestionnaire", ORDER_PREP
 
 const filterLabels: Record<UserFilter, string> = {
   all: "Tous",
-  "whatsapp-to-validate": "WhatsApp à valider",
-  "whatsapp-validated": "WhatsApp validé",
-  "whatsapp-missing": "Sans numéro",
+  "email-to-confirm": "E-mail à confirmer",
+  "email-confirmed": "E-mail confirmé",
+  "email-missing": "Sans e-mail (compte WhatsApp)",
 };
 
 function lastSeen(date: Date | null, now = new Date()) {
@@ -42,6 +43,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
   const requested = searchValue(params, "filtre") as UserFilter;
   const filter: UserFilter = userFilters.includes(requested) ? requested : "all";
   const [result, counts] = await Promise.all([listAdminUsers({ query, page, filter }), countAdminUsersByFilter()]);
+  // Confirmations faites par l'administration : elles seules peuvent être annulées.
+  const adminConfirmed = await emailConfirmedByAdmin(result.users.filter((user) => user.emailVerified).map((user) => user.id));
   const retour = currentPath("/admin/utilisateurs", params);
   const listHref = (next: { filtre?: UserFilter; page?: number }) => {
     const search = new URLSearchParams();
@@ -58,7 +61,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Utilisateurs</h1>
-          <p className="v-page-subtitle">Retrouvez les comptes de la plateforme, leurs boutiques et leurs rôles, et validez leur numéro WhatsApp.</p>
+          <p className="v-page-subtitle">Retrouvez les comptes de la plateforme, leurs boutiques et leurs rôles, et confirmez leur adresse e-mail.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <a
@@ -74,7 +77,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
       </div>
       <AdminFeedback params={params} />
       <p className="v-banner v-banner-info">
-        Le <strong>numéro WhatsApp</strong> est notre contact principal avec chaque vendeur : écrivez-lui (clic sur le numéro), puis cliquez sur <strong>Valider le numéro</strong> quand il répond. Ouvrez <strong>Gérer le compte</strong> pour corriger un numéro, confirmer, déconnecter, suspendre ou supprimer un compte. Les mots de passe ne sont jamais visibles.
+        Pour une adresse e-mail <strong>à confirmer</strong>, cliquez sur <strong>Confirmer l’adresse</strong> : le compte est confirmé sans le code. Une confirmation faite ici peut être annulée ; une adresse confirmée par la personne elle-même reste confirmée. Ouvrez <strong>Gérer le compte</strong> pour modifier, déconnecter, suspendre ou supprimer un compte. Les mots de passe ne sont jamais visibles.
       </p>
 
       <nav aria-label="Filtrer les utilisateurs" className="pill-tabs">
@@ -114,6 +117,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                       <UserAvatar image={user.image} name={user.name} size={32} />
                       <span>
                         <Link href={`/admin/utilisateurs/${user.id}`}>{user.name}</Link>
+                        {user.acquisitionSource && <span className="v-cell-sub">A connu PrestAfrik par : {acquisitionLabel(user.acquisitionSource)}</span>}
                         {isAdminRole(user.platformRole) && (
                           <span className="v-cell-sub">{user.platformRole === "SUPER_ADMIN" ? "Super administrateur PrestAfrik" : "Administrateur PrestAfrik"}</span>
                         )}
@@ -122,33 +126,42 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                   </td>
                   <td data-label="Numéro WhatsApp">
                     {user.phoneNumber ? (
-                      <span className="admin-phone-check">
-                        <span className="admin-phone-check-line">
-                          <a
-                            href={buildWaMeUrl(user.phoneNumber, `Bonjour ${user.name.trim().split(/\s+/)[0]}, ici l’équipe PrestAfrik.`)}
-                            rel="noopener noreferrer"
-                            target="_blank"
-                            title="Écrire sur WhatsApp (nouvel onglet)"
-                          >
-                            {formatPhoneForDisplay(user.phoneNumber)}
-                          </a>
-                          <Badge tone={user.phoneNumberVerified ? "success" : "warning"}>{user.phoneNumberVerified ? "Validé" : "À valider"}</Badge>
-                        </span>
-                        <form action={user.phoneNumberVerified ? unverifyUserPhone : verifyUserPhone}>
-                          <input name="userId" type="hidden" value={user.id} />
-                          <input name="retour" type="hidden" value={retour} />
-                          <SubmitButton className={user.phoneNumberVerified ? "v-link-button admin-row-action" : "btn btn-primary admin-phone-check-btn"} pendingLabel="Enregistrement…">
-                            {user.phoneNumberVerified ? "Retirer la validation" : "Valider le numéro"}
-                          </SubmitButton>
-                        </form>
-                      </span>
+                      <a href={buildWaMeUrl(user.phoneNumber, `Bonjour ${user.name.trim().split(/\s+/)[0]}, ici l’équipe PrestAfrik.`)} rel="noopener noreferrer" target="_blank" title="Écrire sur WhatsApp (nouvel onglet)">
+                        {formatPhoneForDisplay(user.phoneNumber)}
+                      </a>
                     ) : (
                       <span className="v-muted">Aucun numéro</span>
                     )}
                   </td>
                   <td data-label="E-mail">
-                    {isPlaceholderEmail(user.email) ? "—" : accountContact(user)}
-                    {!isAccountVerified(user) && <span className="v-cell-sub">Compte non confirmé</span>}
+                    {isPlaceholderEmail(user.email) ? (
+                      <span className="v-muted">Aucune adresse</span>
+                    ) : (
+                      <span className="admin-email-check">
+                        <span className="admin-email-check-line">
+                          <span className="admin-email-check-address">{user.email}</span>
+                          <Badge tone={user.emailVerified ? "success" : "warning"}>{user.emailVerified ? "Confirmée" : "À confirmer"}</Badge>
+                        </span>
+                        {!user.emailVerified && (
+                          <form action={verifyUserEmail}>
+                            <input name="userId" type="hidden" value={user.id} />
+                            <input name="retour" type="hidden" value={retour} />
+                            <SubmitButton className="btn btn-primary admin-email-check-btn" pendingLabel="Confirmation…">
+                              Confirmer l’adresse
+                            </SubmitButton>
+                          </form>
+                        )}
+                        {user.emailVerified && adminConfirmed.has(user.id) && (
+                          <form action={unverifyUserEmail}>
+                            <input name="userId" type="hidden" value={user.id} />
+                            <input name="retour" type="hidden" value={retour} />
+                            <SubmitButton className="v-link-button admin-row-action" pendingLabel="Annulation…" title="Confirmée par l’administration">
+                              Annuler la confirmation
+                            </SubmitButton>
+                          </form>
+                        )}
+                      </span>
+                    )}
                   </td>
                   <td data-label="Boutiques et rôles">
                     {user.memberships.length ? user.memberships.map((membership) => `${membership.store.name} (${roleLabels[membership.role]})`).join(", ") : "—"}

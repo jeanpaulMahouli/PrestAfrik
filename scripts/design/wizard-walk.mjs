@@ -48,12 +48,12 @@ await page.getByLabel("Adresse e-mail de contact (facultatif)").fill("contact@ex
 await shot("4-coordonnees");
 await next();
 await page.waitForURL(/etape=5/);
-
-await page.getByText("Mode et beauté").click();
-await shot("5-theme");
+await shot("5-couleurs");
 await next();
 await page.waitForURL(/etape=6/);
-await shot("6-couleurs");
+
+await page.getByText("Mode et beauté").click();
+await shot("6-theme");
 await next();
 await page.waitForURL(/etape=7/);
 
