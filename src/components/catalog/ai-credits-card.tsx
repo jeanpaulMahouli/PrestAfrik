@@ -19,21 +19,20 @@ const plural = (count: number) => (count > 1 ? "s" : "");
  */
 export function AiCreditsCard({ credits, action, compact = false }: { credits: AiCreditsSummary; /** Lien vers l'ajout d'un produit (tableau de bord). */ action?: { href: string; label: string }; compact?: boolean }) {
   const empty = credits.total <= 0;
+  const allowance = `Vous avez droit à ${credits.allowance} crédit${plural(credits.allowance)} IA tous les mois${credits.bonus > 0 ? `, plus ${credits.bonus} crédit${plural(credits.bonus)} bonus` : ""}.`;
   return (
     <section aria-label="Crédits de l’assistant IA" className={`ai-credits-card${empty ? " is-empty" : ""}${compact ? " is-compact" : ""}`}>
-      <span aria-hidden="true" className="ai-credits-card-icon">
-        <Sparkles size={compact ? 20 : 24} weight="fill" />
-      </span>
+      <Sparkles aria-hidden="true" className="ai-credits-card-icon" size={compact ? 26 : 32} />
       <div className="ai-credits-card-body">
         <p className="ai-credits-card-title">
           <strong>{credits.total}</strong> crédit{plural(credits.total)} IA restant{plural(credits.total)}
         </p>
-        <p className="ai-credits-card-detail">
-          {empty
-            ? `Ils reviennent le ${renewal(credits.renewsAt)}. Besoin de plus ? Demandez des crédits à l’équipe PrestAfrik.`
-            : `${credits.monthly} sur ${credits.allowance} ce mois-ci${credits.bonus > 0 ? ` + ${credits.bonus} bonus` : ""} · renouvelés le ${renewal(credits.renewsAt)}`}
-        </p>
-        {!compact && <p className="ai-credits-card-help">1 crédit = 1 proposition de nom et de description à partir de vos photos.</p>}
+        {empty ? (
+          <p className="ai-credits-card-detail">Vos crédits reviennent le {renewal(credits.renewsAt)}. Besoin de plus ? Demandez des crédits à l’équipe PrestAfrik.</p>
+        ) : (
+          !compact && <p className="ai-credits-card-detail">Laissez l’IA vous proposer un nom précis et une description claire et vendeuse, à partir des photos de votre produit.</p>
+        )}
+        <p className="ai-credits-card-help">{allowance}</p>
       </div>
       {action && !empty && (
         <Link className="ai-credits-card-action" href={action.href}>

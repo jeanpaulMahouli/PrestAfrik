@@ -3971,3 +3971,18 @@
     justify-content: center;
   }
 }
+
+/* Icône de l'encart « Crédits IA » : l'icône de la banque (Phosphor Regular), sans cercle. */
+.ai-credits-card .ai-credits-card-icon,
+.ai-credits-card.is-compact .ai-credits-card-icon,
+.ai-credits-card.is-empty .ai-credits-card-icon {
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  color: #e08600;
+  background: none;
+}
+
+.ai-credits-card.is-empty .ai-credits-card-icon {
+  color: var(--color-danger);
+}
