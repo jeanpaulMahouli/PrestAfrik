@@ -3845,3 +3845,129 @@
 .v-card > .v-card-header + p:is(.v-small, .v-muted):not(:last-child) {
   margin-bottom: 1rem;
 }
+
+/* Encart « Crédits IA » (accueil du tableau de bord et Infos pratiques du formulaire produit) :
+   bordure en dégradé orange et pêche, comme le bouton de l'assistant. */
+.ai-credits-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.875rem 1rem;
+  margin: 0 0 1rem;
+  padding: 1rem 1.25rem;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background:
+    linear-gradient(#fffaf0, #fffaf0) padding-box,
+    linear-gradient(80deg, #ff9900, #ffdeae 45%, #ff9900) border-box;
+  box-shadow: 0 10px 24px -18px rgb(255 153 0 / 0.9);
+}
+
+.ai-credits-card-icon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #000;
+  background: linear-gradient(135deg, #ff9900, #ffdeae);
+}
+
+.ai-credits-card-body {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.ai-credits-card-body p {
+  margin: 0;
+}
+
+.ai-credits-card-title {
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ai-credits-card-title strong {
+  margin-right: 0.25rem;
+  color: #e08600;
+  font-size: 1.625rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.ai-credits-card-detail {
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+}
+
+.ai-credits-card-help {
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+
+.ai-credits-card-action {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  padding: 0 1.25rem;
+  border-radius: 12px;
+  color: #000;
+  background: linear-gradient(80.5deg, #ff9900 0%, #ffdeae 50%, #ff9900 100%);
+  background-size: 200% 100%;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.08);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: translate 0.2s ease;
+}
+
+.ai-credits-card-action:hover {
+  translate: 0 -2px;
+}
+
+.ai-credits-card.is-compact {
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 0.875rem 1rem;
+}
+
+.ai-credits-card.is-compact .ai-credits-card-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.ai-credits-card.is-compact .ai-credits-card-title strong {
+  font-size: 1.375rem;
+}
+
+.ai-credits-card.is-compact .ai-credits-card-detail {
+  font-size: 0.8125rem;
+}
+
+.ai-credits-card.is-empty {
+  background:
+    linear-gradient(#fff4f2, #fff4f2) padding-box,
+    linear-gradient(80deg, #e2553f, #f6b3a6 45%, #e2553f) border-box;
+  box-shadow: none;
+}
+
+.ai-credits-card.is-empty .ai-credits-card-title strong {
+  color: var(--color-danger);
+}
+
+.ai-credits-card.is-empty .ai-credits-card-icon {
+  background: #f6d2cb;
+}
+
+@media (max-width: 639.98px) {
+  .ai-credits-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .ai-credits-card-action {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}

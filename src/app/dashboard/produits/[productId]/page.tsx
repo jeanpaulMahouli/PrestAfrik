@@ -1,4 +1,5 @@
 import { productAiAvailable } from "@/lib/product-ai";
+import { getAiCredits } from "@/modules/ai-credits/server";
 import { notFound } from "next/navigation";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ProductDangerZone } from "@/components/catalog/product-danger-zone";
@@ -15,8 +16,9 @@ export const metadata = { title: "Modifier un produit" };
 export default async function EditProductPage({ params, searchParams }: PageProps<"/dashboard/produits/[productId]">) {
   const { store } = await requireStorePermission("products.manage");
   const [{ productId }, query] = await Promise.all([params, searchParams]);
-  const [product, categories, profile] = await Promise.all([getEditableProduct(store.id, productId), getStoreCategories(store.id), storeCatalogProfile(store.activityId)]);
+  const [product, categories, profile, credits] = await Promise.all([getEditableProduct(store.id, productId), getStoreCategories(store.id), storeCatalogProfile(store.activityId), productAiAvailable() ? getAiCredits(store.id) : null]);
   if (!product) notFound();
+  const aiCredits = credits ? { total: credits.total, monthly: credits.monthly, bonus: credits.bonus, allowance: credits.allowance, renewsAt: credits.renewsAt.toISOString() } : null;
 
   return (
     <VendorShell>
@@ -26,6 +28,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
         </p>
       )}
       <ProductForm
+        aiCredits={aiCredits}
         aiEnabled={productAiAvailable()}
         categories={categories}
         listingMode={profile.listingMode}

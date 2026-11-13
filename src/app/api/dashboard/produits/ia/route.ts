@@ -6,6 +6,8 @@ import { maxAiPhotos, ProductAiError, productAiAvailable, suggestProductDetails 
 import { createRateLimiter } from "@/lib/rate-limit";
 import { isSameOrigin } from "@/lib/request-guards";
 import { storage } from "@/lib/storage";
+import { formatDate } from "@/lib/format";
+import { getAiCredits, refundAiCredit, takeAiCredit, type AiCredits } from "@/modules/ai-credits/server";
 import { auth } from "@/modules/auth/server";
 import { hasPermission } from "@/modules/auth/permissions";
 import { getStoreContext } from "@/modules/stores/context";
@@ -14,7 +16,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 // Assistant IA du formulaire produit : propose un nom et une description à partir des photos.
-// 10 demandes par boutique et par heure : l'assistant est payant à l'usage.
+// Crédits : 5 demandes offertes par mois et par boutique (modules/ai-credits), et au plus 10 par heure.
 const limiter = createRateLimiter({ limit: 10, windowMs: 60 * 60_000 });
 
 const bodySchema = z.object({
@@ -24,7 +26,8 @@ const bodySchema = z.object({
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return NextResponse.json({ error: "Requête refusée." }, { status: 403 });
-  if (!(await auth.api.getSession({ headers: await headers() }))) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
     return NextResponse.json({ error: "Votre session a expiré. Reconnectez-vous pour continuer." }, { status: 401 });
   }
   const { store, membership } = await getStoreContext();
@@ -62,10 +65,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Les photos n’ont pas pu être lues. Ajoutez-les de nouveau." }, { status: 422 });
   }
 
+  // 1 crédit par demande (5 offerts chaque mois, puis les bonus de l'administration) ; rendu si l'IA échoue.
+  const ticket = await takeAiCredit(store.id, session.user.id);
+  if (!ticket) {
+    const credits = await getAiCredits(store.id);
+    return NextResponse.json(
+      { error: `Vous avez utilisé tous vos crédits IA ce mois-ci. Ils reviennent le ${formatDate(credits.renewsAt)} ; vous pouvez aussi demander des crédits à l’équipe PrestAfrik.`, credits: creditsPayload(credits) },
+      { status: 402 },
+    );
+  }
+
   try {
-    return NextResponse.json(await suggestProductDetails(images, parsed.data.name));
+    const suggestion = await suggestProductDetails(images, parsed.data.name);
+    return NextResponse.json({ ...suggestion, credits: creditsPayload(await getAiCredits(store.id)) });
   } catch (error) {
+    await refundAiCredit(store.id, ticket);
     if (error instanceof ProductAiError) return NextResponse.json({ error: error.message }, { status: 502 });
     throw error;
   }
+}
+
+/** Solde envoyé au navigateur (affiché sous le bouton de l'assistant). */
+function creditsPayload(credits: AiCredits) {
+  return { total: credits.total, monthly: credits.monthly, bonus: credits.bonus, allowance: credits.allowance, renewsAt: credits.renewsAt.toISOString() };
 }

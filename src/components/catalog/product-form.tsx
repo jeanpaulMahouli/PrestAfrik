@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Sparkles } from "@/components/ui/icons";
 import { startTransition, useActionState, useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { PhotoManager, type ExistingPhoto, type PhotoSummary } from "@/components/catalog/photo-manager";
-import { AiSuggestionPanel, ProductNotices, requestAiSuggestion, type AiSuggestion } from "@/components/catalog/product-assistant";
+import { AiRequestError, AiSuggestionPanel, ProductNotices, requestAiSuggestion, type AiCreditsInfo, type AiSuggestion } from "@/components/catalog/product-assistant";
 import { ProductVariantsEditor, type VariantDraft } from "@/components/catalog/product-variants-editor";
 import { ListingFields, productWording, type ListingValues } from "@/components/catalog/product-universe";
 import type { ShopUniverse } from "@/config/marketplace";
@@ -44,6 +44,8 @@ type ProductFormProps = {
   sidePanel?: ReactNode;
   /** Assistant IA disponible (clé Claude configurée sur le serveur). */
   aiEnabled?: boolean;
+  /** Crédits IA restants de la boutique (null si l'assistant n'est pas disponible). */
+  aiCredits?: AiCreditsInfo | null;
   /** Univers de la boutique : Shopping, Immobilier (locations), Services ou Restauration. */
   universe?: ShopUniverse;
   /** Biens immobiliers : « rent » (locations et réservations) ou « sale » (vente, dans le Shopping). */
@@ -76,7 +78,8 @@ const initialSnapshot = (values: ProductFormValues): ProductSnapshot => ({
   uploading: false,
 });
 
-export function ProductForm({ values, categories, sidePanel, aiEnabled = false, universe = "vente", listingMode = null }: ProductFormProps) {
+export function ProductForm({ values, categories, sidePanel, aiEnabled = false, aiCredits = null, universe = "vente", listingMode = null }: ProductFormProps) {
+  const [credits, setCredits] = useState(aiCredits);
   const words = productWording[universe];
   const [state, action, pending] = useActionState<ActionResult, FormData>(saveProduct, null);
   const [dirty, setDirty] = useState(false);
@@ -169,7 +172,8 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
   const price = validAmount(snapshot.priceXaf);
   const promoPrice = validAmount(snapshot.promotionalPriceXaf);
   const discount = discountPercent(snapshot.priceXaf, snapshot.promotionalPriceXaf);
-  const canAskAi = photoSummary.previewUrls.length > 0 && !photoSummary.uploading;
+  const outOfCredits = credits !== null && credits.total <= 0;
+  const canAskAi = photoSummary.previewUrls.length > 0 && !photoSummary.uploading && !outOfCredits;
 
   // Un seul appel à l'IA, uniquement sur demande du vendeur (nom et description).
   async function askAi() {
@@ -177,8 +181,11 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
     setAiLoading(true);
     setAiError("");
     try {
-      setSuggestion(await requestAiSuggestion({ photos: photoSummary.previewUrls, name: nameRef.current?.value ?? "" }));
+      const result = await requestAiSuggestion({ photos: photoSummary.previewUrls, name: nameRef.current?.value ?? "" });
+      if (result.credits) setCredits(result.credits);
+      setSuggestion({ name: result.name, description: result.description });
     } catch (error) {
+      if (error instanceof AiRequestError && error.credits) setCredits(error.credits);
       setAiError(error instanceof Error ? error.message : "L’assistant IA n’a pas pu répondre. Réessayez.");
     } finally {
       setAiLoading(false);
@@ -274,16 +281,19 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
             <PhotoManager error={errors.photos} hero initialPhotos={values.photos} onPhotosChange={onPhotosChange}>
               {aiEnabled && (
                 <div className="ai-fill">
-                  <button className="btn btn-ai" disabled={!canAskAi || aiLoading} onClick={askAi} type="button">
-                    <Sparkles aria-hidden="true" size={18} />
-                    {aiLoading ? "L’IA analyse vos photos…" : "Remplir le nom et la description avec l’IA"}
+                  <button className={`btn-ai${aiLoading ? " is-loading" : ""}`} disabled={!canAskAi || aiLoading} onClick={askAi} type="button">
+                    <span>{aiLoading ? "L’IA analyse vos photos…" : "Remplir le nom et la description avec l’IA"}</span>
+                    <Sparkles aria-hidden="true" className="btn-ai-sparkles" size={20} weight="fill" />
                   </button>
+                  {credits && <AiCreditsLine credits={credits} />}
                   <span className="v-field-help">
-                    {canAskAi
-                      ? "L’IA regarde vos photos et vous propose un nom et une description. Vous les relisez et les validez avant d’enregistrer."
-                      : photoSummary.uploading
-                        ? "Patientez pendant l’envoi des photos…"
-                        : "Commencez par ajouter une photo du produit."}
+                    {outOfCredits
+                      ? "Vous pouvez remplir le nom et la description vous-même, ou demander des crédits à l’équipe PrestAfrik."
+                      : canAskAi
+                        ? "L’IA regarde vos photos et vous propose un nom et une description. Vous les relisez et les validez avant d’enregistrer. Chaque proposition utilise 1 crédit."
+                        : photoSummary.uploading
+                          ? "Patientez pendant l’envoi des photos…"
+                          : "Commencez par ajouter une photo du produit."}
                   </span>
                   {aiError && <p className="v-field-error" role="alert">{aiError}</p>}
                 </div>
@@ -394,7 +404,7 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
         </form>
 
         <div className="v-stack">
-          <ProductNotices completion={completion} notices={notices} />
+          <ProductNotices completion={completion} credits={aiEnabled ? credits : null} notices={notices} />
 
           <fieldset className="v-card v-fieldset">
             <legend className="v-card-title">Disponibilité</legend>
@@ -467,5 +477,20 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
         </SubmitButton>
       </div>
     </>
+  );
+}
+
+/** Solde de crédits IA, sous le bouton de l'assistant. */
+function AiCreditsLine({ credits }: { credits: AiCreditsInfo }) {
+  if (credits.total <= 0) {
+    const renewal = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", timeZone: "Africa/Douala" }).format(new Date(credits.renewsAt));
+    return <span className="ai-credits is-empty">Plus de crédits IA ce mois-ci : ils reviennent le {renewal}.</span>;
+  }
+  const plural = (count: number) => (count > 1 ? "s" : "");
+  return (
+    <span className="ai-credits">
+      <strong>{credits.total}</strong> crédit{plural(credits.total)} IA restant{plural(credits.total)}
+      {credits.bonus > 0 ? ` (dont ${credits.bonus} bonus)` : ""} · {credits.allowance} offert{plural(credits.allowance)} chaque mois
+    </span>
   );
 }

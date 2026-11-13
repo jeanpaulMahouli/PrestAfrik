@@ -3,13 +3,27 @@
 import { Check, CircleAlert, Lightbulb, Sparkles, TriangleAlert } from "@/components/ui/icons";
 import { useState } from "react";
 import { RichText } from "@/components/ui/rich-text";
+import { AiCreditsCard } from "@/components/catalog/ai-credits-card";
 import type { CompletionStep, ProductNotice } from "@/modules/catalog/product-notices";
 
 // Assistant IA (nom et description) et « Infos pratiques » du formulaire produit.
 
 export type AiSuggestion = { name: string; description: string };
 
-export async function requestAiSuggestion(body: { photos: string[]; name: string }): Promise<AiSuggestion> {
+/** Crédits IA restants de la boutique (5 par mois, puis les bonus de l'administration). */
+export type AiCreditsInfo = { total: number; monthly: number; bonus: number; allowance: number; renewsAt: string };
+
+/** Erreur de l'assistant, avec le solde de crédits quand le serveur l'a renvoyé. */
+export class AiRequestError extends Error {
+  constructor(
+    message: string,
+    readonly credits: AiCreditsInfo | null = null,
+  ) {
+    super(message);
+  }
+}
+
+export async function requestAiSuggestion(body: { photos: string[]; name: string }): Promise<AiSuggestion & { credits: AiCreditsInfo | null }> {
   let response: Response;
   try {
     response = await fetch("/api/dashboard/produits/ia", {
@@ -18,11 +32,11 @@ export async function requestAiSuggestion(body: { photos: string[]; name: string
       body: JSON.stringify(body),
     });
   } catch {
-    throw new Error("Connexion interrompue. Vérifiez votre connexion puis réessayez.");
+    throw new AiRequestError("Connexion interrompue. Vérifiez votre connexion puis réessayez.");
   }
-  const data = (await response.json().catch(() => null)) as (AiSuggestion & { error?: string }) | null;
-  if (!response.ok || !data) throw new Error(data?.error ?? "L’assistant IA n’a pas pu répondre. Réessayez.");
-  return data;
+  const data = (await response.json().catch(() => null)) as (AiSuggestion & { error?: string; credits?: AiCreditsInfo }) | null;
+  if (!response.ok || !data) throw new AiRequestError(data?.error ?? "L’assistant IA n’a pas pu répondre. Réessayez.", data?.credits ?? null);
+  return { name: data.name, description: data.description, credits: data.credits ?? null };
 }
 
 /** Proposition de l'IA : le vendeur relit, modifie, puis l'applique au formulaire (ou l'ignore). */
@@ -91,10 +105,11 @@ function goTo(target: string) {
 }
 
 /** Carte « Infos pratiques » : avancement de la fiche et contrôles instantanés de la saisie (sans IA). */
-export function ProductNotices({ notices, completion }: { notices: ProductNotice[]; completion: { steps: CompletionStep[] } }) {
+export function ProductNotices({ notices, completion, credits = null }: { notices: ProductNotice[]; completion: { steps: CompletionStep[] }; /** Crédits IA restants (encart en tête). */ credits?: AiCreditsInfo | null }) {
   return (
     <section aria-labelledby="product-notices-title" className="v-card product-notices">
       <h2 className="v-card-title" id="product-notices-title">Infos pratiques</h2>
+      {credits && <AiCreditsCard compact credits={credits} />}
       <ul className="product-steps">
         {completion.steps.map((step) => (
           <li key={step.id}>

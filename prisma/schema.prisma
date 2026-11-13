@@ -354,6 +354,11 @@ model Store {
   tiktokUrl          String?                @db.VarChar(300)
   youtubeUrl         String?                @db.VarChar(300)
   xUrl               String?                @db.VarChar(300)
+  /// Assistant IA : crédits du mois (null = 5 par défaut) et crédits bonus restants (Administration → Crédits IA).
+  aiMonthlyCredits   Int?
+  aiBonusCredits     Int                    @default(0)
+  aiCreditUses       AiCreditUse[]
+  aiCreditGrants     AiCreditGrant[]
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
   memberships        StoreMembership[]
@@ -1461,4 +1466,36 @@ model PushNotificationLog {
 
   @@index([createdAt])
   @@index([kind, createdAt])
+}
+
+/// Une demande à l'assistant IA (1 crédit), prise sur les crédits du mois ou sur les bonus.
+model AiCreditUse {
+  id        String         @id @default(cuid())
+  storeId   String
+  userId    String?
+  source    AiCreditSource
+  feature   String         @default("product-text") @db.VarChar(40)
+  createdAt DateTime       @default(now())
+  store     Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId, source, createdAt])
+}
+
+enum AiCreditSource {
+  MONTHLY
+  BONUS
+}
+
+/// Crédits IA donnés ou retirés par l'administration (historique).
+model AiCreditGrant {
+  id        String   @id @default(cuid())
+  storeId   String
+  adminId   String
+  /// Crédits bonus ajoutés (négatif : retirés).
+  amount    Int
+  reason    String?  @db.VarChar(200)
+  createdAt DateTime @default(now())
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId, createdAt])
 }

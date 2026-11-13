@@ -1115,3 +1115,118 @@
   font-size: 0.875rem;
   text-align: center;
 }
+
+/* Bouton de l'assistant IA : style des boutons principaux de la landing (dégradé orange et pêche qui
+   défile, étincelles qui scintillent, léger relief au survol). */
+.ai-fill .btn-ai {
+  position: relative;
+  display: inline-flex;
+  min-height: 3.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0 3.25rem 0 1.75rem;
+  border: 0;
+  border-radius: 14px;
+  color: #000;
+  background: linear-gradient(80.5deg, #ff9900 0%, #ffdeae 26%, #ff9900 50%, #ffdeae 76%, #ff9900 100%);
+  background-size: 200% 100%;
+  box-shadow:
+    8px 8px 18px rgb(0 0 0 / 0.16),
+    inset 0 0 0 2px rgb(0 0 0 / 0.1);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  animation: ai-shimmer 6s linear infinite;
+  transition:
+    translate 0.25s cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow 0.25s ease,
+    filter 0.25s ease;
+}
+
+.ai-fill .btn-ai:hover:not(:disabled) {
+  translate: 0 -2px;
+  filter: brightness(0.97) saturate(1.15);
+  box-shadow:
+    10px 14px 26px rgb(0 0 0 / 0.2),
+    inset 0 0 0 2px rgb(0 0 0 / 0.1);
+}
+
+.ai-fill .btn-ai:active:not(:disabled) {
+  translate: 0 0;
+}
+
+.ai-fill .btn-ai:focus-visible {
+  outline: 3px solid var(--color-brand-secondary);
+  outline-offset: 3px;
+}
+
+.ai-fill .btn-ai:disabled {
+  color: rgb(0 0 0 / 0.55);
+  background: linear-gradient(80.5deg, #f1e3cc, #f6ecdc);
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.06);
+  cursor: not-allowed;
+  animation: none;
+  opacity: 1;
+}
+
+.ai-fill .btn-ai.is-loading {
+  cursor: progress;
+  animation-duration: 1.6s;
+}
+
+.btn-ai-sparkles {
+  position: absolute;
+  right: 1.1rem;
+  animation: ai-twinkle 2.4s ease-in-out infinite;
+}
+
+.btn-ai:disabled .btn-ai-sparkles {
+  animation: none;
+  opacity: 0.45;
+}
+
+.ai-credits {
+  color: var(--color-text-secondary);
+  font-size: 0.8125rem;
+}
+
+.ai-credits strong {
+  color: var(--color-text-primary);
+}
+
+.ai-credits.is-empty {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+@keyframes ai-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes ai-twinkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.82) rotate(12deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-fill .btn-ai,
+  .btn-ai-sparkles {
+    animation: none;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .ai-fill .btn-ai {
+    width: 100%;
+  }
+}

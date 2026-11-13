@@ -7,6 +7,9 @@ import { CommunityBlock } from "@/components/dashboard/community";
 import { dayMoment } from "@/components/dashboard/greeting";
 import { LiveGreeting } from "@/components/dashboard/live-greeting";
 import { UnpublishedNotice } from "@/components/dashboard/unpublished-notice";
+import { AiCreditsCard } from "@/components/catalog/ai-credits-card";
+import { productAiAvailable } from "@/lib/product-ai";
+import { getAiCredits } from "@/modules/ai-credits/server";
 import { WelcomeNoStore } from "@/components/dashboard/welcome-no-store";
 import { InstallAppCard, StoreLaunchDialog } from "@/components/pwa/install-app";
 import { TimeSeriesChart } from "@/components/dashboard/time-series-chart";
@@ -64,13 +67,15 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
 
   const { session, store, membership } = await getStoreContext();
   const period = resolveDashboardPeriod(params.periode);
-  const [stats, overview, draft, announcements, publication] = await Promise.all([
+  const [stats, overview, draft, announcements, publication, aiCredits] = await Promise.all([
     getDashboardStats(store.id, period),
     getDashboardOverview(store.id, period.from, period.to),
     findDraft(session.user.id),
     getDashboardAnnouncements(),
     // Boutique pas encore publiée : ce qui manque, affiché en tête de l'accueil.
     store.isPublished ? null : getPublicationChecklist(store.id, isAccountVerified(session.user)),
+    // Crédits de l'assistant IA (encart sous les chiffres clés), pour qui peut ajouter des produits.
+    productAiAvailable() && hasPermission(membership.role, "products.manage") ? getAiCredits(store.id) : null,
   ]);
   const can = (permission: Parameters<typeof hasPermission>[1]) => hasPermission(membership.role, permission);
   const firstName = session.user.name.trim().split(/\s+/)[0] || session.user.name;
@@ -142,6 +147,13 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
         <KpiCard icon={Eye} info="Nombre de visites de votre boutique publique sur la période (les robots ne sont pas comptés)." label="Visites de la boutique" tone="blue" value={String(stats.kpis.visits.value)} />
         <KpiCard icon={ShoppingCart} info="Montant moyen d’une commande sur la période, commandes annulées exclues." label="Panier moyen" tone="violet" value={formatFcfa(stats.kpis.basket.value)} />
       </section>
+
+      {aiCredits && (
+        <AiCreditsCard
+          action={{ href: "/dashboard/produits/nouveau", label: "Ajouter un produit avec l’IA" }}
+          credits={{ total: aiCredits.total, monthly: aiCredits.monthly, bonus: aiCredits.bonus, allowance: aiCredits.allowance, renewsAt: aiCredits.renewsAt.toISOString() }}
+        />
+      )}
 
       {noOrdersYet ? (
         <section aria-labelledby="first-orders" className="v-card v-empty home-empty">
