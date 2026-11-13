@@ -21,6 +21,14 @@ html {
   background: var(--color-page-background);
 }
 
+/* Jamais de défilement horizontal de la page, sur aucun écran : un élément trop large est coupé au bord
+   au lieu de faire glisser toute la page. « clip » (et non « hidden ») garde les en-têtes collants. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 body {
   min-height: 100vh;
   margin: 0;

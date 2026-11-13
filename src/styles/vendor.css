@@ -623,8 +623,14 @@
 
 .v-split {
   display: grid;
+  /* Une seule colonne sur téléphone, qui ne s'élargit jamais au-delà de l'écran (tableaux, longs mots). */
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 1rem;
+}
+
+.v-split > * {
+  min-width: 0;
 }
 
 @media (min-width: 768px) {
