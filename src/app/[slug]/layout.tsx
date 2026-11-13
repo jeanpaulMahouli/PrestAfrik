@@ -3,6 +3,7 @@ import "@/styles/storefront-merchandising.css";
 import "@/styles/storefront-motion.css";
 import "@/styles/storefront-promo.css";
 import "@/styles/storefront-pages.css";
+import "@/styles/storefront-v2.css";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { cache } from "react";
@@ -13,7 +14,6 @@ import { storeBasePath } from "@/lib/store-links";
 import { appBaseUrl, storePublicUrl } from "@/lib/urls";
 import { getStorefrontStore } from "@/modules/catalog/service";
 import { hexColorSchema } from "@/modules/catalog/validation";
-import { getAccessibleTextColor } from "@/modules/stores/appearance";
 import { storeLinkHref } from "@/modules/merchandising/links";
 import { getStorefrontExtras } from "@/modules/storefront/data";
 import { currentPopup, getStorefrontMerchandising } from "@/modules/storefront/merchandising";
@@ -77,8 +77,6 @@ export default async function PublicStoreLayout({ children, params }: LayoutProp
   }
   const [extras, merchandising, base] = await Promise.all([getStorefrontExtras(store.id), getStorefrontMerchandising(store.id), storeBasePath(store.slug)]);
   const popup = currentPopup(merchandising.popup);
-  const primary = safeColor(store.primaryColor, "#FF9900");
-  const secondary = safeColor(store.secondaryColor, "#000026");
 
   return (
     <StorefrontShell
@@ -98,15 +96,9 @@ export default async function PublicStoreLayout({ children, params }: LayoutProp
         slug: store.slug,
         city: store.city,
         logoUrl: store.logoUrl,
-        theme: store.theme,
+        description: store.description,
         promoStyle: store.promoStyle,
-        colors: {
-          primary,
-          onPrimary: getAccessibleTextColor(primary),
-          secondary,
-          onSecondary: getAccessibleTextColor(secondary),
-          accent: safeColor(store.accentColor, "#EF765E"),
-        },
+        social: { facebookUrl: store.facebookUrl, instagramUrl: store.instagramUrl, tiktokUrl: store.tiktokUrl, youtubeUrl: store.youtubeUrl, xUrl: store.xUrl },
       }}
     >
       {children}

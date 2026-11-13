@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { Download } from "@/components/ui/icons";
 import { AdminFeedback, searchValue } from "@/components/admin/admin-feedback";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { prospectionMessageKeys, prospectionMessageLabels, prospectionMessages } from "@/config/prospection";

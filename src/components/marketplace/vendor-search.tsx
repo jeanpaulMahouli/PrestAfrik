@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, MapPin, Search } from "lucide-react";
+import { Loader2, MapPin, Search } from "@/components/ui/icon-set";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { StorePromoStyle, StoreTheme } from "@prisma/client";
+import type { StorePromoStyle, StoreTheme } from "@prisma/client";
 import { startTransition, useActionState, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { StoreLivePreview } from "@/components/stores/store-live-preview";
 import { Combobox } from "@/components/ui/combobox";
@@ -8,9 +8,9 @@ import { StoreImage } from "@/components/ui/store-image";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { useFormPersistence } from "@/components/ui/use-form-persistence";
-import { colorReadability } from "@/lib/contrast";
-import { paletteFromImage } from "@/lib/logo-palette";
 import { updateStoreSettings, type StoreSettingsState } from "@/modules/stores/settings-actions";
+import { socialNetworks, type SocialLinks } from "@/modules/stores/social-links";
+import { FacebookLogo, InstagramLogo, TiktokLogo, XLogo, YoutubeLogo } from "@/components/ui/icons";
 
 export type StoreSettingsValues = {
   name: string;
@@ -33,27 +33,17 @@ export type StoreSettingsValues = {
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
+  social: SocialLinks;
 };
 
-const themes: { id: StoreTheme; name: string; detail: string }[] = [
-  { id: "CATALOGUE_EXPRESS", name: "Catalogue express", detail: "Simple et rapide" },
-  { id: "MODE_BEAUTE", name: "Mode et beauté", detail: "Photos en grand" },
-  { id: "BOUTIQUE_MARQUE", name: "Galerie", detail: "Grandes photos, angles droits" },
-  { id: "GRAND_MARCHE", name: "Grand marché", detail: "Style supermarché, prix bien visibles" },
-];
+const socialIcons = { facebookUrl: FacebookLogo, instagramUrl: InstagramLogo, tiktokUrl: TiktokLogo, youtubeUrl: YoutubeLogo, xUrl: XLogo };
 
 const promoStyles: { id: StorePromoStyle; name: string; detail: string }[] = [
-  { id: "CLASSIQUE", name: "Classique", detail: "Sobre, aux couleurs de la boutique" },
+  { id: "CLASSIQUE", name: "Classique", detail: "Sobre et élégant" },
   { id: "VENTE_FLASH", name: "Vente flash", detail: "Bandeau éclair, stock restant" },
   { id: "OFFRES_DU_JOUR", name: "Offres du jour", detail: "Économies mises en avant" },
   { id: "ECLAT", name: "Éclat", detail: "Fond nuit, reflets dorés animés" },
 ];
-
-const colorFields = [
-  ["primaryColor", "Couleur principale"],
-  ["secondaryColor", "Couleur secondaire"],
-  ["accentColor", "Couleur d’accent"],
-] as const;
 
 export const storeSettingsFormId = "store-settings-form";
 
@@ -80,7 +70,6 @@ export function StoreAppearanceForm({
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoError, setLogoError] = useState("");
   const [dragging, setDragging] = useState(false);
-  const [paletteNote, setPaletteNote] = useState("");
   const logoInput = useRef<HTMLInputElement>(null);
   // Saisie gardée si la page est actualisée avant l'enregistrement.
   const formRef = useRef<HTMLFormElement>(null);
@@ -109,7 +98,6 @@ export function StoreAppearanceForm({
     } else {
       const url = URL.createObjectURL(file);
       setLogoPreview(url);
-      void applyLogoColors(url);
       return;
     }
     if (logoInput.current) logoInput.current.value = "";
@@ -117,17 +105,6 @@ export function StoreAppearanceForm({
   }
   const set = <K extends keyof StoreSettingsValues>(key: K, value: StoreSettingsValues[K]) => setValues((current) => ({ ...current, [key]: value }));
 
-  /** Pipette : les couleurs de la boutique sont reprises du logo (modifiables ensuite). */
-  async function applyLogoColors(src: string) {
-    const palette = await paletteFromImage(src);
-    if (!palette) {
-      setPaletteNote("");
-      return;
-    }
-    setValues((current) => ({ ...current, ...palette }));
-    setPaletteNote("Couleurs reprises de votre logo. Vous pouvez les ajuster ci-dessous, puis enregistrez.");
-  }
-  const currentLogo = logoPreview ?? values.logoUrl;
   const initials = values.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toLocaleUpperCase("fr-FR")).join("") || "B";
   const liveValues = useMemo(
     () => ({
@@ -218,21 +195,8 @@ export function StoreAppearanceForm({
         </section>
 
         <section className="v-card" id="apparence">
-          <h2 className="v-card-title">Apparence</h2>
-          <div className="theme-tiles">
-            {themes.map((theme) => (
-              <label className={`theme-tile ${values.theme === theme.id ? "is-selected" : ""}`} key={theme.id}>
-                <input checked={values.theme === theme.id} className="visually-hidden" name="theme" onChange={() => set("theme", theme.id)} type="radio" value={theme.id} />
-                <span aria-hidden="true" className={`theme-tile-thumb theme-tile-thumb-${theme.id.toLowerCase()}`} />
-                <strong>{theme.name}</strong>
-                <small>{theme.detail}</small>
-              </label>
-            ))}
-          </div>
-          <p className="v-field-help">Changer de thème n’efface rien : produits, commandes, clients et pages sont conservés.</p>
-
-          <h3 className="v-card-subtitle" id="style-promotions">Style des promotions</h3>
-          <p className="v-small v-muted">La rangée « Promotions » de l’accueil et la page « Toutes les promotions ». Elle apparaît dès qu’un produit a un prix promotionnel.</p>
+          <h2 className="v-card-title" id="style-promotions">Style des promotions</h2>
+          <p className="v-small v-muted">Toutes les boutiques PrestAfrik ont la même présentation, claire et rapide. Choisissez seulement le style de vos promotions : la rangée « Promotions » de l’accueil et la page « Toutes les promotions ». Elle apparaît dès qu’un produit a un prix promotionnel.</p>
           <div aria-labelledby="style-promotions" className="theme-tiles" role="radiogroup">
             {promoStyles.map((style) => (
               <label className={`theme-tile ${values.promoStyle === style.id ? "is-selected" : ""}`} key={style.id}>
@@ -249,41 +213,33 @@ export function StoreAppearanceForm({
           </div>
         </section>
 
-        <section className="v-card">
-          <h2 className="v-card-title">Couleurs</h2>
-          {paletteNote && (
-            <p className="v-banner v-banner-info" role="status">
-              {paletteNote}
-            </p>
-          )}
-          <ul className="color-list">
-            {colorFields.map(([key, label]) => {
-              const readability = colorReadability(values[key]);
+        <section className="v-card" id="reseaux-sociaux">
+          <h2 className="v-card-title">Réseaux sociaux</h2>
+          <p className="v-small v-muted">Vos pages s’affichent en bas de votre boutique : vos clients peuvent vous suivre en un clic. Collez le lien de la page ou votre nom d’utilisateur.</p>
+          <div className="v-grid-2 social-fields">
+            {socialNetworks.map((network) => {
+              const Icon = socialIcons[network.key];
+              const error = fieldError(network.key);
               return (
-                <li key={key}>
-                  <label className="color-swatch" style={{ background: values[key] }}>
-                    <span className="visually-hidden">{label}</span>
-                    <input name={key} onChange={(event) => set(key, event.target.value.toUpperCase())} type="color" value={values[key]} />
-                  </label>
-                  <span>
-                    <strong>{label}</strong>
-                    <small>
-                      {values[key]} · {readability.label}
-                    </small>
+                <label className="v-field" key={network.key}>
+                  <span className="social-label">
+                    <Icon aria-hidden="true" size={18} />
+                    {network.label} (facultatif)
                   </span>
-                  <span className={`badge badge-${key === "accentColor" || readability.readable ? "success" : "danger"}`}>
-                    {key === "accentColor" || readability.readable ? "Lisible" : "Peu lisible"}
-                  </span>
-                </li>
+                  <input
+                    aria-invalid={error ? true : undefined}
+                    autoComplete="off"
+                    defaultValue={values.social[network.key] ?? ""}
+                    inputMode="url"
+                    maxLength={300}
+                    name={network.key}
+                    placeholder={network.example}
+                  />
+                  {error && <span className="v-field-error">{error}</span>}
+                </label>
               );
             })}
-          </ul>
-          <p className="v-field-help">Le texte des boutons (blanc ou bleu nuit) est choisi automatiquement pour rester lisible.</p>
-          {currentLogo && (
-            <button className="v-link-button" onClick={() => void applyLogoColors(currentLogo)} type="button">
-              Reprendre les couleurs de mon logo
-            </button>
-          )}
+          </div>
         </section>
 
         <section className="v-card" id="informations">

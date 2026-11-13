@@ -43,7 +43,8 @@ export async function saveStoreImage(
   if (!(file instanceof File)) throw new ImageUploadError("Le fichier image est invalide.");
   if (file.size > maxImageBytes) throw new ImageUploadError("La photo ne peut pas dépasser 2 Mo.");
 
-  const image = sharp(Buffer.from(await file.arrayBuffer()), {
+  const input = Buffer.from(await file.arrayBuffer());
+  const image = sharp(input, {
     failOn: "none",
     limitInputPixels: 25_000_000,
   });
@@ -102,7 +103,8 @@ export async function saveUserAvatar(file: FormDataEntryValue | null, userId: st
   if (!(file instanceof File)) throw new ImageUploadError("Le fichier image est invalide.");
   if (file.size > maxImageBytes) throw new ImageUploadError("La photo ne peut pas dépasser 2 Mo.");
 
-  const image = sharp(Buffer.from(await file.arrayBuffer()), { failOn: "none", limitInputPixels: 25_000_000 });
+  const input = Buffer.from(await file.arrayBuffer());
+  const image = sharp(input, { failOn: "none", limitInputPixels: 25_000_000 });
   let metadata;
   try {
     metadata = await image.metadata();

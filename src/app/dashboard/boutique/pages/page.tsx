@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Eye, EyeOff } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff } from "@/components/ui/icons";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { PageEditor } from "@/components/pages/page-editor";

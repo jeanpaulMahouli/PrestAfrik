@@ -1,3 +1,4 @@
+import { productAiAvailable } from "@/lib/product-ai";
 import { notFound } from "next/navigation";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ProductDangerZone } from "@/components/catalog/product-danger-zone";
@@ -5,14 +6,16 @@ import { ProductForm } from "@/components/catalog/product-form";
 import { photoVariant } from "@/lib/product-photos";
 import { archiveProducts, deleteProducts } from "@/modules/catalog/actions";
 import { getEditableProduct, getStoreCategories } from "@/modules/catalog/queries";
+import { storedPropertyDetails } from "@/modules/catalog/listing";
 import { requireStorePermission } from "@/modules/stores/context";
+import { storeCatalogProfile } from "@/modules/stores/universe";
 
 export const metadata = { title: "Modifier un produit" };
 
 export default async function EditProductPage({ params, searchParams }: PageProps<"/dashboard/produits/[productId]">) {
   const { store } = await requireStorePermission("products.manage");
   const [{ productId }, query] = await Promise.all([params, searchParams]);
-  const [product, categories] = await Promise.all([getEditableProduct(store.id, productId), getStoreCategories(store.id)]);
+  const [product, categories, profile] = await Promise.all([getEditableProduct(store.id, productId), getStoreCategories(store.id), storeCatalogProfile(store.activityId)]);
   if (!product) notFound();
 
   return (
@@ -23,7 +26,10 @@ export default async function EditProductPage({ params, searchParams }: PageProp
         </p>
       )}
       <ProductForm
+        aiEnabled={productAiAvailable()}
         categories={categories}
+        listingMode={profile.listingMode}
+        universe={profile.universe}
         sidePanel={
           <ProductDangerZone
             archive={archiveProducts}
@@ -56,6 +62,11 @@ export default async function EditProductPage({ params, searchParams }: PageProp
             priceXaf: variant.priceXaf === null ? "" : String(variant.priceXaf),
             stockQuantity: variant.stockQuantity === null ? "" : String(variant.stockQuantity),
           })),
+          listing: {
+            listingType: product.listingType ?? "",
+            pricePeriod: product.pricePeriod ?? "",
+            details: storedPropertyDetails(product.propertyDetails),
+          },
         }}
       />
     </VendorShell>

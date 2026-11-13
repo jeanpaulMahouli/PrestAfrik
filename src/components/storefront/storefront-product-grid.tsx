@@ -3,6 +3,7 @@ import { StarRating, reviewCountLabel } from "@/components/storefront/star-ratin
 import { storeHref } from "@/lib/store-host";
 import { StoreImage } from "@/components/ui/store-image";
 import { discountPercent, formatXaf } from "@/modules/catalog/format";
+import { priceSuffix } from "@/modules/catalog/listing";
 
 type StoreProduct = {
   id: string;
@@ -13,6 +14,9 @@ type StoreProduct = {
   images: { url: string; altText: string | null }[];
   /** Produits en promotion : stock réellement disponible quand le vendeur le suit (sinon absent ou null). */
   stockLeft?: number | null;
+  /** Immobilier : location (« / mois » après le loyer). */
+  listingType?: string | null;
+  pricePeriod?: string | null;
 };
 
 /** En dessous de ce stock, la carte d'une promotion affiche « Plus que N en stock » et sa jauge. */
@@ -20,11 +24,12 @@ const lowStockThreshold = 10;
 
 type Ratings = Record<string, { average: number; count: number }> | null;
 
-export function ProductPrice({ priceXaf, promotionalPriceXaf }: { priceXaf: number; promotionalPriceXaf: number | null }) {
-  if (!promotionalPriceXaf || promotionalPriceXaf >= priceXaf) return <span className="sf-price">{formatXaf(priceXaf)}</span>;
+export function ProductPrice({ priceXaf, promotionalPriceXaf, suffix = "" }: { priceXaf: number; promotionalPriceXaf: number | null; /** « / mois » pour un loyer. */ suffix?: string }) {
+  const period = suffix ? <small className="sf-price-period"> {suffix}</small> : null;
+  if (!promotionalPriceXaf || promotionalPriceXaf >= priceXaf) return <span className="sf-price">{formatXaf(priceXaf)}{period}</span>;
   return (
     <span className="sf-price">
-      {formatXaf(promotionalPriceXaf)} <del><span className="visually-hidden">au lieu de </span>{formatXaf(priceXaf)}</del>
+      <span>{formatXaf(promotionalPriceXaf)}{period}</span> <del><span className="visually-hidden">au lieu de </span>{formatXaf(priceXaf)}</del>
     </span>
   );
 }
@@ -78,13 +83,14 @@ export function ProductCard({
         </span>
         <span className="sf-card-body">
           <strong>{product.name}</strong>
+          {/* Note du produit (étoiles), dès que la boutique accepte les avis. */}
           {ratings && (
             <span className="sf-card-rating">
               <StarRating size={14} value={ratings[product.id]?.average ?? 0} />
               <small>{reviewCountLabel(ratings[product.id]?.count ?? 0)}</small>
             </span>
           )}
-          <ProductPrice priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} />
+          <ProductPrice priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} suffix={priceSuffix(product.listingType, product.pricePeriod)} />
           {saving > 0 && <span className="sf-promo-saving">Économisez {formatXaf(saving)}</span>}
           {stockLeft !== null && (
             <span className="sf-promo-stock">

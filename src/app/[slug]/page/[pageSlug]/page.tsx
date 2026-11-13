@@ -10,7 +10,7 @@ import { getStorefrontStore } from "@/modules/catalog/service";
 import { blocksSchema, pageKinds, type PageBlock } from "@/modules/pages/blocks";
 import { getStorefrontExtras, type StorefrontExtras } from "@/modules/storefront/data";
 import { buildWaMeUrl } from "@/modules/whatsapp/wa-me";
-import { BackIcon } from "@/components/ui/icons";
+import { ChevronRight } from "@/components/ui/icons";
 
 async function loadPage(slug: string, pageSlug: string) {
   const store = await getStorefrontStore(slug);
@@ -44,10 +44,12 @@ export default async function StoreEditorialPage({ params }: PageProps<"/[slug]/
 
   return (
     <main className="sf-page sf-editorial">
-      <div className="sf-page-head">
-        <Link aria-label="Retour au catalogue" className="sf-back" href={storeHref(base)}><BackIcon size={18} /></Link>
-        <h1>{page.title}</h1>
-      </div>
+      <nav aria-label="Fil d’Ariane" className="sf-breadcrumb">
+        <Link href={storeHref(base)}>Accueil</Link>
+        <ChevronRight aria-hidden="true" size={14} />
+        <span aria-current="page">{page.title}</span>
+      </nav>
+      <h1>{page.title}</h1>
       {blocks.success ? (
         blocks.data.map((block, index) => <Block block={block} extras={extras} key={index} base={base} storeName={store.name} />)
       ) : (

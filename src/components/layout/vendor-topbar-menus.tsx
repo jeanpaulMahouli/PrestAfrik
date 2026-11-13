@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Store } from "lucide-react";
+import { Check, Copy, Search, Store, X } from "@/components/ui/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -181,19 +181,14 @@ export function MobileSearchButton() {
   return (
     <>
       <button aria-label={t.openSearch} className="topbar-icon-button topbar-search-toggle" onClick={() => setOpen(true)} type="button">
-        <svg aria-hidden="true" fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeWidth="2" viewBox="0 0 24 24" width="20">
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-3.5-3.5" />
-        </svg>
+        <Search aria-hidden="true" size={20} />
       </button>
       {open && (
         <div className="topbar-search-overlay" ref={overlayRef} role="search">
           <form action="/dashboard/recherche" className="topbar-search-overlay-form">
             <input aria-label={t.searchLabel} maxLength={80} minLength={2} name="q" placeholder={t.searchPlaceholder} ref={inputRef} required type="search" />
             <button aria-label={t.closeSearch} className="topbar-icon-button" onClick={() => setOpen(false)} type="button">
-              <svg aria-hidden="true" fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeWidth="2" viewBox="0 0 24 24" width="20">
-                <path d="M6 6l12 12M18 6 6 18" />
-              </svg>
+              <X aria-hidden="true" size={20} />
             </button>
           </form>
         </div>

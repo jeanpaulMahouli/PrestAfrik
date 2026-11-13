@@ -1,5 +1,5 @@
 import "@/styles/admin-content.css";
-import { ArrowDown, ArrowUp, Crown, ExternalLink, Eye, EyeOff, LayoutGrid, Megaphone, Plus, Sparkles, Timer, Trash2, Zap, type LucideIcon } from "lucide-react";
+import { ArrowDown, ArrowUp, BadgePercent, Crown, ExternalLink, Eye, EyeOff, LayoutGrid, Megaphone, Plus, Search, Sparkles, Store, Timer, Trash2, Zap, type AppIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { AdminFeedback } from "@/components/admin/admin-feedback";
 import { AutoSubmitFile } from "@/components/admin/auto-submit-file";
@@ -8,23 +8,26 @@ import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { formatDateTime, formatFcfa } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { absoluteUrl } from "@/lib/seo";
 import { shopUrl, storePublicUrl } from "@/lib/urls";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { getShopTickerSeconds } from "@/modules/announcements/queries";
-import { addMarketplacePick, moveMarketplacePick, removeMarketplacePick } from "@/modules/marketplace/picks-actions";
-import { getMarketplacePicks } from "@/modules/marketplace/shop";
+import { addMarketplacePick, moveMarketplacePick, removeMarketplacePick, setStoreExcluded, setStoreFeatured } from "@/modules/marketplace/picks-actions";
+import { getMarketplacePicks, marketplaceProductPath } from "@/modules/marketplace/shop";
 import { addTicker, removeCategoryImage, removeTicker, setCategoryImage, setTickerSeconds, toggleTicker } from "@/modules/marketplace/visuals-actions";
 
 export const metadata = { title: "Marketplace" };
 
-const sections: Record<"FLASH" | "EXCLUSIVE" | "FEATURED_STORE", { title: string; icon: LucideIcon; help: string; placeholder: string; product: boolean }> = {
+const sections: Record<"DEAL_LEAD" | "FLASH" | "EXCLUSIVE" | "FEATURED_STORE", { title: string; icon: AppIcon; help: string; placeholder: string; product: boolean }> = {
+  DEAL_LEAD: { title: "Bonne affaire vedette", icon: BadgePercent, help: "Le grand produit, à gauche du bloc « Les bonnes affaires ». Un seul produit ; sans choix, la plus forte promotion s’affiche.", placeholder: "https://prestafrik.com/produit/mboa-style/robe-wax", product: true },
   FLASH: { title: "Offre du jour", icon: Zap, help: "Produits avec compte à rebours ; ils disparaissent seuls à la date de fin.", placeholder: "https://mboa-style.prestafrik.com/robe-wax", product: true },
   EXCLUSIVE: { title: "Exclusivités PrestAfrik", icon: Crown, help: "Sélection négociée avec les vendeurs, dans un bandeau doré.", placeholder: "https://mboa-style.prestafrik.com/robe-wax", product: true },
-  FEATURED_STORE: { title: "Boutiques à la une", icon: Sparkles, help: "Sans sélection, les boutiques les mieux notées s’affichent.", placeholder: "https://mboa-style.prestafrik.com", product: false },
+  FEATURED_STORE: { title: "Boutiques à la une", icon: Sparkles, help: "Leurs produits passent devant ceux des autres boutiques. Sans sélection, les mieux notées s’affichent.", placeholder: "https://mboa-style.prestafrik.com", product: false },
 };
 
 const tabs = {
   "mises-en-avant": { label: "Mises en avant", icon: Sparkles },
+  boutiques: { label: "Boutiques", icon: Store },
   bandeau: { label: "Bandeau publicitaire", icon: Megaphone },
   categories: { label: "Catégories", icon: LayoutGrid },
 } as const;
@@ -42,7 +45,20 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
     getShopTickerSeconds(),
   ]);
   const now = Date.now();
-  const counts: Record<Tab, number> = { "mises-en-avant": picks.length, bandeau: tickers.length, categories: activities.filter((activity) => activity.imageUrl).length };
+  // Onglet Boutiques : boutiques en ligne, filtrées par nom ou adresse.
+  const search = typeof params.q === "string" ? params.q.trim().slice(0, 60) : "";
+  const excluded = new Set(picks.flatMap((pick) => (pick.section === "EXCLUDED_STORE" && pick.storeId ? [pick.storeId] : [])));
+  const featured = new Set(picks.flatMap((pick) => (pick.section === "FEATURED_STORE" && pick.storeId ? [pick.storeId] : [])));
+  const stores =
+    tab === "boutiques"
+      ? await prisma.store.findMany({
+          where: { isPublished: true, suspendedAt: null, ...(search ? { OR: [{ name: { contains: search, mode: "insensitive" } }, { slug: { contains: search.toLowerCase() } }] } : {}) },
+          orderBy: { name: "asc" },
+          take: 60,
+          select: { id: true, name: true, slug: true, city: true, activity: { select: { label: true } }, _count: { select: { products: { where: { status: "ACTIVE", archivedAt: null } } } } },
+        })
+      : [];
+  const counts: Record<Tab, number> = { "mises-en-avant": picks.filter((pick) => pick.section !== "EXCLUDED_STORE").length, boutiques: excluded.size, bandeau: tickers.length, categories: activities.filter((activity) => activity.imageUrl).length };
 
   return (
     <>
@@ -50,7 +66,7 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
         <div>
           <h1 className="v-page-title">Marketplace</h1>
           <p className="v-page-subtitle">
-            Ce que l’équipe met en avant sur <a href={shopUrl("/")} rel="noopener noreferrer" target="_blank">la marketplace</a>. Les bannières se gèrent dans <Link href="/admin/annonces">Annonces</Link>.
+            Ce que l’équipe met en avant sur <a href={absoluteUrl(shopUrl("/"))} rel="noopener noreferrer" target="_blank">la marketplace</a>. Les bannières se gèrent dans <Link href="/admin/annonces">Annonces</Link>.
           </p>
         </div>
       </div>
@@ -90,7 +106,7 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
                     {rows.map((pick, index) => {
                       const expired = pick.endsAt !== null && pick.endsAt.getTime() <= now;
                       const product = pick.product;
-                      const href = product ? `${storePublicUrl(product.store.slug)}/${product.slug}` : pick.store ? storePublicUrl(pick.store.slug) : "#";
+                      const href = product ? absoluteUrl(marketplaceProductPath(product.store.slug, product.slug)) : pick.store ? storePublicUrl(pick.store.slug) : "#";
                       return (
                         <li className={expired ? "is-off" : undefined} key={pick.id}>
                           <span aria-hidden="true" className="mkt-ticker-index">{index + 1}</span>
@@ -158,6 +174,74 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
             );
           })}
         </div>
+      )}
+
+      {tab === "boutiques" && (
+        <section aria-labelledby="boutiques-titre" className="v-card ann-group">
+          <header className="ann-group-head">
+            <span aria-hidden="true" className="ann-group-icon">
+              <Store size={20} />
+            </span>
+            <div>
+              <h2 id="boutiques-titre">Boutiques sur la marketplace</h2>
+              <p>Excluez une boutique (elle disparaît de la marketplace et de la recherche, sa vitrine reste en ligne) ou mettez-la en avant : ses produits passent devant les autres.</p>
+            </div>
+          </header>
+          <form className="mkt-settings" role="search">
+            <input name="onglet" type="hidden" value="boutiques" />
+            <label className="v-field">
+              <span>
+                <Search aria-hidden="true" size={15} /> Rechercher une boutique
+              </span>
+              <input defaultValue={search} maxLength={60} name="q" placeholder="Nom ou adresse de la boutique" />
+            </label>
+            <SubmitButton className="btn btn-secondary" pendingLabel="Recherche…">
+              Rechercher
+            </SubmitButton>
+          </form>
+          {stores.length ? (
+            <ul className="mkt-ticker-list">
+              {stores.map((store) => {
+                const isExcluded = excluded.has(store.id);
+                const isFeatured = featured.has(store.id);
+                return (
+                  <li className={isExcluded ? "is-off" : undefined} key={store.id}>
+                    <span className="mkt-ticker-text">
+                      <strong>
+                        {store.name}{" "}
+                        <a aria-label="Ouvrir la boutique dans un nouvel onglet" href={storePublicUrl(store.slug)} rel="noopener noreferrer" target="_blank">
+                          <ExternalLink aria-hidden="true" size={13} />
+                        </a>
+                      </strong>
+                      <small>{[store.activity?.label, store.city, `${store._count.products} produit${store._count.products > 1 ? "s" : ""}`].filter(Boolean).join(" · ")}</small>
+                    </span>
+                    {isExcluded && <Badge tone="neutral">Exclue</Badge>}
+                    {isFeatured && <Badge tone="success">À la une</Badge>}
+                    {!isExcluded && (
+                      <form action={setStoreFeatured}>
+                        <input name="storeId" type="hidden" value={store.id} />
+                        <input name="feature" type="hidden" value={isFeatured ? "0" : "1"} />
+                        <SubmitButton className="btn btn-secondary" pendingLabel="…">
+                          {isFeatured ? "Retirer de la une" : "Mettre en avant"}
+                        </SubmitButton>
+                      </form>
+                    )}
+                    <form action={setStoreExcluded}>
+                      <input name="storeId" type="hidden" value={store.id} />
+                      <input name="exclude" type="hidden" value={isExcluded ? "0" : "1"} />
+                      <SubmitButton className={isExcluded ? "btn btn-primary" : "btn btn-secondary"} pendingLabel="…">
+                        {isExcluded ? "Réintégrer" : "Exclure"}
+                      </SubmitButton>
+                    </form>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="v-muted">{search ? `Aucune boutique en ligne ne correspond à « ${search} ».` : "Aucune boutique en ligne."}</p>
+          )}
+          {stores.length === 60 && <p className="v-small v-muted">60 premières boutiques affichées : précisez votre recherche.</p>}
+        </section>
       )}
 
       {tab === "bandeau" && (

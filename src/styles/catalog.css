@@ -807,3 +807,311 @@
   font-size: 0.9rem;
 }
 
+
+/* ---------- Photo principale en grand ---------- */
+
+.photo-grid.has-hero > .photo-tile:first-child {
+  grid-column: 1 / -1;
+}
+
+.photo-grid.has-hero > .photo-tile:first-child .photo-tile-image {
+  aspect-ratio: 4 / 3;
+  max-height: 26rem;
+  background: var(--color-surface-muted);
+}
+
+.photo-grid.has-hero > .photo-tile:first-child .photo-tile-image img {
+  object-fit: contain;
+}
+
+.photo-grid.has-hero > .photo-tile:first-child .photo-tile-tools input {
+  max-width: 28rem;
+}
+
+/* ---------- Assistant IA ---------- */
+
+.ai-fill {
+  display: grid;
+  gap: 0.375rem;
+  margin: 0.75rem 0 0.5rem;
+}
+
+.btn-ai {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.625rem 1.125rem;
+  border: 0;
+  border-radius: var(--radius-xs);
+  color: #ffffff;
+  background: linear-gradient(98deg, #000026 0%, #3b2a8a 55%, #a85400 100%);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-ai:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-ai:focus-visible {
+  outline: 3px solid var(--color-brand-primary);
+  outline-offset: 2px;
+}
+
+.ai-suggestion {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-brand-primary);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warm);
+}
+
+.ai-suggestion-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-link);
+}
+
+.ai-suggestion-head strong {
+  color: var(--color-text-primary);
+}
+
+.ai-suggestion-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.ai-suggestion-toggle {
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.ai-suggestion-preview {
+  padding: 0.75rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.ai-suggestion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* ---------- Infos pratiques ---------- */
+
+.product-notice-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.product-notice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.product-notice svg {
+  margin-top: 0.1rem;
+}
+
+.product-notice.is-danger {
+  color: #8a1c12;
+  background: #fdecea;
+}
+
+.product-notice.is-warning {
+  color: #6b4400;
+  background: #fff4dc;
+}
+
+.product-notice.is-tip {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-muted);
+}
+
+
+
+
+
+/* Formulaire produit : étapes de la fiche, compteur du nom, aperçu du prix. */
+.product-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0.75rem 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.product-steps button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2rem;
+  padding: 0.25rem 0.625rem 0.25rem 0.375rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.product-steps button:hover {
+  border-color: var(--color-brand-primary);
+}
+
+.product-steps button.is-done {
+  border-color: transparent;
+  color: var(--color-success-strong);
+  background: var(--color-success-surface);
+}
+
+.product-step-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+.is-done .product-step-dot {
+  border-color: transparent;
+  color: #ffffff;
+  background: var(--color-success);
+}
+
+.field-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.field-counter {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.price-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.625rem;
+  margin: 0.25rem 0 0;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-muted);
+  font-size: 0.875rem;
+}
+
+.price-preview strong {
+  font-size: 1.0625rem;
+}
+
+.price-preview s {
+  color: var(--color-text-secondary);
+}
+
+.price-preview-badge {
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  color: #ffffff;
+  background: var(--color-danger);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Formulaire produit, univers Immobilier : bloc « Annonce » (à vendre / à louer). */
+.listing-type {
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+}
+
+.listing-type-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.listing-type-option {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-xs);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.listing-type-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.listing-type-option.is-selected {
+  border-color: var(--color-brand-secondary);
+  color: #fff;
+  background: var(--color-brand-secondary);
+}
+
+.listing-type-option:focus-within {
+  outline: 3px solid var(--color-brand-primary);
+  outline-offset: 2px;
+}
+
+.listing-furnished {
+  align-self: end;
+  min-height: 3rem;
+}
+
+.listing-type-legend {
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.listing-type-options-3 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .listing-type-options-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.listing-type-options-3 .listing-type-option {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  text-align: center;
+}

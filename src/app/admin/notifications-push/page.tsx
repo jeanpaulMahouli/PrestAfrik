@@ -1,4 +1,4 @@
-import { BellRing, Send, Smartphone, Users } from "lucide-react";
+import { BellRing, Send, Smartphone, Users } from "@/components/ui/icons";
 import { AdminFeedback } from "@/components/admin/admin-feedback";
 import { Badge } from "@/components/ui/badge";
 import { KpiCard } from "@/components/ui/kpi-card";

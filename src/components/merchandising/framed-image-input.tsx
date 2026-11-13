@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus } from "lucide-react";
+import { ImagePlus } from "@/components/ui/icons";
 import { useEffect, useId, useRef, useState } from "react";
 import { StoreImage } from "@/components/ui/store-image";
 import { shrinkImageForUpload } from "@/lib/client-image";

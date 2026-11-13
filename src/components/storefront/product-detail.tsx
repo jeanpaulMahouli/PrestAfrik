@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, ShieldCheck, Sparkles, Tag, Truck, X, Zap } from "lucide-react";
+import { Banknote, ChevronLeft, ChevronRight, ChevronRight as Separator, Sparkles, Tag, Truck, X, Zap } from "@/components/ui/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -10,7 +10,6 @@ import { useStoreCart } from "@/components/storefront/store-cart-provider";
 import { RichText } from "@/components/ui/rich-text";
 import { StoreImage } from "@/components/ui/store-image";
 import { buildProductWhatsappOrderMessage, buildWaMeUrl } from "@/modules/whatsapp/wa-me";
-import { BackIcon } from "@/components/ui/icons";
 import { useStoreHref } from "@/components/storefront/store-links";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
@@ -24,6 +23,8 @@ type ProductDetailProps = {
   rating?: { average: number; count: number } | null;
   /** Sections affichées sous le produit (avis, produits similaires). */
   children?: ReactNode;
+  /** Immobilier : « À louer / À vendre », période du loyer et caractéristiques du bien. */
+  listing?: { label: string | null; suffix: string; facts: { key: string; label: string; value: string }[] } | null;
   product: {
     id: string;
     name: string;
@@ -72,10 +73,10 @@ function Lightbox({ images, name, start, onClose }: { images: GalleryImage[]; na
       {images.length > 1 && (
         <>
           <button aria-label="Photo précédente" className="sf-gallery-arrow sf-gallery-arrow-prev sf-lightbox-arrow" onClick={() => go(current - 1)} type="button">
-            <ChevronLeft aria-hidden="true" size={26} strokeWidth={2.4} />
+            <ChevronLeft aria-hidden="true" size={26} />
           </button>
           <button aria-label="Photo suivante" className="sf-gallery-arrow sf-gallery-arrow-next sf-lightbox-arrow" onClick={() => go(current + 1)} type="button">
-            <ChevronRight aria-hidden="true" size={26} strokeWidth={2.4} />
+            <ChevronRight aria-hidden="true" size={26} />
           </button>
           <p aria-live="polite" className="sf-lightbox-count">
             {current + 1} / {images.length}
@@ -141,12 +142,21 @@ function Gallery({ images, name }: { images: ProductDetailProps["product"]["imag
       {images.length > 1 && (
         <>
           <button aria-label="Photo précédente" className="sf-gallery-arrow sf-gallery-arrow-prev" onClick={() => go(index - 1)} type="button">
-            <ChevronLeft aria-hidden="true" size={22} strokeWidth={2.4} />
+            <ChevronLeft aria-hidden="true" size={22} />
           </button>
           <button aria-label="Photo suivante" className="sf-gallery-arrow sf-gallery-arrow-next" onClick={() => go(index + 1)} type="button">
-            <ChevronRight aria-hidden="true" size={22} strokeWidth={2.4} />
+            <ChevronRight aria-hidden="true" size={22} />
           </button>
         </>
+      )}
+      {images.length > 1 && (
+        <div className="sf-gallery-thumbs">
+          {images.map((image, imageIndex) => (
+            <button aria-current={imageIndex === index ? "true" : undefined} aria-label={`Voir la photo ${imageIndex + 1}`} key={image.url} onClick={() => go(imageIndex)} type="button">
+              <StoreImage alt="" height={160} sizes="80px" src={image.url} width={160} />
+            </button>
+          ))}
+        </div>
       )}
       {images.length > 1 && (
         <div className="sf-gallery-dots">
@@ -159,7 +169,8 @@ function Gallery({ images, name }: { images: ProductDetailProps["product"]["imag
   );
 }
 
-export function ProductDetail({ product, storeSlug, storeName, productUrl, whatsappNumber, canOrder = true, rating = null, children }: ProductDetailProps) {
+export function ProductDetail({ product, storeSlug, storeName, productUrl, whatsappNumber, canOrder = true, rating = null, children, listing = null }: ProductDetailProps) {
+  const isListing = Boolean(listing?.label);
   const router = useRouter();
   const link = useStoreHref(storeSlug);
   const cart = useStoreCart();
@@ -199,17 +210,22 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
   return (
     <main className="sf-product-page">
     <div className="sf-product">
-      <Link aria-label="Retour au catalogue" className="sf-back" href={link()}><BackIcon size={18} /></Link>
+      <nav aria-label="Fil d’Ariane" className="sf-breadcrumb">
+        <Link href={link()}>Accueil</Link>
+        <Separator aria-hidden="true" size={14} />
+        <span aria-current="page">{product.name}</span>
+      </nav>
       <Gallery images={product.images} name={product.name} />
       <div className="sf-product-copy">
+        {listing?.label && <span className="sf-listing-badge">{listing.label}</span>}
         <h1>{product.name}</h1>
-        {rating && (
+        {rating && rating.count > 0 && (
           <a className="sf-product-rating" href="#sf-reviews-title">
             <StarRating size={18} value={rating.average} />
             <span>{rating.count > 0 ? `${rating.average.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} · ${reviewCountLabel(rating.count)}` : "Aucun avis pour le moment"}</span>
           </a>
         )}
-        {variant?.priceXaf ? <span className="sf-price">{new Intl.NumberFormat("fr-FR").format(variant.priceXaf)} FCFA</span> : <ProductPrice priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} />}
+        {variant?.priceXaf ? <span className="sf-price">{new Intl.NumberFormat("fr-FR").format(variant.priceXaf)} FCFA</span> : <ProductPrice priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} suffix={listing?.suffix} />}
         {!variant?.priceXaf && <ProductDeal priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} />}
 
         {canOrder && product.variants.length > 0 && (
@@ -235,7 +251,18 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
           </fieldset>
         )}
 
-        {canOrder && (
+        {listing && listing.facts.length > 0 && (
+          <ul aria-label="Caractéristiques du bien" className="sf-facts">
+            {listing.facts.map((fact) => (
+              <li key={fact.key}>
+                <small>{fact.label}</small>
+                <strong>{fact.value}</strong>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {canOrder && !isListing && (
           <div className="sf-quantity">
             <span id="sf-quantity-label">Quantité</span>
             <div aria-labelledby="sf-quantity-label" className="sf-stepper" role="group">
@@ -247,33 +274,51 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
           </div>
         )}
 
-        {product.description && <RichText className="rich-text sf-description" source={product.description} />}
+        {product.description && (
+          <div className="sf-description-short">
+            <RichText className="rich-text sf-description" source={product.description} />
+            <a className="sf-more-link" href="#sf-details-title">Lire la suite</a>
+          </div>
+        )}
 
         {canOrder ? (
           <div className="sf-product-actions">
             {message && <p aria-live="polite" className="sf-toast" role="status">{message}</p>}
-            <button
-              className="sf-btn sf-btn-primary sf-btn-block"
-              disabled={!cart.ready}
-              onClick={() => {
-                if (add()) router.push(link("commande"));
-              }}
-              type="button"
-            >
-              Commander maintenant
-            </button>
-            <button className="sf-btn sf-btn-secondary sf-btn-block" disabled={!cart.ready} onClick={add} type="button">
-              Ajouter au panier
-            </button>
+            <div className="sf-product-buttons">
+              {!isListing && (
+                <button className="sf-btn sf-btn-secondary sf-btn-block" disabled={!cart.ready} onClick={add} type="button">
+                  Ajouter au panier
+                </button>
+              )}
+              <button
+                className="sf-btn sf-btn-primary sf-btn-block"
+                disabled={!cart.ready}
+                onClick={() => {
+                  if (add()) router.push(link("commande"));
+                }}
+                type="button"
+              >
+                {isListing ? (listing?.label === "À réserver" ? "Réserver" : "Demander une visite") : "Commander maintenant"}
+              </button>
+            </div>
             {whatsappOrderUrl && (
               <a className="sf-link sf-whatsapp-link" href={whatsappOrderUrl} rel="noopener noreferrer" target="_blank">
                 Une question ? Écrire à la boutique sur WhatsApp
               </a>
             )}
             <ul className="sf-assurances">
-              <li><Truck aria-hidden="true" size={18} /> Paiement à la livraison</li>
-              <li><WhatsAppIcon size={18} variant="logo" /> Suivi sur WhatsApp</li>
-              <li><ShieldCheck aria-hidden="true" size={18} /> Aucun compte à créer</li>
+              <li>
+                <span className="sf-assurance-icon"><Banknote aria-hidden="true" size={22} /></span>
+                <span><small>Paiement</small>À la livraison</span>
+              </li>
+              <li>
+                <span className="sf-assurance-icon"><Truck aria-hidden="true" size={22} /></span>
+                <span><small>Livraison</small>{stock !== null && stock > 0 ? "En stock" : "Rapide"}</span>
+              </li>
+              <li>
+                <span className="sf-assurance-icon"><WhatsAppIcon size={22} variant="logo" /></span>
+                <span><small>Suivi sur</small>WhatsApp</span>
+              </li>
             </ul>
           </div>
         ) : (
@@ -281,6 +326,14 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
         )}
       </div>
     </div>
+    {product.description && (
+      <section aria-labelledby="sf-details-title" className="sf-section sf-details">
+        <div className="sf-section-head">
+          <h2 id="sf-details-title">Détails</h2>
+        </div>
+        <RichText className="rich-text sf-details-text" source={product.description} />
+      </section>
+    )}
     {children}
     </main>
   );
@@ -303,9 +356,9 @@ function ProductDeal({ priceXaf, promotionalPriceXaf }: { priceXaf: number; prom
   return (
     <p className="sf-product-deal">
       <span aria-hidden="true" className="sf-promo-icon">
-        <Zap className="sf-promo-icon-vente-flash" size={18} strokeWidth={2.4} />
-        <Tag className="sf-promo-icon-offres-du-jour" size={16} strokeWidth={2.4} />
-        <Sparkles className="sf-promo-icon-eclat" size={18} strokeWidth={2.2} />
+        <Zap className="sf-promo-icon-vente-flash" size={18} />
+        <Tag className="sf-promo-icon-offres-du-jour" size={16} />
+        <Sparkles className="sf-promo-icon-eclat" size={18} />
       </span>
       <span className="sf-product-deal-text">
         {dealLabels.map((label) => (

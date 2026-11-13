@@ -1,4 +1,4 @@
-import { MapPin, Star, Store } from "lucide-react";
+import { MapPin, Star, Store } from "@/components/ui/icon-set";
 import { storePublicUrl } from "@/lib/urls";
 import { formatXaf } from "@/modules/catalog/format";
 import { countryName, type getTopProducts, type SearchableStore } from "@/modules/marketplace/search";

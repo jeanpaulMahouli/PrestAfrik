@@ -434,7 +434,7 @@
   }
 }
 
-/* ---------- « Vendre sur PrestAfrik » en verre ---------- */
+/* ---------- « Devenir vendeur » en verre ---------- */
 .shop-btn-glass {
   border: 1px solid rgb(255 255 255 / 0.9);
   color: var(--color-text-primary);
@@ -453,4 +453,185 @@
 
 .shop-btn-glass svg {
   color: #ff9900;
+}
+
+/* ---------- Bannière principale « Devenir vendeur » (components/shop/shop-hero.tsx) ----------
+   Un seul objectif : le bouton, qui mène à /boutique ; toute la bannière est cliquable. */
+.shop-seller {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-width: 0;
+  /* Découpe sans « overflow » : la bannière garde le format 8:3 mais peut grandir si le texte l'exige
+     (le bouton n'est jamais coupé). */
+  clip-path: inset(0 round 1.5rem);
+  aspect-ratio: 8 / 3;
+  border-radius: 1.5rem;
+  color: #fff;
+  text-decoration: none;
+  background:
+    radial-gradient(55% 90% at 88% 15%, rgb(255 153 0 / 0.6), transparent 62%),
+    radial-gradient(45% 80% at 0% 100%, rgb(239 118 94 / 0.38), transparent 60%),
+    linear-gradient(135deg, #000026 0%, #15104a 70%, #24145a 100%);
+  box-shadow: 0 24px 48px -28px rgb(0 0 38 / 0.6);
+  isolation: isolate;
+}
+
+.shop-seller-glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / 0.12) 50%, transparent 65%);
+  background-size: 250% 100%;
+  animation: shop-shine 6s ease-in-out infinite;
+}
+
+.shop-seller-text {
+  display: grid;
+  align-content: center;
+  gap: 0.55rem;
+  max-width: 34rem;
+  /* À droite, la place du téléphone (posé par-dessus, hors du calcul de la hauteur). */
+  margin-right: clamp(9rem, 26%, 16rem);
+  padding: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.shop-seller-kicker {
+  justify-self: start;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  color: #ffb238;
+  background: rgb(255 153 0 / 0.14);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.shop-seller-title {
+  font-size: clamp(1.6rem, 2.6vw, 2.35rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.shop-seller-sub {
+  max-width: 28rem;
+  color: rgb(255 255 255 / 0.82);
+  font-size: clamp(0.85rem, 1.05vw, 0.98rem);
+  line-height: 1.45;
+}
+
+.shop-seller-cta {
+  display: inline-flex;
+  min-height: 3.1rem;
+  align-items: center;
+  justify-self: start;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+  padding: 0 1.5rem;
+  border-radius: 999px;
+  color: #000026;
+  background: linear-gradient(135deg, #ffb238, #ff9900);
+  font-size: 1.02rem;
+  font-weight: 700;
+  box-shadow: 0 14px 28px -12px rgb(255 153 0 / 0.75);
+  transition: transform 0.18s ease;
+}
+
+.shop-seller:hover .shop-seller-cta {
+  transform: translateY(-2px);
+}
+
+.shop-seller:focus-visible {
+  outline: 3px solid #ff9900;
+  outline-offset: 3px;
+}
+
+.shop-seller-phone {
+  position: absolute;
+  right: clamp(1rem, 4%, 3rem);
+  bottom: 0;
+  height: 105%;
+  transform: rotate(6deg) translateY(12%);
+  filter: drop-shadow(0 20px 30px rgb(0 0 0 / 0.45));
+}
+
+.shop-seller-phone img {
+  display: block;
+  width: auto;
+  height: 100%;
+}
+
+/* À côté de la bannière : le diaporama de l'administration, puis un visuel fixe (mêmes hauteurs). */
+.shop-hero-side .shop-carousel {
+  aspect-ratio: auto;
+  height: 100%;
+  border-radius: 1.25rem;
+}
+
+.shop-hero-side .shop-carousel-arrow {
+  width: 2rem;
+  height: 2rem;
+}
+
+@media (max-width: 1023px) {
+  .shop-hero-side .shop-carousel {
+    aspect-ratio: 8 / 3;
+    height: auto;
+  }
+}
+
+/* Téléphone : format vertical, bouton bien visible sans défiler et assez grand pour le pouce. */
+@media (max-width: 767px) {
+  .shop-hero-mobile:has(.shop-seller) {
+    overflow: visible;
+    aspect-ratio: auto;
+    box-shadow: none;
+  }
+
+  .shop-seller--mobile {
+    clip-path: inset(0 round 1.25rem);
+    min-height: 15rem;
+    aspect-ratio: auto;
+    border-radius: 1.25rem;
+  }
+
+  .shop-seller--mobile .shop-seller-text {
+    gap: 0.5rem;
+    margin-right: 32%;
+    padding: 1.1rem 0 1.1rem 1.1rem;
+  }
+
+  .shop-seller--mobile .shop-seller-kicker {
+    font-size: 0.7rem;
+  }
+
+  .shop-seller--mobile .shop-seller-title {
+    font-size: 1.6rem;
+  }
+
+  .shop-seller--mobile .shop-seller-sub {
+    font-size: 0.82rem;
+  }
+
+  .shop-seller--mobile .shop-seller-cta {
+    min-height: 3rem;
+    padding: 0 1.25rem;
+    font-size: 1rem;
+  }
+
+  .shop-seller--mobile .shop-seller-phone {
+    right: -0.5rem;
+    height: 92%;
+    transform: rotate(7deg) translateY(10%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-seller-glow {
+    animation: none;
+  }
+
+  .shop-seller-cta {
+    transition: none;
+  }
 }

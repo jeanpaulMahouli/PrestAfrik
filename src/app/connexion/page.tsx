@@ -6,7 +6,7 @@ import { googleSignInEnabled } from "@/modules/auth/google";
 
 const t = texts.auth.signIn;
 
-export const metadata: Metadata = { title: t.metaTitle };
+export const metadata: Metadata = { title: t.metaTitle, robots: { index: false, follow: true } };
 
 export default async function SignInPage({ searchParams }: PageProps<"/connexion">) {
   const params = await searchParams;

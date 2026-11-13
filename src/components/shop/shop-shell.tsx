@@ -1,21 +1,29 @@
 import "@/styles/shop.css";
 import "@/styles/shop-universes.css";
 import "@/styles/shop-layout.css";
-import { BadgeCheck, BadgePercent, CalendarCheck, Crown, HandCoins, Handshake, House, KeyRound, LayoutGrid, MapPinned, Rocket, ShieldCheck, Star, Store, Tag, Zap, type LucideIcon } from "lucide-react";
+import "@/styles/shop-showcase.css";
+import { Crown, Envelope, House, Lightning, Percent, Phone, RocketLaunch, Star, Storefront, Tag, Handshake, ForkKnife } from "@phosphor-icons/react/ssr";
+import type { Icon } from "@phosphor-icons/react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { VendorSearch } from "@/components/marketplace/vendor-search";
-import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { site } from "@/config/site";
-import { shopUrl } from "@/lib/urls";
+import { brandIdentity } from "@/lib/brand";
+import { sellerLandingPath, shopUrl } from "@/lib/urls";
 import { shopUniverses, type ShopUniverse } from "@/config/marketplace";
+import { marketplaceAds, slotAd } from "@/config/marketplace-ads";
+import { getShopAnnouncements } from "@/modules/announcements/queries";
 import type { ShopScope } from "@/modules/marketplace/country";
 import type { ShopCategory } from "@/modules/marketplace/shop";
 import { CityPicker } from "./city-picker";
+import { CartLink } from "./market-cart";
 import { ShopAssistant } from "./shop-assistant";
-import { CategoryMenu } from "./shop-menus";
+import { MegaMenu, type MegaCategory } from "./shop-mega-menu";
 import { ShopTicker, type TickerItem } from "./shop-ticker";
-import { UniverseTabs, UniverseWelcome } from "./universe-switch";
+import { UniverseMenu, UniverseWelcome } from "./universe-switch";
+
+/** Fenêtre d’accueil « Que recherchez-vous ? » à la première visite (désactivée pour le moment). */
+const SHOW_UNIVERSE_WELCOME = false;
 
 export const shopBudgets = [
   { label: "Moins de 5 000 FCFA", max: 5000 },
@@ -29,87 +37,71 @@ export const budgetHref = (budget: (typeof shopBudgets)[number]) => shopUrl(`/re
 export const categoryHref = (slug: string) => shopUrl(`/recherche?categorie=${slug}`);
 
 const siteHref = (path: string) => `${(process.env.BETTER_AUTH_URL ?? "").replace(/\/$/, "")}${path}`;
-const signupHref = () => siteHref("/inscription");
+/** « Devenir vendeur » : la page de présentation pour les vendeurs (prestafrik.com/boutique). */
+const signupHref = () => sellerLandingPath;
 
-type Rubrique = { id: string; href: string; label: string; icon: LucideIcon };
+type Rubrique = { id: string; href: string; label: string; icon: Icon };
 
 /** Raccourcis de chaque univers, en vocabulaire courant. */
 function rubriquesFor(universe: ShopUniverse): Rubrique[] {
-  const home = { id: "toutes", href: shopUrl("/"), label: "Accueil", icon: LayoutGrid };
   if (universe === "immobilier") {
     return [
-      home,
-      { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouvelles annonces", icon: Rocket },
+      { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouvelles annonces", icon: RocketLaunch },
       { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Bonnes affaires", icon: Tag },
       { id: "notes", href: shopUrl("/recherche?tri=mieux-notes"), label: "Annonceurs les mieux notés", icon: Star },
     ];
   }
+  if (universe === "restauration") {
+    return [
+      { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouvelles adresses", icon: RocketLaunch },
+      { id: "notes", href: shopUrl("/recherche?tri=mieux-notes"), label: "Les mieux notés", icon: Star },
+      { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Menus en promo", icon: Percent },
+      { id: "petits-prix", href: shopUrl("/recherche?max=3000"), label: "Petits prix", icon: Tag },
+    ];
+  }
   if (universe === "services") {
     return [
-      home,
-      { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouveaux prestataires", icon: Rocket },
+      { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouveaux prestataires", icon: RocketLaunch },
       { id: "notes", href: shopUrl("/recherche?tri=mieux-notes"), label: "Les mieux notés", icon: Star },
-      { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Offres du moment", icon: BadgePercent },
+      { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Offres du moment", icon: Percent },
     ];
   }
   return [
-    home,
-    { id: "flash", href: shopUrl("/#ventes-flash"), label: "Offre du jour", icon: Zap },
-    { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Promotions", icon: BadgePercent },
+    { id: "flash", href: shopUrl("/#ventes-flash"), label: "Offre du jour", icon: Lightning },
+    { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Promotions", icon: Percent },
     { id: "notes", href: shopUrl("/recherche?tri=mieux-notes"), label: "Meilleures ventes", icon: Star },
     { id: "petits-prix", href: shopUrl("/recherche?max=5000"), label: "Petits prix", icon: Tag },
-    { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouveautés", icon: Rocket },
+    { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouveautés", icon: RocketLaunch },
     { id: "exclusif", href: shopUrl("/#offres-exclusives"), label: "Exclusivités", icon: Crown },
   ];
 }
 
-/** Engagements affichés en bas de page, selon l'univers. */
-function promisesFor(universe: ShopUniverse) {
-  if (universe === "immobilier") {
-    return [
-      { icon: <KeyRound size={26} strokeWidth={1.7} />, title: "Contact direct", text: "Sans intermédiaire caché." },
-      { icon: <WhatsAppIcon size={26} variant="logo" />, title: "Visite sur WhatsApp", text: "Planifiée en un message." },
-      { icon: <ShieldCheck size={26} strokeWidth={1.7} />, title: "Annonceurs suivis", text: "Signalés, ils sont suspendus." },
-      { icon: <BadgeCheck size={26} strokeWidth={1.7} />, title: "Avis vérifiés", text: "Laissés par de vrais clients." },
-    ];
-  }
-  if (universe === "services") {
-    return [
-      { icon: <MapPinned size={26} strokeWidth={1.7} />, title: "Près de chez vous", text: "Des prestataires de votre ville." },
-      { icon: <WhatsAppIcon size={26} variant="logo" />, title: "Devis sur WhatsApp", text: "Réponse rapide, sans engagement." },
-      { icon: <CalendarCheck size={26} strokeWidth={1.7} />, title: "Rendez-vous simple", text: "Vous fixez la date ensemble." },
-      { icon: <BadgeCheck size={26} strokeWidth={1.7} />, title: "Avis vérifiés", text: "Laissés par de vrais clients." },
-    ];
-  }
-  return [
-    { icon: <HandCoins size={26} strokeWidth={1.7} />, title: "Paiement à la livraison", text: "Vous payez à la réception." },
-    { icon: <WhatsAppIcon size={26} variant="logo" />, title: "Commande sur WhatsApp", text: "Le vendeur vous répond vite." },
-    { icon: <ShieldCheck size={26} strokeWidth={1.7} />, title: "Vendeurs suivis", text: "Signalés, ils sont suspendus." },
-    { icon: <BadgeCheck size={26} strokeWidth={1.7} />, title: "Avis vérifiés", text: "Laissés par de vrais acheteurs." },
-  ];
-}
-
-const ctaFor: Record<ShopUniverse, { label: string; icon: LucideIcon }> = {
-  vente: { label: "Vendre sur PrestAfrik", icon: Store },
+const ctaFor: Record<ShopUniverse, { label: string; icon: Icon }> = {
+  vente: { label: "Devenir vendeur", icon: Storefront },
   immobilier: { label: "Publier une annonce", icon: House },
   services: { label: "Proposer mes services", icon: Handshake },
+  restauration: { label: "Ouvrir mon restaurant", icon: ForkKnife },
 };
 
 /**
- * Cadre de la marketplace (shop.prestafrik.com) : bandeau (engagements, liens), en-tête avec « Livrer à »
- * (ville du visiteur) et recherche, onglets d'univers (vente, immobilier, services), raccourcis, bandeau
- * défilant des catégories, pied de page et assistant. Première visite : fenêtre « Que recherchez-vous ? ».
+ * Cadre de la marketplace : bandeau publicitaire (textes qui défilent), en-tête blanc en verre (logo,
+ * « Livrer à », recherche, univers, « Devenir vendeur »), barre de navigation (grand menu des catégories
+ * et raccourcis), puis pied de page et assistant. En-tête et barre de navigation forment un seul bloc
+ * collant en haut de l'écran. Première visite : fenêtre « Que recherchez-vous ? ».
  */
-export function ShopShell({
+export async function ShopShell({
   categories,
   scope,
   ticker = [],
   tickerSeconds = 4,
   active,
   query,
+  menu,
   children,
 }: {
   categories: ShopCategory[];
+  /** Produits de chaque catégorie pour le grand menu (sinon la liste seule). */
+  menu?: Map<string, MegaCategory["products"]>;
   scope: ShopScope;
   /** Vrai si seules les boutiques de la ville du visiteur sont montrées. */
   local: boolean;
@@ -124,14 +116,16 @@ export function ShopShell({
   const whatsappDigits = site.whatsapp?.replace(/\D/g, "");
   const whatsapp = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent("Bonjour PrestAfrik, j’ai une question sur la marketplace.")}` : null;
   const rubriques = rubriquesFor(scope.universe);
+  const megaCategories: MegaCategory[] = categories.map((category) => ({ slug: category.slug, label: category.label, href: categoryHref(category.slug), count: category.productCount, products: menu?.get(category.slug)?.slice(0, 6) ?? [] }));
   const Cta = ctaFor[scope.universe].icon;
+  const menuAd = slotAd((await getShopAnnouncements()).slots.menu, marketplaceAds.menu);
   // Bandeau publicitaire : textes de l'administration, sinon nos engagements.
   const tickerItems: TickerItem[] = ticker.length
     ? ticker
     : [
         { id: "livraison", text: "Paiement à la livraison partout au Cameroun", linkUrl: null },
         { id: "whatsapp", text: "Commandez sur WhatsApp : le vendeur vous répond vite", linkUrl: null },
-        { id: "vendre", text: "Vendeur ? Votre boutique en ligne gratuitement, en 5 minutes", linkUrl: signupHref() },
+        { id: "vendre", text: "Vendeur ? Votre boutique en ligne en 5 minutes", linkUrl: signupHref() },
       ];
 
   return (
@@ -139,117 +133,132 @@ export function ShopShell({
       <a className="shop-skip" href="#shop-contenu">
         Aller au contenu
       </a>
-      <div className="shop-topbar">
-        <ul className="shop-topbar-perks">
-          <li>
-            <HandCoins aria-hidden="true" size={15} /> Paiement à la livraison
-          </li>
-          <li>
-            <WhatsAppIcon size={15} variant="logo" /> Commande confirmée sur WhatsApp
-          </li>
-        </ul>
+      {/* Espace publicitaire : un texte à la fois, en boucle (Administration → Marketplace). */}
+      <div className="sx-adbar">
         <ShopTicker items={tickerItems} seconds={tickerSeconds} />
-        <nav aria-label="Liens utiles" className="shop-topbar-links">
-          <a href={siteHref("/aide")}>Aide</a>
-          <a href={siteHref("/")}>PrestAfrik.com</a>
-          {whatsapp && (
-            <a href={whatsapp} rel="noopener noreferrer" target="_blank">
-              Besoin d’aide ? WhatsApp
-            </a>
-          )}
-        </nav>
       </div>
 
-      <header className="shop-header">
-        <a aria-label="PrestAfrik Shop, accueil de la marketplace" className="shop-logo" href={shopUrl("/")}>
-          <Image alt="" height={40} priority src="/brand/logo-prestafrik.png" width={73} />
-          <span className="shop-logo-badge">Shop</span>
-        </a>
-        <CityPicker current={scope.city?.name ?? null} label={scope.universe === "vente" ? "Livrer à" : "Votre ville"} />
-        <VendorSearch bare className="shop-search" defaultValue={query ?? ""} placeholder={scope.universe === "immobilier" ? "Maison, appartement, terrain…" : scope.universe === "services" ? "Coiffure, réparation, traiteur…" : "Rechercher un produit, une boutique…"} resultsPath={shopUrl("/recherche")} />
-        <a className="shop-btn shop-btn-glass shop-header-cta" href={signupHref()}>
-          <Cta aria-hidden="true" size={18} />
-          <span>{ctaFor[scope.universe].label}</span>
-        </a>
-      </header>
+      <div className="sx-sticky">
+        <header className="shop-header">
+          <div className="sx-wrap sx-header-row">
+            <a aria-label="PrestAfrik, accueil de la marketplace" className="shop-logo" href={shopUrl("/")}>
+              <Image alt="" height={40} priority src="/brand/logo-prestafrik.png" width={73} />
+            </a>
+            <CityPicker current={scope.city?.name ?? null} label={scope.universe === "vente" ? "Livrer à" : "Votre ville"} />
+            <VendorSearch bare className="shop-search" defaultValue={query ?? ""} placeholder={scope.universe === "immobilier" ? "Appartement, studio meublé, bureau…" : scope.universe === "services" ? "Coiffure, réparation, transport…" : scope.universe === "restauration" ? "Restaurant, pizza, poulet DG, gâteau…" : "Rechercher un produit, une boutique…"} resultsPath={shopUrl("/recherche")} />
+            <UniverseMenu current={scope.universe} home={shopUrl("/")} />
+            <CartLink href={shopUrl("/panier")} />
+            <a className="sx-btn sx-btn-primary shop-header-cta" data-emplacement="en-tete" href={signupHref()}>
+              <Cta aria-hidden="true" size={20} />
+              <span>{ctaFor[scope.universe].label}</span>
+            </a>
+          </div>
+        </header>
 
-      <UniverseTabs current={scope.universe} home={shopUrl("/")} />
-      {!scope.chosen && <UniverseWelcome city={scope.city?.name ?? null} home={shopUrl("/")} />}
-
-      <nav aria-label="Raccourcis" className="shop-rubriques">
-        <ul>
-          {rubriques.map(({ id, href, label, icon: Icon }) => (
-            <li key={id}>
-              <a aria-current={active === id ? "page" : undefined} className={`shop-rubrique shop-rubrique--${id}`} href={href}>
-                <Icon aria-hidden="true" size={17} /> {label}
-              </a>
-            </li>
-          ))}
-          <li>
-            <CategoryMenu active={active} categories={categories.map((category) => ({ slug: category.slug, label: category.label, href: categoryHref(category.slug) }))} />
-          </li>
-        </ul>
-      </nav>
+        <nav aria-label="Raccourcis" className="shop-rubriques">
+          <div className="sx-wrap sx-nav-row">
+            <MegaMenu active={active} ad={menuAd} allHref={shopUrl("/recherche")} categories={megaCategories} />
+            <ul className="sx-nav-links">
+              {rubriques.map(({ id, href, label, icon: Icon }) => (
+                <li key={id}>
+                  <a aria-current={active === id ? "page" : undefined} className={`shop-rubrique shop-rubrique--${id}`} href={href}>
+                    <Icon aria-hidden="true" size={20} /> {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+      </div>
+      {/* Fenêtre d’accueil « Que recherchez-vous ? » désactivée pour le moment : réactiver avec SHOW_UNIVERSE_WELCOME. */}
+      {SHOW_UNIVERSE_WELCOME && !scope.chosen && <UniverseWelcome city={scope.city?.name ?? null} home={shopUrl("/")} />}
 
       <main className="shop-main" id="shop-contenu">
         {children}
       </main>
 
-      <section aria-label="Nos engagements" className="shop-promises">
-        {promisesFor(scope.universe).map(({ icon, title, text }) => (
-          <div key={title}>
-            <span aria-hidden="true">{icon}</span>
-            <strong>{title}</strong>
-            <small>{text}</small>
-          </div>
-        ))}
-      </section>
-
       <footer className="shop-footer">
-        <div className="shop-footer-brand">
-          <Image alt="PrestAfrik" height={110} src="/brand/logo-white.webp" width={201} />
-          <p>Boutiques, immobilier et services près de chez vous. Contact direct sur WhatsApp, paiement à la livraison.</p>
+        <div className="sx-wrap sx-footer-grid">
+          <div className="shop-footer-brand">
+            <Image alt="PrestAfrik" height={110} src="/brand/logo-white.webp" width={201} />
+            <p>{brandIdentity} Paiement à la livraison.</p>
+            <ul className="sx-footer-contacts">
+              {site.phones.map((phone) => (
+                <li key={phone}>
+                  <a href={`tel:${phone.replace(/\s/g, "")}`}>
+                    <Phone aria-hidden="true" size={18} /> {phone}
+                  </a>
+                </li>
+              ))}
+              <li>
+                <a href={`mailto:${site.email}`}>
+                  <Envelope aria-hidden="true" size={18} /> {site.email}
+                </a>
+              </li>
+            </ul>
+          </div>
+          <nav aria-label="Catégories populaires">
+            <h2>Catégories</h2>
+            <ul>
+              {categories.slice(0, 8).map((category) => (
+                <li key={category.slug}>
+                  <a href={categoryHref(category.slug)}>{category.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <nav aria-label="Acheter">
+            <h2>{shopUniverses[scope.universe].short}</h2>
+            <ul>
+              {rubriques.map((item) => (
+                <li key={item.id}>
+                  <a href={item.href}>{item.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <nav aria-label="PrestAfrik">
+            <h2>PrestAfrik</h2>
+            <ul>
+              <li data-emplacement="pied-de-page">
+                <a href={signupHref()}>Devenir vendeur</a>
+              </li>
+              <li>
+                <a href={siteHref("/a-propos")}>À propos</a>
+              </li>
+              <li>
+                <a href={siteHref("/aide")}>Centre d’aide</a>
+              </li>
+              <li>
+                <a href={siteHref("/blog")}>Blog</a>
+              </li>
+              <li>
+                <a href={siteHref("/contact")}>Contact</a>
+              </li>
+              <li>
+                <a href={siteHref("/legal/conditions-generales")}>Conditions générales</a>
+              </li>
+              <li>
+                <a href={siteHref("/legal/politique-de-confidentialite")}>Confidentialité</a>
+              </li>
+            </ul>
+          </nav>
+          <nav aria-label="Recherches fréquentes" className="sx-footer-tags">
+            <h2>Recherches fréquentes</h2>
+            <ul>
+              {shopBudgets.slice(0, 3).map((budget) => (
+                <li key={budget.label}>
+                  <a href={budgetHref(budget)}>{budget.label}</a>
+                </li>
+              ))}
+              {categories.slice(0, 7).map((category) => (
+                <li key={category.slug}>
+                  <a href={categoryHref(category.slug)}>{category.label}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
-        <nav aria-label="Catégories populaires">
-          <h2>Catégories</h2>
-          <ul>
-            {categories.slice(0, 8).map((category) => (
-              <li key={category.slug}>
-                <a href={categoryHref(category.slug)}>{category.label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <nav aria-label="Acheter">
-          <h2>{shopUniverses[scope.universe].short}</h2>
-          <ul>
-            {rubriques.slice(1).map((item) => (
-              <li key={item.id}>
-                <a href={item.href}>{item.label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <nav aria-label="PrestAfrik">
-          <h2>PrestAfrik</h2>
-          <ul>
-            <li>
-              <a href={siteHref("/a-propos")}>À propos</a>
-            </li>
-            <li>
-              <a href={siteHref("/aide")}>Centre d’aide</a>
-            </li>
-            <li>
-              <a href={siteHref("/contact")}>Contact</a>
-            </li>
-            <li>
-              <a href={siteHref("/legal/conditions-generales")}>Conditions générales</a>
-            </li>
-            <li>
-              <a href={siteHref("/legal/politique-de-confidentialite")}>Confidentialité</a>
-            </li>
-          </ul>
-        </nav>
         <p className="shop-footer-copy">© {new Date().getFullYear()} PrestAfrik. Les produits sont vendus par les boutiques, qui en sont responsables.</p>
       </footer>
 

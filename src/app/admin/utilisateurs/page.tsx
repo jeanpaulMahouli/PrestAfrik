@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { Download } from "@/components/ui/icons";
 import Link from "next/link";
 import { UserAvatar } from "@/components/account/user-avatar";
 import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";

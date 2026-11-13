@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Info, type LucideIcon } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Info, type AppIcon } from "@/components/ui/icons";
 
 export type KpiTone = "orange" | "navy" | "green" | "blue" | "violet";
 
@@ -16,7 +16,7 @@ export function KpiCard({
   hint,
   info,
 }: {
-  icon: LucideIcon;
+  icon: AppIcon;
   tone?: KpiTone;
   label: string;
   value: string;
@@ -29,7 +29,7 @@ export function KpiCard({
 }) {
   return (
     <article className="kpi-card">
-      <Icon aria-hidden="true" className={`kpi-icon kpi-icon-${tone}`} size={26} strokeWidth={1.8} />
+      <Icon aria-hidden="true" className={`kpi-icon kpi-icon-${tone}`} size={26} />
       <p className="kpi-value">{value}</p>
       <div className="kpi-label-row">
         <p className="kpi-label">{label}</p>

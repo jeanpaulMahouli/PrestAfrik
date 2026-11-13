@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, Pencil, Power, PowerOff, Trash2 } from "lucide-react";
+import { Eye, Pencil, Power, PowerOff, Trash2 } from "@/components/ui/icons";
 import { useActionState, useEffect, useState, type FormEvent } from "react";
 import { FramedImageInput } from "@/components/merchandising/framed-image-input";
 import { LinkPicker, type LinkPickerTargets, type LinkPickerValue } from "@/components/merchandising/link-picker";

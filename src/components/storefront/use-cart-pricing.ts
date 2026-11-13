@@ -7,6 +7,8 @@ export type PricedLine = {
   productId: string;
   variantId: string | null;
   productName: string;
+  productSlug?: string;
+  imageUrl?: string | null;
   variantName: string | null;
   sku: string;
   quantity: number;

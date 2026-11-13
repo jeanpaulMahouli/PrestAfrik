@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { Download } from "@/components/ui/icons";
 import Link from "next/link";
 import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";
 import { ActionDialog } from "@/components/ui/action-dialog";

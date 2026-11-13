@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { Download } from "@/components/ui/icons";
 import { countryCities } from "@/modules/geo";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";

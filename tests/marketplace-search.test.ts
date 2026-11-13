@@ -13,6 +13,7 @@ const store = (name: string, city: string, activity = "", description = "") => (
   country: "CM",
   activity,
   activitySlug: null,
+    universe: "vente" as const,
   description,
   logoUrl: null,
   createdAt: new Date(),

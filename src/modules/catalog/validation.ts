@@ -30,7 +30,7 @@ export const productFormSchema = z
       .refine((value) => !/<[a-z/!]/i.test(value), "La description est un texte simple : retirez les balises HTML."),
     categoryId: z.string().trim(),
     newCategory: z.string().trim().max(80, "Le nom de catégorie ne peut pas dépasser 80 caractères."),
-    priceXaf: amount("Prix"),
+    priceXaf: amount("Prix").refine((value) => value > 0, "Le prix doit être supérieur à 0 FCFA."),
     promotionalPriceXaf: optionalAmount("Prix promotionnel"),
     sku: z
       .string()
@@ -44,6 +44,9 @@ export const productFormSchema = z
     isFeatured: z.boolean(),
   })
   .superRefine((value, context) => {
+    if (value.promotionalPriceXaf === 0) {
+      context.addIssue({ code: "custom", path: ["promotionalPriceXaf"], message: "Le prix promotionnel doit être supérieur à 0 FCFA (laissez vide s’il n’y a pas de promotion)." });
+    }
     if (value.promotionalPriceXaf !== null && value.promotionalPriceXaf >= value.priceXaf) {
       context.addIssue({ code: "custom", path: ["promotionalPriceXaf"], message: "Le prix promotionnel doit être strictement inférieur au prix." });
     }

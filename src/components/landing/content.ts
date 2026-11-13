@@ -36,8 +36,8 @@ export const authLinks = {
 export const hero = {
   title: "Votre commerce mérite une vitrine à sa hauteur",
   subtitle:
-    "Une boutique en ligne gratuite, professionnelle et prête en 5 minutes. Les commandes arrivent sur WhatsApp, le paiement se fait à la livraison.",
-  primaryCta: { label: "Créer ma boutique gratuitement", href: "/inscription" },
+    "Une boutique en ligne professionnelle, prête en 5 minutes depuis votre téléphone. Les commandes arrivent sur WhatsApp, le paiement se fait à la livraison.",
+  primaryCta: { label: "Créer ma boutique", href: "/inscription" },
   phoneScreen: "/landing/screens/hero-boutique.webp",
   /** Petites photos de la carte flottante à gauche du téléphone. */
   community: [
@@ -164,7 +164,7 @@ export const clientSide = {
     { label: "Commande en 1 minute", image: "/landing/screens/telephone-3-commande-v2.webp", width: 720, height: 1495 },
     { label: "Suivez vos commandes", image: "/landing/screens/telephone-4-suivi-v2.webp", width: 720, height: 1495 },
   ],
-  cta: { label: "Créer ma boutique gratuitement", href: "/inscription" },
+  cta: { label: "Créer ma boutique", href: "/inscription" },
 };
 
 export type Testimonial = { name: string; role: string; photo: string; text: string; rating: number };
@@ -252,8 +252,8 @@ export const faq = {
 export const finalCta = {
   kicker: "Aucun paiement requis",
   title: "Vos prochains clients vous attendent déjà !",
-  subtitle: "C’est gratuit, sans engagement, et vous n’avez besoin d’aucune compétence technique.",
-  primary: { label: "Créer ma boutique gratuitement", href: "/inscription" },
+  subtitle: `${trialLabel} pendant le lancement, sans engagement, et vous n’avez besoin d’aucune compétence technique.`,
+  primary: { label: "Créer ma boutique", href: "/inscription" },
   secondary: { label: "Réserver une démo", href: "/contact?sujet=demo" },
 };
 
@@ -266,7 +266,7 @@ export const footer = {
       links: [
         { label: "Centre d’aide", href: "/aide" },
         { label: "Tarifs", href: "/tarifs" },
-        { label: "Nos boutiques", href: "/nos-boutiques" },
+        { label: "Marketplace", href: "/nos-boutiques" },
         { label: "Blog", href: "/blog" },
         { label: "Démo guidée", href: "/demo" },
         { label: "Fonctionnalités", href: "/fonctionnalites" },

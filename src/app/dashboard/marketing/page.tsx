@@ -1,4 +1,4 @@
-import { Images, Megaphone, MessageSquareText, type LucideIcon } from "lucide-react";
+import { Images, Megaphone, MessageSquareText, type AppIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { hasPermission, type Permission } from "@/modules/auth/permissions";
@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 
 export const metadata = { title: "Marketing" };
 
-const sections: { href: string; icon: LucideIcon; title: string; text: string; permission: Permission }[] = [
+const sections: { href: string; icon: AppIcon; title: string; text: string; permission: Permission }[] = [
   {
     href: "/dashboard/marketing/campagnes",
     icon: Megaphone,
@@ -50,7 +50,7 @@ export default async function MarketingPage() {
           <li key={href}>
             <Link className="hub-card" href={href}>
               <span aria-hidden="true" className="hub-card-icon">
-                <Icon size={30} strokeWidth={1.8} />
+                <Icon size={30} />
               </span>
               <span className="hub-card-text">
                 <strong>{title}</strong>

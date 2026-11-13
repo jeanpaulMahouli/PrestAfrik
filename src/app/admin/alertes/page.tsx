@@ -1,4 +1,4 @@
-import { MailCheck, MessageCircle } from "lucide-react";
+import { MailCheck, MessageCircle } from "@/components/ui/icons";
 import Link from "next/link";
 import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";
 import { ReasonDialog } from "@/components/admin/reason-dialog";

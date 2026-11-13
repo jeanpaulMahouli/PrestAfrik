@@ -9,7 +9,8 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { formatXaf } from "@/modules/catalog/format";
 import { checkoutOrderAction, type CheckoutActionState } from "@/modules/orders/actions";
 import type { StorefrontZone } from "@/modules/storefront/data";
-import { BackIcon } from "@/components/ui/icons";
+import { ChevronRight } from "@/components/ui/icons";
+import { StoreImage } from "@/components/ui/store-image";
 import { uuid } from "@/lib/uuid";
 
 type CheckoutProps = {
@@ -109,14 +110,15 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
 
   return (
     <main className="sf-page sf-checkout">
-      <div className="sf-page-head">
-        <Link aria-label="Retour au panier" className="sf-back" href={link("panier")}><BackIcon size={18} /></Link>
-        <h1>Finaliser ma commande</h1>
-      </div>
-      <p className="sf-muted">Aucun compte à créer.</p>
+      <nav aria-label="Fil d’Ariane" className="sf-breadcrumb">
+        <Link href={link("panier")}>Mon panier</Link>
+        <ChevronRight aria-hidden="true" size={14} />
+        <span aria-current="page">Commande</span>
+      </nav>
+      <h1>Finaliser ma commande</h1>
 
       <form
-        className="sf-form"
+        className="sf-form sf-checkout-layout"
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
@@ -133,141 +135,173 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
         <input name="idempotencyKey" type="hidden" value={idempotencyKey} />
         <input name="deliveryMethod" type="hidden" value={method} />
 
-        <label className={`sf-field${fieldError("name") ? " sf-field-invalid" : ""}`}>
-          Votre nom
-          <input aria-invalid={fieldError("name") ? true : undefined} autoComplete="name" maxLength={120} name="name" onBlur={() => touch("name")} onChange={(event) => setName(event.target.value)} placeholder="Ex. Estelle Nkoa" required value={name} />
-          {fieldError("name") && <span className="sf-field-error" role="alert">{fieldError("name")}</span>}
-        </label>
+        <div className="sf-checkout-main">
+          <section aria-labelledby="sf-checkout-contact" className="sf-checkout-block">
+            <h2 id="sf-checkout-contact">Vos coordonnées</h2>
+            <p className="sf-muted">Aucun compte à créer : la boutique vous contacte sur WhatsApp.</p>
 
-        <PhoneInput
-          error={fieldError("whatsapp")}
-          help="La boutique vous écrira sur ce numéro. Saisissez-le sans l’indicatif."
-          label="Votre numéro WhatsApp"
-          name="whatsapp"
-          onValidityChange={(isValid) => setPhoneValid(isValid)}
-        />
+            <label className={`sf-field${fieldError("name") ? " sf-field-invalid" : ""}`}>
+              Votre nom
+              <input aria-invalid={fieldError("name") ? true : undefined} autoComplete="name" maxLength={120} name="name" onBlur={() => touch("name")} onChange={(event) => setName(event.target.value)} placeholder="Ex. Estelle Nkoa" required value={name} />
+              {fieldError("name") && <span className="sf-field-error" role="alert">{fieldError("name")}</span>}
+            </label>
 
-        {deliveryAvailable && pickup.enabled && (
-          <fieldset className="sf-field sf-segmented">
-            <legend>Mode de réception</legend>
-            <div>
-              <label className={method === "DELIVERY" ? "is-selected" : ""}>
-                <input checked={method === "DELIVERY"} name="methodChoice" onChange={() => setMethod("DELIVERY")} type="radio" value="DELIVERY" />
-                Livraison
-              </label>
-              <label className={method === "PICKUP" ? "is-selected" : ""}>
-                <input checked={method === "PICKUP"} name="methodChoice" onChange={() => setMethod("PICKUP")} type="radio" value="PICKUP" />
-                Retrait en boutique
-              </label>
-            </div>
-          </fieldset>
-        )}
+            <PhoneInput
+              error={fieldError("whatsapp")}
+              help="La boutique vous écrira sur ce numéro. Saisissez-le sans l’indicatif."
+              label="Votre numéro WhatsApp"
+              name="whatsapp"
+              onValidityChange={(isValid) => setPhoneValid(isValid)}
+            />
+          </section>
 
-        {method === "DELIVERY" ? (
-          <>
-            <label className={`sf-field${fieldError("zoneId") ? " sf-field-invalid" : ""}`}>
-              Zone de livraison
-              <select
-                aria-invalid={fieldError("zoneId") ? true : undefined}
-                name="zoneId"
-                onBlur={() => touch("zoneId")}
+          <section aria-labelledby="sf-checkout-delivery" className="sf-checkout-block">
+            <h2 id="sf-checkout-delivery">Réception de la commande</h2>
+            {deliveryAvailable && pickup.enabled && (
+              <fieldset className="sf-field sf-segmented">
+                <legend>Mode de réception</legend>
+                <div>
+                  <label className={method === "DELIVERY" ? "is-selected" : ""}>
+                    <input checked={method === "DELIVERY"} name="methodChoice" onChange={() => setMethod("DELIVERY")} type="radio" value="DELIVERY" />
+                    Livraison
+                  </label>
+                  <label className={method === "PICKUP" ? "is-selected" : ""}>
+                    <input checked={method === "PICKUP"} name="methodChoice" onChange={() => setMethod("PICKUP")} type="radio" value="PICKUP" />
+                    Retrait en boutique
+                  </label>
+                </div>
+              </fieldset>
+            )}
+
+            {method === "DELIVERY" ? (
+              <>
+                <label className={`sf-field${fieldError("zoneId") ? " sf-field-invalid" : ""}`}>
+                  Zone de livraison
+                  <select
+                    aria-invalid={fieldError("zoneId") ? true : undefined}
+                    name="zoneId"
+                    onBlur={() => touch("zoneId")}
+                    onChange={(event) => {
+                      setZoneId(event.target.value);
+                      touch("zoneId");
+                    }}
+                    required
+                    value={zoneId}
+                  >
+                    <option disabled value="">Choisir votre quartier ou zone</option>
+                    {zones.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.label} — {item.feeXaf === 0 ? "gratuit" : formatXaf(item.feeXaf)}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="sf-field-help">
+                    {zone ? `Frais de livraison : ${zone.feeXaf === 0 ? "gratuits" : formatXaf(zone.feeXaf)}${zone.delay ? ` · délai : ${zone.delay}` : ""}.` : "Votre zone n’est pas dans la liste ? Écrivez à la boutique ou choisissez le retrait."}
+                  </span>
+                  {fieldError("zoneId") && <span className="sf-field-error" role="alert">{fieldError("zoneId")}</span>}
+                </label>
+                <label className={`sf-field${fieldError("landmark") ? " sf-field-invalid" : ""}`}>
+                  Point de repère
+                  <input aria-invalid={fieldError("landmark") ? true : undefined} maxLength={250} name="landmark" onBlur={() => touch("landmark")} onChange={(event) => setLandmark(event.target.value)} placeholder="Ex. Près de la pharmacie du carrefour" required value={landmark} />
+                  {fieldError("landmark") && <span className="sf-field-error" role="alert">{fieldError("landmark")}</span>}
+                </label>
+              </>
+            ) : (
+              <div className="sf-notice">
+                <strong>Retrait en boutique, gratuit</strong>
+                {pickup.address && <p>{pickup.address}</p>}
+                {pickup.hours && <p>{pickup.hours}</p>}
+                {!pickup.address && <p>La boutique vous indiquera l’adresse sur WhatsApp.</p>}
+              </div>
+            )}
+
+            <label className="sf-field">
+              Note pour la boutique (facultatif)
+              <textarea maxLength={500} name="comment" placeholder="Ex. Appelez-moi en arrivant" rows={2} />
+            </label>
+
+            <label className={`sf-check${fieldError("followUpConsent") ? " sf-check-invalid" : ""}`}>
+              <input
+                aria-invalid={fieldError("followUpConsent") ? true : undefined}
+                checked={consent}
+                name="followUpConsent"
+                onBlur={() => touch("followUpConsent")}
                 onChange={(event) => {
-                  setZoneId(event.target.value);
-                  touch("zoneId");
+                  setConsent(event.target.checked);
+                  touch("followUpConsent");
                 }}
                 required
-                value={zoneId}
-              >
-                <option disabled value="">Choisir votre quartier ou zone</option>
-                {zones.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label} — {item.feeXaf === 0 ? "gratuit" : formatXaf(item.feeXaf)}
-                  </option>
-                ))}
-              </select>
-              <span className="sf-field-help">
-                {zone ? `Frais de livraison : ${zone.feeXaf === 0 ? "gratuits" : formatXaf(zone.feeXaf)}${zone.delay ? ` · délai : ${zone.delay}` : ""}.` : "Votre zone n’est pas dans la liste ? Écrivez à la boutique ou choisissez le retrait."}
-              </span>
-              {fieldError("zoneId") && <span className="sf-field-error" role="alert">{fieldError("zoneId")}</span>}
+                type="checkbox"
+              />
+              J’accepte de recevoir le suivi de ma commande sur WhatsApp.
             </label>
-            <label className={`sf-field${fieldError("landmark") ? " sf-field-invalid" : ""}`}>
-              Point de repère
-              <input aria-invalid={fieldError("landmark") ? true : undefined} maxLength={250} name="landmark" onBlur={() => touch("landmark")} onChange={(event) => setLandmark(event.target.value)} placeholder="Ex. Près de la pharmacie du carrefour" required value={landmark} />
-              {fieldError("landmark") && <span className="sf-field-error" role="alert">{fieldError("landmark")}</span>}
+            {fieldError("followUpConsent") && <span className="sf-field-error" role="alert">{fieldError("followUpConsent")}</span>}
+            <label className="sf-check">
+              <input name="marketingConsent" type="checkbox" />
+              Je souhaite recevoir les offres de la boutique (facultatif).
             </label>
-          </>
-        ) : (
-          <div className="sf-notice">
-            <strong>Retrait en boutique, gratuit</strong>
-            {pickup.address && <p>{pickup.address}</p>}
-            {pickup.hours && <p>{pickup.hours}</p>}
-            {!pickup.address && <p>La boutique vous indiquera l’adresse sur WhatsApp.</p>}
-          </div>
-        )}
 
-        <label className="sf-field">
-          Note pour la boutique (facultatif)
-          <textarea maxLength={500} name="comment" placeholder="Ex. Appelez-moi en arrivant" rows={2} />
-        </label>
-
-        <label className={`sf-check${fieldError("followUpConsent") ? " sf-check-invalid" : ""}`}>
-          <input
-            aria-invalid={fieldError("followUpConsent") ? true : undefined}
-            checked={consent}
-            name="followUpConsent"
-            onBlur={() => touch("followUpConsent")}
-            onChange={(event) => {
-              setConsent(event.target.checked);
-              touch("followUpConsent");
-            }}
-            required
-            type="checkbox"
-          />
-          J’accepte de recevoir le suivi de ma commande sur WhatsApp.
-        </label>
-        {fieldError("followUpConsent") && <span className="sf-field-error" role="alert">{fieldError("followUpConsent")}</span>}
-        <label className="sf-check">
-          <input name="marketingConsent" type="checkbox" />
-          Je souhaite recevoir les offres de la boutique (facultatif).
-        </label>
-
-        <dl className="sf-sums">
-          <div>
-            <dt>Sous-total ({count} article{count > 1 ? "s" : ""})</dt>
-            <dd>{loading ? "…" : formatXaf(subtotal)}</dd>
-          </div>
-          <div>
-            <dt>{method === "PICKUP" ? "Retrait en boutique" : "Livraison"}</dt>
-            <dd>{fee === null ? "Choisissez votre zone" : fee === 0 ? "Gratuit" : formatXaf(fee)}</dd>
-          </div>
-          <div className="sf-sums-total">
-            <dt>Total à payer à la livraison</dt>
-            <dd>{total === null || loading ? "—" : formatXaf(total)}</dd>
-          </div>
-        </dl>
-
-        {(generalError || pricingError) && <p className="sf-notice sf-notice-error" role="alert">{generalError ?? pricingError}</p>}
-
-        <div className="sf-checkout-actions">
-          <button className="sf-btn sf-btn-primary sf-btn-block" disabled={pending || !valid} name="intent" type="submit" value="site">
-            {pending && intent.current === "site" ? "Envoi de la commande…" : "Commander"}
-          </button>
-          {whatsappOrderEnabled && (
-            <>
-              <span aria-hidden="true" className="sf-or">ou</span>
-              <button className="sf-btn sf-btn-whatsapp sf-btn-block" disabled={pending || !valid} name="intent" type="submit" value="whatsapp">
-                {pending && intent.current === "whatsapp" ? "Envoi de la commande…" : "Commander sur WhatsApp"}
-              </button>
-            </>
-          )}
-          <p aria-live="polite" className="sf-muted sf-actions-hint">
-            {valid
-              ? whatsappOrderEnabled
-                ? "Avec WhatsApp, votre commande est enregistrée puis WhatsApp s’ouvre avec votre message prêt à envoyer."
-                : "Votre commande sera envoyée à la boutique, qui vous contactera sur WhatsApp."
-              : `Il reste : ${missing.join(", ")}.`}
-          </p>
+          </section>
         </div>
+
+        <aside aria-labelledby="sf-checkout-summary" className="sf-cart-summary sf-checkout-summary">
+          <h2 id="sf-checkout-summary">Récapitulatif</h2>
+          {lines.length > 0 && (
+            <ul className="sf-checkout-items">
+              {lines.map((line) => (
+                <li key={`${line.productId}:${line.variantId ?? ""}`}>
+                  <span className="sf-cart-thumb">
+                    {line.imageUrl ? <StoreImage alt="" height={120} sizes="56px" src={line.imageUrl} width={120} /> : <span aria-hidden="true" className="sf-card-placeholder" />}
+                  </span>
+                  <span className="sf-checkout-item-name">
+                    {line.productName}
+                    <small>
+                      {line.variantName ? `${line.variantName} · ` : ""}Quantité : {line.quantity}
+                    </small>
+                  </span>
+                  <strong>{formatXaf(line.lineTotalXaf)}</strong>
+                </li>
+              ))}
+            </ul>
+          )}
+          <dl className="sf-sums">
+            <div>
+              <dt>Sous-total ({count} article{count > 1 ? "s" : ""})</dt>
+              <dd>{loading ? "…" : formatXaf(subtotal)}</dd>
+            </div>
+            <div>
+              <dt>{method === "PICKUP" ? "Retrait en boutique" : "Livraison"}</dt>
+              <dd>{fee === null ? "Choisissez votre zone" : fee === 0 ? "Gratuit" : formatXaf(fee)}</dd>
+            </div>
+            <div className="sf-sums-total">
+              <dt>Total à payer à la livraison</dt>
+              <dd>{total === null || loading ? "—" : formatXaf(total)}</dd>
+            </div>
+          </dl>
+
+          {(generalError || pricingError) && <p className="sf-notice sf-notice-error" role="alert">{generalError ?? pricingError}</p>}
+
+          <div className="sf-checkout-actions">
+            <button className="sf-btn sf-btn-primary sf-btn-block" disabled={pending || !valid} name="intent" type="submit" value="site">
+              {pending && intent.current === "site" ? "Envoi de la commande…" : "Commander"}
+            </button>
+            {whatsappOrderEnabled && (
+              <>
+                <span aria-hidden="true" className="sf-or">ou</span>
+                <button className="sf-btn sf-btn-whatsapp sf-btn-block" disabled={pending || !valid} name="intent" type="submit" value="whatsapp">
+                  {pending && intent.current === "whatsapp" ? "Envoi de la commande…" : "Commander sur WhatsApp"}
+                </button>
+              </>
+            )}
+            <p aria-live="polite" className="sf-muted sf-actions-hint">
+              {valid
+                ? whatsappOrderEnabled
+                  ? "Avec WhatsApp, votre commande est enregistrée puis WhatsApp s’ouvre avec votre message prêt à envoyer."
+                  : "Votre commande sera envoyée à la boutique, qui vous contactera sur WhatsApp."
+                : `Il reste : ${missing.join(", ")}.`}
+            </p>
+          </div>
+        </aside>
       </form>
     </main>
   );

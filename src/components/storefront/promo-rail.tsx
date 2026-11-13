@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@/components/ui/icons";
 import { useRef, type ReactNode } from "react";
 
 /** Rangée horizontale à défilement natif (scroll-snap) ; flèches sur ordinateur. */

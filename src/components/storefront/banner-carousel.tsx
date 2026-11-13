@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@/components/ui/icons";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StoreImage } from "@/components/ui/store-image";

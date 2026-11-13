@@ -15,7 +15,7 @@ import {
   Users,
   Wallet,
   MessageCircle,
-} from "lucide-react";
+} from "@/components/ui/icons";
 import Link from "next/link";
 import { TimeSeriesChart } from "@/components/dashboard/time-series-chart";
 import { KpiCard } from "@/components/ui/kpi-card";

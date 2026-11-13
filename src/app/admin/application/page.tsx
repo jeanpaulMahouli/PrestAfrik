@@ -1,4 +1,4 @@
-import { Smartphone, Users } from "lucide-react";
+import { Smartphone, Users } from "@/components/ui/icons";
 import { Badge } from "@/components/ui/badge";
 import { KpiCard } from "@/components/ui/kpi-card";
 import { formatDate, formatDateTime, formatNumber } from "@/lib/format";

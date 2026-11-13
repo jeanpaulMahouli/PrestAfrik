@@ -1,16 +1,14 @@
 "use server";
 
-import { StorePromoStyle, StoreTheme } from "@prisma/client";
+import { StorePromoStyle } from "@prisma/client";
 import { isKnownCity } from "@/modules/geo";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { colorReadability } from "@/lib/contrast";
 import { parsePhone } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { deleteStoreImage, ImageUploadError, saveStoreImage } from "@/lib/uploads";
 import { invalidateStorefrontCache } from "@/modules/catalog/cache";
-import { hexColorSchema } from "@/modules/catalog/validation";
 import { activeStoreCookie, rememberActiveStore, requireStorePermission } from "@/modules/stores/context";
 import { storePublicUrl } from "@/lib/urls";
 import { isPlatformAdmin } from "@/modules/admin/context";
@@ -19,6 +17,7 @@ import { findOwnedStoreWithSameName } from "@/modules/stores/draft";
 import { isSlugTaken } from "@/modules/stores/slug-availability";
 import { slugForRenamedStore, type SlugProposal } from "@/modules/stores/slug-rename";
 import { publishStoreIfReady } from "@/modules/stores/publication";
+import { normalizeSocialUrl, socialNetworks, type SocialLinks } from "@/modules/stores/social-links";
 import { isAccountVerified } from "@/modules/auth/phone-account";
 
 const settingsPath = "/dashboard/boutique";
@@ -44,11 +43,8 @@ const settingsSchema = z.object({
   pickupEnabled: z.boolean(),
   pickupAddress: z.string().trim().max(200),
   pickupHours: z.string().trim().max(120),
-  theme: z.nativeEnum(StoreTheme),
+  // Toutes les boutiques ont la même apparence : seul le style des promotions reste au choix du vendeur.
   promoStyle: z.nativeEnum(StorePromoStyle),
-  primaryColor: hexColorSchema,
-  secondaryColor: hexColorSchema,
-  accentColor: hexColorSchema,
 });
 
 function revalidateStore(store: { id: string; slug: string }) {
@@ -78,11 +74,7 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
     pickupEnabled: formData.get("pickupEnabled") === "on",
     pickupAddress: text(formData, "pickupAddress"),
     pickupHours: text(formData, "pickupHours"),
-    theme: text(formData, "theme"),
     promoStyle: text(formData, "promoStyle"),
-    primaryColor: text(formData, "primaryColor").toUpperCase(),
-    secondaryColor: text(formData, "secondaryColor").toUpperCase(),
-    accentColor: text(formData, "accentColor").toUpperCase(),
   });
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
@@ -90,10 +82,11 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
   }
   const input = parsed.data;
 
-  for (const [field, label, color] of [["primaryColor", "principale", input.primaryColor], ["secondaryColor", "secondaire", input.secondaryColor]] as const) {
-    if (!colorReadability(color).readable) {
-      return { ok: false, field, message: `La couleur ${label} ${color} n’est pas assez contrastée pour rester lisible.` };
-    }
+  const social: Partial<SocialLinks> = {};
+  for (const network of socialNetworks) {
+    const result = normalizeSocialUrl(network.key, text(formData, network.key));
+    if (!result.ok) return { ok: false, field: network.key, message: result.message };
+    social[network.key] = result.url;
   }
   if (input.pickupEnabled && !input.pickupAddress && !input.address) {
     return { ok: false, field: "pickupAddress", message: "Indiquez l’adresse de retrait en boutique, ou décochez le retrait." };
@@ -142,11 +135,8 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
       pickupEnabled: input.pickupEnabled,
       pickupAddress: input.pickupAddress || input.address || null,
       pickupHours: input.pickupHours || null,
-      theme: input.theme,
       promoStyle: input.promoStyle,
-      primaryColor: input.primaryColor,
-      secondaryColor: input.secondaryColor,
-      accentColor: input.accentColor,
+      ...social,
       ...(phone?.ok ? { phoneCountry: phone.country, phoneNational: phone.national, phoneE164: phone.e164, contactPhone: phone.e164 } : {}),
       ...(logoUrl ? { logoUrl } : {}),
   };

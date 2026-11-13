@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, ExternalLink } from "lucide-react";
+import { Check, Copy, ExternalLink } from "@/components/ui/icons";
 import QRCode from "qrcode";
 import { useEffect, useId, useState } from "react";
 import { SocialShare } from "@/components/shared/social-share";

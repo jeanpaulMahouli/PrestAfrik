@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { FreshOnNavigate } from "@/components/ui/fresh-on-navigate";
+import { Search } from "@/components/ui/icons";
 import { texts } from "@/config/texts";
 import { FeedbackLauncher } from "@/components/dashboard/community";
 import { EmailVerificationBanner } from "@/components/layout/email-verification-banner";
@@ -37,10 +38,7 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
           <Image alt="" height={34} priority src="/brand/logo-prestafrik.png" width={62} />
         </Link>
         <form action="/dashboard/recherche" className="topbar-search" role="search">
-          <svg aria-hidden="true" className="topbar-search-icon" fill="none" height="18" stroke="currentColor" strokeLinecap="round" strokeWidth="2" viewBox="0 0 24 24" width="18">
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
+          <Search aria-hidden="true" className="topbar-search-icon" size={18} />
           <input aria-label={t.searchLabel} defaultValue={searchQuery} key={searchQuery} maxLength={80} minLength={2} name="q" placeholder={t.searchPlaceholder} required type="search" />
         </form>
         <span className="vendor-topbar-spacer" />
@@ -59,6 +57,17 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
         <UserMenu adminLink={showAdminLink} userEmail={accountContact(session.user)} userImage={session.user.image ?? null} userName={session.user.name} />
       </header>
       {!isAccountVerified(session.user) && <EmailVerificationBanner />}
+      {/* Boutique pas encore publiée : rappel sur toutes les pages ; les étapes sont sur l'accueil. */}
+      {!store.isPublished && !store.suspendedAt && (
+        <p className="v-banner v-banner-warning vendor-unpublished-banner" role="status">
+          <span>
+            <strong>{store.name} n’est pas encore en ligne :</strong> vos clients ne la voient pas encore, et elle n’apparaît pas sur la marketplace.
+          </span>
+          <Link className="btn btn-primary btn-sm" href="/dashboard#publication-title">
+            Voir les étapes pour la publier
+          </Link>
+        </p>
+      )}
       {store.suspendedAt && (
         <p className="v-banner v-banner-danger vendor-suspension-banner" role="alert">
           <strong>{store.name} est suspendue par l’équipe PrestAfrik.</strong> Vos clients ne la voient plus. Motif : {store.suspensionReason ?? "non précisé"}. Répondez à l’e-mail reçu pour la rétablir.

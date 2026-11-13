@@ -1,7 +1,8 @@
 "use client";
 
-import { Store } from "lucide-react";
+import { Store } from "@/components/ui/icons";
 import Link from "next/link";
+import { ConversionEvent } from "@/components/analytics/analytics";
 import { InstallAppSuggestion } from "@/components/pwa/install-app";
 import { SocialShare } from "@/components/shared/social-share";
 import { CopyButton } from "@/components/ui/copy-button";
@@ -91,6 +92,8 @@ export function PublishedScreen({ storeName, storeUrl }: { storeName: string; st
   return (
     <section aria-labelledby="published-title" className="wizard-card wizard-published">
       <InstallAppSuggestion />
+      {/* Conversion GA4 « boutique créée » (une fois par boutique). */}
+      <ConversionEvent id={storeUrl} name="boutique_creee" />
       <span aria-hidden="true" className="wizard-published-icon"><CheckIcon size={24} /></span>
       <h1 id="published-title">Félicitations, votre boutique prend vie !</h1>
       <p className="wizard-subtitle">
@@ -111,6 +114,8 @@ export function CreatedScreen({ storeName, storeUrl, missing }: { storeName: str
   return (
     <section aria-labelledby="created-title" className="wizard-card wizard-published">
       <InstallAppSuggestion />
+      {/* Conversion GA4 « boutique créée » (une fois par boutique). */}
+      <ConversionEvent id={storeUrl} name="boutique_creee" />
       <span aria-hidden="true" className="wizard-published-icon"><CheckIcon size={24} /></span>
       <h1 id="created-title">Votre boutique « {storeName} » est créée !</h1>
       <p className="wizard-subtitle">

@@ -1,7 +1,5 @@
-"use client";
-
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { marketplaceAds } from "@/config/marketplace-ads";
 import type { DashboardAnnouncement } from "@/modules/announcements/queries";
 
 /** Emplacement sans image (pas encore de visuel dans l'administration) : fond aux couleurs et bouton seul. */
@@ -39,86 +37,55 @@ function Banner({ slide, className, priority = false }: { slide: Slide; classNam
 }
 
 /**
- * Haut de la marketplace. Ordinateur : grand diaporama (5 s par image, pause au survol) et deux visuels à
- * côté. Téléphone : une seule bannière rectangulaire, gérée à part. Visuels et boutons gérés dans
- * Administration → Annonces ; tant qu'il n'y a pas d'image, l'emplacement montre seulement son bouton.
+ * Bannière principale « Devenir vendeur » : une image (comme les autres emplacements publicitaires),
+ * entièrement cliquable vers /boutique. Elle sert aussi de destination aux publicités : les paramètres de
+ * campagne sont ajoutés au lien au moment du clic (components/analytics/analytics.tsx, emplacement
+ * « heros »). Visuels : config/marketplace-ads.ts (ordinateur 424 × 248, téléphone 358 × 287).
  */
-export function ShopHero({ carousel, banners, mobile, drawn, drawnBanners }: { carousel: DashboardAnnouncement[]; banners: DashboardAnnouncement[]; mobile: DashboardAnnouncement | null; drawn: DrawnSlide[]; drawnBanners: DrawnSlide[] }) {
-  const slides: Slide[] = carousel.length ? carousel.map((item) => ({ kind: "image", item })) : drawn.map((item) => ({ kind: "drawn", item }));
-  const sides: Slide[] = banners.length ? banners.map((item) => ({ kind: "image", item })) : drawnBanners.map((item) => ({ kind: "drawn", item }));
-  const mobileSlide: Slide = mobile ? { kind: "image", item: mobile } : { kind: "drawn", item: drawn[0] };
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const touchX = useRef(0);
-  const count = slides.length;
-
-  useEffect(() => {
-    if (count < 2 || paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const timer = window.setInterval(() => setIndex((value) => (value + 1) % count), 5000);
-    return () => window.clearInterval(timer);
-  }, [count, paused]);
-
-  const go = (next: number) => setIndex((next + count) % count);
-
+export function SellerBanner({ href, variant, image = null }: { href: string; variant: "desktop" | "mobile"; image?: DashboardAnnouncement | null }) {
+  const fallback = variant === "desktop" ? marketplaceAds.seller : marketplaceAds.sellerMobile;
+  const ad = image ? { ...fallback, src: image.imageUrl, alt: image.altText } : fallback;
   return (
-    <>
-      <section aria-label="À la une" className="shop-hero">
-        <div
-          aria-roledescription="diaporama"
-          className="shop-carousel"
-          onBlur={() => setPaused(false)}
-          onFocus={() => setPaused(true)}
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onTouchEnd={(event) => {
-            const dx = event.changedTouches[0].clientX - touchX.current;
-            if (Math.abs(dx) > 40) go(index + (dx < 0 ? 1 : -1));
-          }}
-          onTouchStart={(event) => (touchX.current = event.touches[0].clientX)}
-        >
-          <div className="shop-carousel-track" style={{ transform: `translateX(-${index * 100}%)` }}>
-            {slides.map((slide, position) => (
-              <div aria-hidden={position !== index} aria-label={`${position + 1} sur ${count}`} aria-roledescription="diapositive" className="shop-carousel-slide" inert={position !== index} key={slide.item.id} role="group">
-                <Banner className="shop-slide" priority={position === 0} slide={slide} />
-              </div>
-            ))}
-          </div>
-          {count > 1 && (
-            <>
-              <button aria-label="Diapositive précédente" className="shop-carousel-arrow shop-carousel-arrow--prev" onClick={() => go(index - 1)} type="button">
-                <ChevronLeft aria-hidden="true" size={22} />
-              </button>
-              <button aria-label="Diapositive suivante" className="shop-carousel-arrow shop-carousel-arrow--next" onClick={() => go(index + 1)} type="button">
-                <ChevronRight aria-hidden="true" size={22} />
-              </button>
-              <div className="shop-carousel-dots">
-                {slides.map((slide, position) => (
-                  <button aria-current={position === index} aria-label={`Afficher la diapositive ${position + 1}`} key={slide.item.id} onClick={() => go(position)} type="button" />
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-        <div className="shop-hero-side">
-          {sides.map((slide) => (
-            <div className="shop-hero-side-item" key={slide.item.id}>
-              <Banner className="shop-slide shop-slide--small" slide={slide} />
-            </div>
-          ))}
-        </div>
-      </section>
-      <section aria-label="À la une" className="shop-hero-mobile">
-        <Banner className="shop-slide" priority slide={mobileSlide} />
-      </section>
-    </>
+    <a className={`shop-seller shop-seller--${variant}`} data-emplacement="heros" href={href}>
+      <img alt={ad.alt} decoding="async" fetchPriority="high" height={ad.size[1]} loading="eager" src={ad.src} width={ad.size[0]} />
+    </a>
   );
 }
 
-/** Immobilier et Services : une seule bannière (ordinateur et téléphone), gérée dans Administration → Annonces. */
-export function ShopSingleBanner({ banner, fallback }: { banner: DashboardAnnouncement | null; fallback: DrawnSlide }) {
+/** Bannière dessinée d'un univers (sans visuel dans l'administration) : texte, deux boutons et une illustration. */
+export type UniverseHero = {
+  kicker: string;
+  title: string;
+  text: string;
+  cta: { label: string; href: string };
+  seller: { label: string; href: string };
+  icon: ReactNode;
+};
+
+/**
+ * Immobilier, Services et Restauration : une seule bannière par page, dans le cadre du grand visuel du
+ * Shopping (mêmes coins, même hauteur). L'image vient de Administration → Annonces ; à défaut, une bannière
+ * dessinée aux couleurs de PrestAfrik, comme les visuels du Shopping.
+ */
+export function ShopSingleBanner({ banner, hero }: { banner: DashboardAnnouncement | null; hero: UniverseHero }) {
   return (
-    <section aria-label="À la une" className="shop-single-banner">
-      <Banner className="shop-slide" priority slide={banner ? { kind: "image", item: banner } : { kind: "drawn", item: fallback }} />
+    <section aria-label="À la une" className="shop-single-banner sx-single-hero">
+      {banner ? (
+        <Banner className="shop-slide" priority slide={{ kind: "image", item: banner }} />
+      ) : (
+        <div className="sx-single-drawn">
+          <div className="sx-single-copy">
+            <p className="sx-single-kicker">{hero.kicker}</p>
+            <p className="sx-single-title">{hero.title}</p>
+            <p className="sx-single-text">{hero.text}</p>
+            <div className="sx-single-actions">
+              <a className="sx-btn sx-btn-primary" href={hero.cta.href}>{hero.cta.label}</a>
+              <a className="sx-single-seller" href={hero.seller.href}>{hero.seller.label}</a>
+            </div>
+          </div>
+          <span aria-hidden="true" className="sx-single-art">{hero.icon}</span>
+        </div>
+      )}
     </section>
   );
 }

@@ -5,6 +5,7 @@ import { dayColumn } from "@/lib/dashboard-periods";
 import { prisma } from "@/lib/prisma";
 import { photoVariant } from "@/lib/product-photos";
 import { storePublicUrl } from "@/lib/urls";
+import { universeFromDb, type ShopUniverse } from "@/config/marketplace";
 
 // Recherche publique de vendeurs (accueil et /recherche) : première brique de la marketplace.
 // Seules les boutiques publiées et non suspendues sont lues, et seulement des champs publics
@@ -49,6 +50,8 @@ export type SearchableStore = {
   activity: string | null;
   /** Identifiant de l'activité (« vetements-mode ») : rubriques de la marketplace. */
   activitySlug: string | null;
+  /** Univers de la boutique (d'après son activité). */
+  universe: ShopUniverse;
   description: string | null;
   logoUrl: string | null;
   createdAt: Date;
@@ -59,13 +62,35 @@ export type SearchableStore = {
 let cache: { at: number; stores: SearchableStore[] } | null = null;
 const cacheTtlMs = 60_000;
 
+/** Après une modification de l'administration (boutique exclue ou réintégrée) : index relu tout de suite. */
+export function clearSearchIndex() {
+  cache = null;
+}
+
+/**
+ * Boutiques exclues de la marketplace par l'administration (sélection « EXCLUDED_STORE »). Liste vide tant
+ * que la migration 20261109120000_marketplace_admin_and_likes n'est pas appliquée.
+ */
+async function hiddenStoreIds(): Promise<Set<string>> {
+  try {
+    const rows = await prisma.marketplacePick.findMany({ where: { section: "EXCLUDED_STORE", storeId: { not: null } }, select: { storeId: true } });
+    return new Set(rows.flatMap((row) => (row.storeId ? [row.storeId] : [])));
+  } catch {
+    return new Set();
+  }
+}
+
 /** Boutiques publiées et non suspendues (liste lue une fois par minute) : marketplace et recherche. */
 export async function loadIndex(): Promise<SearchableStore[]> {
   if (cache && Date.now() - cache.at < cacheTtlMs) return cache.stores;
-  const rows = await prisma.store.findMany({
+  const [all, hidden] = await Promise.all([
+    prisma.store.findMany({
     where: { isPublished: true, suspendedAt: null },
-    select: { id: true, name: true, slug: true, city: true, country: true, description: true, logoUrl: true, createdAt: true, activityOther: true, activity: { select: { label: true, slug: true } } },
-  });
+    select: { id: true, name: true, slug: true, city: true, country: true, description: true, logoUrl: true, createdAt: true, activityOther: true, activity: { select: { label: true, slug: true, universe: true } } },
+    }),
+    hiddenStoreIds(),
+  ]);
+  const rows = all.filter((row) => !hidden.has(row.id));
   const stores = rows.map((row) => {
     const activity = row.activity?.label ?? row.activityOther ?? null;
     return {
@@ -76,6 +101,7 @@ export async function loadIndex(): Promise<SearchableStore[]> {
       country: row.country,
       activity,
       activitySlug: row.activity?.slug ?? null,
+      universe: universeFromDb(row.activity?.universe),
       description: row.description,
       logoUrl: row.logoUrl,
       createdAt: row.createdAt,

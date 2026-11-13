@@ -27,6 +27,9 @@ export type CurrentLine = {
   productId: string;
   variantId: string | null;
   productName: string;
+  /** Adresse de la fiche et photo principale (affichage du panier). */
+  productSlug: string;
+  imageUrl: string | null;
   variantName: string | null;
   sku: string;
   quantity: number;
@@ -82,7 +85,10 @@ export async function getCurrentCheckoutLines(
       availability: { not: ProductAvailability.SOLD_OUT },
       id: { in: Array.from(consolidated.values(), ({ productId }) => productId) },
     },
-    include: { variants: { where: { isArchived: false } } },
+    include: {
+      variants: { where: { isArchived: false } },
+      images: { take: 1, orderBy: { position: "asc" }, select: { url: true } },
+    },
   });
   const byId = new Map(products.map((product) => [product.id, product]));
   if (byId.size !== new Set(Array.from(consolidated.values(), ({ productId }) => productId)).size) {
@@ -120,6 +126,8 @@ export async function getCurrentCheckoutLines(
       productId: product.id,
       variantId: variant?.id ?? null,
       productName: product.name,
+      productSlug: product.slug,
+      imageUrl: product.images[0]?.url ?? null,
       variantName: variant ? `${variant.optionName} : ${variant.optionValue}` : null,
       sku: variant?.sku ?? product.sku,
       quantity: item.quantity,

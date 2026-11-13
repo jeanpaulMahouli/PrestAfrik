@@ -1,4 +1,4 @@
-import { Store } from "lucide-react";
+import { Store } from "@/components/ui/icons";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { BannerManager } from "@/components/merchandising/banner-manager";

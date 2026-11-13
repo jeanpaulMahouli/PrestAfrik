@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, Lightbulb, MessageCircleQuestion, MessagesSquare, SendHorizontal, Star, X } from "lucide-react";
+import { ChevronLeft, Lightbulb, MessageCircleQuestion, MessagesSquare, SendHorizontal, Star, X } from "@/components/ui/icons";
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { sendVendorFeedback, type FeedbackState } from "@/modules/support/feedback";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
@@ -55,7 +55,7 @@ export function CommunityBlock({ whatsappChannel, youtube }: { whatsappChannel: 
         <li>
           <button className="hub-card" onClick={openFeedbackChat} type="button">
             <span aria-hidden="true" className="hub-card-icon">
-              <MessagesSquare size={30} strokeWidth={1.8} />
+              <MessagesSquare size={30} />
             </span>
             <span className="hub-card-text">
               <strong>Partagez vos suggestions</strong>

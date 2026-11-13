@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { Download } from "@/components/ui/icons";
 import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";
 import { ReasonDialog } from "@/components/admin/reason-dialog";
 import { Badge, StatusBadge } from "@/components/ui/badge";

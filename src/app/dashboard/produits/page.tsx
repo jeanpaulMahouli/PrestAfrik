@@ -1,4 +1,4 @@
-import { Download, FileSpreadsheet } from "lucide-react";
+import { Download, FileSpreadsheet } from "@/components/ui/icons";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { ProductList } from "@/components/catalog/product-list";

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import type { ShopUniverse } from "@/config/marketplace";
+import { wizardWording } from "./wizard-universe";
 import { WizardStepForm } from "@/components/wizard/wizard-step-form";
 import { saveDeliveryStep } from "@/modules/stores/wizard-actions";
 
@@ -18,15 +20,19 @@ export function DeliveryStep({
   draftId,
   city,
   initial,
+  universe = "vente",
 }: {
   draftId: string;
   city: string;
+  /** Univers de la boutique : livraison (Shopping), visites (Immobilier) ou déplacements (Services). */
+  universe?: ShopUniverse;
   initial: { zones: { name: string; feeXaf: number; estimatedDelay: string | null }[]; pickupEnabled: boolean; pickupAddress: string; pickupHours: string };
 }) {
   const [zones, setZones] = useState<Zone[]>(() =>
     initial.zones.length ? initial.zones.map((zone) => ({ key: nextKey++, name: zone.name, fee: String(zone.feeXaf), delay: zone.estimatedDelay ?? "" })) : [emptyZone()],
   );
   const [pickup, setPickup] = useState(initial.pickupEnabled);
+  const words = wizardWording[universe];
   const update = (key: number, field: keyof Omit<Zone, "key">, value: string) => setZones((rows) => rows.map((row) => (row.key === key ? { ...row, [field]: value } : row)));
 
   return (
@@ -40,14 +46,16 @@ export function DeliveryStep({
         </button>
       }
       step={8}
-      subtitle="Facultatif : indiquez où vous livrez et à quel prix, et si vos clients peuvent venir chercher leur commande. Ils verront le total exact avant de commander. Vous pourrez tout modifier ensuite."
-      title="Livraison et retrait"
+      subtitle={words.deliverySubtitle}
+      title={words.deliveryTitle}
     >
       {(fieldError) => (
         <>
           <fieldset className="wizard-fieldset">
-            <legend className="wizard-label">Zones de livraison {city ? `à ${city}` : ""}</legend>
-            <p className="v-field-help">Un tarif fixe par quartier ou par zone (0 si la livraison est gratuite). Laissez vide si vous ne livrez pas.</p>
+            <legend className="wizard-label">
+              {words.zonesLegend} {city ? `à ${city}` : ""}
+            </legend>
+            <p className="v-field-help">{words.zonesHelp}</p>
             <ul className="wizard-zones">
               {zones.map((zone, index) => (
                 <li key={zone.key}>
@@ -80,7 +88,7 @@ export function DeliveryStep({
           </fieldset>
 
           <fieldset className="wizard-fieldset">
-            <legend className="wizard-label">Retrait en boutique</legend>
+            <legend className="wizard-label">{words.pickupLegend}</legend>
             <label className="v-check">
               <input checked={pickup} name="pickupEnabled" onChange={(event) => setPickup(event.target.checked)} type="checkbox" />
               Mes clients peuvent venir chercher leur commande à la boutique (gratuit)

@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { startTransition, useActionState, useEffect, useRef, useState, type ReactNode } from "react";
-import { PhotoManager, type ExistingPhoto } from "@/components/catalog/photo-manager";
+import { Sparkles } from "@/components/ui/icons";
+import { startTransition, useActionState, useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { PhotoManager, type ExistingPhoto, type PhotoSummary } from "@/components/catalog/photo-manager";
+import { AiSuggestionPanel, ProductNotices, requestAiSuggestion, type AiSuggestion } from "@/components/catalog/product-assistant";
 import { ProductVariantsEditor, type VariantDraft } from "@/components/catalog/product-variants-editor";
+import { ListingFields, productWording, type ListingValues } from "@/components/catalog/product-universe";
+import type { ShopUniverse } from "@/config/marketplace";
+import type { ListingMode } from "@/modules/catalog/listing";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useFormPersistence } from "@/components/ui/use-form-persistence";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { saveProduct, type ActionResult } from "@/modules/catalog/actions";
+import { formatFcfa } from "@/lib/format";
+import { buildProductNotices, cleanAmountInput, discountPercent, productCompletion, validAmount, type ProductSnapshot } from "@/modules/catalog/product-notices";
 
 export type ProductFormValues = {
   id?: string;
@@ -26,6 +33,8 @@ export type ProductFormValues = {
   photos: ExistingPhoto[];
   optionName: string;
   variants: VariantDraft[];
+  /** Univers Immobilier : vente ou location et caractéristiques du bien. */
+  listing?: ListingValues;
 };
 
 type ProductFormProps = {
@@ -33,15 +42,42 @@ type ProductFormProps = {
   categories: { id: string; name: string }[];
   /** Carte « Zone sensible » (archivage, suppression), affichée en modification. */
   sidePanel?: ReactNode;
+  /** Assistant IA disponible (clé Claude configurée sur le serveur). */
+  aiEnabled?: boolean;
+  /** Univers de la boutique : Shopping, Immobilier (locations), Services ou Restauration. */
+  universe?: ShopUniverse;
+  /** Biens immobiliers : « rent » (locations et réservations) ou « sale » (vente, dans le Shopping). */
+  listingMode?: ListingMode | null;
 };
 
 const formId = "product-form";
+
+/** Retire espaces, points et lettres pendant la saisie d'un montant (« 15 000 » devient « 15000 »). */
+function cleanAmount(event: FormEvent<HTMLInputElement>) {
+  const input = event.currentTarget;
+  const cleaned = cleanAmountInput(input.value);
+  if (cleaned !== input.value) input.value = cleaned;
+}
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   return message ? <span className="v-field-error" id={id} role="alert">{message}</span> : null;
 }
 
-export function ProductForm({ values, categories, sidePanel }: ProductFormProps) {
+const initialSnapshot = (values: ProductFormValues): ProductSnapshot => ({
+  name: values.name,
+  description: values.description,
+  categoryChosen: Boolean(values.categoryId),
+  priceXaf: values.priceXaf,
+  promotionalPriceXaf: values.promotionalPriceXaf,
+  trackInventory: values.trackInventory,
+  stockQuantity: values.stockQuantity,
+  availability: values.availability,
+  photoCount: values.photos.length,
+  uploading: false,
+});
+
+export function ProductForm({ values, categories, sidePanel, aiEnabled = false, universe = "vente", listingMode = null }: ProductFormProps) {
+  const words = productWording[universe];
   const [state, action, pending] = useActionState<ActionResult, FormData>(saveProduct, null);
   const [dirty, setDirty] = useState(false);
   const [creatingCategory, setCreatingCategory] = useState(false);
@@ -49,6 +85,115 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
   // Modification : saisie gardée si la page est actualisée avant l'enregistrement. Nouveau produit : le
   // formulaire s'ouvre toujours vide (rien n'est repris d'une saisie précédente).
   const formRef = useRef<HTMLFormElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const categoryRef = useRef<HTMLSelectElement>(null);
+
+  // Description remplie par l'assistant IA : l'éditeur est remonté (key) avec la nouvelle valeur.
+  const [descriptionValue, setDescriptionValue] = useState(values.description);
+  const [descriptionKey, setDescriptionKey] = useState(0);
+
+  // Photos, saisie en cours (pour les infos pratiques) et assistant IA.
+  const [photoSummary, setPhotoSummary] = useState<PhotoSummary>({ previewUrls: values.photos.map((photo) => photo.previewUrl), uploading: false });
+  const [snapshot, setSnapshot] = useState<ProductSnapshot>(() => initialSnapshot(values));
+  const [suggestion, setSuggestion] = useState<AiSuggestion | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+
+  const readForm = useCallback(() => {
+    const form = formRef.current;
+    if (!form) return null;
+    const data = new FormData(form);
+    const get = (key: string) => String(data.get(key) ?? "");
+    const categoryId = get("categoryId");
+    const newCategory = get("newCategory").trim();
+    const select = categoryRef.current;
+    const categoryName = newCategory || (categoryId && categoryId !== "__new" && select ? (select.selectedOptions[0]?.text ?? "") : "");
+    return {
+      name: get("name"),
+      description: get("description"),
+      priceXaf: get("priceXaf"),
+      promotionalPriceXaf: get("promotionalPriceXaf"),
+      categoryName,
+      trackInventory: data.get("trackInventory") === "on",
+      stockQuantity: get("stockQuantity"),
+      availability: get("availability"),
+    };
+  }, []);
+
+  const refreshSnapshot = useCallback(() => {
+    const current = readForm();
+    if (!current) return;
+    setSnapshot((previous) => ({
+      ...previous,
+      name: current.name,
+      description: current.description,
+      categoryChosen: Boolean(current.categoryName),
+      priceXaf: current.priceXaf,
+      promotionalPriceXaf: current.promotionalPriceXaf,
+      trackInventory: current.trackInventory,
+      stockQuantity: current.stockQuantity,
+      availability: current.availability,
+    }));
+  }, [readForm]);
+
+  // Les champs de la colonne latérale sont rattachés au formulaire par l'attribut form : on écoute tout le document.
+  useEffect(() => {
+    let frame = 0;
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(refreshSnapshot);
+    };
+    document.addEventListener("input", schedule);
+    document.addEventListener("change", schedule);
+    schedule();
+    return () => {
+      cancelAnimationFrame(frame);
+      document.removeEventListener("input", schedule);
+      document.removeEventListener("change", schedule);
+    };
+  }, [refreshSnapshot]);
+
+  useEffect(() => {
+    // Après un remplissage par l'IA (champs remontés), relit la saisie.
+    const timer = setTimeout(refreshSnapshot, 0);
+    return () => clearTimeout(timer);
+  }, [descriptionKey, creatingCategory, refreshSnapshot]);
+
+  const onPhotosChange = useCallback((summary: PhotoSummary) => {
+    setPhotoSummary(summary);
+    setSnapshot((previous) => ({ ...previous, photoCount: summary.previewUrls.length, uploading: summary.uploading }));
+  }, []);
+
+  const notices = useMemo(() => buildProductNotices(snapshot), [snapshot]);
+  const completion = useMemo(() => productCompletion(snapshot), [snapshot]);
+  const price = validAmount(snapshot.priceXaf);
+  const promoPrice = validAmount(snapshot.promotionalPriceXaf);
+  const discount = discountPercent(snapshot.priceXaf, snapshot.promotionalPriceXaf);
+  const canAskAi = photoSummary.previewUrls.length > 0 && !photoSummary.uploading;
+
+  // Un seul appel à l'IA, uniquement sur demande du vendeur (nom et description).
+  async function askAi() {
+    if (!canAskAi || aiLoading) return;
+    setAiLoading(true);
+    setAiError("");
+    try {
+      setSuggestion(await requestAiSuggestion({ photos: photoSummary.previewUrls, name: nameRef.current?.value ?? "" }));
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : "L’assistant IA n’a pas pu répondre. Réessayez.");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  function applySuggestion(applied: AiSuggestion) {
+    if (nameRef.current) nameRef.current.value = applied.name;
+    setDescriptionValue(applied.description);
+    setDescriptionKey((key) => key + 1);
+    setSuggestion(null);
+    setDirty(true);
+    nameRef.current?.focus();
+  }
+
   useFormPersistence(formRef, values.id ? `produit:${values.id}` : null);
   useEffect(() => {
     if (values.id) return;
@@ -64,7 +209,12 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
   const invalid = (name: string) => (errors[name] ? { "aria-invalid": true, "aria-describedby": `${name}-error` } : {});
 
   useEffect(() => {
-    if (state && !state.ok) setDirty(true);
+    if (!state || state.ok) return;
+    setDirty(true);
+    // Après un refus du serveur, amène le vendeur sur le premier champ à corriger.
+    const first = document.querySelector<HTMLElement>(`[form="${formId}"][aria-invalid="true"], #${formId} [aria-invalid="true"]`);
+    first?.scrollIntoView({ behavior: "smooth", block: "center" });
+    first?.focus({ preventScroll: true });
   }, [state]);
 
   useEffect(() => {
@@ -79,17 +229,13 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
     <>
       <div className="v-page-header">
         <div>
-          <h1 className="v-page-title">{isEdit ? `Modifier : ${values.name}` : "Ajouter un produit"}</h1>
-          <p className="v-page-subtitle">
-            {isEdit
-              ? "Modifiez les informations de ce produit. Vos clients verront les changements dès l’enregistrement."
-              : "Renseignez les informations de votre produit et ajoutez jusqu’à 5 photos. Vous pourrez tout modifier plus tard."}
-          </p>
+          <h1 className="v-page-title">{isEdit ? `Modifier : ${values.name}` : words.newTitle}</h1>
+          <p className="v-page-subtitle">{isEdit ? words.editSubtitle : words.newSubtitle}</p>
         </div>
         <div className="v-page-actions product-form-top-actions">
           <Link className="btn btn-secondary" href="/dashboard/produits">Annuler</Link>
           <SubmitButton className="btn btn-primary" form={formId} loading={pending} pendingLabel="Enregistrement…">
-            {isEdit ? "Enregistrer les modifications" : "Enregistrer le produit"}
+            {isEdit ? "Enregistrer les modifications" : words.saveLabel}
           </SubmitButton>
         </div>
       </div>
@@ -124,34 +270,63 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
           {values.id && <input name="productId" type="hidden" value={values.id} />}
           {values.updatedAt && <input name="expectedUpdatedAt" type="hidden" value={values.updatedAt} />}
 
-          <section className="v-card">
+          <section className="v-card" id="product-photos">
+            <PhotoManager error={errors.photos} hero initialPhotos={values.photos} onPhotosChange={onPhotosChange}>
+              {aiEnabled && (
+                <div className="ai-fill">
+                  <button className="btn btn-ai" disabled={!canAskAi || aiLoading} onClick={askAi} type="button">
+                    <Sparkles aria-hidden="true" size={18} />
+                    {aiLoading ? "L’IA analyse vos photos…" : "Remplir le nom et la description avec l’IA"}
+                  </button>
+                  <span className="v-field-help">
+                    {canAskAi
+                      ? "L’IA regarde vos photos et vous propose un nom et une description. Vous les relisez et les validez avant d’enregistrer."
+                      : photoSummary.uploading
+                        ? "Patientez pendant l’envoi des photos…"
+                        : "Commencez par ajouter une photo du produit."}
+                  </span>
+                  {aiError && <p className="v-field-error" role="alert">{aiError}</p>}
+                </div>
+              )}
+            </PhotoManager>
+            {suggestion && <AiSuggestionPanel key={JSON.stringify(suggestion)} onApply={applySuggestion} onDismiss={() => setSuggestion(null)} suggestion={suggestion} />}
+          </section>
+
+          <section className="v-card" id="product-info">
             <h2 className="v-card-title">Informations</h2>
             <label className="v-field">
-              Nom du produit
-              <input defaultValue={values.name} maxLength={120} name="name" placeholder="Ex. Robe wax Akwa" required {...invalid("name")} />
+              <span className="field-label-row">
+                {words.nameLabel}
+                <span aria-hidden="true" className="field-counter">{snapshot.name.length}/120</span>
+              </span>
+              <input defaultValue={values.name} id="product-name" maxLength={120} name="name" placeholder={words.namePlaceholder} ref={nameRef} required {...invalid("name")} />
+              <span className="v-field-help">{words.nameHelp}</span>
               <FieldError id="name-error" message={errors.name} />
             </label>
             <RichTextEditor
-              defaultValue={values.description}
+              defaultValue={descriptionValue}
+              key={descriptionKey}
               describedBy={errors.description ? "description-error" : undefined}
               help="Gras, italique, sous-titres et listes. Texte simple, sans HTML."
               invalid={Boolean(errors.description)}
-              label="Description (facultative)"
+              label={words.descriptionLabel}
               name="description"
-              placeholder="Décrivez votre produit en quelques mots"
+              placeholder={words.descriptionPlaceholder}
             />
             <FieldError id="description-error" message={errors.description} />
             <label className="v-field">
               Catégorie
               {creatingCategory ? (
                 <span className="inline-create">
-                  <input autoFocus maxLength={80} name="newCategory" placeholder="Nom de la nouvelle catégorie" {...invalid("newCategory")} />
+                  <input autoFocus id="product-category" maxLength={80} name="newCategory" placeholder="Nom de la nouvelle catégorie" {...invalid("newCategory")} />
                   <button className="btn btn-secondary" onClick={() => setCreatingCategory(false)} type="button">Choisir dans la liste</button>
                 </span>
               ) : (
                 <select
                   defaultValue={values.categoryId}
+                  id="product-category"
                   name="categoryId"
+                  ref={categoryRef}
                   onChange={(event) => {
                     if (event.target.value === "__new") {
                       event.target.value = "";
@@ -160,7 +335,7 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
                   }}
                   {...invalid("categoryId")}
                 >
-                  <option value="">Choisir ou créer une catégorie</option>
+                  <option value="">{words.categoryPlaceholder}</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>{category.name}</option>
                   ))}
@@ -171,22 +346,22 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
             </label>
           </section>
 
-          <section className="v-card">
-            <PhotoManager error={errors.photos} initialPhotos={values.photos} />
-          </section>
+          {listingMode && (
+            <ListingFields errors={errors} formId={formId} mode={listingMode} values={values.listing ?? { listingType: "", pricePeriod: "", details: null }} />
+          )}
 
           <section className="v-card">
             <h2 className="v-card-title">Prix</h2>
             <div className="field-row-3">
               <label className="v-field">
-                Prix (FCFA)
-                <input defaultValue={values.priceXaf} inputMode="numeric" name="priceXaf" placeholder="0" required {...invalid("priceXaf")} />
-                <span className="v-field-help">Nombre entier, sans espace.</span>
+                {listingMode === "rent" ? "Loyer ou prix de la nuit (FCFA)" : listingMode === "sale" ? "Prix de vente (FCFA)" : universe === "services" ? "Prix de départ (FCFA)" : "Prix (FCFA)"}
+                <input defaultValue={values.priceXaf} id="product-price" inputMode="numeric" name="priceXaf" onInput={cleanAmount} placeholder="Ex. 15000" required {...invalid("priceXaf")} />
+                <span className="v-field-help">Chiffres uniquement : les espaces sont retirés automatiquement.</span>
                 <FieldError id="priceXaf-error" message={errors.priceXaf} />
               </label>
               <label className="v-field">
                 Prix promotionnel (facultatif)
-                <input defaultValue={values.promotionalPriceXaf} inputMode="numeric" name="promotionalPriceXaf" placeholder="Doit être inférieur au prix" {...invalid("promotionalPriceXaf")} />
+                <input defaultValue={values.promotionalPriceXaf} inputMode="numeric" name="promotionalPriceXaf" onInput={cleanAmount} placeholder="Inférieur au prix" {...invalid("promotionalPriceXaf")} />
                 <FieldError id="promotionalPriceXaf-error" message={errors.promotionalPriceXaf} />
               </label>
               <label className="v-field">
@@ -195,20 +370,38 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
                 <FieldError id="sku-error" message={errors.sku} />
               </label>
             </div>
+            {price && (
+              <p aria-live="polite" className="price-preview">
+                <span className="v-muted">Vos clients verront :</span>
+                {discount !== null && promoPrice ? (
+                  <>
+                    <strong>{formatFcfa(promoPrice)}</strong>
+                    <s>{formatFcfa(price)}</s>
+                    <span className="price-preview-badge">−{discount} %</span>
+                  </>
+                ) : (
+                  <strong>{formatFcfa(price)}</strong>
+                )}
+              </p>
+            )}
           </section>
 
-          <section className="v-card">
-            <ProductVariantsEditor error={errors.variants} initialOptionName={values.optionName} initialVariants={values.variants} />
-          </section>
+          {words.showVariants && (
+            <section className="v-card">
+              <ProductVariantsEditor error={errors.variants} initialOptionName={values.optionName} initialVariants={values.variants} />
+            </section>
+          )}
         </form>
 
         <div className="v-stack">
+          <ProductNotices completion={completion} notices={notices} />
+
           <fieldset className="v-card v-fieldset">
             <legend className="v-card-title">Disponibilité</legend>
             {[
-              ["AVAILABLE", "Disponible"],
-              ["SOLD_OUT", "Épuisé"],
-              ["PREORDER", "Sur commande"],
+              ["AVAILABLE", words.availability[0]],
+              ["SOLD_OUT", words.availability[1]],
+              ["PREORDER", words.availability[2]],
             ].map(([value, label]) => (
               <label className="v-check v-radio" key={value}>
                 <input defaultChecked={values.availability === value} form={formId} name="availability" onChange={() => setDirty(true)} type="radio" value={value} />
@@ -217,21 +410,23 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
             ))}
           </fieldset>
 
-          <section className="v-card">
-            <h2 className="v-card-title">Stock</h2>
-            <label className="v-check">
-              <input checked={trackInventory} form={formId} name="trackInventory" onChange={(event) => { setTrackInventory(event.target.checked); setDirty(true); }} type="checkbox" />
-              Suivre le stock
-            </label>
-            {trackInventory && (
-              <label className="v-field stock-field">
-                Quantité en stock
-                <input defaultValue={values.stockQuantity} form={formId} inputMode="numeric" name="stockQuantity" placeholder="0" {...invalid("stockQuantity")} />
-                <span className="v-field-help">À 0, le produit passe automatiquement en « Épuisé ».</span>
-                <FieldError id="stockQuantity-error" message={errors.stockQuantity} />
+          {words.showStock && (
+            <section className="v-card">
+              <h2 className="v-card-title">Stock</h2>
+              <label className="v-check">
+                <input checked={trackInventory} form={formId} name="trackInventory" onChange={(event) => { setTrackInventory(event.target.checked); setDirty(true); }} type="checkbox" />
+                Suivre le stock
               </label>
-            )}
-          </section>
+              {trackInventory && (
+                <label className="v-field stock-field">
+                  Quantité en stock
+                  <input defaultValue={values.stockQuantity} form={formId} inputMode="numeric" name="stockQuantity" placeholder="0" {...invalid("stockQuantity")} />
+                  <span className="v-field-help">À 0, le produit passe automatiquement en « Épuisé ».</span>
+                  <FieldError id="stockQuantity-error" message={errors.stockQuantity} />
+                </label>
+              )}
+            </section>
+          )}
 
           <section className="v-card">
             <h2 className="v-card-title">Publication</h2>
@@ -268,7 +463,7 @@ export function ProductForm({ values, categories, sidePanel }: ProductFormProps)
       <div className="v-sticky-actions product-form-bottom-actions">
         <Link className="btn btn-secondary" href="/dashboard/produits">Annuler</Link>
         <SubmitButton className="btn btn-primary" form={formId} loading={pending} pendingLabel="Enregistrement…">
-          {isEdit ? "Enregistrer" : "Enregistrer le produit"}
+          {isEdit ? "Enregistrer" : words.saveLabel}
         </SubmitButton>
       </div>
     </>

@@ -7,6 +7,7 @@ import { ProductDetail } from "@/components/storefront/product-detail";
 import { ProductReviews } from "@/components/storefront/product-reviews";
 import { StorefrontProductGrid } from "@/components/storefront/storefront-product-grid";
 import { richTextToPlain } from "@/modules/catalog/rich-text";
+import { listingLabel, priceSuffix, propertyFacts, storedPropertyDetails } from "@/modules/catalog/listing";
 import { formatXaf, getPublishedProduct, getStorefrontStore } from "@/modules/catalog/service";
 import { getProductReviews, getRatingSummaries, getSimilarProducts } from "@/modules/reviews/queries";
 import { getStorefrontWhatsapp } from "@/modules/whatsapp/settings";
@@ -25,7 +26,7 @@ export async function generateMetadata({ params }: PageProps<"/[slug]/[productSl
     openGraph: {
       type: "website",
       siteName: store.name,
-      locale: "fr_FR",
+      locale: "fr_CM",
       url,
       title: `${product.name} — ${formatXaf(currentPrice(product))}`,
       description,
@@ -90,6 +91,11 @@ export default async function PublicProductPage({
       {!store.isPreview && <script dangerouslySetInnerHTML={jsonLd(structuredData)} type="application/ld+json" />}
       <ProductDetail
         canOrder={!store.isPreview && !store.subscriptionPaused}
+        listing={
+          product.listingType
+            ? { label: listingLabel(product.listingType, product.pricePeriod), suffix: priceSuffix(product.listingType, product.pricePeriod), facts: propertyFacts(storedPropertyDetails(product.propertyDetails)) }
+            : null
+        }
         product={product}
         productUrl={productUrl}
         rating={reviews?.summary ?? null}

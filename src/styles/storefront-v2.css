@@ -1,0 +1,2659 @@
+/* Boutiques publiques — apparence unique (maquettes « Maquette boutiques publics » : Home, Product Page,
+   Products Page, Shopping Cart). Toutes les boutiques PrestAfrik ont cette présentation ; seul le style des
+   promotions (classe sf-promo-…, storefront-promo.css) reste au choix du vendeur.
+   Chargée après les autres feuilles de la vitrine : elle les remplace là où la maquette diffère. */
+
+.sf-v2 {
+  --store-primary: #000000;
+  --store-on-primary: #ffffff;
+  --store-secondary: #000000;
+  --store-on-secondary: #ffffff;
+  --store-accent: #db3022;
+  --sf-page: #ffffff;
+  --sf-radius: 0.5625rem;
+  --sf-surface: #f6f6f6;
+  --sf-soft: #fafafa;
+  --sf-line: #ebebeb;
+  --sf-muted: #8b8b8b;
+  --sf-ink: #000000;
+  --sf-dark: #211c24;
+  --sf-gold: #ffb547;
+  --sf-wide: 70rem;
+  --sf-gutter: 1rem;
+  color: var(--sf-ink);
+  background: var(--sf-page);
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 {
+    --sf-gutter: 2rem;
+  }
+}
+
+.sf-v2 .sf-main {
+  max-width: none;
+}
+
+/* Contenu centré (1120 px), le bandeau d'accueil et le pied de page restent pleine largeur. */
+.sf-v2 :is(.sf-home, .sf-product-page) > :not(.sf-banner) {
+  width: min(100% - 2 * var(--sf-gutter), var(--sf-wide));
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.sf-v2 :is(.sf-chips, .sf-grid, .sf-home-section-head, .sf-search, .sf-pagination, .sf-section, .sf-rail) {
+  margin-right: 0;
+  margin-left: 0;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.sf-v2 .sf-rail-list {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+/* ---------- Boutons ---------- */
+
+.sf-v2 .sf-btn {
+  min-height: 3rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+}
+
+.sf-v2 .sf-btn-primary {
+  border-color: #000;
+  color: #fff;
+  background: #000;
+}
+
+.sf-v2 .sf-btn-secondary {
+  border-color: #000;
+  color: #000;
+  background: #fff;
+}
+
+@media (hover: hover) {
+  .sf-v2 .sf-btn-primary:not(:disabled):hover {
+    background: #2b2b2b;
+    box-shadow: none;
+  }
+
+  .sf-v2 .sf-btn-secondary:not(:disabled):hover {
+    background: var(--sf-surface);
+  }
+}
+
+.sf-v2 :focus-visible {
+  outline-color: #000;
+}
+
+/* ---------- En-tête ---------- */
+
+.sf-v2 .sf-header {
+  gap: 1rem;
+  min-height: 4.5rem;
+  padding: 0.75rem var(--sf-gutter);
+  border-bottom: 1px solid var(--sf-line);
+  background: #fff;
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-header {
+    min-height: 5.5rem;
+    padding: 1rem calc(max(0px, (100% - var(--sf-wide)) / 2));
+    gap: 2rem;
+  }
+}
+
+.sf-v2 .sf-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  color: #fff;
+  background: #000;
+}
+
+.sf-v2 .sf-logo:has(img) {
+  background: transparent;
+}
+
+.sf-v2 .sf-brand-text strong {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.sf-v2 .sf-brand-text small {
+  color: var(--sf-muted);
+}
+
+.sf-v2 .sf-cart-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.5rem;
+  color: #000;
+  background: transparent;
+}
+
+.sf-v2 .sf-cart-icon:hover {
+  background: var(--sf-surface);
+}
+
+.sf-v2 .sf-cart-count {
+  top: 0.125rem;
+  right: 0.125rem;
+  color: #fff;
+  background: var(--store-accent);
+}
+
+/* Barre de recherche de l'en-tête (ordinateur) ; sur téléphone : loupe, et barre en haut de l'accueil. */
+.sf-header-searchbar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-header-searchbar {
+    position: relative;
+    display: block;
+    min-width: 12rem;
+    max-width: 27rem;
+    flex: 1;
+  }
+
+  .sf-v2 .sf-header-searchbar svg {
+    position: absolute;
+    top: 50%;
+    left: 1rem;
+    color: var(--sf-muted);
+    transform: translateY(-50%);
+  }
+
+  .sf-v2 .sf-header-searchbar input {
+    width: 100%;
+    height: 3.5rem;
+    padding: 0 1rem 0 3rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: #f5f5f5;
+    font: inherit;
+    font-size: 0.9375rem;
+  }
+
+  .sf-v2 .sf-header-search,
+  .sf-v2 .sf-home > .sf-search {
+    display: none;
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .sf-v2 .sf-header-search {
+    display: block;
+  }
+
+  /* L'accueil a déjà sa barre de recherche juste sous l'en-tête. */
+  .sf-v2:has(.sf-home > .sf-search) .sf-header-search {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .sf-v2 .sf-nav {
+    flex: none;
+    gap: 0.5rem;
+  }
+
+  .sf-v2 .sf-nav a {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    color: #989898;
+    font-weight: 500;
+  }
+
+  .sf-v2 .sf-nav a:hover {
+    color: #000;
+    background: transparent;
+  }
+
+  .sf-v2 .sf-nav a[aria-current="page"] {
+    color: #000;
+    background: transparent;
+    font-weight: 600;
+  }
+}
+
+/* ---------- Accueil ---------- */
+
+.sf-v2 .sf-home {
+  padding-bottom: 4rem;
+}
+
+.sf-v2 .sf-search {
+  margin-top: 1rem;
+}
+
+.sf-v2 .sf-search input {
+  min-height: 3.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #f5f5f5;
+}
+
+.sf-v2 .sf-search svg {
+  color: var(--sf-muted);
+}
+
+.sf-v2 .sf-info {
+  display: none;
+}
+
+/* Catégories : pastilles sobres. */
+.sf-v2 .sf-chips {
+  padding-top: 1.5rem;
+}
+
+.sf-v2 .sf-chips a,
+.sf-v2 .sf-chips button {
+  min-height: 2.5rem;
+  border-color: #d9d9d9;
+  border-radius: 0.5rem;
+  color: #000;
+  font-size: 0.9375rem;
+}
+
+.sf-v2 .sf-chips [aria-current="page"],
+.sf-v2 .sf-chips [aria-pressed="true"] {
+  border-color: #000;
+  color: #fff;
+  background: #000;
+}
+
+/* Engagements : pastilles grises à icône (comme « Free Delivery / In Stock / Guaranteed »). */
+.sf-v2 .sf-trust {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-v2 .sf-trust li,
+.sf-v2 .sf-assurances li {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.sf-trust-icon,
+.sf-assurance-icon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: none;
+  place-items: center;
+  border-radius: 0.6875rem;
+  color: #4e4e4e;
+  background: var(--sf-surface);
+}
+
+.sf-v2 .sf-trust li > span:last-child,
+.sf-v2 .sf-assurances li > span:last-child {
+  display: grid;
+  gap: 0.125rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.sf-v2 .sf-trust small,
+.sf-v2 .sf-assurances small {
+  color: #717171;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Onglets « Tous les produits / Mis en avant / Les mieux notés ». */
+.sf-v2 .sf-home-section {
+  margin-top: 3rem;
+}
+
+.sf-tabs {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  margin: 0 0 1.5rem;
+  scrollbar-width: none;
+}
+
+.sf-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.sf-tabs :is(a, span) {
+  flex: none;
+  padding: 0 0 0.375rem;
+  border-bottom: 2px solid transparent;
+  color: #8b8b8b;
+  font-size: 1.125rem;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.sf-tabs [aria-current="page"] {
+  border-bottom-color: #000;
+  color: #000;
+}
+
+.sf-v2 .sf-home-section-head {
+  margin-bottom: 1.25rem;
+}
+
+.sf-v2 .sf-home-section-head h2,
+.sf-v2 .sf-section-head h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.sf-v2 .sf-home-section-head a {
+  text-decoration-color: #000;
+}
+
+/* ---------- Cartes produits ---------- */
+
+.sf-v2 .sf-grid {
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.sf-v2 .sf-card {
+  border-radius: var(--sf-radius);
+  background: var(--sf-surface);
+  box-shadow: none;
+}
+
+.sf-v2 .sf-card-link {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0.75rem 1.25rem;
+}
+
+.sf-v2 .sf-card-media {
+  position: relative;
+  border-radius: 0.375rem;
+  background: transparent;
+}
+
+.sf-v2 .sf-card-body {
+  flex: 1;
+  align-content: start;
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0 0;
+  text-align: center;
+}
+
+.sf-v2 .sf-card-body > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  min-height: 2.7em;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.sf-v2 .sf-card .sf-price {
+  display: grid;
+  justify-items: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.sf-v2 .sf-card .sf-price del {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.sf-card-cta {
+  display: none;
+}
+
+.sf-v2 .sf-card-cta {
+  display: inline-flex;
+  width: 100%;
+  max-width: 11.5rem;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  border-radius: 0.5rem;
+  color: #fff;
+  background: #000;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.sf-v2 .sf-card-link:hover .sf-card-cta {
+  background: #2b2b2b;
+}
+
+.sf-v2 .sf-card-rating {
+  justify-content: center;
+}
+
+@media (max-width: 639.98px) {
+  .sf-v2 .sf-card-link {
+    padding: 0.75rem 0.5rem 1rem;
+  }
+
+  .sf-v2 .sf-card .sf-price {
+    font-size: 1.0625rem;
+  }
+
+  .sf-v2 .sf-card-cta {
+    min-height: 2.75rem;
+  }
+}
+
+/* ---------- Fiche produit ---------- */
+
+.sf-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin: 0 0 1.5rem;
+  color: #a4a4a4;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.sf-breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sf-breadcrumb a:hover {
+  color: #000;
+}
+
+.sf-breadcrumb [aria-current="page"] {
+  overflow: hidden;
+  max-width: 100%;
+  color: #000;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf-v2 .sf-product {
+  padding: 1.25rem 0 2rem;
+}
+
+.sf-v2 .sf-product > .sf-breadcrumb {
+  grid-column: 1 / -1;
+}
+
+/* Galerie : grande photo, miniatures dessous (téléphone) ou à gauche (ordinateur). */
+.sf-v2 .sf-gallery {
+  display: grid;
+  gap: 1rem;
+  aspect-ratio: auto;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+}
+
+.sf-v2 .sf-gallery-track {
+  aspect-ratio: 1;
+  overflow-y: hidden;
+  border-radius: var(--sf-radius);
+  background: var(--sf-surface);
+}
+
+.sf-v2 .sf-gallery-dots {
+  display: none;
+}
+
+.sf-gallery-thumbs {
+  display: none;
+}
+
+.sf-v2 .sf-gallery-thumbs {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.sf-v2 .sf-gallery-thumbs button {
+  width: 4.5rem;
+  height: 4.5rem;
+  flex: none;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: var(--sf-surface);
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.sf-v2 .sf-gallery-thumbs button[aria-current="true"] {
+  border-color: #000;
+  opacity: 1;
+}
+
+.sf-v2 .sf-gallery-thumbs img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sf-v2 .sf-gallery-arrow {
+  top: calc(50% - 2.75rem);
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-product {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 1.5rem 3.5rem;
+    padding: 2.5rem 0 4rem;
+  }
+
+  .sf-v2 .sf-gallery:has(.sf-gallery-thumbs) {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .sf-v2 .sf-gallery-thumbs {
+    grid-row: 1;
+    grid-column: 1;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .sf-v2 .sf-gallery-thumbs button {
+    width: 5.5rem;
+    height: 6.5rem;
+  }
+
+  .sf-v2 .sf-gallery:has(.sf-gallery-thumbs) .sf-gallery-track {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .sf-v2 .sf-gallery-arrow {
+    top: 50%;
+  }
+
+  .sf-v2 .sf-gallery:has(.sf-gallery-thumbs) .sf-gallery-arrow-prev {
+    left: 7rem;
+  }
+}
+
+.sf-v2 .sf-product-copy {
+  display: grid;
+  align-content: start;
+  gap: 0;
+  padding: 1.5rem 0 0;
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-product-copy {
+    padding: 2rem 0 0;
+  }
+}
+
+.sf-v2 .sf-product-copy h1 {
+  margin: 0 0 1.25rem;
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.sf-v2 .sf-product-copy > .sf-price {
+  margin-bottom: 1.25rem;
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.sf-v2 .sf-product-copy > .sf-price del {
+  margin-left: 0.75rem;
+  color: #a0a0a0;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.sf-v2 .sf-product-deal {
+  margin: 0 0 1.5rem;
+  border-radius: var(--sf-radius);
+}
+
+.sf-v2 .sf-product-deal-badge {
+  color: #fff;
+  background: var(--store-accent);
+}
+
+.sf-v2 .sf-options legend {
+  margin-bottom: 0.75rem;
+  font-size: 0.9375rem;
+}
+
+/* Variantes : cases à bordure (comme « 128GB / 256GB / 1TB »). */
+.sf-v2 .sf-chips-options button {
+  min-width: 5.75rem;
+  min-height: 3rem;
+  border-color: #d5d5d5;
+  border-radius: 0.5rem;
+  color: #6f6f6f;
+  background: #fff;
+  font-size: 0.875rem;
+}
+
+.sf-v2 .sf-chips-options button[aria-pressed="true"] {
+  border-color: #000;
+  color: #000;
+  background: #fff;
+  font-weight: 500;
+}
+
+.sf-v2 .sf-chips-options button:disabled {
+  border-color: #ececec;
+  color: #c4c4c4;
+}
+
+.sf-v2 .sf-stepper {
+  border-color: #d5d5d5;
+  border-radius: 0.5rem;
+}
+
+.sf-v2 .sf-product-copy .sf-description {
+  margin: 0.5rem 0 0;
+  color: #6c6c6c;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.sf-v2 .sf-product-actions {
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.sf-product-buttons {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.sf-v2 .sf-product-buttons .sf-btn {
+  min-height: 3.5rem;
+  font-size: 1rem;
+}
+
+@media (min-width: 640px) {
+  .sf-product-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+.sf-v2 .sf-assurances {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: stretch;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.sf-v2 .sf-assurances li {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #000;
+  background: none;
+}
+
+.sf-v2 .sf-assurances svg {
+  color: #4e4e4e;
+}
+
+@media (max-width: 639.98px) {
+  .sf-v2 .sf-assurances li {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* ---------- Avis ---------- */
+
+.sf-v2 .sf-section {
+  margin-top: 4rem;
+}
+
+.sf-reviews-overview {
+  display: grid;
+  gap: 2rem;
+  margin: 0 0 2rem;
+}
+
+.sf-reviews-score {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  border-radius: 1.5rem;
+  background: var(--sf-soft);
+}
+
+.sf-reviews-score > strong {
+  font-size: 3.5rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.sf-reviews-score > small {
+  color: #9a9a9a;
+  font-size: 0.875rem;
+}
+
+.sf-reviews-bars {
+  display: grid;
+  align-content: center;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-reviews-bars li {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr) 2rem;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.sf-reviews-bars small {
+  color: #9a9a9a;
+  font-size: 0.9375rem;
+  text-align: right;
+}
+
+.sf-reviews-bar {
+  height: 0.3125rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #d9d9d9;
+}
+
+.sf-reviews-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sf-gold);
+}
+
+@media (min-width: 768px) {
+  .sf-reviews-overview {
+    grid-template-columns: 11.5rem minmax(0, 1fr);
+    gap: 3.5rem;
+  }
+}
+
+.sf-v2 .sf-review {
+  padding: 1.5rem;
+  border: 0;
+  border-radius: 0.625rem;
+  background: var(--sf-soft);
+}
+
+.sf-v2 .sf-review p {
+  color: #7e7e7e;
+  line-height: 1.6;
+}
+
+.sf-v2 .sf-review time {
+  color: #b0b0b0;
+}
+
+.sf-v2 .sf-review-avatar {
+  color: #fff;
+  background: #000;
+}
+
+/* ---------- Panier ---------- */
+
+.sf-v2 .sf-cart-page {
+  max-width: calc(var(--sf-wide) + 2 * var(--sf-gutter));
+  padding: 2rem var(--sf-gutter) 4rem;
+}
+
+.sf-v2 .sf-cart-page > h1 {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.sf-cart-layout {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .sf-cart-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 33.5rem);
+    gap: 3rem;
+  }
+}
+
+.sf-cart-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-cart-line {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr) auto;
+  grid-template-areas:
+    "thumb info remove"
+    "thumb qty total";
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #a3a3a3;
+}
+
+.sf-cart-line:last-child {
+  border-bottom: 0;
+}
+
+@media (min-width: 640px) {
+  .sf-cart-line {
+    grid-template-columns: 5.5rem minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "thumb info qty total remove";
+    padding: 2.5rem 0;
+  }
+}
+
+.sf-cart-thumb {
+  grid-area: thumb;
+  display: block;
+  width: 5.5rem;
+  height: 5.5rem;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: var(--sf-surface);
+}
+
+.sf-cart-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sf-cart-info {
+  grid-area: info;
+  display: grid;
+  min-width: 0;
+  gap: 0.375rem;
+}
+
+.sf-cart-info a,
+.sf-cart-info strong {
+  color: #000;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+}
+
+.sf-cart-info small {
+  color: #555;
+  font-size: 0.875rem;
+}
+
+.sf-cart-qty {
+  grid-area: qty;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sf-cart-qty button {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  color: #000;
+  background: none;
+  cursor: pointer;
+}
+
+.sf-cart-qty button:disabled {
+  color: #c4c4c4;
+  cursor: not-allowed;
+}
+
+.sf-cart-qty output {
+  display: grid;
+  min-width: 2.5rem;
+  height: 2rem;
+  place-items: center;
+  border: 0.5px solid #d9d9d9;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+.sf-cart-total {
+  grid-area: total;
+  font-size: 1.25rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.sf-cart-remove {
+  grid-area: remove;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  justify-self: end;
+  padding: 0;
+  border: 0;
+  border-radius: 0.375rem;
+  color: #000;
+  background: none;
+  cursor: pointer;
+}
+
+.sf-cart-remove:hover {
+  background: var(--sf-surface);
+}
+
+.sf-cart-summary {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.5rem;
+  border: 1px solid var(--sf-line);
+  border-radius: 0.625rem;
+}
+
+@media (min-width: 1024px) {
+  .sf-cart-summary {
+    padding: 3.5rem 4rem;
+  }
+}
+
+.sf-cart-summary h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.sf-v2 .sf-cart-summary .sf-sums {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.sf-v2 .sf-cart-summary .sf-sums div {
+  padding: 0.5rem 0;
+  border: 0;
+}
+
+.sf-v2 .sf-cart-summary .sf-sums dt {
+  color: #545454;
+}
+
+.sf-v2 .sf-cart-summary .sf-sums div:first-child dt,
+.sf-v2 .sf-cart-summary .sf-sums-total dt {
+  color: #000;
+  font-weight: 500;
+}
+
+.sf-v2 .sf-cart-summary .sf-sums-total {
+  margin-top: 0.5rem;
+}
+
+.sf-muted-inline {
+  color: var(--sf-muted);
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.sf-v2 .sf-cart-summary .sf-actions-sticky {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.sf-v2 .sf-cart-summary .sf-actions-sticky .sf-btn {
+  min-height: 3.5rem;
+}
+
+/* Panneaux intérieurs (commande, suivi) : surfaces grises arrondies, sans ombre. */
+.sf-v2 :is(.sf-lines, .sf-sums, .sf-panel, .sf-empty, .sf-order-thanks) {
+  border-color: var(--sf-line);
+  border-radius: 0.625rem;
+  box-shadow: none;
+}
+
+.sf-v2 .sf-empty {
+  background: var(--sf-soft);
+}
+
+/* ---------- Pied de page ---------- */
+
+.sf-v2 .sf-footer {
+  display: block;
+  margin-top: 4rem;
+  padding: 3.5rem var(--sf-gutter) calc(2rem + env(safe-area-inset-bottom));
+  border: 0;
+  color: #cfcfcf;
+  background: #000;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.sf-footer-inner {
+  display: grid;
+  gap: 2.5rem;
+  max-width: var(--sf-wide);
+  margin: 0 auto;
+}
+
+.sf-footer-brand {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+}
+
+.sf-footer-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #fff;
+  text-decoration: none;
+}
+
+.sf-footer-logo strong {
+  font-size: 1.375rem;
+  font-weight: 700;
+}
+
+.sf-v2 .sf-footer-logo .sf-logo {
+  color: #000;
+  background: #fff;
+}
+
+.sf-footer-brand p {
+  max-width: 24rem;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.sf-footer-social {
+  display: flex;
+  gap: 1.5rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sf-footer-social a {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 0.375rem;
+  color: #fff;
+}
+
+.sf-footer-social a:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.sf-footer-col {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.75rem;
+}
+
+.sf-footer-col h2 {
+  margin: 0 0 0.25rem;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.sf-v2 .sf-footer-col a,
+.sf-footer-col span {
+  color: #cfcfcf;
+  text-decoration: none;
+}
+
+.sf-v2 .sf-footer-col a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.sf-footer-bottom {
+  display: grid;
+  gap: 0.5rem;
+  max-width: var(--sf-wide);
+  margin: 2.5rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid #262626;
+  color: #8b8b8b;
+  font-size: 0.8125rem;
+}
+
+.sf-v2 .sf-footer-bottom a {
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .sf-v2 .sf-footer {
+    padding-top: 6.5rem;
+    text-align: left;
+  }
+
+  .sf-footer-inner {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 3rem;
+  }
+
+  .sf-footer-brand,
+  .sf-footer-col {
+    justify-items: start;
+  }
+
+  .sf-footer-bottom {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+/* ---------- Barre « Voir mon panier » ---------- */
+
+.sf-v2 .sf-cart-bar {
+  border-top-color: var(--sf-line);
+}
+
+.sf-v2 .sf-chat-trigger {
+  box-shadow: 0 8px 22px rgb(0 0 0 / 0.3);
+}
+
+/* ======================================================================
+   Ajustements au plus près des maquettes (2e passe)
+   ====================================================================== */
+
+/* En-tête : logo, recherche juste à côté, puis liens et icônes à droite (comme « Home »). */
+.sf-v2 .sf-brand-text small {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-header {
+    justify-content: flex-start;
+    gap: 2rem;
+  }
+
+  .sf-v2 .sf-header-searchbar {
+    flex: 0 1 27rem;
+  }
+
+  .sf-v2 .sf-nav {
+    margin-left: auto;
+  }
+
+  .sf-v2 .sf-header-actions {
+    margin-left: auto;
+  }
+
+  .sf-v2 .sf-nav ~ .sf-header-actions {
+    margin-left: 0;
+  }
+}
+
+/* Cartes : photo centrée sur fond gris, nom, prix en grand, bouton noir. */
+.sf-v2 .sf-card-link {
+  padding: 1.5rem 1rem;
+}
+
+.sf-v2 .sf-card-media {
+  width: min(100%, 10rem);
+  margin: 0 auto;
+}
+
+.sf-v2 .sf-card-media img {
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+.sf-v2 .sf-card-body {
+  gap: 1rem;
+}
+
+.sf-v2 .sf-card-body > strong {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.sf-v2 .sf-card .sf-price {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.sf-v2 .sf-card .sf-price del {
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.sf-v2 .sf-card-cta {
+  max-width: 11.4375rem;
+}
+
+.sf-v2 .sf-discount-badge {
+  top: 0;
+  left: 0;
+}
+
+@media (max-width: 639.98px) {
+  .sf-v2 .sf-card-link {
+    padding: 1rem 0.75rem;
+  }
+
+  .sf-v2 .sf-card-media {
+    width: min(100%, 6.5rem);
+  }
+
+  .sf-v2 .sf-card-body > strong {
+    font-size: 0.9375rem;
+  }
+
+  .sf-v2 .sf-card .sf-price {
+    font-size: 1.25rem;
+  }
+}
+
+/* Produits similaires (« Related Products ») : même grille que l'accueil, 4 cartes larges. */
+.sf-v2 .sf-similar {
+  border-top: 0;
+}
+
+.sf-v2 .sf-similar .sf-grid {
+  grid-auto-flow: row;
+  grid-auto-columns: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  overflow: visible;
+  padding: 0;
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-similar .sf-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.sf-v2 .sf-similar .sf-card-body {
+  padding: 1rem 0 0;
+}
+
+.sf-v2 .sf-similar .sf-card-body > strong {
+  font-size: 1rem;
+}
+
+/* Fiche produit : galerie contenue dans sa colonne (plus de débordement). */
+.sf-v2 .sf-product {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sf-v2 .sf-gallery {
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+
+.sf-v2 .sf-gallery-track {
+  min-width: 0;
+  background: transparent;
+}
+
+.sf-v2 .sf-gallery-track img {
+  object-fit: contain;
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-product {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem 3rem;
+    padding-top: 2.5rem;
+  }
+
+  .sf-v2 .sf-gallery:has(.sf-gallery-thumbs) {
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+    gap: 3rem;
+    align-self: start;
+    margin-top: 5rem;
+  }
+
+  .sf-v2 .sf-gallery-thumbs {
+    gap: 1.5rem;
+  }
+
+  .sf-v2 .sf-gallery-thumbs button {
+    width: 4.75rem;
+    height: 6.25rem;
+    background: transparent;
+  }
+
+  .sf-v2 .sf-gallery-thumbs img {
+    object-fit: contain;
+  }
+
+  .sf-v2 .sf-gallery:has(.sf-gallery-thumbs) .sf-gallery-arrow-prev {
+    left: 8.5rem;
+  }
+
+  .sf-v2 .sf-product-copy {
+    padding-top: 7rem;
+  }
+
+  .sf-v2 .sf-product > .sf-breadcrumb {
+    margin-bottom: 0;
+  }
+}
+
+.sf-v2 .sf-product-rating {
+  margin: -0.5rem 0 1rem;
+}
+
+.sf-v2 .sf-product-copy .sf-quantity {
+  margin: 1.5rem 0 0;
+}
+
+/* Description courte (3 lignes) + « Lire la suite » ; le texte complet est dans « Détails ». */
+.sf-description-short {
+  margin-top: 1.5rem;
+}
+
+.sf-v2 .sf-description-short .sf-description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: #6c6c6c;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.sf-v2 .sf-description-short .sf-description :is(p, ul, ol, h2, h3, h4) {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.sf-v2 .sf-description-short .sf-description li {
+  display: inline;
+}
+
+.sf-v2 .sf-description-short .sf-description li::after,
+.sf-v2 .sf-description-short .sf-description p::after {
+  content: " ";
+}
+
+.sf-more-link {
+  display: inline-block;
+  margin-top: 0.25rem;
+  color: #000;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sf-v2 .sf-product-actions {
+  margin-top: 2rem;
+}
+
+.sf-v2 .sf-product-buttons .sf-btn {
+  border-radius: 0.375rem;
+}
+
+.sf-v2 .sf-whatsapp-link {
+  color: #000;
+}
+
+.sf-v2 .sf-assurances {
+  margin-top: 2rem;
+}
+
+.sf-v2 .sf-assurances li > span:last-child {
+  white-space: nowrap;
+}
+
+@media (max-width: 1023.98px) {
+  .sf-v2 .sf-assurances li > span:last-child {
+    white-space: normal;
+  }
+}
+
+/* « Détails » : carte blanche sur bande grise (maquette mobile « Details »). */
+.sf-v2 .sf-details {
+  padding: 3rem 1.5rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: var(--sf-soft);
+}
+
+@media (min-width: 768px) {
+  .sf-v2 .sf-details {
+    padding: 3rem 2.5rem;
+  }
+}
+
+.sf-v2 .sf-details-text {
+  color: #6c6c6c;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+
+/* Avis : sans filet, champ « Laisser un avis » comme « Leave Comment », « Voir plus ». */
+.sf-v2 .sf-section {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.sf-review-open {
+  display: block;
+  width: 100%;
+  min-height: 4rem;
+  margin: 0 0 1.5rem;
+  padding: 0 1rem;
+  border: 0.5px solid #cecece;
+  border-radius: 0.4375rem;
+  color: #9a9a9a;
+  background: #fff;
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: text;
+}
+
+.sf-review-open:hover {
+  border-color: #000;
+}
+
+.sf-v2 .sf-review-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.sf-view-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.sf-view-more .sf-btn {
+  min-width: 13rem;
+}
+
+.sf-v2 .sf-reviews-score {
+  min-height: 12rem;
+}
+
+/* Pied de page : colonnes de la maquette (les règles génériques de .sf-footer sont plus fortes). */
+.sf-v2 .sf-footer .sf-footer-col {
+  display: grid;
+  justify-items: center;
+  justify-content: stretch;
+  gap: 1rem;
+}
+
+.sf-v2 .sf-footer .sf-footer-col h2 {
+  margin-bottom: 0;
+}
+
+.sf-v2 .sf-footer .sf-footer-logo,
+.sf-v2 .sf-footer .sf-footer-logo strong {
+  color: #fff;
+}
+
+.sf-v2 .sf-footer .sf-footer-col a,
+.sf-v2 .sf-footer .sf-footer-col span {
+  color: #cfcfcf;
+  font-size: 0.875rem;
+  font-weight: 300;
+}
+
+.sf-v2 .sf-footer .sf-footer-brand p {
+  color: #cfcfcf;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+.sf-v2 .sf-footer .sf-footer-social {
+  justify-content: center;
+}
+
+.sf-v2 .sf-footer .sf-footer-social a {
+  color: #fff;
+}
+
+.sf-v2 .sf-footer .sf-footer-bottom {
+  display: grid;
+  justify-items: center;
+  border-top-color: #1f1f1f;
+}
+
+@media (min-width: 768px) {
+  .sf-v2 .sf-footer .sf-footer-col {
+    justify-items: start;
+  }
+
+  .sf-footer-brand {
+    align-content: start;
+    min-height: 15rem;
+  }
+
+  .sf-v2 .sf-footer .sf-footer-social {
+    justify-content: flex-start;
+    margin-top: auto;
+    gap: 2rem;
+  }
+
+  .sf-v2 .sf-footer .sf-footer-bottom {
+    display: flex;
+    justify-content: space-between;
+  }
+}
+
+@media (min-width: 768px) {
+  .sf-v2 .sf-footer .sf-footer-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.sf-v2 .sf-gallery-track {
+  width: 100%;
+  height: auto;
+}
+
+.sf-v2 .sf-footer .sf-footer-bottom {
+  width: 100%;
+}
+
+/* Boutons « Acheter » alignés en bas de chaque carte, quelle que soit la longueur du nom. */
+.sf-v2 .sf-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sf-v2 .sf-card-cta {
+  margin-top: auto;
+}
+
+.sf-v2 .sf-card .sf-price {
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 639.98px) {
+  .sf-v2 .sf-product-copy > .sf-price {
+    font-size: 1.625rem;
+    white-space: nowrap;
+  }
+
+  .sf-v2 .sf-product-copy > .sf-price del {
+    margin-left: 0.5rem;
+    font-size: 1.125rem;
+  }
+}
+
+/* Panier : deux colonnes égales (maquette « Shopping Cart »), boutons dans le récapitulatif. */
+@media (min-width: 1024px) {
+  .sf-cart-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 3rem;
+  }
+}
+
+.sf-v2 .sf-cart-summary .sf-actions-sticky {
+  position: static;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.sf-v2 .sf-cart-page > h1 {
+  font-size: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-cart-page > h1 {
+    margin-top: 2.5rem;
+  }
+}
+
+/* ======================================================================
+   3e passe : logique des maquettes
+   ====================================================================== */
+
+/* En-tête : la recherche occupe tout l'espace libre entre le logo et les icônes. */
+@media (min-width: 1024px) {
+  .sf-v2 .sf-header-searchbar {
+    max-width: none;
+    flex: 1 1 auto;
+  }
+
+  .sf-v2 .sf-nav,
+  .sf-v2 .sf-header-actions {
+    margin-left: 0;
+  }
+}
+
+/* Téléphone : logo à gauche ; loupe, panier et menu ☰ à droite (maquette « Home Mobile »). */
+.sf-v2 .sf-header-actions {
+  margin-left: auto;
+  gap: 0.25rem;
+}
+
+.sf-v2 .sf-menu-button {
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: 0;
+  color: #000;
+}
+
+@media (min-width: 768px) {
+  .sf-v2 .sf-menu-button {
+    display: none;
+  }
+}
+
+/* Bannière : uniquement l'image du vendeur, sur toute la largeur, sans marge ni arrondi. */
+.sf-v2 .sf-banner,
+.sf-v2 .sf-home > .sf-banner {
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  background: #000;
+}
+
+/* Barre du catalogue (maquette « Products Page ») : Filtres, tri, nombre de produits. */
+.sf-catalog-head {
+  margin-top: 2.5rem;
+  scroll-margin-top: 6rem;
+}
+
+.sf-toolbar {
+  display: grid;
+  gap: 1rem;
+}
+
+.sf-toolbar-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1rem;
+}
+
+.sf-select {
+  position: relative;
+  display: block;
+}
+
+.sf-select select {
+  width: 100%;
+  height: 3.5rem;
+  padding: 0 3rem 0 1rem;
+  border: 0.5px solid #d4d4d4;
+  border-radius: 0.5rem;
+  color: #000;
+  background: #fff;
+  font: inherit;
+  font-size: 0.9375rem;
+  appearance: none;
+  cursor: pointer;
+}
+
+.sf-select select:hover {
+  border-color: #000;
+}
+
+.sf-select svg {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  color: #000;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.sf-toolbar-count {
+  margin: 0;
+  color: #6c6c6c;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.sf-toolbar-count strong {
+  margin-left: 0.25rem;
+  color: #000;
+  font-size: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .sf-toolbar {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+  }
+
+  .sf-toolbar-controls {
+    grid-template-columns: repeat(2, 16rem);
+  }
+
+  .sf-toolbar-count {
+    order: -1;
+  }
+
+  .sf-toolbar-controls {
+    justify-self: end;
+  }
+}
+
+.sf-v2 .sf-catalog-head + .sf-home-section {
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .sf-v2 .sf-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sf-v2 .sf-toolbar-controls {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .sf-v2 .sf-toolbar-controls .sf-select {
+    width: 16rem;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .sf-v2 .sf-brand-text strong {
+    font-size: 1.0625rem;
+  }
+
+  .sf-v2 .sf-brand {
+    gap: 0.5rem;
+  }
+}
+
+/* Cartes produits : la photo remplit tout son cadre carré, avec une petite marge autour (demande du 13/11). */
+.sf-v2 .sf-card-link,
+.sf-v2 .sf-similar .sf-card-link {
+  padding: 0.5rem 0.5rem 1.25rem;
+}
+
+.sf-v2 .sf-card-media,
+.sf-v2 .sf-similar .sf-card-media {
+  width: 100%;
+  margin: 0;
+  border-radius: 0.375rem;
+}
+
+.sf-v2 .sf-card-media img {
+  object-fit: cover;
+  mix-blend-mode: normal;
+}
+
+.sf-v2 .sf-card-body,
+.sf-v2 .sf-similar .sf-card-body {
+  padding: 1rem 0.5rem 0;
+}
+
+@media (max-width: 639.98px) {
+  .sf-v2 .sf-card-link,
+  .sf-v2 .sf-similar .sf-card-link {
+    padding: 0.375rem 0.375rem 1rem;
+  }
+
+  .sf-v2 .sf-card-media,
+  .sf-v2 .sf-similar .sf-card-media {
+    width: 100%;
+  }
+
+  .sf-v2 .sf-card-body,
+  .sf-v2 .sf-similar .sf-card-body {
+    padding: 0.75rem 0.25rem 0;
+  }
+}
+
+/* ======================================================================
+   4e passe : menus de tri, panier mobile, commande, assistant
+   ====================================================================== */
+
+/* Menus « Filtres / Trier » : seule notre icône (la flèche native des listes est retirée). */
+.sf-v2 .sf-select select {
+  background-image: none !important;
+  -webkit-appearance: none;
+}
+
+/* Panier mobile (maquette « Shopping Card Mobile ») : photo à gauche ; nom, référence,
+   puis quantité · prix · ✕ sur une même ligne. */
+.sf-cart-line {
+  grid-template-columns: 5.5rem auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "thumb info info info"
+    "thumb qty total remove";
+  gap: 0.75rem 1rem;
+}
+
+.sf-cart-total {
+  justify-self: end;
+}
+
+@media (min-width: 640px) {
+  .sf-cart-line {
+    grid-template-columns: 5.5rem minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "thumb info qty total remove";
+  }
+}
+
+.sf-continue-link {
+  justify-self: center;
+  color: #000;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Commande : même structure que le panier ---------- */
+
+.sf-v2 .sf-checkout {
+  max-width: calc(var(--sf-wide) + 2 * var(--sf-gutter));
+  padding: 2rem var(--sf-gutter) 4rem;
+}
+
+.sf-v2 .sf-checkout > h1 {
+  margin: 0 0 2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.sf-v2 .sf-checkout .sf-breadcrumb {
+  margin-bottom: 1.5rem;
+}
+
+.sf-checkout-layout {
+  display: grid;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .sf-checkout-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 3rem;
+  }
+
+  .sf-checkout-summary {
+    position: sticky;
+    top: 7rem;
+  }
+}
+
+.sf-checkout-main {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.sf-checkout-block {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.sf-checkout-block h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.sf-checkout-block > .sf-muted {
+  margin: -0.75rem 0 0;
+}
+
+/* Champs de la maquette (« Code », « Enter Card Number ») : hauts, filet fin, coins doux. */
+.sf-v2 .sf-form .sf-field,
+.sf-v2 .sf-form .phone-field {
+  gap: 0.5rem;
+  color: #000;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.sf-v2 .sf-form :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  min-height: 3.5rem;
+  border: 0.5px solid #cecece;
+  border-radius: 0.4375rem;
+  background-color: #fff;
+  font-size: 0.9375rem;
+}
+
+.sf-v2 .sf-form textarea {
+  padding-top: 1rem;
+}
+
+.sf-v2 .sf-form :is(input, select, textarea):focus {
+  border-color: #000;
+}
+
+.sf-v2 .sf-form .sf-field-help {
+  color: #717171;
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.sf-v2 .sf-segmented div {
+  gap: 0.75rem;
+}
+
+.sf-v2 .sf-segmented label {
+  min-height: 3.5rem;
+  border: 0.5px solid #cecece;
+  border-radius: 0.4375rem;
+  color: #000;
+  background: #fff;
+  font-weight: 500;
+}
+
+.sf-v2 .sf-segmented label.is-selected {
+  border-color: #000;
+  color: #fff;
+  background: #000;
+}
+
+.sf-v2 .sf-check {
+  color: #545454;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.sf-v2 .sf-check input {
+  accent-color: #000;
+}
+
+.sf-checkout-items {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0 0 1.25rem;
+  border-bottom: 1px solid var(--sf-line);
+  list-style: none;
+}
+
+.sf-checkout-items li {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sf-checkout-items .sf-cart-thumb {
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+.sf-checkout-item-name {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.sf-checkout-item-name small {
+  color: #717171;
+  font-size: 0.8125rem;
+  font-weight: 400;
+}
+
+.sf-checkout-items strong {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sf-v2 .sf-checkout-summary .sf-checkout-actions {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.sf-v2 .sf-checkout-actions .sf-btn {
+  min-height: 3.5rem;
+  border-radius: 0.375rem;
+}
+
+.sf-v2 .sf-btn-whatsapp {
+  border-color: #25d366;
+  color: #fff;
+  background: #25d366;
+}
+
+.sf-v2 .sf-or {
+  color: #9a9a9a;
+  font-size: 0.8125rem;
+}
+
+.sf-v2 .sf-actions-hint {
+  margin: 0;
+  text-align: center;
+}
+
+/* ---------- Assistant de la boutique : blanc, noir et gris, comme le reste ---------- */
+
+.sf-v2 .sf-chat-trigger {
+  border: 0;
+  color: #fff;
+  background: #000;
+}
+
+.sf-v2 .sf-chat-backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.sf-v2 .sf-chat {
+  background: #fff;
+}
+
+@media (min-width: 640px) {
+  .sf-v2 .sf-chat {
+    border: 1px solid var(--sf-line);
+    border-radius: 0.75rem;
+    box-shadow: 0 24px 60px rgb(0 0 0 / 0.2);
+  }
+}
+
+.sf-v2 .sf-chat-head {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--sf-line);
+  color: #000;
+  background: #fff;
+}
+
+.sf-v2 .sf-chat-avatar {
+  border-radius: 0.5rem;
+  color: #fff;
+  background: #000;
+}
+
+.sf-v2 .sf-chat-title strong {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.sf-v2 .sf-chat-title small {
+  color: #8b8b8b;
+  opacity: 1;
+}
+
+.sf-v2 .sf-chat-close {
+  border-radius: 0.5rem;
+  color: #000;
+  background: transparent;
+}
+
+.sf-v2 .sf-chat-close:hover {
+  background: var(--sf-surface);
+}
+
+.sf-v2 .sf-chat-messages {
+  gap: 0.75rem;
+  padding: 1.25rem;
+}
+
+.sf-v2 .sf-bubble {
+  font-size: 0.875rem;
+  box-shadow: none;
+}
+
+.sf-v2 .sf-bubble-bot {
+  border-radius: 0.25rem 0.75rem 0.75rem;
+  color: #000;
+  background: var(--sf-surface);
+}
+
+.sf-v2 .sf-bubble-client {
+  border-radius: 0.75rem 0.25rem 0.75rem 0.75rem;
+  color: #fff;
+  background: #000;
+}
+
+.sf-v2 .sf-chat-chips button {
+  min-height: 2.75rem;
+  border: 0.5px solid #cecece;
+  border-radius: 0.5rem;
+  color: #000;
+  background: #fff;
+  font-weight: 500;
+}
+
+.sf-v2 .sf-chat-chips button:hover {
+  border-color: #000;
+}
+
+.sf-v2 .sf-chat-chips button.is-filled {
+  border-color: #000;
+  color: #fff;
+  background: #000;
+}
+
+.sf-v2 .sf-chat-ready {
+  border: 1px solid var(--sf-line);
+  border-radius: 0.625rem;
+  box-shadow: none;
+}
+
+.sf-v2 .sf-chat-ready p {
+  border-radius: 0.375rem;
+  background: var(--sf-surface);
+}
+
+.sf-v2 .sf-chat-input {
+  padding: 0.875rem 1.25rem calc(0.875rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--sf-line);
+}
+
+.sf-v2 .sf-chat-input input {
+  height: 3rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #f5f5f5;
+}
+
+.sf-v2 .sf-chat-input button {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.5rem;
+  color: #fff;
+  background: #000;
+}
+
+/* Numéro WhatsApp : un seul cadre (indicatif + numéro), même style que les autres champs. */
+.sf-v2 .sf-form .phone-input {
+  border: 0.5px solid #cecece;
+  border-radius: 0.4375rem;
+}
+
+.sf-v2 .sf-form .phone-input:focus-within {
+  border-color: #000;
+  box-shadow: none;
+}
+
+.sf-v2 .sf-form .phone-input :is(input, select) {
+  min-height: 3.5rem;
+}
+
+.sf-v2 .sf-form .phone-input select {
+  background-color: #fafafa;
+}
+
+@media (max-width: 639.98px) {
+  .sf-cart-line {
+    grid-template-columns: 4.5rem auto minmax(0, 1fr) auto;
+    gap: 0.75rem;
+  }
+
+  .sf-cart-thumb {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .sf-cart-qty {
+    gap: 0.25rem;
+  }
+
+  .sf-cart-qty button {
+    width: 1.5rem;
+  }
+
+  .sf-cart-qty output {
+    min-width: 2rem;
+  }
+
+  .sf-cart-total {
+    font-size: 1rem;
+  }
+
+  .sf-cart-remove {
+    width: 2rem;
+  }
+}
+
+/* Récapitulatif de commande : miniatures dans leur propre colonne (pas les zones de la ligne du panier). */
+.sf-checkout-items .sf-cart-thumb {
+  grid-area: auto;
+}
+
+/* ---------- Promotions (tous les styles) : cartes compactes, flèches hors des cartes ---------- */
+
+.sf-v2 .sf-card-body {
+  gap: 0.5rem;
+}
+
+.sf-v2 .sf-card-body > .sf-card-cta {
+  margin-top: auto;
+}
+
+.sf-v2 .sf-card .sf-price {
+  margin-bottom: 0.75rem;
+}
+
+.sf-v2 .sf-promo-section .sf-card-rating {
+  margin-top: -0.25rem;
+}
+
+.sf-v2 .sf-promo-section :is(.sf-promo-saving, .sf-promo-stock) {
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.sf-v2 .sf-home-section-head.sf-promo-head {
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  margin-right: 0;
+  margin-left: 0;
+}
+
+.sf-v2 .sf-promo-all {
+  flex: none;
+  white-space: nowrap;
+}
+
+.sf-v2 .sf-rail-arrow {
+  top: 7rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--sf-line);
+  color: #000;
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-rail-prev {
+    left: -1.375rem;
+  }
+
+  .sf-v2 .sf-rail-next {
+    right: -1.375rem;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .sf-v2 .sf-promo-head :is(h1, h2) {
+    font-size: 1.125rem;
+  }
+
+  .sf-v2 .sf-promo-sub {
+    font-size: 0.75rem;
+  }
+}
+
+/* Styles de promotion encadrés (Vente flash, Éclat) : marges intérieures du bandeau et des cartes,
+   pour que l'icône, le titre et « Tout voir » restent dans le cadre. */
+.sf-v2.sf-promo-vente-flash .sf-promo-section,
+.sf-v2.sf-promo-eclat .sf-promo-section {
+  margin-top: 3rem;
+}
+
+.sf-v2.sf-promo-vente-flash .sf-home-section-head.sf-promo-head {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.sf-v2.sf-promo-eclat .sf-home-section-head.sf-promo-head {
+  margin: 0 0 1rem;
+  padding: 0 1rem;
+}
+
+.sf-v2:is(.sf-promo-vente-flash, .sf-promo-eclat) .sf-promo-section .sf-rail-list {
+  padding: 0.25rem 1rem 0.5rem;
+  scroll-padding-inline: 1rem;
+}
+
+/* Dans un cadre, les flèches restent à l'intérieur (sinon le cadre les coupe). */
+.sf-v2:is(.sf-promo-vente-flash, .sf-promo-eclat) .sf-rail-prev {
+  left: 0.5rem;
+}
+
+.sf-v2:is(.sf-promo-vente-flash, .sf-promo-eclat) .sf-rail-next {
+  right: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+  .sf-v2.sf-promo-vente-flash .sf-home-section-head.sf-promo-head {
+    padding: 0.875rem 1.5rem;
+  }
+
+  .sf-v2.sf-promo-eclat .sf-home-section-head.sf-promo-head {
+    padding: 0 1.5rem;
+  }
+
+  .sf-v2:is(.sf-promo-vente-flash, .sf-promo-eclat) .sf-promo-section .sf-rail-list {
+    padding: 0.25rem 1.5rem 0.75rem;
+    scroll-padding-inline: 1.5rem;
+  }
+}
+
+/* Offres du jour / Classique (sans cadre) : l'icône et « Tout voir » ne doivent pas toucher les bords. */
+.sf-v2 .sf-promo-head .sf-promo-icon {
+  flex: none;
+}
+
+/* Offres du jour : pas de filets au-dessus et en dessous de la section. */
+.sf-v2.sf-promo-offres-du-jour .sf-promo-section {
+  border-top: 0;
+  border-bottom: 0;
+}
+
+/* Fiche produit : la photo principale remplit tout son cadre carré, comme les miniatures. */
+.sf-v2 .sf-gallery-track img,
+.sf-v2 .sf-gallery-thumbs img {
+  object-fit: cover;
+}
+
+.sf-v2 .sf-gallery-slide {
+  overflow: hidden;
+  border-radius: var(--sf-radius);
+}
+
+/* Barre du catalogue sans le nombre de produits : les menus à droite. */
+@media (min-width: 768px) {
+  .sf-v2 .sf-toolbar {
+    justify-content: flex-end;
+  }
+}
+
+/* Cartes sans bouton « Acheter » : la note (étoiles) sous le nom, puis le prix. */
+.sf-v2 .sf-card-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.sf-v2 .sf-card .sf-price {
+  margin-bottom: 0;
+}
+
+.sf-v2 .sf-card-link {
+  padding-bottom: 1rem;
+}
+
+/* Fiche produit : flèches ‹ › centrées verticalement sur la photo principale. */
+.sf-v2 .sf-gallery-track {
+  position: relative;
+}
+
+.sf-v2 .sf-gallery {
+  position: relative;
+}
+
+.sf-v2 .sf-gallery .sf-gallery-arrow {
+  top: calc(50% - (var(--sf-thumbs-h, 0px) / 2));
+  transform: translateY(-50%);
+}
+
+@media (max-width: 1023.98px) {
+  .sf-v2 .sf-gallery:has(.sf-gallery-thumbs) {
+    --sf-thumbs-h: 5.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-gallery .sf-gallery-arrow {
+    top: 50%;
+  }
+
+  .sf-v2 .sf-gallery:has(.sf-gallery-thumbs) .sf-gallery-arrow-prev {
+    left: calc(4.75rem + 3rem + 0.75rem);
+  }
+
+  .sf-v2 .sf-gallery-arrow-next {
+    right: 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* La colonne de miniatures ne dépasse jamais la photo : la galerie a la hauteur de la photo. */
+  .sf-v2 .sf-gallery-thumbs {
+    height: 0;
+    min-height: 100%;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .sf-v2 .sf-gallery-thumbs::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ======================================================================
+   Autres pages de la boutique : pages du vendeur (« Nous contacter »…), documents légaux,
+   promotions, suivi de commande — même design que le reste (titres, fil d'Ariane, largeur).
+   ====================================================================== */
+
+.sf-v2 .sf-page {
+  max-width: calc(48rem + 2 * var(--sf-gutter));
+  padding: 2rem var(--sf-gutter) 4rem;
+}
+
+.sf-v2 .sf-page h1,
+.sf-v2 .sf-promotions h1 {
+  margin: 0 0 1.5rem;
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.sf-v2 .sf-page-breadcrumb {
+  margin-top: 2rem;
+}
+
+/* Pages du vendeur : texte aéré, titres nets, listes et questions fréquentes sobres. */
+.sf-v2 .sf-editorial {
+  color: #3d3d3d;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.sf-v2 .sf-editorial h2 {
+  margin: 2.25rem 0 0.75rem;
+  color: #000;
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.sf-v2 .sf-editorial p {
+  margin: 0 0 1rem;
+}
+
+.sf-v2 .sf-editorial a {
+  color: #000;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sf-v2 .sf-editorial-image {
+  overflow: hidden;
+  margin: 1.5rem 0;
+  border-radius: 0.625rem;
+  background: var(--sf-surface);
+}
+
+.sf-v2 .sf-editorial-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  padding-left: 1.25rem;
+}
+
+.sf-v2 .sf-faq {
+  margin: 0 0 0.75rem;
+  padding: 1rem 1.25rem;
+  border: 0;
+  border-radius: 0.625rem;
+  background: var(--sf-soft);
+}
+
+.sf-v2 .sf-faq summary {
+  color: #000;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Blocs « contact » des pages (téléphone, WhatsApp, adresse) : boutons noirs de la boutique. */
+.sf-v2 .sf-editorial .sf-btn {
+  text-decoration: none;
+}
+
+/* Documents légaux dans la boutique : onglets sobres puis le texte. */
+.sf-legal-tabs {
+  display: flex;
+  gap: 1.5rem;
+  margin: 0 0 2rem;
+  border-bottom: 1px solid var(--sf-line);
+}
+
+.sf-v2 .sf-legal-tabs a {
+  margin-bottom: -1px;
+  padding: 0 0 0.75rem;
+  border-bottom: 2px solid transparent;
+  color: #8b8b8b;
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.sf-v2 .sf-legal-tabs a[aria-current="page"] {
+  border-bottom-color: #000;
+  color: #000;
+}
+
+.sf-legal-body ul {
+  display: grid;
+  gap: 0.375rem;
+  padding-left: 1.25rem;
+}
+
+.sf-legal-body .legal-provisional {
+  padding: 1rem 1.25rem;
+  border-radius: 0.625rem;
+  background: var(--sf-soft);
+}
+
+/* Suivi de commande : panneaux gris clair arrondis, comme le récapitulatif du panier. */
+.sf-v2 .sf-order .sf-panel {
+  padding: 1.5rem;
+  background: #fff;
+}
+
+/* ---------- Immobilier : badge, loyer et caractéristiques (cases grises de la maquette) ---------- */
+
+.sf-listing-badge {
+  justify-self: start;
+  margin: 0 0 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  color: #fff;
+  background: #000;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.sf-price-period {
+  margin-left: 0.25rem;
+  color: #6c6c6c;
+  font-size: 0.55em;
+  font-weight: 500;
+}
+
+.sf-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .sf-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.sf-facts li {
+  display: grid;
+  gap: 0.125rem;
+  padding: 1rem;
+  border-radius: 0.4375rem;
+  background: var(--sf-surface);
+}
+
+.sf-facts small {
+  color: #a7a7a7;
+  font-size: 0.875rem;
+}
+
+.sf-facts strong {
+  color: #4e4e4e;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}

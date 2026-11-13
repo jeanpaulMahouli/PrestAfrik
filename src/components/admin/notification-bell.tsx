@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Info, MailOpen, OctagonAlert, TriangleAlert } from "lucide-react";
+import { Bell, Info, MailOpen, OctagonAlert, TriangleAlert } from "@/components/ui/icons";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useDismiss } from "@/components/ui/use-dismiss";

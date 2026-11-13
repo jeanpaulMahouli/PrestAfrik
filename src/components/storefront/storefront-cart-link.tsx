@@ -4,13 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useStoreCart } from "@/components/storefront/store-cart-provider";
 import { useStoreHref } from "@/components/storefront/store-links";
+import { ShoppingCart } from "@/components/ui/icons";
 
-const bagIcon = (
-  <svg aria-hidden="true" fill="none" height="22" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="22">
-    <path d="M6 7h12l1 13H5L6 7Z" />
-    <path d="M9 10V6a3 3 0 0 1 6 0v4" />
-  </svg>
-);
+const bagIcon = <ShoppingCart aria-hidden="true" size={26} />;
 
 function useCartCount() {
   const cart = useStoreCart();

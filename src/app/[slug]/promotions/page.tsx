@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PromoHeading } from "@/components/storefront/promo-heading";
 import { StorePagination } from "@/components/storefront/store-pagination";
 import { StorefrontProductGrid } from "@/components/storefront/storefront-product-grid";
-import { BackIcon } from "@/components/ui/icons";
+import { ChevronRight } from "@/components/ui/icons";
 import { storeHref } from "@/lib/store-host";
 import { storeBasePath } from "@/lib/store-links";
 import { discountPercent } from "@/modules/catalog/format";
@@ -33,9 +33,11 @@ export default async function StorePromotionsPage({ params, searchParams }: Page
 
   return (
     <main className="sf-home sf-promotions">
-      <div className="sf-page-head sf-home-page-head">
-        <Link aria-label="Retour à la boutique" className="sf-back" href={storeHref(base)}><BackIcon size={18} /></Link>
-      </div>
+      <nav aria-label="Fil d’Ariane" className="sf-breadcrumb sf-page-breadcrumb">
+        <Link href={storeHref(base)}>Accueil</Link>
+        <ChevronRight aria-hidden="true" size={14} />
+        <span aria-current="page">Promotions</span>
+      </nav>
       {promotions.length ? (
         <section aria-labelledby="sf-promo-title" className="sf-home-section sf-promo-section">
           <PromoHeading count={promotions.length} id="sf-promo-title" level={1} maxDiscount={discountPercent(promotions[0])} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircleMore, SendHorizontal, X } from "lucide-react";
+import { MessageCircleMore, SendHorizontal, X } from "@/components/ui/icons";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useStoreBase, useStoreHref } from "@/components/storefront/store-links";

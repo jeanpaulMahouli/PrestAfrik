@@ -84,3 +84,4 @@ export function deliverySummary(extras: Pick<StorefrontExtras, "zones" | "store"
   const sentence = parts.join(", ");
   return sentence ? `${sentence.charAt(0).toUpperCase()}${sentence.slice(1)}. Paiement à la livraison.` : "Paiement à la livraison.";
 }
+

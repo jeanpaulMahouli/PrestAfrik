@@ -61,6 +61,16 @@ export function marketplaceRewritePath(pathname: string) {
   return pathname === "/" || pathname === "" ? marketplaceBasePath : `${marketplaceBasePath}${pathname}`;
 }
 
+/** Pages de la marketplace servies à la racine de prestafrik.com (accueil, recherche, fiches produit, panier, commande). */
+export function isMarketplacePath(pathname: string) {
+  return pathname === "/" || pathname === "" || pathname === "/recherche" || pathname === "/panier" || pathname === "/commande" || /^\/produit\/[^/]+\/[^/]+\/?$/.test(pathname);
+}
+
+/** Ancienne adresse interne « /nos-boutiques/… » → adresse publique (« / », « /recherche »). */
+export function marketplacePublicPath(pathname: string) {
+  return pathname.slice(marketplaceBasePath.length) || "/";
+}
+
 /** Fichiers et routes techniques jamais réécrits (scripts, images, API, médias). */
 export function isPassthroughPath(pathname: string) {
   return /^\/(?:_next|api|media|uploads)(?:\/|$)/.test(pathname) || /\.[a-z0-9]+$/i.test(pathname);

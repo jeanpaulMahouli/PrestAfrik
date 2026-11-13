@@ -3832,3 +3832,16 @@
   align-items: center;
   gap: 0.4rem;
 }
+
+/* Ma boutique → Réseaux sociaux : icône du réseau devant le libellé. */
+.social-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* Textes d'information des cartes (ex. « Ajoutez votre propre logo… ») : un espace avant le contenu qui suit. */
+.v-card > p:is(.v-small, .v-muted):not(:last-child),
+.v-card > .v-card-header + p:is(.v-small, .v-muted):not(:last-child) {
+  margin-bottom: 1rem;
+}

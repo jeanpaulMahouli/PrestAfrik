@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus } from "lucide-react";
+import { ImagePlus } from "@/components/ui/icons";
 import { useFormStatus } from "react-dom";
 
 /** Choix d'image compact : le formulaire parent est envoyé dès qu'un fichier est choisi. */

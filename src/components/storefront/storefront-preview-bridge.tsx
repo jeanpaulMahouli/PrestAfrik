@@ -2,15 +2,15 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { textColorFor } from "@/lib/contrast";
 
 type PreviewValues = { name: string; theme: string; promoStyle: string; primaryColor: string; secondaryColor: string; accentColor: string; logoUrl: string | null; description?: string; city?: string };
 
-const themeClass = (theme: string) => `sf-theme-${theme.toLowerCase().replaceAll("_", "-")}`;
 const promoClass = (style: string) => `sf-promo-${style.toLowerCase().replaceAll("_", "-")}`;
-const hex = /^#[\da-f]{6}$/i;
 
 /**
+ * Toutes les boutiques ont la même apparence : seuls le nom, le logo, la description, la ville et le style
+ * des promotions changent en direct.
+ *
  * Vitrine affichée dans l'aperçu de « Ma boutique » (iframe, ?apercu=1) : applique en direct les réglages
  * non enregistrés envoyés par le tableau de bord (même origine uniquement). Aucun effet hors de l'aperçu.
  */
@@ -26,17 +26,6 @@ export function StorefrontPreviewBridge({ initials }: { initials: string }) {
 
     const apply = (values: PreviewValues) => {
       last.current = values;
-      for (const [variable, color] of [
-        ["--store-primary", values.primaryColor],
-        ["--store-secondary", values.secondaryColor],
-        ["--store-accent", values.accentColor],
-      ] as const) {
-        if (hex.test(color)) root.style.setProperty(variable, color);
-      }
-      if (hex.test(values.primaryColor)) root.style.setProperty("--store-on-primary", textColorFor(values.primaryColor));
-      if (hex.test(values.secondaryColor)) root.style.setProperty("--store-on-secondary", textColorFor(values.secondaryColor));
-      root.className = root.className.replace(/sf-theme-[a-z-]+/, themeClass(values.theme));
-      root.dataset.theme = values.theme;
       if (values.promoStyle) root.className = root.className.replace(/sf-promo-[a-z-]+/, promoClass(values.promoStyle));
       if (values.description !== undefined) {
         root.querySelectorAll<HTMLElement>("[data-store-description]").forEach((element) => {

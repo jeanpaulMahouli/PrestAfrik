@@ -1,4 +1,4 @@
-import { Store, Globe, Users, UserPlus } from "lucide-react";
+import { Store, Globe, Users, UserPlus } from "@/components/ui/icons";
 import { KpiCard } from "@/components/ui/kpi-card";
 import { formatDateTime, formatNumber, plural } from "@/lib/format";
 import { storePublicUrl } from "@/lib/urls";

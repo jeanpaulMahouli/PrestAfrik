@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "@/components/ui/icons";
 import { useEffect, useRef, useState } from "react";
 import type { DashboardAnnouncement } from "@/modules/announcements/queries";
 

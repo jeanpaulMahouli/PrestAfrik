@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { Search, X } from "@/components/ui/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDismiss } from "@/components/ui/use-dismiss";
 import { useStoreHref } from "@/components/storefront/store-links";

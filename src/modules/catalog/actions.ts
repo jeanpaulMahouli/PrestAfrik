@@ -24,6 +24,8 @@ import {
   type ProductVariantInput,
 } from "@/modules/catalog/validation";
 import { getStoreContext } from "@/modules/stores/context";
+import { storeCatalogProfile } from "@/modules/stores/universe";
+import { readListingForm, type ListingInput } from "@/modules/catalog/listing";
 import { assertCanCreateProduct, SubscriptionLimitError } from "@/modules/subscriptions/service";
 
 export type ActionError = { code: string; message: string; fields?: Record<string, string> };
@@ -147,6 +149,19 @@ export async function saveProduct(_previous: ActionResult, formData: FormData): 
     return fail("Certaines informations sont à corriger. Vos saisies sont conservées.", "VALIDATION", fields);
   }
   const input = parsed.data;
+  // Biens immobiliers : locations et réservations (univers Immobilier) ou vente (Shopping, « Vente
+  // immobilière ») ; chaque bien est une annonce avec ses caractéristiques.
+  const { listingMode } = await storeCatalogProfile(store.activityId);
+  let listing: ListingInput | null = null;
+  if (listingMode) {
+    const result = readListingForm((key) => text(formData, key), (key) => formData.get(key) === "on", listingMode);
+    if (!result.success) {
+      const fields: Record<string, string> = {};
+      for (const issue of result.error.issues) fields[String(issue.path.at(-1))] ??= issue.message;
+      return fail("Certaines informations de l’annonce sont à corriger. Vos saisies sont conservées.", "VALIDATION", fields);
+    }
+    listing = result.data;
+  }
   if (photos.data.length > maxProductPhotos) return fail("Vous avez atteint la limite de 5 photos par produit.", "PHOTO_LIMIT", { photos: "5 photos au maximum." });
   const variantKeys = variants.data.map((variant) => `${variant.optionName.toLowerCase()}=${variant.optionValue.toLowerCase()}`);
   if (new Set(variantKeys).size !== variantKeys.length) return fail("Deux variantes portent la même valeur.", "VALIDATION", { variants: "Chaque valeur de variante doit être unique." });
@@ -201,6 +216,9 @@ export async function saveProduct(_previous: ActionResult, formData: FormData): 
         trackInventory: input.trackInventory,
         stockQuantity: input.trackInventory ? input.stockQuantity : null,
         isFeatured: input.isFeatured,
+        listingType: listing?.listingType ?? null,
+        pricePeriod: listing?.pricePeriod ?? null,
+        propertyDetails: listing ? listing.details : Prisma.DbNull,
         slug: await uniqueSlug(transaction, store.id, input.name, existing?.id),
         ...(existing?.status === "ARCHIVED" ? {} : { status: input.status }),
       };
@@ -356,6 +374,9 @@ export async function duplicateProduct(formData: FormData) {
           availability: source.availability === "SOLD_OUT" ? "AVAILABLE" : source.availability,
           trackInventory: source.trackInventory,
           stockQuantity: source.trackInventory ? 0 : null,
+          listingType: source.listingType,
+          pricePeriod: source.pricePeriod,
+          propertyDetails: source.propertyDetails ?? Prisma.DbNull,
           status: "DRAFT",
           variants: {
             create: source.variants.map((variant, index) => ({

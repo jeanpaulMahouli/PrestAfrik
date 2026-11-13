@@ -1,4 +1,4 @@
-import { Star } from "lucide-react";
+import { Star } from "@/components/ui/icons";
 import Link from "next/link";
 import { AdminFeedback, searchValue } from "@/components/admin/admin-feedback";
 import { Badge } from "@/components/ui/badge";

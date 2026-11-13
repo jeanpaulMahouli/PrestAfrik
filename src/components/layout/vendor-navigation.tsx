@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, House, LayoutGrid, Megaphone, Package, ShoppingBag, Star, Store, Truck, Users, UsersRound, Wallet, type LucideIcon } from "lucide-react";
+import { CreditCard, House, LayoutGrid, Megaphone, Package, ShoppingBag, Star, Store, Truck, Users, UsersRound, Wallet, X, type AppIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +11,7 @@ import { hasPermission, type Permission } from "@/modules/auth/permissions";
 
 const nav = texts.vendor.nav;
 
-type NavLink = { title: string; href: string; icon: LucideIcon; permission?: Permission };
+type NavLink = { title: string; href: string; icon: AppIcon; permission?: Permission };
 
 const links: readonly NavLink[] = [
   { title: nav.home, href: "/dashboard", icon: House },
@@ -170,9 +170,7 @@ export function VendorMobileNav({ role, storeName, locked = false }: { role: Sto
             <div className="vendor-drawer-header">
               <strong>{storeName}</strong>
               <button aria-label={texts.vendor.shell.closeMenu} className="topbar-icon-button" onClick={() => setOpen(false)} type="button">
-                <svg aria-hidden="true" fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeWidth="2" viewBox="0 0 24 24" width="20">
-                  <path d="M6 6l12 12M18 6 6 18" />
-                </svg>
+                <X aria-hidden="true" size={20} />
               </button>
             </div>
             <nav className="vendor-drawer-nav">

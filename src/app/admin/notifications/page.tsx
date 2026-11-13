@@ -1,5 +1,5 @@
 import { revalidatePath } from "next/cache";
-import { MailOpen } from "lucide-react";
+import { MailOpen } from "@/components/ui/icons";
 import { SeverityIcon } from "@/components/admin/notification-bell";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { formatDateTime, formatNumber } from "@/lib/format";

@@ -44,6 +44,12 @@ export function shopUrl(path = "/") {
   return `/nos-boutiques${clean}`;
 }
 
+/**
+ * Page de présentation pour les vendeurs (« Devenir vendeur ») : la landing, à l'accueil de prestafrik.com.
+ * Adresse complète, pour que les liens de la marketplace (shop.prestafrik.com) y mènent bien.
+ */
+export const sellerLandingPath = `${appBaseUrl()}/`;
+
 /** Chemin d'une page de la boutique sur le site (« /mboa-style », « /mboa-style/panier »…). */
 export function storePath(slug: string, ...segments: string[]) {
   return ["", slug, ...segments].join("/");

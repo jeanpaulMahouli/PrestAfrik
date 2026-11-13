@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/ssr";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /** Rangée défilante (glisser au doigt, flèches sur ordinateur) : produits ou boutiques. */
@@ -29,10 +29,10 @@ export function ScrollRail({ children, label }: { children: ReactNode; label: st
         {children}
       </ul>
       <button aria-label="Précédent" className="shop-rail-arrow shop-rail-arrow--prev" disabled={edges.start} onClick={() => scroll(-1)} type="button">
-        <ChevronLeft aria-hidden="true" size={20} />
+        <ArrowLeft aria-hidden="true" size={20} />
       </button>
       <button aria-label="Suivant" className="shop-rail-arrow shop-rail-arrow--next" disabled={edges.end} onClick={() => scroll(1)} type="button">
-        <ChevronRight aria-hidden="true" size={20} />
+        <ArrowRight aria-hidden="true" size={20} />
       </button>
     </div>
   );

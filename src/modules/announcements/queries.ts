@@ -19,25 +19,50 @@ export async function getDashboardAnnouncements(): Promise<{ carousel: Dashboard
   };
 }
 
+/** Emplacements publicitaires de la marketplace (Administration → Annonces) : une image chacun, sauf `duo` (deux). */
+export type ShopSlots = {
+  seller: DashboardAnnouncement | null;
+  featuredColumn: DashboardAnnouncement | null;
+  duo: DashboardAnnouncement[];
+  columnTop: DashboardAnnouncement | null;
+  columnBottom: DashboardAnnouncement | null;
+  wide: DashboardAnnouncement | null;
+  searchSide: DashboardAnnouncement | null;
+  menu: DashboardAnnouncement | null;
+};
+
 /**
- * Visuels de la marketplace (shop.prestafrik.com) : sur ordinateur, grand diaporama et deux visuels à côté ;
- * sur téléphone, une seule bannière rectangulaire gérée à part.
+ * Visuels de la marketplace : grand diaporama du héros, visuel de côté, bannières Immobilier et Services, et
+ * tous les emplacements publicitaires (`slots`). Un emplacement sans image garde le visuel par défaut
+ * (config/marketplace-ads.ts).
  */
-export async function getShopAnnouncements(): Promise<{ carousel: DashboardAnnouncement[]; banners: DashboardAnnouncement[]; mobile: DashboardAnnouncement | null; immo: DashboardAnnouncement | null; services: DashboardAnnouncement | null }> {
+export async function getShopAnnouncements(): Promise<{ carousel: DashboardAnnouncement[]; banners: DashboardAnnouncement[]; mobile: DashboardAnnouncement | null; immo: DashboardAnnouncement | null; services: DashboardAnnouncement | null; restauration: DashboardAnnouncement | null; slots: ShopSlots }> {
   const rows = await prisma.platformAnnouncement
     .findMany({
-      where: { active: true, placement: { in: ["SHOP_CAROUSEL", "SHOP_BANNER", "SHOP_MOBILE", "SHOP_IMMO", "SHOP_SERVICES"] } },
+      where: { active: true },
       orderBy: [{ position: "asc" }, { createdAt: "asc" }],
       select: { id: true, placement: true, imageUrl: true, altText: true, linkUrl: true, ctaLabel: true },
     })
     .catch(() => []);
   const pick = (row: (typeof rows)[number]): DashboardAnnouncement => ({ id: row.id, imageUrl: row.imageUrl, altText: row.altText, linkUrl: row.linkUrl, ctaLabel: row.ctaLabel });
+  const first = (placement: string) => rows.filter((row) => row.placement === placement).map(pick)[0] ?? null;
   return {
     carousel: rows.filter((row) => row.placement === "SHOP_CAROUSEL").map(pick),
     banners: rows.filter((row) => row.placement === "SHOP_BANNER").map(pick).slice(0, 2),
     mobile: rows.filter((row) => row.placement === "SHOP_MOBILE").map(pick)[0] ?? null,
     immo: rows.filter((row) => row.placement === "SHOP_IMMO").map(pick)[0] ?? null,
     services: rows.filter((row) => row.placement === "SHOP_SERVICES").map(pick)[0] ?? null,
+    restauration: rows.filter((row) => row.placement === "SHOP_RESTAURATION").map(pick)[0] ?? null,
+    slots: {
+      seller: first("SHOP_SELLER"),
+      featuredColumn: first("SHOP_FEATURED_COLUMN"),
+      duo: rows.filter((row) => row.placement === "SHOP_DUO").map(pick).slice(0, 2),
+      columnTop: first("SHOP_COLUMN_TOP"),
+      columnBottom: first("SHOP_COLUMN_BOTTOM"),
+      wide: first("SHOP_WIDE"),
+      searchSide: first("SHOP_SEARCH_SIDE"),
+      menu: first("SHOP_MENU"),
+    },
   };
 }
 

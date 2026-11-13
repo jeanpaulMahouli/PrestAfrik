@@ -12,7 +12,7 @@ import { renderTemplate } from "@/modules/whatsapp/templates";
 import { buildWaMeUrl } from "@/modules/whatsapp/wa-me";
 import { CheckIcon } from "@/components/ui/icons";
 import { IconLink, IconSubmit } from "@/components/ui/icon-action";
-import { CircleCheck, Eye } from "lucide-react";
+import { CircleCheck, Eye } from "@/components/ui/icons";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 export type QuickOrder = {

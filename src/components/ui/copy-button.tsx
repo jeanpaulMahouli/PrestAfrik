@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, CopyCheck } from "lucide-react";
+import { Copy, CopyCheck } from "@/components/ui/icons";
 import { useState } from "react";
 import { copyText } from "@/lib/clipboard";
 

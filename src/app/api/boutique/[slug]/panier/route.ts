@@ -38,10 +38,12 @@ export async function POST(request: Request, { params }: RouteContext<"/api/bout
   try {
     const lines = await getCurrentCheckoutLines(store.id, parsed.data);
     return NextResponse.json({
-      items: lines.map(({ productId, variantId, productName, variantName, sku, quantity, unitPriceXaf, lineTotalXaf }) => ({
+      items: lines.map(({ productId, variantId, productName, productSlug, imageUrl, variantName, sku, quantity, unitPriceXaf, lineTotalXaf }) => ({
         productId,
         variantId,
         productName,
+        productSlug,
+        imageUrl,
         variantName,
         sku,
         quantity,

@@ -3,20 +3,37 @@
 
 export const shopUniverses = {
   vente: { label: "Shopping", short: "Shopping", text: "Mode, beauté, maison, téléphones…" },
-  immobilier: { label: "Immobilier", short: "Immobilier", text: "Maisons, appartements, terrains, bureaux" },
+  immobilier: { label: "Immobilier", short: "Immobilier", text: "Locations et réservations : logements, meublés, bureaux, salles" },
   services: { label: "Services", short: "Services", text: "Coiffure, réparation, événementiel, transport…" },
+  restauration: { label: "Restauration", short: "Restauration", text: "Restaurants, fast-food, traiteurs, pâtisseries…" },
 } as const;
 
 export type ShopUniverse = keyof typeof shopUniverses;
+
+/**
+ * Catégories prioritaires sur la marketplace, dans l'ordre : vêtements et beauté, puis électronique et
+ * accessoires. Elles passent en premier (catégories, rangées de produits, bonnes affaires, résultats) ;
+ * les autres suivent dans l'ordre de l'administration.
+ */
+export const categoryPriority = ["vetements-mode", "beaute-cosmetiques", "electronique", "accessoires"] as const;
+
+/** Rang d'une catégorie (0 = la plus prioritaire). */
+export function categoryRank(slug: string | null | undefined) {
+  const index = slug ? (categoryPriority as readonly string[]).indexOf(slug) : -1;
+  return index === -1 ? categoryPriority.length : index;
+}
 export const shopUniverseKeys = Object.keys(shopUniverses) as ShopUniverse[];
 export const shopUniverseCookie = "shop_univers";
 export const shopCityCookie = "shop_ville";
 
-/** Univers d'une boutique, d'après son activité. */
-export function universeOfActivity(slug: string | null | undefined): ShopUniverse {
-  if (slug === "immobilier") return "immobilier";
-  if (slug === "services") return "services";
-  return "vente";
+/** Univers enregistré sur l'activité (colonne Activity.universe) → univers de la marketplace. */
+export type DbUniverse = "SHOPPING" | "IMMOBILIER" | "SERVICES" | "RESTAURATION";
+
+const fromDb: Record<DbUniverse, ShopUniverse> = { SHOPPING: "vente", IMMOBILIER: "immobilier", SERVICES: "services", RESTAURATION: "restauration" };
+
+/** Univers d'une boutique, d'après l'univers de son activité (Shopping sans activité). */
+export function universeFromDb(value: DbUniverse | null | undefined): ShopUniverse {
+  return value ? fromDb[value] : "vente";
 }
 
 export type ShopCity = { name: string; region: string; lat: number; lng: number };

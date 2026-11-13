@@ -1,36 +1,79 @@
 "use client";
 
-import { Building2, Handshake, ShoppingBag, X, type LucideIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import type { Icon } from "@phosphor-icons/react";
+import { Buildings, CaretDown, Check, ForkKnife, Handshake, ShoppingBag, X } from "@phosphor-icons/react/ssr";
+import { useEffect, useRef, useState } from "react";
+import { useMenuTop } from "./use-menu-top";
 import { shopUniverseCookie, shopUniverseKeys, shopUniverses, type ShopUniverse } from "@/config/marketplace";
 
-export const universeIcons: Record<ShopUniverse, LucideIcon> = { vente: ShoppingBag, immobilier: Building2, services: Handshake };
+export const universeIcons: Record<ShopUniverse, Icon> = { vente: ShoppingBag, immobilier: Buildings, services: Handshake, restauration: ForkKnife };
 
 function choose(universe: ShopUniverse, home: string) {
   document.cookie = `${shopUniverseCookie}=${universe}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
   window.location.assign(home);
 }
 
-/** Onglets « Vente & boutiques », « Immobilier », « Services » : changer d'univers à tout moment. */
-export function UniverseTabs({ current, home }: { current: ShopUniverse; home: string }) {
+/**
+ * Univers (Shopping, Immobilier, Services, Restauration) : menu déroulant de l'en-tête, avant « Devenir vendeur ».
+ * Se ferme au clic à l'extérieur et avec Échap.
+ */
+export function UniverseMenu({ current, home }: { current: ShopUniverse; home: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  useMenuTop(open);
+  const CurrentIcon = universeIcons[current];
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (event: MouseEvent) => {
+      if (!ref.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
+    document.addEventListener("click", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("click", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   return (
-    <nav aria-label="Univers" className="shop-universes">
-      {shopUniverseKeys.map((key) => {
-        const Icon = universeIcons[key];
-        return (
-          <button aria-current={key === current ? "page" : undefined} key={key} onClick={() => key !== current && choose(key, home)} type="button">
-            <Icon aria-hidden="true" size={18} />
-            <span>{shopUniverses[key].label}</span>
-          </button>
-        );
-      })}
-    </nav>
+    <div className="sx-universe" ref={ref}>
+      <button aria-controls="sx-universe-list" aria-expanded={open} aria-label={`Univers : ${shopUniverses[current].label}`} className="sx-universe-button" onClick={() => setOpen((value) => !value)} ref={buttonRef} type="button">
+        <CurrentIcon aria-hidden="true" size={20} />
+        <span>{shopUniverses[current].label}</span>
+        <CaretDown aria-hidden="true" className="sx-caret" size={14} />
+      </button>
+      <ul className="sx-universe-list" hidden={!open} id="sx-universe-list">
+        {shopUniverseKeys.map((key) => {
+          const Icon = universeIcons[key];
+          return (
+            <li key={key}>
+              <button aria-current={key === current ? "true" : undefined} onClick={() => (key === current ? setOpen(false) : choose(key, home))} type="button">
+                <Icon aria-hidden="true" size={22} />
+                <span>
+                  <strong>{shopUniverses[key].label}</strong>
+                  <small>{shopUniverses[key].text}</small>
+                </span>
+                {key === current && <Check aria-hidden="true" className="sx-universe-check" size={16} />}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
 /**
  * Fenêtre d'accueil, à la première visite : « Que recherchez-vous ? » — trois grandes cartes illustrées.
- * Le choix est gardé ; les onglets d'univers permettent d'en changer ensuite.
+ * Le choix est gardé ; le menu des univers de l'en-tête permet d'en changer ensuite.
  */
 export function UniverseWelcome({ home, city }: { home: string; city: string | null }) {
   const [open, setOpen] = useState(false);
@@ -54,7 +97,7 @@ export function UniverseWelcome({ home, city }: { home: string; city: string | n
         <button aria-label="Fermer et voir les boutiques" className="shop-welcome-close" onClick={() => choose("vente", home)} type="button">
           <X aria-hidden="true" size={20} />
         </button>
-        <p className="shop-welcome-kicker">Bienvenue sur PrestAfrik Shop{city ? ` · ${city}` : ""}</p>
+        <p className="shop-welcome-kicker">Bienvenue sur PrestAfrik{city ? ` · ${city}` : ""}</p>
         <h2 id="shop-welcome-title">Que recherchez-vous aujourd’hui ?</h2>
         <ul className="shop-welcome-choices">
           {shopUniverseKeys.map((key) => {
@@ -63,7 +106,7 @@ export function UniverseWelcome({ home, city }: { home: string; city: string | n
               <li key={key}>
                 <button autoFocus={key === "vente"} className={`shop-welcome-choice shop-welcome-choice--${key}`} onClick={() => choose(key, home)} type="button">
                   <span aria-hidden="true" className="shop-welcome-icon">
-                    <Icon size={30} strokeWidth={1.8} />
+                    <Icon size={30} />
                   </span>
                   <strong>{shopUniverses[key].label}</strong>
                   <small>{shopUniverses[key].text}</small>
@@ -75,5 +118,14 @@ export function UniverseWelcome({ home, city }: { home: string; city: string | n
         <p className="shop-welcome-note">Vous pourrez changer à tout moment, en haut de la page.</p>
       </div>
     </div>
+  );
+}
+
+/** Bouton qui change d'univers (ex. « Voir le Shopping » quand l'univers choisi n'a pas encore d'annonces). */
+export function UniverseSwitchButton({ to, home, className, children }: { to: ShopUniverse; home: string; className?: string; children: React.ReactNode }) {
+  return (
+    <button className={className} onClick={() => choose(to, home)} type="button">
+      {children}
+    </button>
   );
 }

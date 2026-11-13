@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, GripVertical, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, GripVertical, Trash2 } from "@/components/ui/icons";
 import { useActionState, useEffect, useState, useTransition, type FormEvent } from "react";
 import { FramedImageInput } from "@/components/merchandising/framed-image-input";
 import { LinkPicker, type LinkPickerTargets, type LinkPickerValue } from "@/components/merchandising/link-picker";

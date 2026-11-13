@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { Menu, X } from "@/components/ui/icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -35,7 +35,10 @@ export function StoreDesktopNav({ storeSlug, pages }: { storeSlug: string; pages
 
 /** Bouton menu (mobile), placé avant le logo, qui ouvre un panneau latéral. */
 export function StoreMobileMenu({ storeSlug, storeName, pages }: { storeSlug: string; storeName: string; pages: MenuPage[] }) {
-  const { links, isActive } = useMenuLinks(storeSlug, pages);
+  const { links: pageLinks, isActive } = useMenuLinks(storeSlug, pages);
+  const base = useStoreBase(storeSlug);
+  // Téléphone : la boutique, ses promotions, ses pages et le panier.
+  const links = [pageLinks[0], { label: "Promotions", href: storeHref(base, "promotions") }, ...pageLinks.slice(1), { label: "Mon panier", href: storeHref(base, "panier") }];
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);

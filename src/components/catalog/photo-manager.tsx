@@ -1,7 +1,7 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "@/components/ui/icons";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useRestorableValue } from "@/components/ui/use-form-persistence";
 import { uuid } from "@/lib/uuid";
 
@@ -50,7 +50,27 @@ function uploadPhoto(uploadUrl: string, file: File, onProgress: (value: number) 
 }
 
 /** uploadUrl : adresse d'envoi (par défaut, le catalogue de la boutique ; l'assistant de création en fournit une autre). */
-export function PhotoManager({ initialPhotos, error, uploadUrl = "/api/dashboard/produits/photos" }: { initialPhotos: ExistingPhoto[]; error?: string; uploadUrl?: string }) {
+export type PhotoSummary = { previewUrls: string[]; uploading: boolean };
+
+/**
+ * onPhotosChange : appelé à chaque changement (photos prêtes, dans l'ordre, et envoi en cours).
+ * hero : la photo principale est affichée en grand au-dessus des autres.
+ */
+export function PhotoManager({
+  initialPhotos,
+  error,
+  uploadUrl = "/api/dashboard/produits/photos",
+  onPhotosChange,
+  hero = false,
+  children,
+}: {
+  initialPhotos: ExistingPhoto[];
+  error?: string;
+  uploadUrl?: string;
+  onPhotosChange?: (summary: PhotoSummary) => void;
+  hero?: boolean;
+  children?: ReactNode;
+}) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<PhotoItem[]>(
@@ -67,6 +87,14 @@ export function PhotoManager({ initialPhotos, error, uploadUrl = "/api/dashboard
   const serialized = JSON.stringify(
     photos.filter((photo) => photo.status === "ready").map((photo) => ({ id: photo.id, key: photo.key, alt: photo.alt.trim(), previewUrl: photo.previewUrl })),
   );
+
+  const uploading = photos.some((photo) => photo.status === "uploading");
+  const onPhotosChangeRef = useRef(onPhotosChange);
+  onPhotosChangeRef.current = onPhotosChange;
+  useEffect(() => {
+    const previewUrls = photos.filter((photo) => photo.status === "ready" && photo.previewUrl).map((photo) => photo.previewUrl!);
+    onPhotosChangeRef.current?.({ previewUrls, uploading });
+  }, [serialized, uploading]);
 
   // Saisie gardée (useFormPersistence) : on signale chaque changement de la liste, et on accepte la liste restaurée.
   const hiddenRef = useRef<HTMLInputElement>(null);
@@ -177,7 +205,7 @@ export function PhotoManager({ initialPhotos, error, uploadUrl = "/api/dashboard
         </label>
       )}
 
-      <ol className="photo-grid">
+      <ol className={`photo-grid ${hero && photos.length ? "has-hero" : ""}`}>
         {photos.map((photo, index) => (
           <li
             className={`photo-tile is-${photo.status} ${dragIndex === index ? "is-dragged" : ""}`}
@@ -263,6 +291,7 @@ export function PhotoManager({ initialPhotos, error, uploadUrl = "/api/dashboard
           </li>
         ))}
       </ol>
+      {children}
       <p className="v-field-help">
         JPG, PNG ou WebP, 5 Mo maximum par photo. La première photo est la photo principale : glissez pour changer l’ordre (ou utilisez les flèches).
         Quand vous atteignez 5 photos, la zone d’ajout disparaît.

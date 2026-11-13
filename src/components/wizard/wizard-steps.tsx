@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { shopUniverseKeys, shopUniverses, universeFromDb, type DbUniverse, type ShopUniverse } from "@/config/marketplace";
+import { wizardWording } from "./wizard-universe";
 import { PhotoManager } from "@/components/catalog/photo-manager";
 import { Combobox } from "@/components/ui/combobox";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -166,7 +168,7 @@ export function ActivityStep({
   initialDescription,
 }: {
   draftId: string;
-  activities: { id: string; label: string; popular: boolean }[];
+  activities: { id: string; slug: string; label: string; popular: boolean; universe: DbUniverse }[];
   initialId: string;
   initialOther: string;
   initialDescription: string;
@@ -176,19 +178,48 @@ export function ActivityStep({
   const [activityId, setActivityId] = useState(initialId);
   const [other, setOther] = useState(initialOther);
   const [freeText, setFreeText] = useState(!initialId && Boolean(initialOther));
+  // Univers (Shopping, Immobilier, Services) : il adapte les textes et la liste des activités.
+  const [universe, setUniverse] = useState<ShopUniverse>(universeFromDb(activities.find((activity) => activity.id === initialId)?.universe));
+  const words = wizardWording[universe];
+  const listed = activities.filter((activity) => universeFromDb(activity.universe) === universe);
   const choose = (id: string) => {
     setActivityId(id);
     setFreeText(false);
     update({ activity: activities.find((activity) => activity.id === id)?.label ?? "" });
   };
+  const chooseUniverse = (next: ShopUniverse) => {
+    setUniverse(next);
+    const inUniverse = activities.filter((activity) => universeFromDb(activity.universe) === next);
+    // Immobilier et Services : une seule activité, choisie d'office.
+    if (next !== "vente" && inUniverse.length === 1) choose(inUniverse[0].id);
+    else if (!inUniverse.some((activity) => activity.id === activityId)) {
+      setActivityId("");
+      update({ activity: "" });
+    }
+  };
 
   return (
-    <WizardStepForm action={saveActivityStep} backHref={back(draftId, 1)} draftId={draftId} step={2} subtitle="Choisissez votre activité principale pour que nous adaptions les suggestions à votre métier. La liste se filtre au fur et à mesure que vous tapez." title="Que vendez-vous ?">
+    <WizardStepForm action={saveActivityStep} backHref={back(draftId, 1)} draftId={draftId} step={2} subtitle={words.activitySubtitle} title={words.activityTitle}>
       {(fieldError) => (
         <>
+          <fieldset className="wizard-universes">
+            <legend className="wizard-label">Que proposez-vous ?</legend>
+            <div>
+              {shopUniverseKeys.map((key) => (
+                <button aria-pressed={universe === key} className={universe === key ? "is-selected" : ""} key={key} onClick={() => chooseUniverse(key)} type="button">
+                  <strong>{shopUniverses[key].label}</strong>
+                  <small>{shopUniverses[key].text}</small>
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          {universe !== "vente" && listed.length === 1 ? (
+            <input name="activityId" type="hidden" value={listed[0].id} />
+          ) : (
+          <>
           <p className="wizard-label">Activités les plus choisies :</p>
           <div className="variable-chips">
-            {activities.filter((activity) => activity.popular).map((activity) => (
+            {listed.filter((activity) => activity.popular).map((activity) => (
               <button aria-pressed={activityId === activity.id} className={activityId === activity.id ? "is-selected" : ""} key={activity.id} onClick={() => choose(activity.id)} type="button">
                 {activity.label}
               </button>
@@ -205,7 +236,7 @@ export function ActivityStep({
                 setFreeText(true);
                 setActivityId("");
               }}
-              options={activities.map((activity) => ({ value: activity.id, label: activity.label }))}
+              options={listed.map((activity) => ({ value: activity.id, label: activity.label }))}
               placeholder="Choisir une activité"
               searchPlaceholder="Tapez pour chercher (ex. beauté)…"
               value={activityId}
@@ -217,6 +248,8 @@ export function ActivityStep({
               {fieldError("activityOther") && <span className="v-field-error">{fieldError("activityOther")}</span>}
               <button className="v-link-button" onClick={() => setFreeText(false)} type="button">Choisir dans la liste</button>
             </label>
+          )}
+          </>
           )}
           <label className="v-field">
             <span>
@@ -231,12 +264,12 @@ export function ActivityStep({
                 setDescription(event.target.value);
                 update({ description: event.target.value });
               }}
-              placeholder="Ex. Pagnes, robes et accessoires faits main à Douala. Livraison rapide dans toute la ville."
+              placeholder={words.descriptionPlaceholder}
               rows={3}
               value={description}
             />
             <span className={fieldError("description") ? "v-field-error" : "v-field-help"} id="wizard-description-help">
-              {fieldError("description") ?? `En une ou deux phrases : ce que vous vendez et ce qui vous rend unique. Elle s’affiche en haut de votre boutique. ${description.length} / 2000`}
+              {fieldError("description") ?? `${words.descriptionHelp} Elle s’affiche en haut de votre boutique. ${description.length} / 2000`}
             </span>
           </label>
         </>
@@ -496,7 +529,8 @@ export function BrandingStep({ draftId, initial }: { draftId: string; initial: {
 
 type DraftProduct = { name: string; priceXaf: number; photos: { key: string; previewUrl: string; alt: string }[] } | null;
 
-export function ProductStep({ draftId, product }: { draftId: string; product: DraftProduct }) {
+export function ProductStep({ draftId, product, universe = "vente" }: { draftId: string; product: DraftProduct; universe?: ShopUniverse }) {
+  const words = wizardWording[universe];
   return (
     <WizardStepForm
       action={saveProductStep}
@@ -508,19 +542,19 @@ export function ProductStep({ draftId, product }: { draftId: string; product: Dr
         </button>
       }
       step={7}
-      subtitle="C’est facultatif, mais une boutique avec un produit donne tout de suite envie d’acheter ! Vous pourrez ajouter jusqu’à 5 photos par produit, et d’autres produits ensuite depuis votre tableau de bord."
-      title="Ajoutons votre premier produit"
+      subtitle={words.productSubtitle}
+      title={words.productTitle}
     >
       {(fieldError) => (
         <>
           <label className="v-field">
-            Nom du produit
-            <input defaultValue={product?.name ?? ""} maxLength={120} name="productName" placeholder="Ex. Robe wax Akwa" />
+            {words.productName}
+            <input defaultValue={product?.name ?? ""} maxLength={120} name="productName" placeholder={words.productPlaceholder} />
             {fieldError("productName") && <span className="v-field-error">{fieldError("productName")}</span>}
           </label>
           <label className="v-field">
-            Prix (en FCFA)
-            <input defaultValue={product ? String(product.priceXaf) : ""} inputMode="numeric" name="productPrice" placeholder="18000" />
+            {words.priceLabel}
+            <input defaultValue={product ? String(product.priceXaf) : ""} inputMode="numeric" name="productPrice" placeholder={words.pricePlaceholder} />
             <span className={fieldError("productPrice") ? "v-field-error" : "v-field-help"}>{fieldError("productPrice") ?? "Saisissez un nombre entier, sans espace ni virgule."}</span>
           </label>
           <PhotoManager
