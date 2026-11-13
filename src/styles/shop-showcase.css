@@ -4852,3 +4852,191 @@
     display: none;
   }
 }
+
+/* =============================================================================
+   Fiche produit (téléphone et ordinateur) : fil d'Ariane, photo principale, miniatures, icône WhatsApp
+   ============================================================================= */
+
+/* Icône WhatsApp : un SVG (plus de masque d'image), couleur seulement. */
+.shop svg.sx-wa,
+svg.sx-wa {
+  display: inline-block;
+  flex: none;
+  background: none;
+  -webkit-mask: none;
+  mask: none;
+}
+
+/* Le contenu ne s'élargit jamais au-delà de l'écran. */
+.shop .sx-wrap {
+  min-width: 0;
+}
+
+/* Photo principale : elle remplit tout son cadre. */
+.shop .sx-gallery-main {
+  padding: 0;
+}
+
+.shop .sx-gallery-main img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Miniatures centrées. */
+.shop .sx-thumbs ul {
+  display: flex;
+  justify-content: center;
+}
+
+.shop .sx-thumbs li {
+  width: min(5.5rem, calc((100% - 2.5rem) / 6));
+  flex: none;
+}
+
+@media (max-width: 767px) {
+  /* Fil d'Ariane : une seule ligne, chevrons alignés ; défile sur le côté s'il est trop long. */
+  .shop .sx-crumbs ol {
+    min-height: 3.25rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.375rem;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+
+  .shop .sx-crumbs ol::-webkit-scrollbar {
+    display: none;
+  }
+
+  .shop .sx-crumbs li {
+    flex: none;
+    align-items: center;
+    gap: 0.375rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .shop .sx-crumbs li + li::before {
+    display: inline-block;
+    line-height: 1;
+  }
+
+  .shop .sx-crumbs li:last-child {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .shop .sx-crumbs [aria-current="page"] {
+    display: block;
+    max-width: 11rem;
+  }
+
+  /* Miniatures : les flèches de chaque côté de la rangée, jamais sur les photos. */
+  .shop .sx-thumbs {
+    gap: 0.5rem;
+  }
+
+  .shop .sx-thumbs-prev,
+  .shop .sx-thumbs-next {
+    position: static;
+    flex: none;
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .shop .sx-thumbs ul {
+    flex: 1;
+    min-width: 0;
+    gap: 0.375rem;
+  }
+
+  .shop .sx-thumbs li {
+    width: min(4rem, calc((100% - 1.875rem) / 6));
+  }
+}
+
+/* Les blocs de la page (fil d'Ariane compris) ne peuvent jamais élargir la colonne au-delà de l'écran. */
+.shop .sx-stack > *,
+.shop .sx-crumbs {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.shop .sx-crumbs {
+  overflow: hidden;
+}
+
+/* Grande photo de la fiche : une rangée que l'on fait glisser (une photo à la fois). */
+.shop .sx-gallery-main {
+  position: relative;
+  display: block;
+  padding: 0;
+  cursor: default;
+}
+
+.sx-gallery-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+}
+
+.sx-gallery-track::-webkit-scrollbar {
+  display: none;
+}
+
+.sx-gallery-slide {
+  position: relative;
+  display: block;
+  flex: 0 0 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: #fff;
+  cursor: zoom-in;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.shop .sx-gallery-slide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+}
+
+.shop .sx-gallery-main .sx-gallery-zoom {
+  pointer-events: none;
+}
+
+.sx-gallery-count {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 999px;
+  color: #fff;
+  background: rgb(0 0 38 / 0.6);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* Assistant de la marketplace : une fois ouvert, au-dessus de l'en-tête et des menus (jamais caché dessous). */
+.shop .shop-assistant {
+  z-index: 1200;
+}
+
+@media (max-width: 767px) {
+  .shop .shop-assistant {
+    max-height: min(34rem, calc(100dvh - 7.5rem));
+  }
+}

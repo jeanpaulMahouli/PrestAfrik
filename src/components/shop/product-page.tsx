@@ -58,28 +58,57 @@ function Lightbox({ images, name, start, onClose }: { images: GalleryImage[]; na
   );
 }
 
-/** Galerie (maquette) : grande photo centrée dans son cadre, vignettes défilantes ; la photo s'agrandit dans une fenêtre. */
+/**
+ * Galerie (maquette) : grande photo qui remplit son cadre et que l'on fait glisser du doigt (téléphone) ou
+ * avec les flèches et les vignettes ; un toucher l'agrandit dans une fenêtre.
+ */
 export function ProductGallery({ images, name }: { images: GalleryImage[]; name: string }) {
   const [current, setCurrent] = useState(0);
   const [start, setStart] = useState(0);
   const [zoom, setZoom] = useState<number | null>(null);
+  const track = useRef<HTMLDivElement>(null);
   const visible = 6;
   if (!images.length) return <div className="sx-gallery-main sx-gallery-empty">{name.slice(0, 2).toUpperCase()}</div>;
-  const image = images[current];
+  // Vignette affichée : la fenêtre des vignettes suit la photo courante.
+  const select = (value: number) => {
+    setCurrent(value);
+    setStart((first) => (value < first ? value : value >= first + visible ? value - visible + 1 : first));
+  };
   const go = (next: number) => {
     const value = (next + images.length) % images.length;
-    setCurrent(value);
-    if (value < start) setStart(value);
-    if (value >= start + visible) setStart(value - visible + 1);
+    select(value);
+    const element = track.current;
+    if (element) element.scrollTo({ left: value * element.clientWidth, behavior: "smooth" });
   };
   return (
     <div className="sx-gallery">
-      <button aria-label="Agrandir la photo" className="sx-gallery-main" onClick={() => setZoom(current)} type="button">
-        <img alt={image.altText ?? `${name}, photo ${current + 1}`} fetchPriority="high" height={800} src={size(image.url, 800)} width={800} />
+      <div className="sx-gallery-main">
+        <div
+          aria-label={`Photos de ${name}`}
+          className="sx-gallery-track"
+          onScroll={(event) => {
+            const element = event.currentTarget;
+            const index = Math.round(element.scrollLeft / Math.max(1, element.clientWidth));
+            if (index !== current && index >= 0 && index < images.length) select(index);
+          }}
+          ref={track}
+          role="region"
+        >
+          {images.map((item, index) => (
+            <button aria-label={`Agrandir la photo ${index + 1}`} className="sx-gallery-slide" key={item.url} onClick={() => setZoom(index)} type="button">
+              <img alt={item.altText ?? `${name}, photo ${index + 1}`} decoding="async" fetchPriority={index === 0 ? "high" : "auto"} height={800} loading={index === 0 ? "eager" : "lazy"} src={size(item.url, 800)} width={800} />
+            </button>
+          ))}
+        </div>
         <span aria-hidden="true" className="sx-gallery-zoom">
           <MagnifyingGlassPlus size={22} />
         </span>
-      </button>
+        {images.length > 1 && (
+          <span aria-live="polite" className="sx-gallery-count">
+            {current + 1} / {images.length}
+          </span>
+        )}
+      </div>
       {images.length > 1 && (
         <div className="sx-thumbs">
           <button aria-label="Photo précédente" className="sx-round sx-round--solid sx-thumbs-prev" onClick={() => go(current - 1)} type="button">
@@ -90,7 +119,7 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
               const index = start + offset;
               return (
                 <li key={item.url}>
-                  <button aria-current={index === current} aria-label={`Afficher la photo ${index + 1}`} onClick={() => setCurrent(index)} type="button">
+                  <button aria-current={index === current} aria-label={`Afficher la photo ${index + 1}`} onClick={() => go(index)} type="button">
                     <img alt="" height={96} loading="lazy" src={size(item.url, 320)} width={96} />
                   </button>
                 </li>
