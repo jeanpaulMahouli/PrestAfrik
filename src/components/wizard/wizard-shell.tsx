@@ -33,6 +33,8 @@ export function useWizardPreview() {
 
 type WizardShellProps = {
   steps: readonly string[];
+  /** Numéro interne de chaque étape affichée (par défaut 1, 2, 3…). */
+  stepIds?: readonly number[];
   current: number;
   /** Étapes déjà validées (cliquables pour revenir). */
   reached: number;
@@ -48,7 +50,14 @@ type WizardShellProps = {
 };
 
 /** Mise en page de l'assistant de création (maquettes « Assistant · 1 à 8 »). */
-export function WizardShell({ steps, current, reached, draftId, exitHref = "/dashboard", previewPath, initialDraft, showThemeLabel, children }: WizardShellProps) {
+export function WizardShell({ steps, stepIds, current, reached, draftId, exitHref = "/dashboard", previewPath, initialDraft, showThemeLabel, children }: WizardShellProps) {
+  // Numéro interne de chaque étape affichée (certaines étapes ont été retirées sans renuméroter les brouillons).
+  const ids = stepIds ?? steps.map((_, index) => index + 1);
+  const position = (step: number) => {
+    const index = ids.findIndex((id) => id >= step);
+    return index === -1 ? steps.length + 1 : index + 1;
+  };
+  const shown = Math.min(position(current), steps.length);
   const [draft, setDraft] = useState(initialDraft);
   const update = (patch: Partial<PreviewDraft>) => setDraft((value) => ({ ...value, ...patch }));
   const liveValues = useMemo<LivePreviewValues>(
@@ -76,7 +85,7 @@ export function WizardShell({ steps, current, reached, draftId, exitHref = "/das
           </Link>
           {/* <div> et non <p> : un paragraphe ne peut pas contenir le formulaire « Abandonner ». */}
           <div className="wizard-header-info">
-            Étape {Math.min(current, steps.length)} sur {steps.length}
+            Étape {shown} sur {steps.length}
             {draftId && (
               <>
                 {" · "}
@@ -88,19 +97,19 @@ export function WizardShell({ steps, current, reached, draftId, exitHref = "/das
           </div>
         </header>
         <div aria-hidden="true" className="wizard-progress">
-          <span style={{ width: `${(Math.min(current, steps.length) / steps.length) * 100}%` }} />
+          <span style={{ width: `${(shown / steps.length) * 100}%` }} />
         </div>
 
         <div className="wizard-body">
           <nav aria-label="Étapes de création" className="wizard-steps">
-            <p className="wizard-steps-compact">Étape {Math.min(current, steps.length)} sur {steps.length} · {steps[Math.min(current, steps.length) - 1]}</p>
+            <p className="wizard-steps-compact">Étape {shown} sur {steps.length} · {steps[shown - 1]}</p>
             <ol>
               {steps.map((label, index) => {
-                const step = index + 1;
+                const step = ids[index];
                 const done = step < reached && step !== current;
                 const content = (
                   <>
-                    <span aria-hidden="true" className="wizard-step-dot">{done ? <CheckIcon size={11} /> : step}</span>
+                    <span aria-hidden="true" className="wizard-step-dot">{done ? <CheckIcon size={11} /> : index + 1}</span>
                     {label}
                     {done && <span className="visually-hidden"> (terminée)</span>}
                   </>

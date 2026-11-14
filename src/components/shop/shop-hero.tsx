@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { marketplaceAds } from "@/config/marketplace-ads";
 import type { DashboardAnnouncement } from "@/modules/announcements/queries";
 
@@ -52,40 +51,15 @@ export function SellerBanner({ href, variant, image = null }: { href: string; va
   );
 }
 
-/** Bannière dessinée d'un univers (sans visuel dans l'administration) : texte, deux boutons et une illustration. */
-export type UniverseHero = {
-  kicker: string;
-  title: string;
-  text: string;
-  cta: { label: string; href: string };
-  seller: { label: string; href: string };
-  icon: ReactNode;
-};
-
 /**
- * Immobilier, Services et Restauration : une seule bannière par page, dans le cadre du grand visuel du
- * Shopping (mêmes coins, même hauteur). L'image vient de Administration → Annonces ; à défaut, une bannière
- * dessinée aux couleurs de PrestAfrik, comme les visuels du Shopping.
+ * Bannière des autres univers (Immobilier, Services, Restauration) : uniquement l'image de l'administration,
+ * affichée en entier sur toute la largeur. Sans image, aucune bannière.
  */
-export function ShopSingleBanner({ banner, hero }: { banner: DashboardAnnouncement | null; hero: UniverseHero }) {
+export function ShopSingleBanner({ banner }: { banner: DashboardAnnouncement | null }) {
+  if (!banner) return null;
   return (
     <section aria-label="À la une" className="shop-single-banner sx-single-hero">
-      {banner ? (
-        <Banner className="shop-slide" priority slide={{ kind: "image", item: banner }} />
-      ) : (
-        <div className="sx-single-drawn">
-          <div className="sx-single-copy">
-            <p className="sx-single-kicker">{hero.kicker}</p>
-            <p className="sx-single-title">{hero.title}</p>
-            <p className="sx-single-text">{hero.text}</p>
-            <div className="sx-single-actions">
-              <a className="sx-btn sx-btn-primary" href={hero.cta.href}>{hero.cta.label}</a>
-              <a className="sx-single-seller" href={hero.seller.href}>{hero.seller.label}</a>
-            </div>
-          </div>
-          <span aria-hidden="true" className="sx-single-art">{hero.icon}</span>
-        </div>
-      )}
+      <Banner className="shop-slide" priority slide={{ kind: "image", item: banner }} />
     </section>
   );
 }

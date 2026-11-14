@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Sparkles } from "@/components/ui/icons";
+import { MagicWand, Sparkles } from "@/components/ui/icons";
 import { startTransition, useActionState, useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { PhotoManager, type ExistingPhoto, type PhotoSummary } from "@/components/catalog/photo-manager";
 import { AiRequestError, ProductNotices, requestAiSuggestion, type AiCreditsInfo, type AiSuggestion } from "@/components/catalog/product-assistant";
@@ -84,6 +84,8 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
   const [state, action, pending] = useActionState<ActionResult, FormData>(saveProduct, null);
   const [dirty, setDirty] = useState(false);
   const [creatingCategory, setCreatingCategory] = useState(false);
+  // Nouvelle catégorie proposée par l'IA (pré-remplie dans le champ « nouvelle catégorie »).
+  const [newCategoryValue, setNewCategoryValue] = useState("");
   const [trackInventory, setTrackInventory] = useState(values.trackInventory);
   // Modification : saisie gardée si la page est actualisée avant l'enregistrement. Nouveau produit : le
   // formulaire s'ouvre toujours vide (rien n'est repris d'une saisie précédente).
@@ -100,6 +102,8 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
   const [snapshot, setSnapshot] = useState<ProductSnapshot>(() => initialSnapshot(values));
   // Nom et description remplis par l'IA : petit message sous le bouton, à relire avant d'enregistrer.
   const [aiFilled, setAiFilled] = useState(false);
+  // Champs remplis par l'IA (baguette magique orange au bout du champ, retirée dès que le vendeur y touche).
+  const [aiMarks, setAiMarks] = useState({ name: false, description: false });
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
 
@@ -186,7 +190,7 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
       const result = await requestAiSuggestion({ photos: photoSummary.previewUrls, name: nameRef.current?.value ?? "" });
       if (result.credits) setCredits(result.credits);
       // Le nom et la description vont directement dans leurs champs (le vendeur peut les modifier).
-      applySuggestion({ name: result.name, description: result.description });
+      applySuggestion({ name: result.name, description: result.description, category: result.category });
     } catch (error) {
       if (error instanceof AiRequestError && error.credits) setCredits(error.credits);
       setAiError(error instanceof Error ? error.message : "L’assistant IA n’a pas pu répondre. Réessayez.");
@@ -199,6 +203,22 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
     if (nameRef.current) nameRef.current.value = applied.name;
     setDescriptionValue(applied.description);
     setDescriptionKey((key) => key + 1);
+    setAiMarks({ name: Boolean(applied.name), description: Boolean(applied.description) });
+    // Catégorie : celle de la liste choisie par l'IA, sinon une nouvelle catégorie pré-remplie.
+    if (applied.category) {
+      const existing = categories.find((category) => category.name === applied.category);
+      if (existing) {
+        setCreatingCategory(false);
+        setNewCategoryValue("");
+        requestAnimationFrame(() => {
+          if (categoryRef.current) categoryRef.current.value = existing.id;
+          refreshSnapshot();
+        });
+      } else {
+        setNewCategoryValue(applied.category);
+        setCreatingCategory(true);
+      }
+    }
     setAiFilled(true);
     setDirty(true);
     // Amène le vendeur sur les champs remplis, sans saut brusque.
@@ -287,7 +307,10 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
               {aiEnabled && (
                 <div className="ai-fill">
                   <button className={`btn-ai${aiLoading ? " is-loading" : ""}`} disabled={!canAskAi || aiLoading} onClick={askAi} type="button">
-                    <span>{aiLoading ? "L’IA analyse vos photos…" : "Remplir le nom et la description avec l’IA"}</span>
+                    <span>
+                      {aiLoading ? "L’IA analyse vos photos…" : "Remplir le nom et la description avec l’IA"}
+                      {!aiLoading && credits && ` (${credits.total}/${credits.allowance + credits.bonus})`}
+                    </span>
                     <Sparkles aria-hidden="true" className="btn-ai-sparkles" size={20} weight="fill" />
                   </button>
                   {credits && <AiCreditsLine credits={credits} />}
@@ -318,14 +341,41 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
                 {words.nameLabel}
                 <span aria-hidden="true" className="field-counter">{snapshot.name.length}/120</span>
               </span>
-              <input defaultValue={values.name} id="product-name" maxLength={120} name="name" placeholder={words.namePlaceholder} ref={nameRef} required {...invalid("name")} />
+              <span className={`field-with-adornment${aiMarks.name ? " has-adornment" : ""}`}>
+                <input
+                  defaultValue={values.name}
+                  id="product-name"
+                  maxLength={120}
+                  name="name"
+                  onInput={() => aiMarks.name && setAiMarks((marks) => ({ ...marks, name: false }))}
+                  placeholder={words.namePlaceholder}
+                  ref={nameRef}
+                  required
+                  {...invalid("name")}
+                />
+                {aiMarks.name && (
+                  <span className="field-adornment" title="Écrit par l’IA">
+                    <MagicWand aria-hidden="true" size={20} weight="fill" />
+                    <span className="visually-hidden">Nom proposé par l’IA</span>
+                  </span>
+                )}
+              </span>
               <span className="v-field-help">{words.nameHelp}</span>
               <FieldError id="name-error" message={errors.name} />
             </label>
             <RichTextEditor
               defaultValue={descriptionValue}
               key={descriptionKey}
+              adornment={
+                aiMarks.description ? (
+                  <span title="Écrit par l’IA">
+                    <MagicWand aria-hidden="true" size={20} weight="fill" />
+                    <span className="visually-hidden">Description proposée par l’IA</span>
+                  </span>
+                ) : null
+              }
               describedBy={errors.description ? "description-error" : undefined}
+              onUserEdit={() => aiMarks.description && setAiMarks((marks) => ({ ...marks, description: false }))}
               help="Gras, italique, sous-titres et listes. Texte simple, sans HTML."
               invalid={Boolean(errors.description)}
               label={words.descriptionLabel}
@@ -337,8 +387,8 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
               Catégorie
               {creatingCategory ? (
                 <span className="inline-create">
-                  <input autoFocus id="product-category" maxLength={80} name="newCategory" placeholder="Nom de la nouvelle catégorie" {...invalid("newCategory")} />
-                  <button className="btn btn-secondary" onClick={() => setCreatingCategory(false)} type="button">Choisir dans la liste</button>
+                  <input autoFocus={!newCategoryValue} defaultValue={newCategoryValue} id="product-category" key={newCategoryValue} maxLength={80} name="newCategory" placeholder="Nom de la nouvelle catégorie" {...invalid("newCategory")} />
+                  <button className="btn btn-secondary" onClick={() => { setCreatingCategory(false); setNewCategoryValue(""); }} type="button">Choisir dans la liste</button>
                 </span>
               ) : (
                 <select

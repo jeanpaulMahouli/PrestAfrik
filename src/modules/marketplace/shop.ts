@@ -2,11 +2,12 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { fuzzyRank } from "@/lib/fuzzy-search";
 import { photoVariant } from "@/lib/product-photos";
 import { shopUrl, storePublicUrl } from "@/lib/urls";
 import { categoryRank, cityKey } from "@/config/marketplace";
 import { scopeKey, type ShopScope } from "./country";
-import { clearSearchIndex, getTopStores, loadIndex, normalizeForSearch, type SearchableStore } from "./search";
+import { clearSearchIndex, getTopStores, loadIndex, type SearchableStore } from "./search";
 
 // Marketplace PrestAfrik (shop.prestafrik.com) : les boutiques publiées et leurs produits, rangés par
 // rubriques. Ventes flash, offres exclusives et boutiques à la une sont choisies par l'administration
@@ -301,12 +302,16 @@ export async function exploreShop(query: ShopQuery, scope: Pick<ShopScope, "univ
   const terms = (query.q ?? "").trim();
   const inCategory = all.filter((store) => !query.category || store.activitySlug === query.category);
   const stores = new Map(inCategory.map((store) => [store.id, store]));
-  const words = normalizeForSearch(terms).split(/\s+/).filter(Boolean);
-  // Boutiques dont le nom, l'activité ou la ville contient chaque mot recherché.
-  const matchingStores = words.length
-    ? inCategory.filter((store) => words.every((word) => `${store.haystack.name} ${store.haystack.activity} ${store.haystack.city}`.includes(word)))
+  // Boutiques dont le nom, l'activité ou la ville correspondent (recherche tolérante : fautes, pluriels…).
+  const matchingStores = terms
+    ? fuzzyRank(inCategory, terms, (store) => [
+        { text: store.haystack.name, weight: 1 },
+        { text: store.haystack.activity, weight: 0.8 },
+        { text: store.haystack.city, weight: 0.8 },
+      ])
     : inCategory;
 
+  let relevance: Map<string, number> | null = null;
   const price: Prisma.ProductWhereInput[] = [];
   if (query.max) price.push({ OR: [{ promotionalPriceXaf: { lte: query.max } }, { promotionalPriceXaf: null, priceXaf: { lte: query.max } }] });
   if (query.min) price.push({ OR: [{ promotionalPriceXaf: { gte: query.min } }, { promotionalPriceXaf: null, priceXaf: { gte: query.min } }] });
@@ -315,24 +320,50 @@ export async function exploreShop(query: ShopQuery, scope: Pick<ShopScope, "univ
     AND: [
       ...price,
       ...(query.promo ? [{ promotionalPriceXaf: { not: null } }] : []),
-      ...(terms ? [{ OR: [{ name: { contains: terms, mode: "insensitive" as const } }, { storeId: { in: matchingStores.map((store) => store.id) } }] }] : []),
     ],
   };
+  // Recherche de produits tolérante : les produits candidats (sans le texte) sont classés par pertinence
+  // (nom, catégorie, description, boutique), puis seuls les 200 meilleurs sont lus en entier.
+  if (terms) {
+    const candidates = await prisma.product.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: 3000,
+      select: { id: true, name: true, description: true, storeId: true, category: { select: { name: true } } },
+    });
+    const ranked = fuzzyRank(candidates, terms, (product) => {
+      const store = stores.get(product.storeId);
+      return [
+        { text: product.name, weight: 1 },
+        { text: product.category?.name, weight: 0.85 },
+        { text: product.description?.slice(0, 600), weight: 0.55 },
+        { text: store?.haystack.name, weight: 0.5 },
+        { text: store?.haystack.activity, weight: 0.45 },
+      ];
+    }).slice(0, 200);
+    (where.AND as Prisma.ProductWhereInput[]).push({ id: { in: ranked.map((product) => product.id) } });
+    relevance = new Map(ranked.map((product, index) => [product.id, index]));
+  }
 
   let products: ShopProduct[];
   if (query.sort === "mieux-notes") products = await topRated(stores, 48, where);
   else {
     const orderBy: Prisma.ProductOrderByWithRelationInput =
       query.sort === "prix-croissant" ? { priceXaf: "asc" } : query.sort === "prix-decroissant" ? { priceXaf: "desc" } : { createdAt: "desc" };
-    const rows = await prisma.product.findMany({ where, orderBy, take: query.sort === "promo" ? 200 : 48, select: productSelect });
+    const rows = await prisma.product.findMany({ where, orderBy, take: query.sort === "promo" || relevance ? 200 : 48, select: productSelect });
     products = await toShopProducts(rows, stores);
     // Pertinence : boutiques mises en avant et catégories prioritaires d'abord (le tri reste stable).
-    if (query.sort === "pertinence" || !query.sort) products.sort(byPriority);
+    if (query.sort === "pertinence" || !query.sort) {
+      // Avec une recherche : les plus proches de ce qui a été tapé d'abord.
+      const rank = relevance;
+      products.sort(rank ? (a, b) => (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999) : byPriority);
+    }
     if (query.promo) products = products.filter((product) => product.discount);
     if (query.sort === "promo") products = products.sort((a, b) => (b.discount ?? 0) - (a.discount ?? 0)).slice(0, 48);
     // Le tri par prix porte sur le prix payé (promotion comprise).
     if (query.sort === "prix-croissant") products.sort((a, b) => a.priceXaf - b.priceXaf);
     if (query.sort === "prix-decroissant") products.sort((a, b) => b.priceXaf - a.priceXaf);
+    products = products.slice(0, 48);
   }
   return { products, stores: await decorateStores(terms || query.category ? matchingStores.slice(0, 20) : []), category };
 }

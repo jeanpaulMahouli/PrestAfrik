@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StoreSearchInput } from "@/components/storefront/store-search-input";
 import type { StorePromoStyle } from "@prisma/client";
 import type { ReactNode } from "react";
 import { StoreChatWidget, type ChatWidgetConfig } from "@/components/storefront/store-chat-widget";
@@ -83,7 +84,7 @@ export function StorefrontShell({ children, base, store, pages, chat, popup = nu
           <form action={home} className="sf-header-searchbar" role="search">
             <label className="visually-hidden" htmlFor="sf-header-q">Rechercher un produit</label>
             <Search aria-hidden="true" size={20} />
-            <input id="sf-header-q" maxLength={100} name="q" placeholder="Rechercher un produit" type="search" />
+            <StoreSearchInput id="sf-header-q" storeSlug={store.slug} />
           </form>
           {pages.length > 0 && <StoreDesktopNav pages={pages} storeSlug={store.slug} />}
           <div className="sf-header-actions">

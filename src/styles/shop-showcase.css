@@ -1452,7 +1452,7 @@
 }
 
 .sx-club p {
-  max-width: 34rem;
+  max-width: none; /* phrases sur une seule ligne quand la place le permet */
   margin: 0;
   color: rgb(255 255 255 / 0.72);
   line-height: 1.5;
@@ -3623,7 +3623,7 @@
 }
 
 .sx-done p {
-  max-width: 34rem;
+  max-width: none; /* phrases sur une seule ligne quand la place le permet */
   margin: 0;
   color: var(--sx-ink-3);
   line-height: 1.5;
@@ -4593,7 +4593,7 @@
 }
 
 .sx-empty-universe-text {
-  max-width: 44rem;
+  max-width: none; /* phrases sur une seule ligne quand la place le permet */
   margin: 0;
   color: var(--sx-ink-3);
   font-size: 0.95rem;
@@ -4776,7 +4776,7 @@
   display: grid;
   justify-items: start;
   gap: 0.875rem;
-  max-width: 36rem;
+  max-width: none; /* phrases sur une seule ligne quand la place le permet */
 }
 
 .sx-single-kicker {
@@ -5048,4 +5048,18 @@ svg.sx-wa {
 
 .shop .sx-footer-contacts {
   margin-top: 0;
+}
+
+/* Bannière des autres univers : l'image en entier (100 %), à sa propre proportion, sans fond ni cadre fixe. */
+.shop .sx-single-hero,
+.shop .sx-single-hero .shop-slide {
+  aspect-ratio: auto !important;
+  background: none;
+}
+
+.shop .sx-single-hero .shop-slide img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }

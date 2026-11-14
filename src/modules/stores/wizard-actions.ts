@@ -2,9 +2,10 @@
 
 import { Prisma, StoreTheme } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { z } from "zod";
 import { colorReadability } from "@/lib/contrast";
-import { parsePhone } from "@/lib/phone";
+import { parsePhone, splitE164 } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
 import { storeAddressLabel } from "@/lib/urls";
 import { PhotoError, attachedPhotoUrl, checkTemporaryPhotos, moveTemporaryPhotos, tmpKeyPattern } from "@/lib/product-photos";
@@ -19,7 +20,7 @@ import { brandNameMessage, brandSlug, brandSlugMessage, usesBrandName, usesBrand
 import { publishStoreIfReady } from "@/modules/stores/publication";
 import { checkSlug, slugMessages, slugify } from "@/modules/stores/slug";
 import { isSlugTaken } from "@/modules/stores/slug-availability";
-import { findOwnedStore, requireVerifiedWizardSession, wizardStepHref } from "@/modules/stores/wizard";
+import { findOwnedStore, nextWizardStep, requireVerifiedWizardSession, wizardStepHref } from "@/modules/stores/wizard";
 import { addCalendarMonths } from "@/modules/subscriptions/dates";
 import { freeMonths } from "@/config/pricing";
 import { isAccountVerified } from "@/modules/auth/phone-account";
@@ -46,8 +47,20 @@ async function currentDraft(formData: FormData) {
 
 /** Enregistre les réponses d'une étape, puis passe à la suivante. */
 async function saveAndContinue(draft: StoreDraftRecord, patch: DraftData, completedStep: number): Promise<never> {
-  await updateDraft(draft, patch, completedStep + 1);
-  redirect(wizardStepHref(draft.id, completedStep + 1));
+  const next = nextWizardStep(completedStep);
+  await updateDraft(draft, patch, next);
+  redirect(wizardStepHref(draft.id, next));
+}
+
+/**
+ * Numéro de la boutique : celui du compte (WhatsApp vérifié à l'inscription), il n'est plus demandé.
+ * Il reste modifiable ensuite dans « Ma boutique ».
+ */
+function accountPhone(user: { phoneNumber?: string | null }): DraftData["phone"] | null {
+  if (!user.phoneNumber) return null;
+  const { country, national } = splitE164(user.phoneNumber);
+  const phone = parsePhone(country, national);
+  return phone.ok ? { country: phone.country, national: phone.national, e164: phone.e164 } : null;
 }
 
 const missingDraft = (): never => redirect("/boutiques/nouvelle");
@@ -103,17 +116,21 @@ export async function saveActivityStep(_previous: WizardState, formData: FormDat
 
 const locationSchema = z.object({
   country: z.string().regex(/^[A-Z]{2}$/, "Choisissez le pays de votre boutique."),
-  region: z.string().min(2, "Choisissez la région de votre boutique, ou saisissez-la.").max(80),
+  region: z.string().min(2, "Choisissez votre ville dans la liste.").max(80),
   city: z.string().min(2, "Choisissez la ville de votre boutique, ou saisissez-la.").max(80),
   neighborhood: z.string().max(80),
 });
 
 export async function saveLocationStep(_previous: WizardState, formData: FormData): Promise<WizardState> {
-  const { draft } = await currentDraft(formData);
+  const { session, draft } = await currentDraft(formData);
   if (!draft) return missingDraft();
-  const parsed = locationSchema.safeParse({ country: text(formData, "country"), region: text(formData, "region"), city: text(formData, "city"), neighborhood: text(formData, "neighborhood") });
+  const country = text(formData, "country");
+  const city = text(formData, "city");
+  // La région n'est plus demandée : elle est retrouvée à partir de la ville choisie.
+  const regionOfCity = hasGeoData(country) ? getRegions(country).find((item) => getCities(country, item.code).includes(city))?.name : undefined;
+  const parsed = locationSchema.safeParse({ country, region: text(formData, "region") || regionOfCity || "", city, neighborhood: text(formData, "neighborhood") });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Vérifiez la localisation.", String(parsed.error.issues[0]?.path[0] ?? ""));
-  const { country, neighborhood, city } = parsed.data;
+  const { neighborhood } = parsed.data;
   let { region } = parsed.data;
   // Pays, région et ville viennent toujours des listes : aucune saisie libre n'est acceptée.
   if (!hasGeoData(country)) return fail("Choisissez un pays dans la liste.", "country");
@@ -121,7 +138,8 @@ export async function saveLocationStep(_previous: WizardState, formData: FormDat
   if (!known) return fail("Choisissez une région dans la liste.", "region");
   region = known.name;
   if (!getCities(country, known.code).includes(city)) return fail("Choisissez votre ville dans la liste de la région.", "city");
-  return saveAndContinue(draft, { country, region, city, neighborhood: neighborhood || null }, 3);
+  const phone = draft.data.phone ?? accountPhone(session.user);
+  return saveAndContinue(draft, { country, region, city, neighborhood: neighborhood || null, ...(phone ? { phone, whatsapp: draft.data.whatsapp ?? phone } : {}) }, 3);
 }
 
 /* ---------- 4. Coordonnées ---------- */
@@ -196,8 +214,10 @@ export async function saveProductStep(_previous: WizardState, formData: FormData
   if (!draft) return missingDraft();
   const name = text(formData, "productName");
   const price = text(formData, "productPrice").replace(/[\s  ]/g, "");
+  const productDescription = text(formData, "productDescription").replace(/\r\n/g, "\n").slice(0, 2000);
   if (formData.get("skip") === "1" || (!name && !price)) return saveAndContinue(draft, { product: null, productStepDone: true }, 7);
   if (name.length < 2 || name.length > 120) return fail("Donnez un nom à votre produit (2 à 120 caractères), ou touchez « Passer cette étape ».", "productName");
+  if (/<[a-z/!]/i.test(productDescription)) return fail("La description est un texte simple, sans balises HTML.", "productDescription");
   if (!/^\d{1,9}$/.test(price)) return fail("Indiquez le prix en FCFA, en chiffres uniquement (ex. 18000), sans espace ni virgule.", "productPrice");
   const photos = parseJsonField(formData.get("photos"), photosSchema, []);
   if (!photos.success) return fail(photos.error.issues[0]?.message ?? "Vérifiez les photos.", "photos");
@@ -212,7 +232,7 @@ export async function saveProductStep(_previous: WizardState, formData: FormData
     if (error instanceof PhotoError) return fail(error.message, "photos");
     throw error;
   }
-  return saveAndContinue(draft, { product: { name, priceXaf: Number(price), photos: keys }, productStepDone: true }, 7);
+  return saveAndContinue(draft, { product: { name, priceXaf: Number(price), description: productDescription || null, photos: keys }, productStepDone: true }, 7);
 }
 
 /* ---------- 8. Livraison et retrait (facultatif) ---------- */
@@ -275,7 +295,9 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
     if (created) redirect(launchHref);
     return missingDraft();
   }
-  const data = draft.data;
+  // Brouillons commencés avant la suppression de l'étape « Coordonnées » : numéro du compte.
+  const fallbackPhone = draft.data.phone ? null : accountPhone(session.user);
+  const data: DraftData = fallbackPhone ? { ...draft.data, phone: fallbackPhone, whatsapp: draft.data.whatsapp ?? fallbackPhone } : draft.data;
   const missing = draftMissing(data);
   if (missing.length) return fail(`Il manque encore ${missing.map((item) => item.label).join(", ")}. Touchez « Modifier » sur la ligne concernée pour compléter.`);
   const sameName = await findOwnedStoreWithSameName(session.user.id, data.name!);
@@ -347,7 +369,7 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
       if (data.product) {
         const prefix = data.name!.normalize("NFKD").replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase() || "PRD";
         const product = await transaction.product.create({
-          data: { storeId, name: data.product.name, slug: slugify(data.product.name) || "produit", sku: `${prefix}-001`, priceXaf: data.product.priceXaf, status: "ACTIVE" },
+          data: { storeId, name: data.product.name, slug: slugify(data.product.name) || "produit", sku: `${prefix}-001`, priceXaf: data.product.priceXaf, description: data.product.description ?? null, status: "ACTIVE" },
           select: { id: true },
         });
         productId = product.id;
@@ -377,10 +399,20 @@ export async function finishWizard(_previous: WizardState, formData: FormData): 
     }
     throw error;
   }
-  // Photos déplacées après la transaction (stockage distant : quelques secondes).
+  // Photos déplacées après la réponse (stockage distant : plusieurs appels, quelques secondes) : la dernière
+  // étape répond tout de suite au vendeur au lieu de garder une requête longue et lourde ouverte, qui pouvait
+  // faire tomber le serveur (Cloudflare affichait alors « SSL handshake failed » le temps qu'il redémarre).
   if (productId && photoKeys.length) {
-    const failed = await moveTemporaryPhotos(storeId, `products/${productId}`, photoKeys);
-    if (failed.length) await prisma.productImage.deleteMany({ where: { productId, url: { in: failed } } });
+    const folder = `products/${productId}`;
+    const createdProductId = productId;
+    after(async () => {
+      try {
+        const failed = await moveTemporaryPhotos(storeId, folder, photoKeys);
+        if (failed.length) await prisma.productImage.deleteMany({ where: { productId: createdProductId, url: { in: failed } } });
+      } catch (error) {
+        console.error("[assistant] Photos du premier produit non rattachées", error);
+      }
+    });
   }
   await rememberActiveStore(session.user.id, session.session.id, storeId);
   invalidateStorefrontCache(storeId, data.slug!);

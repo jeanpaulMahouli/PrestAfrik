@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { RichText } from "@/components/ui/rich-text";
 
 type RichTextEditorProps = {
@@ -12,6 +12,10 @@ type RichTextEditorProps = {
   help?: string;
   invalid?: boolean;
   describedBy?: string;
+  /** Petit repère affiché à l'extrémité du champ (ex. baguette magique : texte écrit par l'IA). */
+  adornment?: ReactNode;
+  /** Appelé quand le vendeur modifie lui-même le texte. */
+  onUserEdit?: () => void;
 };
 
 const icons = {
@@ -23,7 +27,7 @@ const icons = {
 };
 
 /** Mini éditeur de texte : gras, italique, sous-titre, listes, avec aperçu (aucun HTML stocké). */
-export function RichTextEditor({ name, defaultValue = "", maxLength = 2000, placeholder, label, help, invalid, describedBy }: RichTextEditorProps) {
+export function RichTextEditor({ name, defaultValue = "", maxLength = 2000, placeholder, label, help, invalid, describedBy, adornment, onUserEdit }: RichTextEditorProps) {
   const id = useId();
   const ref = useRef<HTMLTextAreaElement>(null);
   const [value, setValue] = useState(defaultValue);
@@ -131,13 +135,17 @@ export function RichTextEditor({ name, defaultValue = "", maxLength = 2000, plac
           id={id}
           maxLength={maxLength}
           name={name}
-          onChange={(event) => setValue(event.target.value)}
+          onChange={(event) => {
+            setValue(event.target.value);
+            onUserEdit?.();
+          }}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
           ref={ref}
           rows={6}
           value={value}
         />
+        {adornment && !preview && <span className="field-adornment field-adornment--area">{adornment}</span>}
         {preview && (value.trim() ? <RichText className="rich-text rich-editor-preview" source={value} /> : <p className="rich-editor-preview v-muted">Rien à afficher pour le moment.</p>)}
       </div>
       <span className="v-field-help">

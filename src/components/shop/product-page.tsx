@@ -136,7 +136,7 @@ export function ProductGallery({ images, name }: { images: GalleryImage[]; name:
   );
 }
 
-/** Cœur « J'aime » : un par visiteur ; le compteur monte à chaque nouveau j'aime. */
+/** Cœur « J'aime » : un par visiteur ; un second clic l'annule. */
 export function LikeButton({ productId, initial }: { productId: string; initial: { count: number; liked: boolean } }) {
   const [state, setState] = useState(initial);
   const [pending, setPending] = useState(false);
@@ -149,18 +149,27 @@ export function LikeButton({ productId, initial }: { productId: string; initial:
         className="sx-like"
         disabled={pending}
         onClick={async () => {
+          // Un clic met le j'aime, un autre l'annule (autant de fois que voulu).
+          const before = state;
           setPending(true);
           // Affichage immédiat, corrigé par la réponse du serveur.
-          setState((value) => ({ liked: !value.liked, count: Math.max(0, value.count + (value.liked ? -1 : 1)) }));
-          const result = await toggleProductLike(productId);
-          if ("error" in result) {
-            setState(initial);
-            setMessage(result.error);
-          } else {
-            setState(result);
-            setMessage("");
+          setState({ liked: !before.liked, count: Math.max(0, before.count + (before.liked ? -1 : 1)) });
+          try {
+            const result = await toggleProductLike(productId);
+            if ("error" in result) {
+              setState(before);
+              setMessage(result.error);
+            } else {
+              setState(result);
+              setMessage("");
+            }
+          } catch {
+            // Réseau coupé ou serveur indisponible : le bouton redevient utilisable, dans son état d'avant.
+            setState(before);
+            setMessage("Connexion interrompue : réessayez.");
+          } finally {
+            setPending(false);
           }
-          setPending(false);
         }}
         type="button"
       >

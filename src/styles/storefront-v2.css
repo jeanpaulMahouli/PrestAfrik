@@ -2688,14 +2688,192 @@
   font-weight: 600;
 }
 
-/* Bannière sur téléphone : l'ancien modèle, arrondie (même arrondi que les cartes produits) et décollée
-   de l'en-tête et des bords. Sur ordinateur, elle reste en pleine largeur. */
-@media (max-width: 767px) {
+/* Bannière : l'ancien modèle, arrondie (même arrondi que les cartes produits) et décollée de l'en-tête
+   et des bords, sur téléphone comme sur ordinateur (alignée sur la largeur du contenu). */
+.sf-v2 .sf-banner,
+.sf-v2 .sf-home > .sf-banner {
+  width: min(100% - 2 * var(--sf-gutter), var(--sf-wide));
+  margin: 1rem auto 0;
+  overflow: hidden;
+  border-radius: var(--sf-radius);
+}
+
+@media (min-width: 768px) {
   .sf-v2 .sf-banner,
   .sf-v2 .sf-home > .sf-banner {
-    width: calc(100% - 2 * var(--sf-gutter));
-    margin: 1rem auto 0;
-    overflow: hidden;
-    border-radius: var(--sf-radius);
+    margin-top: 1.5rem;
+  }
+}
+
+/* ======================================================================
+   Promotions (14/11) : icônes sans fond ni cercle, « Promos en or » en gras, titre et « Jusqu'à… »
+   sur la même ligne sur ordinateur, flèches centrées sur les cartes et visibles seulement si la rangée
+   déborde.
+   ====================================================================== */
+.sf-v2 .sf-promo-icon,
+.sf-v2 .sf-product-deal .sf-promo-icon {
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+.sf-v2.sf-promo-vente-flash .sf-promo-head .sf-promo-icon {
+  color: inherit;
+}
+
+.sf-v2.sf-promo-offres-du-jour .sf-promo-icon {
+  color: var(--sf-deal-red);
+}
+
+.sf-v2.sf-promo-offres-du-jour .sf-product-deal .sf-promo-icon {
+  color: #15803d;
+}
+
+.sf-v2.sf-promo-vente-flash .sf-product-deal .sf-promo-icon {
+  color: var(--sf-deal-red);
+}
+
+.sf-v2.sf-promo-eclat .sf-promo-icon {
+  color: #f5d27a;
+  filter: drop-shadow(0 0 6px rgb(245 210 122 / 0.55));
+}
+
+.sf-v2.sf-promo-eclat :is(.sf-promo-head h1, .sf-promo-head h2, .sf-promo-label),
+.sf-v2.sf-promo-eclat .sf-product-deal-text strong {
+  font-weight: 800 !important;
+}
+
+@media (min-width: 1024px) {
+  .sf-v2 .sf-promo-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.875rem;
+  }
+}
+
+/* Flèches : au milieu de la hauteur des cartes ; cachées quand tout tient à l'écran, et la flèche
+   « précédent » (ou « suivant ») cachée en début (ou en fin) de rangée. */
+.sf-v2 .sf-rail-arrow,
+.sf .sf-rail-arrow {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.sf .sf-rail:not(.has-overflow) .sf-rail-arrow,
+.sf .sf-rail.at-start .sf-rail-prev,
+.sf .sf-rail.at-end .sf-rail-next {
+  display: none !important;
+}
+
+.sf-v2 .sf-promo-icon svg {
+  animation: none !important;
+}
+
+/* ---------- Suggestions de la recherche (pendant la saisie) ---------- */
+.sf .sf-suggest {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.sf .sf-suggest > input {
+  width: 100%;
+}
+
+.sf .sf-suggest-panel {
+  position: absolute;
+  top: calc(100% + 0.375rem);
+  right: 0;
+  left: 0;
+  z-index: 60;
+  min-width: 17rem;
+  overflow: hidden;
+  border: 1px solid var(--sf-line, #e5e5e5);
+  border-radius: 0.75rem;
+  background: #fff;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.14);
+  animation: sf-suggest-in 0.16s ease-out;
+}
+
+.sf .sf-suggest-panel[hidden] {
+  display: none;
+}
+
+.sf .sf-suggest-panel ul {
+  margin: 0;
+  padding: 0.375rem;
+  list-style: none;
+}
+
+.sf .sf-suggest-panel a {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: #000;
+  text-decoration: none;
+}
+
+.sf .sf-suggest-panel li[aria-selected="true"] a,
+.sf .sf-suggest-panel a:hover {
+  background: #f5f5f5;
+}
+
+.sf .sf-suggest-thumb {
+  width: 2.75rem;
+  height: 2.75rem;
+  overflow: hidden;
+  border-radius: 0.375rem;
+  background: #f0f0f0;
+}
+
+.sf .sf-suggest-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sf .sf-suggest-name {
+  overflow: hidden;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf .sf-suggest-panel strong {
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.sf .sf-suggest-empty {
+  margin: 0;
+  padding: 0.875rem 1rem;
+  color: var(--sf-muted, #666);
+  font-size: 0.875rem;
+}
+
+.sf .sf-suggest-all {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-top: 1px solid var(--sf-line, #e5e5e5);
+  background: #fafafa;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@keyframes sf-suggest-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 }

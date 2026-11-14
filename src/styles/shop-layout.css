@@ -490,7 +490,7 @@
   display: grid;
   align-content: center;
   gap: 0.55rem;
-  max-width: 34rem;
+  max-width: none; /* phrases sur une seule ligne quand la place le permet */
   /* À droite, la place du téléphone (posé par-dessus, hors du calcul de la hauteur). */
   margin-right: clamp(9rem, 26%, 16rem);
   padding: clamp(1.25rem, 3vw, 2.5rem);
@@ -514,7 +514,7 @@
 }
 
 .shop-seller-sub {
-  max-width: 28rem;
+  max-width: none; /* phrases sur une seule ligne quand la place le permet */
   color: rgb(255 255 255 / 0.82);
   font-size: clamp(0.85rem, 1.05vw, 0.98rem);
   line-height: 1.45;

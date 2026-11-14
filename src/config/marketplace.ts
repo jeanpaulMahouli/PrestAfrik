@@ -2,8 +2,8 @@
 // Fichier sans dépendance serveur : utilisé par les pages et par les composants du navigateur.
 
 export const shopUniverses = {
-  vente: { label: "Shopping", short: "Shopping", text: "Mode, beauté, maison, téléphones…" },
-  immobilier: { label: "Immobilier", short: "Immobilier", text: "Locations et réservations : logements, meublés, bureaux, salles" },
+  vente: { label: "Boutique", short: "Boutique", text: "Mode, beauté, maison, téléphones…" },
+  immobilier: { label: "Immobilier", short: "Immobilier", text: "Logements, meublés, bureaux, salles, véhicules" },
   services: { label: "Services", short: "Services", text: "Coiffure, réparation, événementiel, transport…" },
   restauration: { label: "Restauration", short: "Restauration", text: "Restaurants, fast-food, traiteurs, pâtisseries…" },
 } as const;

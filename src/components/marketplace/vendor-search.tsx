@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 type Suggestion = { name: string; slug: string; href: string; city: string | null; country: string; activity: string | null; logoUrl: string | null };
+type ProductSuggestion = { id: string; name: string; href: string; priceXaf: number; imageUrl: string | null; store: string };
+
+const price = (value: number) => `${new Intl.NumberFormat("fr-FR").format(value)} FCFA`;
 type Status = "idle" | "loading" | "ready" | "error";
 
 const strip = (value: string) => value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -39,6 +42,7 @@ export function VendorSearch({
   bare = false,
   resultsPath = "/recherche",
   placeholder,
+  withProducts = false,
 }: {
   defaultValue?: string;
   className?: string;
@@ -47,6 +51,8 @@ export function VendorSearch({
   /** Page de résultats (la marketplace a la sienne : shop.prestafrik.com/recherche). */
   resultsPath?: string;
   placeholder?: string;
+  /** Marketplace : propose aussi des produits (recherche tolérante) au-dessus des boutiques. */
+  withProducts?: boolean;
 }) {
   const router = useRouter();
   const id = useId();
@@ -55,6 +61,9 @@ export function VendorSearch({
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [items, setItems] = useState<Suggestion[]>([]);
+  const [products, setProducts] = useState<ProductSuggestion[]>([]);
+  // Produits d'abord, puis boutiques : une seule liste pour le clavier.
+  const entries = [...products.map((item) => item.href), ...items.map((item) => item.href)];
   const [active, setActive] = useState(-1);
   const [attempt, setAttempt] = useState(0);
   const rootRef = useRef<HTMLFormElement>(null);
@@ -70,10 +79,15 @@ export function VendorSearch({
     const timer = window.setTimeout(async () => {
       setStatus("loading");
       try {
-        const response = await fetch(`/api/recherche?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal });
+        const [response, productResponse] = await Promise.all([
+          fetch(`/api/recherche?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal }),
+          withProducts ? fetch(`/api/recherche/produits?q=${encodeURIComponent(trimmed)}`, { signal: controller.signal }).catch(() => null) : Promise.resolve(null),
+        ]);
         if (!response.ok) throw new Error(String(response.status));
         const data = (await response.json()) as { suggestions: Suggestion[] };
+        const productData = productResponse?.ok ? ((await productResponse.json()) as { suggestions: ProductSuggestion[] }) : { suggestions: [] };
         setItems(data.suggestions);
+        setProducts(productData.suggestions ?? []);
         setActive(-1);
         setStatus("ready");
       } catch (error) {
@@ -84,7 +98,7 @@ export function VendorSearch({
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [trimmed, attempt]);
+  }, [trimmed, attempt, withProducts]);
 
   useEffect(() => {
     const onPointer = (event: PointerEvent) => {
@@ -109,7 +123,7 @@ export function VendorSearch({
       className={`vendor-search ${className}`.trim()}
       onSubmit={(event) => {
         event.preventDefault();
-        if (showList && active >= 0 && items[active]) window.location.assign(items[active].href);
+        if (showList && active >= 0 && entries[active]) window.location.assign(entries[active]);
         else goToResults();
       }}
       ref={rootRef}
@@ -136,13 +150,13 @@ export function VendorSearch({
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={(event) => {
-            if (event.key === "ArrowDown" && items.length) {
+            if (event.key === "ArrowDown" && entries.length) {
               event.preventDefault();
               setOpen(true);
-              setActive((value) => (value + 1) % items.length);
-            } else if (event.key === "ArrowUp" && items.length) {
+              setActive((value) => (value + 1) % entries.length);
+            } else if (event.key === "ArrowUp" && entries.length) {
               event.preventDefault();
-              setActive((value) => (value <= 0 ? items.length - 1 : value - 1));
+              setActive((value) => (value <= 0 ? entries.length - 1 : value - 1));
             } else if (event.key === "Escape") {
               if (open) event.preventDefault();
               setOpen(false);
@@ -177,13 +191,34 @@ export function VendorSearch({
             </button>
           </p>
         )}
-        {status === "ready" && items.length === 0 && (
-          <p className="vendor-search-state">Aucun vendeur ne correspond à « {trimmed} ». Essayez un nom de ville ou une activité.</p>
+        {status === "ready" && entries.length === 0 && (
+          <p className="vendor-search-state">
+            {withProducts ? `Aucun produit ni vendeur ne ressemble à « ${trimmed} ». Essayez un autre mot.` : `Aucun vendeur ne correspond à « ${trimmed} ». Essayez un nom de ville ou une activité.`}
+          </p>
+        )}
+        {status === "ready" && products.length > 0 && (
+          <ul aria-label="Produits suggérés" className="vendor-search-list vendor-search-products" role="listbox">
+            {products.map((item, index) => (
+              <li aria-selected={index === active} id={`${id}-option-${index}`} key={item.id} onMouseEnter={() => setActive(index)} role="option">
+                <a href={item.href} tabIndex={-1}>
+                  <span aria-hidden="true" className="vendor-search-logo vendor-search-thumb">
+                    {item.imageUrl ? <img alt="" height={40} loading="lazy" src={item.imageUrl} width={40} /> : null}
+                  </span>
+                  <span className="vendor-search-text">
+                    <strong>{item.name}</strong>
+                    <small>
+                      {price(item.priceXaf)} · {item.store}
+                    </small>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
         )}
         <ul aria-label="Vendeurs suggérés" className="vendor-search-list" id={listId} role="listbox">
           {status === "ready" &&
             items.map((item, index) => (
-              <li aria-selected={index === active} id={`${id}-option-${index}`} key={item.slug} onMouseEnter={() => setActive(index)} role="option">
+              <li aria-selected={index + products.length === active} id={`${id}-option-${index + products.length}`} key={item.slug} onMouseEnter={() => setActive(index + products.length)} role="option">
                 <a href={item.href} tabIndex={-1}>
                   <span aria-hidden="true" className="vendor-search-logo">
                     {item.logoUrl ? <img alt="" height={40} loading="lazy" src={item.logoUrl} width={40} /> : initials(item.name)}
@@ -201,7 +236,7 @@ export function VendorSearch({
               </li>
             ))}
         </ul>
-        {status === "ready" && items.length > 0 && (
+        {status === "ready" && entries.length > 0 && (
           <button className="vendor-search-all" onClick={goToResults} type="button">
             Voir tous les résultats pour « {trimmed} »
           </button>

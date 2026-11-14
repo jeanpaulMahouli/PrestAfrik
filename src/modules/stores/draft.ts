@@ -29,7 +29,9 @@ export type DraftData = {
   secondaryColor?: string;
   accentColor?: string;
   logoUrl?: string | null;
-  product?: { name: string; priceXaf: number; photos: { key: string; alt?: string }[] } | null;
+  product?: { name: string; priceXaf: number; description?: string | null; photos: { key: string; alt?: string }[] } | null;
+  /** Propositions de l’assistant IA (offertes) utilisées pendant la création : 3 au plus. */
+  aiUses?: number;
   /** L'étape « Premier produit » a été vue (produit ajouté ou étape passée). */
   productStepDone?: boolean;
   /** Étape « Livraison » (facultative) : zones à frais fixes et retrait en boutique. */
@@ -71,6 +73,16 @@ export async function updateDraft(draft: StoreDraftRecord, patch: DraftData, rea
   );
 }
 
+/** Compte une proposition de l'assistant IA dans le brouillon (sans toucher au reste) ; renvoie le total. */
+export async function recordDraftAiUse(draftId: string) {
+  const rows = await prisma.$queryRaw<{ uses: number }[]>`
+    UPDATE "StoreDraft"
+    SET data = jsonb_set(data::jsonb, '{aiUses}', to_jsonb(COALESCE((data::jsonb->>'aiUses')::int, 0) + 1)), "updatedAt" = NOW()
+    WHERE id = ${draftId}
+    RETURNING (data::jsonb->>'aiUses')::int AS uses`;
+  return rows[0]?.uses ?? 0;
+}
+
 /** Nom normalisé pour comparer deux noms de boutique (casse, accents et espaces ignorés). */
 export function normalizeStoreName(name: string) {
   return name
@@ -100,6 +112,6 @@ export function draftMissing(data: DraftData) {
   if (!data.name || !data.slug) missing.push({ label: "le nom et l’adresse de la boutique", step: 1 });
   if (!data.activityId && !data.activityOther) missing.push({ label: "votre activité", step: 2 });
   if (!data.city) missing.push({ label: "la ville de la boutique", step: 3 });
-  if (!data.phone) missing.push({ label: "le téléphone de la boutique", step: 4 });
+  if (!data.phone) missing.push({ label: "le numéro WhatsApp de votre compte", step: 3 });
   return missing;
 }

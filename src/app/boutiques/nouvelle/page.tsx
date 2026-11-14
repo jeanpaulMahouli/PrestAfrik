@@ -5,7 +5,7 @@ import { CreatedScreen, PublishedScreen, PublishStep } from "@/components/wizard
 import { DeliveryStep } from "@/components/wizard/wizard-delivery-step";
 import { EmailVerificationGate } from "@/components/wizard/wizard-email-gate";
 import { WizardShell, type PreviewDraft } from "@/components/wizard/wizard-shell";
-import { ActivityStep, BrandingStep, ContactStep, LocationStep, NameStep, ProductStep, ThemeStep } from "@/components/wizard/wizard-steps";
+import { ActivityStep, BrandingStep, LocationStep, NameStep, ProductStep } from "@/components/wizard/wizard-steps";
 import { formatFcfa } from "@/lib/format";
 import { phoneCountries } from "@/lib/phone";
 import { prisma } from "@/lib/prisma";
@@ -13,12 +13,12 @@ import { storeAddressFormat, storeAddressLabel, storePublicUrl } from "@/lib/url
 import { geoDataset, supportedCountries } from "@/modules/geo";
 import { draftMissing, findDraft, type DraftData } from "@/modules/stores/draft";
 import { getPublicationChecklist } from "@/modules/stores/publication";
-import { findOwnedStore, requireWizardSession, wizardStepCount, wizardSteps } from "@/modules/stores/wizard";
+import { productAiAvailable } from "@/lib/product-ai";
+import { findOwnedStore, requireWizardSession, visibleWizardStep, wizardStepCount, wizardStepIds, wizardSteps } from "@/modules/stores/wizard";
 import { isAccountVerified } from "@/modules/auth/phone-account";
 
 export const metadata: Metadata = { title: "Créer ma boutique" };
 
-const themeNames = { CATALOGUE_EXPRESS: "Catalogue express", MODE_BEAUTE: "Mode et beauté", BOUTIQUE_MARQUE: "Galerie", GRAND_MARCHE: "Grand marché" } as const;
 const defaultColors = { primaryColor: "#FF9900", secondaryColor: "#000026", accentColor: "#EF765E" };
 
 /**
@@ -41,7 +41,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
     const preview = previewOfStore(store);
     if (store.isPublished) {
       return (
-        <WizardShell current={wizardStepCount + 1} draftId={null} initialDraft={preview} previewPath={`/${store.slug}`} reached={wizardStepCount + 1} showThemeLabel steps={wizardSteps}>
+        <WizardShell current={wizardStepCount + 1} draftId={null} initialDraft={preview} previewPath={`/${store.slug}`} reached={wizardStepCount + 1} showThemeLabel={false} stepIds={wizardStepIds} steps={wizardSteps}>
           <PublishedScreen storeName={store.name} storeUrl={storePublicUrl(store.slug)} />
         </WizardShell>
       );
@@ -49,7 +49,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
     const checklist = await getPublicationChecklist(store.id, isAccountVerified(session.user));
     const missing = checklist.filter((item) => !item.done && item.key !== "email").map((item) => ({ label: item.label, href: item.href }));
     return (
-      <WizardShell current={wizardStepCount + 1} draftId={null} initialDraft={preview} previewPath={`/${store.slug}`} reached={wizardStepCount + 1} showThemeLabel steps={wizardSteps}>
+      <WizardShell current={wizardStepCount + 1} draftId={null} initialDraft={preview} previewPath={`/${store.slug}`} reached={wizardStepCount + 1} showThemeLabel={false} stepIds={wizardStepIds} steps={wizardSteps}>
         <CreatedScreen missing={missing} storeName={store.name} storeUrl={storePublicUrl(store.slug)} />
       </WizardShell>
     );
@@ -59,7 +59,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
   // (Les comptes créés par WhatsApp sont confirmés dès l'inscription, par le code reçu.)
   if (!isAccountVerified(session.user)) {
     return (
-      <WizardShell current={1} draftId={null} initialDraft={previewOfDraft({})} reached={1} showThemeLabel={false} steps={wizardSteps}>
+      <WizardShell current={1} draftId={null} initialDraft={previewOfDraft({})} reached={1} showThemeLabel={false} stepIds={wizardStepIds} steps={wizardSteps}>
         <EmailVerificationGate email={session.user.email} />
       </WizardShell>
     );
@@ -68,9 +68,10 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
   const draft = value("nouvelle") === "1" ? null : await findDraft(session.user.id, value("brouillon"));
   if (value("brouillon") && !draft) redirect("/boutiques/nouvelle");
   const data: DraftData = draft?.data ?? {};
-  const reached = draft ? Math.min(draft.step, wizardStepCount) : 1;
+  // Anciennes étapes 4 (coordonnées) et 6 (thème) : on passe à l'étape affichée suivante.
+  const reached = draft ? visibleWizardStep(Math.min(draft.step, wizardStepCount)) : 1;
   const asked = Number(requested);
-  const step = draft ? (Number.isInteger(asked) && asked >= 1 && asked <= reached ? asked : reached) : 1;
+  const step = draft ? (Number.isInteger(asked) && asked >= 1 && asked <= reached ? visibleWizardStep(asked) : reached) : 1;
   const draftId = draft?.id ?? null;
 
   let content: React.ReactNode = null;
@@ -88,17 +89,6 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
     const countries = phoneCountries().filter(({ iso }) => supportedCountries.includes(iso)).map(({ iso, name }) => ({ iso: iso as string, name }));
     const geo = Object.fromEntries(supportedCountries.map((iso) => [iso, geoDataset(iso)?.regions ?? []]));
     content = <LocationStep countries={countries} draftId={draft.id} geo={geo} initial={{ country: data.country ?? "CM", region: data.region ?? "", city: data.city ?? "", neighborhood: data.neighborhood ?? "" }} />;
-  } else if (step === 4) {
-    content = (
-      <ContactStep
-        contactEmail={data.contactEmail ?? ""}
-        draftId={draft.id}
-        phone={data.phone ? { country: data.phone.country, national: data.phone.national } : { country: data.country ?? "CM", national: "" }}
-        whatsapp={data.whatsapp ? { country: data.whatsapp.country, national: data.whatsapp.national } : null}
-      />
-    );
-  } else if (step === 6) {
-    content = <ThemeStep draftId={draft.id} initialTheme={data.theme ?? "CATALOGUE_EXPRESS"} />;
   } else if (step === 5) {
     content = (
       <BrandingStep
@@ -117,6 +107,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
       ? {
           name: data.product.name,
           priceXaf: data.product.priceXaf,
+          description: data.product.description ?? "",
           photos: data.product.photos.map((photo) => ({
             key: photo.key,
             alt: photo.alt ?? "",
@@ -124,7 +115,9 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
           })),
         }
       : null;
-    content = <ProductStep draftId={draft.id} product={product} universe={universe} />;
+    // Assistant IA offert pendant la création (3 essais au plus, sans toucher aux crédits du mois).
+    const ai = productAiAvailable() ? { remaining: Math.max(0, 3 - (data.aiUses ?? 0)) } : null;
+    content = <ProductStep ai={ai} draftId={draft.id} product={product} universe={universe} />;
   } else if (step === 8) {
     content = (
       <DeliveryStep
@@ -140,15 +133,12 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
       />
     );
   } else {
-    const phone = data.phone?.e164;
     const recap = [
       { label: "Nom et adresse", value: data.name ? `${data.name} · ${storeAddressLabel(data.slug ?? "")}` : "À préciser", step: 1, done: Boolean(data.name && data.slug) },
       { label: "Activité", value: data.activityLabel ?? data.activityOther ?? "À préciser", step: 2, done: Boolean(data.activityId || data.activityOther) },
       { label: "Description", value: data.description ? (data.description.length > 90 ? `${data.description.slice(0, 90)}…` : data.description) : "Aucune (facultatif, vous pourrez l’ajouter ensuite)", step: 2, done: Boolean(data.description) },
-      { label: "Localisation", value: [data.city, data.region].filter(Boolean).join(", ") || "À préciser", step: 3, done: Boolean(data.city) },
-      { label: "Coordonnées", value: phone ? phone.replace(/(\+\d{3})(\d)\d+(\d{2})$/, "$1 $2 •• •• •• $3") : "À préciser", step: 4, done: Boolean(phone) },
+      { label: "Localisation", value: [data.neighborhood, data.city].filter(Boolean).join(", ") || "À préciser", step: 3, done: Boolean(data.city) },
       { label: "Logo et couleurs", value: `${data.logoUrl ? "Logo ajouté" : "Initiales affichées"} · ${(data.primaryColor ?? defaultColors.primaryColor) === defaultColors.primaryColor ? "couleurs PrestAfrik" : "couleurs personnalisées"}`, step: 5, done: true },
-      { label: "Thème", value: themeNames[data.theme ?? "CATALOGUE_EXPRESS"], step: 6, done: true },
       {
         label: "Premier produit",
         value: data.product ? `${data.product.name} · ${formatFcfa(data.product.priceXaf)} · ${data.product.photos.length} photo${data.product.photos.length > 1 ? "s" : ""}` : "Aucun produit pour l’instant (vous pourrez en ajouter ensuite)",
@@ -172,7 +162,7 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
   }
 
   return (
-    <WizardShell current={step} draftId={draftId} initialDraft={previewOfDraft(data)} reached={reached} showThemeLabel={step >= 5} steps={wizardSteps}>
+    <WizardShell current={step} draftId={draftId} initialDraft={previewOfDraft(data)} reached={reached} showThemeLabel={false} stepIds={wizardStepIds} steps={wizardSteps}>
       {content}
     </WizardShell>
   );

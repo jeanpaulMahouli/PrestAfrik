@@ -5,6 +5,7 @@ import { mediaPathPattern, photoVariant } from "@/lib/product-photos";
 import { maxAiPhotos, ProductAiError, productAiAvailable, suggestProductDetails } from "@/lib/product-ai";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { isSameOrigin } from "@/lib/request-guards";
+import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
 import { formatDate } from "@/lib/format";
 import { getAiCredits, refundAiCredit, takeAiCredit, type AiCredits } from "@/modules/ai-credits/server";
@@ -76,7 +77,9 @@ export async function POST(request: Request) {
   }
 
   try {
-    const suggestion = await suggestProductDetails(images, parsed.data.name);
+    // Catégories de la boutique : l'IA en choisit une (ou en propose une nouvelle).
+    const categories = await prisma.productCategory.findMany({ where: { storeId: store.id }, orderBy: { sortOrder: "asc" }, select: { name: true } });
+    const suggestion = await suggestProductDetails(images, parsed.data.name, categories.map((item) => item.name));
     return NextResponse.json({ ...suggestion, credits: creditsPayload(await getAiCredits(store.id)) });
   } catch (error) {
     await refundAiCredit(store.id, ticket);

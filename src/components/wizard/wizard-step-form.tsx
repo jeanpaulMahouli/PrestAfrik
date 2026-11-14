@@ -18,13 +18,15 @@ type WizardStepFormProps = {
   subtitle: string;
   backHref?: string;
   submitLabel?: string;
-  /** Bouton secondaire (ex. « Passer cette étape »). */
+  /** Bouton secondaire. */
   secondary?: ReactNode;
+  /** Lien souligné, à droite au-dessus des boutons, qui envoie l'étape sans la remplir (ex. « Passer cette étape »). */
+  skipLink?: string;
   children: (fieldError: (field: string) => string | undefined, pending: boolean) => ReactNode;
 };
 
 /** Carte d'étape de l'assistant : envoi sans perte de saisie, erreurs sous les champs, Retour / Continuer. */
-export function WizardStepForm({ action, draftId, step, title, subtitle, backHref, submitLabel = "Continuer", secondary, children }: WizardStepFormProps) {
+export function WizardStepForm({ action, draftId, step, title, subtitle, backHref, submitLabel = "Continuer", secondary, skipLink, children }: WizardStepFormProps) {
   const [state, dispatch, pending] = useActionState<WizardState, FormData>(action, null);
   const fieldError = (field: string) => (state && !state.ok && state.field === field ? state.message : undefined);
   const formRef = useRef<HTMLFormElement>(null);
@@ -53,6 +55,13 @@ export function WizardStepForm({ action, draftId, step, title, subtitle, backHre
         </p>
       )}
       {children(fieldError, pending)}
+      {skipLink && (
+        <p className="wizard-skip">
+          <button className="wizard-skip-link" disabled={pending} formNoValidate name="skip" type="submit" value="1">
+            {skipLink}
+          </button>
+        </p>
+      )}
       <div className="wizard-actions">
         <Link className="btn btn-secondary" href={backHref ?? "/dashboard"}>
           <BackIcon /> Retour

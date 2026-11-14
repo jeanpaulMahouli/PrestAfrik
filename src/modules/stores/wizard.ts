@@ -7,19 +7,26 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/modules/auth/server";
 import { isAccountVerified } from "@/modules/auth/phone-account";
 
-export const wizardSteps = [
-  "Nom",
-  "Activité",
-  "Localisation",
-  "Coordonnées",
-  "Couleurs et logo",
-  "Thème",
-  "Premier produit",
-  "Livraison",
-  "Publication",
-] as const;
+/**
+ * Étapes affichées, avec leur numéro interne. Les numéros enregistrés dans les brouillons ne changent pas :
+ * les anciennes étapes 4 (« Coordonnées » : le numéro WhatsApp du compte est repris) et 6 (« Thème » :
+ * une seule vitrine) sont sautées.
+ */
+export const wizardStepIds = [1, 2, 3, 5, 7, 8, 9] as const;
+export const wizardSteps = ["Nom", "Activité", "Localisation", "Logo et couleurs", "Premier produit", "Livraison", "Publication"] as const;
 
-export const wizardStepCount = wizardSteps.length;
+/** Dernier numéro interne (publication). */
+export const wizardStepCount = 9;
+
+/** Étape affichée qui suit (ou correspond à) un numéro interne : 4 → 5, 6 → 7. */
+export function visibleWizardStep(step: number) {
+  return wizardStepIds.find((id) => id >= step) ?? wizardStepCount;
+}
+
+/** Étape suivante après une étape enregistrée. */
+export function nextWizardStep(step: number) {
+  return visibleWizardStep(step + 1);
+}
 
 /** Session obligatoire pour l'assistant. */
 export async function requireWizardSession() {

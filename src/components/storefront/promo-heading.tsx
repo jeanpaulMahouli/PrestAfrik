@@ -1,4 +1,4 @@
-import { Sparkles, Tag, Zap } from "@/components/ui/icons";
+import { Crown, Tag, Zap } from "@/components/ui/icons";
 import type { ReactNode } from "react";
 
 // Titre de la rangée « Promotions ». Les libellés et icônes de chaque style sont tous rendus et le style
@@ -30,9 +30,9 @@ export function PromoHeading({
   return (
     <header className="sf-home-section-head sf-promo-head">
       <span aria-hidden="true" className="sf-promo-icon">
-        <Zap className="sf-promo-icon-vente-flash" size={20} />
-        <Tag className="sf-promo-icon-offres-du-jour" size={18} />
-        <Sparkles className="sf-promo-icon-eclat" size={20} />
+        <Zap className="sf-promo-icon-vente-flash" size={24} weight="fill" />
+        <Tag className="sf-promo-icon-offres-du-jour" size={22} weight="fill" />
+        <Crown className="sf-promo-icon-eclat" size={24} weight="fill" />
       </span>
       <span className="sf-promo-heading">
         <Heading id={id}>

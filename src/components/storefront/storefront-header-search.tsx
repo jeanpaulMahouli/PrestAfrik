@@ -4,6 +4,7 @@ import { Search, X } from "@/components/ui/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDismiss } from "@/components/ui/use-dismiss";
 import { useStoreHref } from "@/components/storefront/store-links";
+import { StoreSearchInput } from "@/components/storefront/store-search-input";
 
 /**
  * Loupe de l'en-tête, juste avant le panier (thème « Galerie », où la barre de recherche de la page est masquée).
@@ -30,7 +31,7 @@ export function StorefrontHeaderSearch({ storeSlug }: { storeSlug: string }) {
           <label className="visually-hidden" htmlFor="sf-header-search-input">
             Rechercher un produit
           </label>
-          <input id="sf-header-search-input" maxLength={100} name="q" placeholder="Rechercher un produit" ref={inputRef} type="search" />
+          <StoreSearchInput id="sf-header-search-input" inputRef={inputRef} storeSlug={storeSlug} />
           <button className="sf-btn sf-btn-primary" type="submit">
             Rechercher
           </button>

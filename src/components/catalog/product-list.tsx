@@ -1,6 +1,7 @@
 "use client";
 
 import { Star } from "@/components/ui/icons";
+import { setProductFeatured } from "@/modules/catalog/actions";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
@@ -199,20 +200,7 @@ export function ProductList({ rows, tab, storeSlug, storePublished, canManage, a
               <td data-label="Prix promo">{row.promotionalPriceXaf === null ? "—" : formatFcfa(row.promotionalPriceXaf)}</td>
               <td className="product-actions">
                 {canManage && row.status !== "ARCHIVED" && (
-                  <form action={actions.feature}>
-                    <input name="onglet" type="hidden" value={tab} />
-                    <input name="productId" type="hidden" value={row.id} />
-                    <input name="featured" type="hidden" value={row.isFeatured ? "0" : "1"} />
-                    <button
-                      aria-label={row.isFeatured ? `Ne plus mettre en avant « ${row.name} »` : `Mettre en avant « ${row.name} » sur l’accueil de la boutique`}
-                      aria-pressed={row.isFeatured}
-                      className={`icon-button icon-button-sm${row.isFeatured ? " is-featured" : ""}`}
-                      title={row.isFeatured ? "Mis en avant : touchez pour retirer" : "Mettre en avant sur l’accueil"}
-                      type="submit"
-                    >
-                      <Star aria-hidden="true" fill={row.isFeatured ? "currentColor" : "none"} size={16} />
-                    </button>
-                  </form>
+                  <FeatureStar featured={row.isFeatured} name={row.name} productId={row.id} />
                 )}
                 {canManage && <Link className="v-link" href={`/dashboard/produits/${row.id}`}>Modifier</Link>}
                 {canManage && (
@@ -292,5 +280,49 @@ export function ProductList({ rows, tab, storeSlug, storePublished, canManage, a
         </div>
       </Dialog>
     </>
+  );
+}
+
+/**
+ * Étoile « Mettre en avant » : change tout de suite à l'écran (sans recharger la liste), puis s'aligne sur
+ * la réponse du serveur ; revient en arrière avec un message si l'enregistrement échoue.
+ */
+function FeatureStar({ productId, name, featured: initial }: { productId: string; name: string; featured: boolean }) {
+  const [featured, setFeatured] = useState(initial);
+  const [error, setError] = useState("");
+  const pending = useRef(false);
+  useEffect(() => setFeatured(initial), [initial]);
+  return (
+    <span className="feature-star">
+      <button
+        aria-label={featured ? `Ne plus mettre en avant « ${name} »` : `Mettre en avant « ${name} » sur l’accueil de la boutique`}
+        aria-pressed={featured}
+        className={`icon-button icon-button-sm${featured ? " is-featured" : ""}`}
+        onClick={async () => {
+          if (pending.current) return;
+          pending.current = true;
+          const next = !featured;
+          setFeatured(next);
+          setError("");
+          try {
+            const result = await setProductFeatured(productId, next);
+            if (result.ok) setFeatured(result.featured);
+            else {
+              setFeatured(!next);
+              setError(result.error);
+            }
+          } catch {
+            setFeatured(!next);
+            setError("Connexion interrompue : réessayez.");
+          } finally {
+            pending.current = false;
+          }
+        }}
+        title={error || (featured ? "Mis en avant : touchez pour retirer" : "Mettre en avant sur l’accueil")}
+        type="button"
+      >
+        <Star aria-hidden="true" size={16} weight={featured ? "fill" : "regular"} />
+      </button>
+    </span>
   );
 }

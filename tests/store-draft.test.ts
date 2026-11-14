@@ -15,7 +15,7 @@ describe("boutique en cours de création", () => {
   });
 
   it("liste ce qui manque avant de créer la boutique, avec l'étape à compléter", () => {
-    expect(draftMissing({}).map((item) => item.step)).toEqual([1, 2, 3, 4]);
+    expect(draftMissing({}).map((item) => item.step)).toEqual([1, 2, 3, 3]);
     expect(
       draftMissing({
         name: "Mboa Style",

@@ -21,7 +21,7 @@ const spaces: Record<"marketplace" | "tableau-de-bord", { label: string; icon: A
     groups: [
       {
         id: "shopping",
-        title: "Shopping",
+        title: "Boutique",
         icon: ShoppingBag,
         text: "Haut de l’accueil : grand diaporama, et à droite « Devenir vendeur » puis un visuel. Sur téléphone, « Devenir vendeur » passe en premier.",
         slots: [

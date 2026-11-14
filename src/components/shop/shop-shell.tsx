@@ -2,6 +2,7 @@ import "@/styles/shop.css";
 import "@/styles/shop-universes.css";
 import "@/styles/shop-layout.css";
 import "@/styles/shop-showcase.css";
+import "@/styles/shop-motion.css";
 import { Crown, Envelope, House, Lightning, Percent, Phone, RocketLaunch, Star, Storefront, Tag, Handshake, ForkKnife } from "@phosphor-icons/react/ssr";
 import type { Icon } from "@phosphor-icons/react";
 import Image from "next/image";
@@ -144,7 +145,7 @@ export async function ShopShell({
               <Image alt="" height={40} priority src="/brand/logo-prestafrik.png" width={73} />
             </a>
             <CityPicker current={scope.city?.name ?? null} label={scope.universe === "vente" ? "Livrer à" : "Votre ville"} />
-            <VendorSearch bare className="shop-search" defaultValue={query ?? ""} placeholder={scope.universe === "immobilier" ? "Appartement, studio meublé, bureau…" : scope.universe === "services" ? "Coiffure, réparation, transport…" : scope.universe === "restauration" ? "Restaurant, pizza, poulet DG, gâteau…" : "Rechercher un produit, une boutique…"} resultsPath={shopUrl("/recherche")} />
+            <VendorSearch bare className="shop-search" defaultValue={query ?? ""} withProducts placeholder={scope.universe === "immobilier" ? "Appartement, studio meublé, bureau…" : scope.universe === "services" ? "Coiffure, réparation, transport…" : scope.universe === "restauration" ? "Restaurant, pizza, poulet DG, gâteau…" : "Rechercher un produit, une boutique…"} resultsPath={shopUrl("/recherche")} />
             <UniverseMenu current={scope.universe} home={shopUrl("/")} />
             <CartLink href={shopUrl("/panier")} />
             <a className="sx-btn sx-btn-primary shop-header-cta" data-emplacement="en-tete" href={signupHref()}>

@@ -6,7 +6,7 @@ import type { CompletionStep, ProductNotice } from "@/modules/catalog/product-no
 
 // Assistant IA (nom et description) et « Infos pratiques » du formulaire produit.
 
-export type AiSuggestion = { name: string; description: string };
+export type AiSuggestion = { name: string; description: string; category?: string | null };
 
 /** Crédits IA restants de la boutique (5 par mois, puis les bonus de l'administration). */
 export type AiCreditsInfo = { total: number; monthly: number; bonus: number; allowance: number; renewsAt: string };
@@ -34,7 +34,7 @@ export async function requestAiSuggestion(body: { photos: string[]; name: string
   }
   const data = (await response.json().catch(() => null)) as (AiSuggestion & { error?: string; credits?: AiCreditsInfo }) | null;
   if (!response.ok || !data) throw new AiRequestError(data?.error ?? "L’assistant IA n’a pas pu répondre. Réessayez.", data?.credits ?? null);
-  return { name: data.name, description: data.description, credits: data.credits ?? null };
+  return { name: data.name, description: data.description, category: data.category ?? null, credits: data.credits ?? null };
 }
 
 const icons = { danger: CircleAlert, warning: TriangleAlert, tip: Lightbulb };

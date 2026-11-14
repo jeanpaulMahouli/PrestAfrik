@@ -126,7 +126,12 @@ export async function listOpenAlerts(now = new Date()) {
 }
 
 /** Pastille du menu : alertes nouvelles + demandes d'aide ouvertes. */
+/**
+ * Pastille du menu « Alertes » : exactement ce que la page Alertes montre à traiter (alertes nouvelles et
+ * tickets du formulaire de contact ouverts). Les messages des vendeurs (questions, suggestions, avis) sont
+ * comptés dans « Messages et avis », pas ici : avant, ils gonflaient la pastille sans apparaître dans la page.
+ */
 export async function countOpenAlerts() {
-  const [alerts, tickets] = await Promise.all([listOpenAlerts(), prisma.supportTicket.count({ where: { status: "OPEN" } })]);
+  const [alerts, tickets] = await Promise.all([listOpenAlerts(), prisma.supportTicket.count({ where: { status: "OPEN", kind: "CONTACT" } })]);
   return alerts.length + tickets;
 }

@@ -908,3 +908,65 @@
 .wizard-preview .live-preview {
   margin: 0 auto;
 }
+
+/* Étape « Logo et couleurs » : aperçu du logo et bouton « Ajouter le logo » sur la même ligne. */
+.wizard .logo-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.wizard .logo-add-button {
+  position: relative;
+  flex: none;
+  cursor: pointer;
+}
+
+/* Listes déroulantes de la création de boutique : celles du navigateur, sans flèche ajoutée. */
+.wizard select,
+.wizard .wizard-native-select {
+  -webkit-appearance: menulist;
+  appearance: auto;
+  background-image: none !important;
+  padding-right: 0.75rem;
+}
+
+/* Étape « Premier produit » : mention de l'IA et lien « Passer cette étape » (souligné, à droite, au-dessus
+   des boutons : les boutons du bas ne bougent pas). */
+.wizard .wizard-ai-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 10px;
+  background: #f4f1ff;
+  color: #2b2350;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.wizard .wizard-ai-note svg {
+  flex: none;
+  margin-top: 0.1rem;
+  color: #6c4cf1;
+}
+
+.wizard .wizard-skip {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.75rem 0 0;
+}
+
+.wizard .wizard-skip-link {
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

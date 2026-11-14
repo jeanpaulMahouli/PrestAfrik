@@ -43,8 +43,8 @@ export const wizardWording: Record<
     pickupLegend: "Retrait en boutique",
   },
   immobilier: {
-    activityTitle: "Vous louez des biens",
-    activitySubtitle: "Logements, meublés, bureaux, salles : vos locations et réservations apparaîtront dans l’univers Immobilier de la marketplace, et les demandes de visite ou de réservation arriveront sur WhatsApp. Pour vendre un terrain ou une maison, choisissez Shopping puis « Vente immobilière ».",
+    activityTitle: "Vous louez des biens ou des véhicules",
+    activitySubtitle: "Logements, meublés, bureaux, salles, location ou vente de véhicules : vos annonces apparaîtront dans l’univers Immobilier de la marketplace, et les demandes arriveront sur WhatsApp. Pour vendre un terrain ou une maison, choisissez Boutique puis « Vente immobilière ».",
     descriptionPlaceholder: "Ex. Agence à Douala : appartements et studios meublés à louer, réservation à la nuit ou au mois.",
     descriptionHelp: "En une ou deux phrases : le type de biens, les quartiers, et ce qui vous distingue (agence, propriétaire…).",
     productTitle: "Ajoutons votre première location",
@@ -78,7 +78,7 @@ export const wizardWording: Record<
   },
   restauration: {
     activityTitle: "Vous proposez de la restauration",
-    activitySubtitle: "Restaurant, fast-food, traiteur, pâtisserie, jus : votre menu apparaîtra dans l’univers Restauration de la marketplace (jamais dans le Shopping), et les commandes arriveront sur WhatsApp.",
+    activitySubtitle: "Restaurant, fast-food, traiteur, pâtisserie, jus : votre menu apparaîtra dans l’univers Restauration de la marketplace (jamais dans l’univers Boutique), et les commandes arriveront sur WhatsApp.",
     descriptionPlaceholder: "Ex. Cuisine camerounaise à Bastos : ndolé, poulet DG, poisson braisé. Livraison le midi et le soir.",
     descriptionHelp: "En une ou deux phrases : votre cuisine, votre quartier et vos horaires.",
     productTitle: "Ajoutons votre premier plat",

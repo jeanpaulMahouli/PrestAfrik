@@ -20,7 +20,7 @@ function Stars({ value }: { value: number }) {
   return (
     <span aria-label={`${value} sur 5`} className="admin-stars" role="img">
       {[1, 2, 3, 4, 5].map((step) => (
-        <Star aria-hidden="true" fill={step <= value ? "currentColor" : "none"} key={step} size={15} />
+        <Star aria-hidden="true" key={step} size={15} weight={step <= value ? "fill" : "regular"} />
       ))}
     </span>
   );

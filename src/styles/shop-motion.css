@@ -1,0 +1,88 @@
+/* ======================================================================
+   Marketplace : animations (14/11). Zoom léger des photos au survol (comme les vitrines), cartes qui se
+   soulèvent, sections et cartes qui apparaissent en douceur au défilement. Rien pour qui demande moins
+   d'animations (prefers-reduced-motion).
+   ====================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  .shop :is(.shop-card-photo, .sx-deal-lead-media, .sx-deal-media, .sx-mini-media, .sx-category-media, .sx-mega-thumb) img {
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (hover: hover) {
+    /* Zoom très léger de la photo produit au survol. */
+    .shop .shop-card:hover .shop-card-photo img,
+    .shop .sx-deal:hover .sx-deal-media img,
+    .shop .sx-deal-lead:hover .sx-deal-lead-media img,
+    .shop .sx-mini a:hover .sx-mini-media img,
+    .shop .sx-mega-thumb:hover img {
+      transform: scale(1.05);
+    }
+
+    .shop .shop-card,
+    .shop .sx-deal,
+    .shop .store-tile,
+    .shop .sx-category {
+      transition:
+        transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.3s ease;
+    }
+
+    .shop .shop-card:hover,
+    .shop .store-tile:hover {
+      transform: translateY(-3px);
+    }
+
+    .shop .sx-deal:hover {
+      transform: translateY(-2px);
+    }
+
+    .shop .sx-category:hover {
+      transform: translateY(-4px);
+    }
+
+    .shop .sx-btn {
+      transition:
+        transform 0.2s ease,
+        filter 0.2s ease;
+    }
+
+    .shop .sx-btn:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  /* Cartes des rangées et des grilles : apparition en cascade au chargement. */
+  .shop :is(.shop-rail-track, .sx-deal-grid, .shop-grid, .sx-grid) > li {
+    animation: shop-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .shop :is(.shop-rail-track, .sx-deal-grid, .shop-grid, .sx-grid) > li:nth-child(2) { animation-delay: 50ms; }
+  .shop :is(.shop-rail-track, .sx-deal-grid, .shop-grid, .sx-grid) > li:nth-child(3) { animation-delay: 100ms; }
+  .shop :is(.shop-rail-track, .sx-deal-grid, .shop-grid, .sx-grid) > li:nth-child(4) { animation-delay: 150ms; }
+  .shop :is(.shop-rail-track, .sx-deal-grid, .shop-grid, .sx-grid) > li:nth-child(5) { animation-delay: 200ms; }
+  .shop :is(.shop-rail-track, .sx-deal-grid, .shop-grid, .sx-grid) > li:nth-child(n + 6) { animation-delay: 250ms; }
+
+  /* Sections : glissent légèrement en apparaissant à l'écran (navigateurs récents). */
+  @supports (animation-timeline: view()) {
+    .shop .sx-section {
+      animation: shop-reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+
+@keyframes shop-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes shop-reveal {
+  from {
+    opacity: 0.2;
+    transform: translateY(28px);
+  }
+}

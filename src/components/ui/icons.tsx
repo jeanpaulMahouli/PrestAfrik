@@ -75,6 +75,7 @@ export {
   Lightbulb,
   Layout as LayoutTemplate,
   Lightning as Zap,
+  MagicWand,
   LinkSimple as Link2,
   MagnifyingGlass as Search,
   MapPin,

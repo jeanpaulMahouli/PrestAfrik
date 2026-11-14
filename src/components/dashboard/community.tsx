@@ -195,7 +195,7 @@ function FeedbackChat({ firstName, onDone }: { firstName: string; onDone: () => 
               {[1, 2, 3, 4, 5].map((value) => (
                 <label key={value}>
                   <input checked={rating === value} className="visually-hidden" name="rating" onChange={() => setRating(value)} type="radio" value={value} />
-                  <Star aria-hidden="true" className={value <= rating ? "is-on" : ""} fill={value <= rating ? "currentColor" : "none"} size={28} />
+                  <Star aria-hidden="true" className={value <= rating ? "is-on" : ""} size={28} weight={value <= rating ? "fill" : "regular"} />
                   <span className="visually-hidden">
                     {value} étoile{value > 1 ? "s" : ""}
                   </span>

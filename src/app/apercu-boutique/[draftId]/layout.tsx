@@ -3,6 +3,7 @@ import "@/styles/storefront-merchandising.css";
 import "@/styles/storefront-motion.css";
 import "@/styles/storefront-promo.css";
 import "@/styles/storefront-pages.css";
+import "@/styles/storefront-v2.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Aperçu de ma boutique", robots: { index: false, follow: false } };

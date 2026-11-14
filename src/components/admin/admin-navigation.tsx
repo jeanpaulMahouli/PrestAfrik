@@ -23,7 +23,7 @@ const links = [
 ] as const;
 
 /** Menu de l'administration : latéral dès 1024 px, onglets défilants en dessous. */
-export function AdminNavigation({ openAlerts, superAdmin, variant }: { openAlerts: number; superAdmin: boolean; variant: "sidebar" | "tabs" }) {
+export function AdminNavigation({ openAlerts, openMessages = 0, superAdmin, variant }: { openAlerts: number; /** Messages des vendeurs encore ouverts. */ openMessages?: number; superAdmin: boolean; variant: "sidebar" | "tabs" }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Administration" className={variant === "sidebar" ? "vendor-sidebar admin-sidebar" : "admin-tabs"}>
@@ -35,6 +35,7 @@ export function AdminNavigation({ openAlerts, superAdmin, variant }: { openAlert
             <Link aria-current={active ? "page" : undefined} href={link.href} key={link.href} prefetch>
               {link.title}
               {link.href === "/admin/alertes" && openAlerts > 0 && <span className="admin-nav-count">{openAlerts}</span>}
+              {link.href === "/admin/avis" && openMessages > 0 && <span className="admin-nav-count">{openMessages}</span>}
             </Link>
           );
         })}

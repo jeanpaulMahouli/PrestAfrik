@@ -1,14 +1,13 @@
 import { ArrowRight, Buildings, ForkKnife, Handshake } from "@phosphor-icons/react/ssr";
 import type { Metadata } from "next";
 import { ProductRail } from "@/components/shop/shop-blocks";
-import { ShopSingleBanner, type UniverseHero } from "@/components/shop/shop-hero";
+import { ShopSingleBanner } from "@/components/shop/shop-hero";
 import { categoryHref, ShopShell } from "@/components/shop/shop-shell";
-import { announcementAd, BannerDuo, CategoryTiles, ClubBand, DealsBoard, MiniLists, ShowcaseHead, ShowcaseHero, shoppingPromises, TabbedShowcase, TrustStrip, WideBanner } from "@/components/shop/shop-showcase";
+import { announcementAd, BannerDuo, CategoryTiles, DealsBoard, MiniLists, ShowcaseHead, ShowcaseHero, shoppingPromises, TabbedShowcase, TrustStrip, WideBanner } from "@/components/shop/shop-showcase";
 import { FlashCountdown } from "@/components/shop/shop-widgets";
 import { UniverseSwitchButton } from "@/components/shop/universe-switch";
 import { shopUniverses } from "@/config/marketplace";
 import { marketplaceAds, slotAd } from "@/config/marketplace-ads";
-import { site } from "@/config/site";
 import { brandStructuredData } from "@/lib/brand";
 import { jsonLd, sharePreviewImage } from "@/lib/seo";
 import { sellerLandingPath, shopUrl } from "@/lib/urls";
@@ -65,34 +64,6 @@ export default async function ShopHomePage() {
   const menu = new Map(sections.map(({ category, products }) => [category.slug, products]));
   const blocks = chunk(sections, 4);
 
-  // Bannière unique des autres univers (sans visuel dans l'administration : bannière dessinée).
-  const hero: UniverseHero =
-    universe === "immobilier"
-      ? {
-          kicker: "Immobilier",
-          title: "Votre prochain logement, à louer ou à réserver",
-          text: "Appartements, studios meublés, bureaux et salles : contactez directement le propriétaire ou l’agence sur WhatsApp.",
-          cta: { label: "Voir les locations", href: shopUrl("/recherche?tri=nouveautes") },
-          seller: { label: "Publier une annonce", href: signupHref() },
-          icon: <Buildings size={150} weight="duotone" />,
-        }
-      : universe === "restauration"
-        ? {
-            kicker: "Restauration",
-            title: "Les bonnes adresses près de chez vous",
-            text: "Restaurants, grillades, traiteurs et pâtisseries : commandez votre repas sur WhatsApp, livré ou à emporter.",
-            cta: { label: "Voir les restaurants", href: shopUrl("/recherche?tri=mieux-notes") },
-            seller: { label: "Ouvrir mon restaurant", href: signupHref() },
-            icon: <ForkKnife size={150} weight="duotone" />,
-          }
-        : {
-            kicker: "Services",
-            title: "Des prestataires de confiance, près de vous",
-            text: "Coiffure, réparation, transport, photo, événementiel : comparez les avis et écrivez directement au prestataire.",
-            cta: { label: "Trouver un prestataire", href: shopUrl("/recherche?tri=mieux-notes") },
-            seller: { label: "Proposer mes services", href: signupHref() },
-            icon: <Handshake size={150} weight="duotone" />,
-          };
   const empty = universe !== "vente" && home.categories.length === 0;
   const EmptyIcon = universe === "immobilier" ? Buildings : universe === "restauration" ? ForkKnife : Handshake;
   const sellerLabel = universe === "immobilier" ? "Publier une annonce" : universe === "services" ? "Proposer mes services" : universe === "restauration" ? "Ouvrir mon restaurant" : "Ouvrir ma boutique";
@@ -114,7 +85,7 @@ export default async function ShopHomePage() {
         {universe === "vente" ? (
           <ShowcaseHero sellerHref={sellerLandingPath} sellerImage={visuals.slots.seller} side={heroSide} slides={heroSlides} />
         ) : (
-          <ShopSingleBanner banner={universe === "immobilier" ? visuals.immo : universe === "restauration" ? visuals.restauration : visuals.services} hero={hero} />
+          <ShopSingleBanner banner={universe === "immobilier" ? visuals.immo : universe === "restauration" ? visuals.restauration : visuals.services} />
         )}
 
         {empty && (
@@ -188,8 +159,6 @@ export default async function ShopHomePage() {
           ]}
         />
       </div>
-
-      <ClubBand channel={site.whatsappChannel} sellerHref={signupHref()} stores={home.featuredStores} />
     </ShopShell>
   );
 }

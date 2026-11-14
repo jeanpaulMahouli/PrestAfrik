@@ -1,6 +1,6 @@
 "use client";
 
-import { Banknote, ChevronLeft, ChevronRight, ChevronRight as Separator, Sparkles, Tag, Truck, X, Zap } from "@/components/ui/icons";
+import { Banknote, ChevronLeft, ChevronRight, ChevronRight as Separator, Crown, Tag, Truck, X, Zap } from "@/components/ui/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -356,9 +356,9 @@ function ProductDeal({ priceXaf, promotionalPriceXaf }: { priceXaf: number; prom
   return (
     <p className="sf-product-deal">
       <span aria-hidden="true" className="sf-promo-icon">
-        <Zap className="sf-promo-icon-vente-flash" size={18} />
-        <Tag className="sf-promo-icon-offres-du-jour" size={16} />
-        <Sparkles className="sf-promo-icon-eclat" size={18} />
+        <Zap className="sf-promo-icon-vente-flash" size={22} weight="fill" />
+        <Tag className="sf-promo-icon-offres-du-jour" size={20} weight="fill" />
+        <Crown className="sf-promo-icon-eclat" size={22} weight="fill" />
       </span>
       <span className="sf-product-deal-text">
         {dealLabels.map((label) => (

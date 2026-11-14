@@ -303,6 +303,22 @@ export async function toggleFeaturedProduct(formData: FormData) {
   backToList(formData, result.count ? `succes=${featured ? "mis-en-avant" : "retire-avant"}` : "erreur=selection-vide");
 }
 
+/**
+ * Étoile de la liste des produits, sans recharger la page : met le produit en avant (ou l'en retire) et
+ * renvoie l'état enregistré. Le navigateur affiche le changement tout de suite.
+ */
+export async function setProductFeatured(productId: string, featured: boolean): Promise<{ ok: true; featured: boolean } | { ok: false; error: string }> {
+  const context = await catalogContext().catch(() => null);
+  if (!context) return { ok: false, error: "Vous n’avez pas l’autorisation de modifier le catalogue." };
+  const result = await prisma.product.updateMany({
+    where: { id: productId, storeId: context.store.id, status: { not: "ARCHIVED" } },
+    data: { isFeatured: featured },
+  });
+  if (!result.count) return { ok: false, error: "Ce produit est introuvable ou archivé." };
+  refreshCatalog(context.store);
+  return { ok: true, featured };
+}
+
 export async function restoreProducts(formData: FormData) {
   const { store } = await catalogContext().catch(() => redirect("/dashboard/produits?erreur=non-autorise"));
   const ids = selectedIds(formData);

@@ -22,6 +22,12 @@ export type ListingMode = "rent" | "sale";
 /** Activité du Shopping dont les produits sont des biens à vendre (avec leurs caractéristiques). */
 export const propertySaleActivity = "vente-immobiliere";
 
+/**
+ * Activités de l'univers Immobilier consacrées aux véhicules (location, vente) : produits ordinaires,
+ * sans fiche de bien (type de bien, pièces, surface).
+ */
+export const vehicleActivities = ["location-vehicules", "vente-vehicules"] as const;
+
 export const propertyTypes = [
   "Appartement",
   "Studio",
