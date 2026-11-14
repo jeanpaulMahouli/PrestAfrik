@@ -8,7 +8,6 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import { VendorSearch } from "@/components/marketplace/vendor-search";
 import { site } from "@/config/site";
-import { brandIdentity } from "@/lib/brand";
 import { sellerLandingPath, shopUrl } from "@/lib/urls";
 import { shopUniverses, type ShopUniverse } from "@/config/marketplace";
 import { marketplaceAds, slotAd } from "@/config/marketplace-ads";
@@ -181,7 +180,7 @@ export async function ShopShell({
         <div className="sx-wrap sx-footer-grid">
           <div className="shop-footer-brand">
             <Image alt="PrestAfrik" height={110} src="/brand/logo-white.webp" width={201} />
-            <p>{brandIdentity} Paiement à la livraison.</p>
+            <p className="shop-footer-about">PrestAfrik est la marketplace qui met directement en relation les vendeurs et les clients, le tout sur WhatsApp. Paiement à la livraison.</p>
             <ul className="sx-footer-contacts">
               {site.phones.map((phone) => (
                 <li key={phone}>

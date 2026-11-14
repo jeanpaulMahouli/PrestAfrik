@@ -13,6 +13,9 @@ export const fontUi = localFont({
     { path: "../../node_modules/@fontsource/poppins/files/poppins-latin-600-normal.woff2", weight: "600", style: "normal" },
     { path: "../../node_modules/@fontsource/poppins/files/poppins-latin-700-normal.woff2", weight: "700", style: "normal" },
     { path: "../../node_modules/@fontsource/poppins/files/poppins-latin-800-normal.woff2", weight: "800", style: "normal" },
+    // Vrai italique (descriptions des produits) : sinon le navigateur penche et déforme les lettres lui-même.
+    { path: "../../node_modules/@fontsource/poppins/files/poppins-latin-400-italic.woff2", weight: "400", style: "italic" },
+    { path: "../../node_modules/@fontsource/poppins/files/poppins-latin-600-italic.woff2", weight: "600", style: "italic" },
   ],
   variable: "--lp-font-ui",
   display: "swap",

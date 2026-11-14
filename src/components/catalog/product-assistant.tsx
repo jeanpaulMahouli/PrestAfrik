@@ -1,8 +1,6 @@
 "use client";
 
-import { Check, CircleAlert, Lightbulb, Sparkles, TriangleAlert } from "@/components/ui/icons";
-import { useState } from "react";
-import { RichText } from "@/components/ui/rich-text";
+import { Check, CircleAlert, Lightbulb, TriangleAlert } from "@/components/ui/icons";
 import { AiCreditsCard } from "@/components/catalog/ai-credits-card";
 import type { CompletionStep, ProductNotice } from "@/modules/catalog/product-notices";
 
@@ -37,61 +35,6 @@ export async function requestAiSuggestion(body: { photos: string[]; name: string
   const data = (await response.json().catch(() => null)) as (AiSuggestion & { error?: string; credits?: AiCreditsInfo }) | null;
   if (!response.ok || !data) throw new AiRequestError(data?.error ?? "L’assistant IA n’a pas pu répondre. Réessayez.", data?.credits ?? null);
   return { name: data.name, description: data.description, credits: data.credits ?? null };
-}
-
-/** Proposition de l'IA : le vendeur relit, modifie, puis l'applique au formulaire (ou l'ignore). */
-export function AiSuggestionPanel({
-  suggestion,
-  onApply,
-  onDismiss,
-}: {
-  suggestion: AiSuggestion;
-  onApply: (values: AiSuggestion) => void;
-  onDismiss: () => void;
-}) {
-  const [name, setName] = useState(suggestion.name);
-  const [description, setDescription] = useState(suggestion.description);
-  const [preview, setPreview] = useState(true);
-
-  return (
-    <div aria-labelledby="ai-suggestion-title" className="ai-suggestion" role="region">
-      <div className="ai-suggestion-head">
-        <Sparkles aria-hidden="true" size={18} />
-        <strong id="ai-suggestion-title">Proposition de l’assistant IA</strong>
-      </div>
-      <p className="v-small v-muted">Relisez et corrigez si besoin : rien n’est enregistré tant que vous n’avez pas validé puis enregistré le produit.</p>
-
-      <label className="v-field">
-        Nom proposé
-        <input maxLength={120} onChange={(event) => setName(event.target.value)} value={name} />
-      </label>
-
-      <div className="v-field">
-        <span className="ai-suggestion-label">
-          Description proposée
-          <button className="v-link-inline ai-suggestion-toggle" onClick={() => setPreview(!preview)} type="button">
-            {preview ? "Modifier le texte" : "Voir l’aperçu"}
-          </button>
-        </span>
-        {preview ? (
-          <div className="ai-suggestion-preview">
-            <RichText source={description} />
-          </div>
-        ) : (
-          <textarea maxLength={2000} onChange={(event) => setDescription(event.target.value)} rows={8} value={description} />
-        )}
-      </div>
-
-      <div className="ai-suggestion-actions">
-        <button className="btn btn-primary" disabled={name.trim().length < 2} onClick={() => onApply({ name: name.trim(), description: description.trim() })} type="button">
-          Utiliser ces informations
-        </button>
-        <button className="btn btn-secondary" onClick={onDismiss} type="button">
-          Ignorer
-        </button>
-      </div>
-    </div>
-  );
 }
 
 const icons = { danger: CircleAlert, warning: TriangleAlert, tip: Lightbulb };

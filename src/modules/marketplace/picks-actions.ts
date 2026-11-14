@@ -13,7 +13,6 @@ import { clearShopCache } from "@/modules/marketplace/shop";
 const listPath = "/admin/marketplace";
 const sections = ["FLASH", "EXCLUSIVE", "FEATURED_STORE", "DEAL_LEAD"] as const;
 const maxPerSection = { FLASH: 12, EXCLUSIVE: 12, FEATURED_STORE: 10, DEAL_LEAD: 1 } as const;
-const pendingMigration = "Cette option sera disponible après la mise à jour de la base de données (migration de la marketplace).";
 const idSchema = z.string().min(10).max(40).regex(/^[a-z0-9]+$/);
 const slugPattern = /^[a-z0-9](?:[a-z0-9-]{0,158}[a-z0-9])?$/;
 
@@ -75,8 +74,7 @@ export async function addMarketplacePick(formData: FormData) {
   if (endsAt === undefined) back("Date de fin invalide.", "erreur");
   if (section.data === "FLASH" && !endsAt) back("Indiquez la fin de la vente flash : le compte à rebours s’arrête à cette date.", "erreur");
   if (endsAt && endsAt.getTime() <= Date.now()) back("La date de fin est déjà passée.", "erreur");
-  const existing = await prisma.marketplacePick.count({ where: { section: section.data } }).catch(() => null);
-  if (existing === null) back(pendingMigration, "erreur");
+  const existing = await prisma.marketplacePick.count({ where: { section: section.data } });
   if (existing >= maxPerSection[section.data]) {
     back(
       section.data === "DEAL_LEAD" ? "Une seule bonne affaire vedette : retirez l’actuelle d’abord." : `${maxPerSection[section.data]} éléments au plus dans cette rubrique : retirez-en un d’abord.`,
@@ -155,17 +153,13 @@ export async function setStoreExcluded(formData: FormData) {
   const exclude = formData.get("exclude") === "1";
   const store = await prisma.store.findUnique({ where: { id: storeId.data }, select: { id: true, name: true } });
   if (!store) back("Boutique introuvable.", "erreur", "boutiques");
-  try {
-    if (exclude) {
-      const already = await prisma.marketplacePick.findFirst({ where: { section: "EXCLUDED_STORE", storeId: store.id }, select: { id: true } });
-      if (!already) await prisma.marketplacePick.create({ data: { section: "EXCLUDED_STORE", storeId: store.id } });
-      // Une boutique exclue ne reste pas « à la une ».
-      await prisma.marketplacePick.deleteMany({ where: { section: "FEATURED_STORE", storeId: store.id } });
-    } else {
-      await prisma.marketplacePick.deleteMany({ where: { section: "EXCLUDED_STORE", storeId: store.id } });
-    }
-  } catch {
-    back(pendingMigration, "erreur", "boutiques");
+  if (exclude) {
+    const already = await prisma.marketplacePick.findFirst({ where: { section: "EXCLUDED_STORE", storeId: store.id }, select: { id: true } });
+    if (!already) await prisma.marketplacePick.create({ data: { section: "EXCLUDED_STORE", storeId: store.id } });
+    // Une boutique exclue ne reste pas « à la une ».
+    await prisma.marketplacePick.deleteMany({ where: { section: "FEATURED_STORE", storeId: store.id } });
+  } else {
+    await prisma.marketplacePick.deleteMany({ where: { section: "EXCLUDED_STORE", storeId: store.id } });
   }
   await logAdminAction(admin.id, { action: exclude ? "marketplace.store.exclude" : "marketplace.store.include", targetType: "marketplace", targetId: store.id, storeId: store.id });
   refresh();

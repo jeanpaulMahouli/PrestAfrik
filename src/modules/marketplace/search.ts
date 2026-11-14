@@ -180,7 +180,8 @@ export type TopProduct = { name: string; slug: string; priceXaf: number; promoti
  * Point unique pour faire évoluer ce choix (ventes, boost…).
  */
 export async function getTopProducts(storeId: string, take = 4): Promise<TopProduct[]> {
-  const where = { storeId, status: "ACTIVE" as const, archivedAt: null };
+  // Comme sur la marketplace : jamais de produit à 0 FCFA ou sous 50 FCFA.
+  const where = { storeId, status: "ACTIVE" as const, archivedAt: null, priceXaf: { gte: 50 }, OR: [{ promotionalPriceXaf: null }, { promotionalPriceXaf: { gte: 50 } }] };
   const rated = await prisma.productReview.groupBy({
     by: ["productId"],
     where: { storeId, status: "APPROVED", product: where },

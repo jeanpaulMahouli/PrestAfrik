@@ -60,7 +60,23 @@ const productSelect = {
 type ProductRow = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 
 /** Produits visibles sur la marketplace : en ligne, disponibles, d'une boutique publiée, et avec au moins une photo. */
-const visible = (storeIds: string[]): Prisma.ProductWhereInput => ({ storeId: { in: storeIds }, status: "ACTIVE", archivedAt: null, availability: "AVAILABLE", images: { some: {} } });
+/** Prix minimal d'un produit sur la marketplace : 0 FCFA ou un prix dérisoire (erreur de saisie) n'y apparaît pas. */
+export const minMarketplacePriceXaf = 50;
+
+/** Le prix payé (promotion comprise) atteint le minimum de la marketplace. */
+export const hasMarketplacePrice = (product: { priceXaf: number; promotionalPriceXaf: number | null }) =>
+  (product.promotionalPriceXaf !== null && product.promotionalPriceXaf < product.priceXaf ? product.promotionalPriceXaf : product.priceXaf) >= minMarketplacePriceXaf;
+
+const visible = (storeIds: string[]): Prisma.ProductWhereInput => ({
+  storeId: { in: storeIds },
+  status: "ACTIVE",
+  archivedAt: null,
+  availability: "AVAILABLE",
+  images: { some: {} },
+  // Ni produit à 0 FCFA, ni prix (ou prix promotionnel) sous 50 FCFA.
+  priceXaf: { gte: minMarketplacePriceXaf },
+  OR: [{ promotionalPriceXaf: null }, { promotionalPriceXaf: { gte: minMarketplacePriceXaf } }],
+});
 
 async function ratingsOf(productIds: string[]) {
   if (!productIds.length) return new Map<string, { rating: number; count: number }>();
@@ -84,7 +100,8 @@ async function toShopProducts(rows: ProductRow[], stores: Map<string, Searchable
   const [ratings, featuredIds] = await Promise.all([ratingsOf(rows.map((row) => row.id)), featuredStoreIds()]);
   return rows.flatMap((row) => {
     const store = stores.get(row.storeId);
-    if (!store) return [];
+    // Sélections de l'administration comprises : jamais de produit sous le prix minimal.
+    if (!store || !hasMarketplacePrice(row)) return [];
     const promo = row.promotionalPriceXaf !== null && row.promotionalPriceXaf < row.priceXaf ? row.promotionalPriceXaf : null;
     const rating = ratings.get(row.id);
     const image = row.images[0]?.url ?? null;

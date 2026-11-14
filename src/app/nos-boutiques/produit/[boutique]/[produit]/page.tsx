@@ -15,7 +15,7 @@ import { richTextToPlain } from "@/modules/catalog/rich-text";
 import { getPublishedProduct, getStorefrontStore } from "@/modules/catalog/service";
 import { getShopScope } from "@/modules/marketplace/country";
 import { countryName } from "@/modules/marketplace/search";
-import { getProductNeighbours, marketplaceProductPath, marketplaceStore } from "@/modules/marketplace/shop";
+import { getProductNeighbours, hasMarketplacePrice, marketplaceProductPath, marketplaceStore } from "@/modules/marketplace/shop";
 import { getProductReviews } from "@/modules/reviews/queries";
 import { getLikeSummary } from "@/modules/marketplace/likes";
 
@@ -31,7 +31,8 @@ async function load(params: Params) {
   const store = await getStorefrontStore(boutique);
   if (!store || store.isPreview) return null;
   const product = await getPublishedProduct(store.id, produit);
-  return product ? { listed, store, product } : null;
+  // Produit à 0 FCFA ou sous 50 FCFA : absent de la marketplace (sa fiche reste sur la boutique).
+  return product && hasMarketplacePrice(product) ? { listed, store, product } : null;
 }
 
 const summary = (product: { name: string; description: string | null; priceXaf: number; promotionalPriceXaf: number | null }, storeName: string) => {

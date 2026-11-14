@@ -5040,3 +5040,12 @@ svg.sx-wa {
     max-height: min(34rem, calc(100dvh - 7.5rem));
   }
 }
+
+/* Pied de page : de l'espace entre la présentation et les numéros de téléphone. */
+.shop .shop-footer-about {
+  margin: 0 0 1.5rem;
+}
+
+.shop .sx-footer-contacts {
+  margin-top: 0;
+}

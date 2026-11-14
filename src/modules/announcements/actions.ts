@@ -90,9 +90,7 @@ export async function createAnnouncement(formData: FormData) {
   const fields = fieldsSchema.safeParse({ placement: formData.get("placement"), altText: formData.get("altText") ?? "", linkUrl: formData.get("linkUrl") ?? "", ctaLabel: formData.get("ctaLabel") ?? "" });
   if (!fields.success) back(fields.error.issues[0]?.message ?? "Vérifiez les informations.", "erreur");
   const { placement, altText, linkUrl, ctaLabel } = fields.data;
-  // Nouveaux emplacements : ils existent en base après la migration 20261109120000_marketplace_admin_and_likes.
-  const existing = await prisma.platformAnnouncement.count({ where: { placement } }).catch(() => null);
-  if (existing === null) back("Cet emplacement sera disponible après la mise à jour de la base de données (migration de la marketplace).", "erreur", espaceOf(placement));
+  const existing = await prisma.platformAnnouncement.count({ where: { placement } });
   if (existing >= maxPerPlacement[placement]) {
     back(`${maxPerPlacement[placement]} image${maxPerPlacement[placement] > 1 ? "s" : ""} au plus pour cet emplacement : supprimez-en une d’abord.`, "erreur", espaceOf(placement));
   }

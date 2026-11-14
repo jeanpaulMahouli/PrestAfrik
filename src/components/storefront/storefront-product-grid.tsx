@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { StarRating, reviewCountLabel } from "@/components/storefront/star-rating";
+import { StarRating } from "@/components/storefront/star-rating";
 import { storeHref } from "@/lib/store-host";
 import { StoreImage } from "@/components/ui/store-image";
 import { discountPercent, formatXaf } from "@/modules/catalog/format";
@@ -83,11 +83,10 @@ export function ProductCard({
         </span>
         <span className="sf-card-body">
           <strong>{product.name}</strong>
-          {/* Note du produit (étoiles), dès que la boutique accepte les avis. */}
+          {/* Note du produit : les étoiles seules, sans texte (« Aucun avis »…). */}
           {ratings && (
             <span className="sf-card-rating">
               <StarRating size={14} value={ratings[product.id]?.average ?? 0} />
-              <small>{reviewCountLabel(ratings[product.id]?.count ?? 0)}</small>
             </span>
           )}
           <ProductPrice priceXaf={product.priceXaf} promotionalPriceXaf={product.promotionalPriceXaf} suffix={priceSuffix(product.listingType, product.pricePeriod)} />

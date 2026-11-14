@@ -861,53 +861,12 @@
   outline-offset: 2px;
 }
 
-.ai-suggestion {
-  display: grid;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  padding: 1rem;
-  border: 1px solid var(--color-brand-primary);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-warm);
-}
 
-.ai-suggestion-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--color-link);
-}
 
-.ai-suggestion-head strong {
-  color: var(--color-text-primary);
-}
 
-.ai-suggestion-label {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
 
-.ai-suggestion-toggle {
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 0.8125rem;
-  cursor: pointer;
-}
 
-.ai-suggestion-preview {
-  padding: 0.75rem;
-  border: 1px solid var(--color-border-input);
-  border-radius: var(--radius-sm);
-  background: var(--color-surface);
-}
 
-.ai-suggestion-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
 
 /* ---------- Infos pratiques ---------- */
 
@@ -1229,4 +1188,14 @@
   .ai-fill .btn-ai {
     width: 100%;
   }
+}
+
+/* Message après le remplissage par l'IA. */
+.ai-filled {
+  margin: 0;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-xs);
+  color: var(--color-success-strong);
+  background: var(--color-success-surface);
+  font-size: 0.875rem;
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Sparkles } from "@/components/ui/icons";
 import { startTransition, useActionState, useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { PhotoManager, type ExistingPhoto, type PhotoSummary } from "@/components/catalog/photo-manager";
-import { AiRequestError, AiSuggestionPanel, ProductNotices, requestAiSuggestion, type AiCreditsInfo, type AiSuggestion } from "@/components/catalog/product-assistant";
+import { AiRequestError, ProductNotices, requestAiSuggestion, type AiCreditsInfo, type AiSuggestion } from "@/components/catalog/product-assistant";
 import { ProductVariantsEditor, type VariantDraft } from "@/components/catalog/product-variants-editor";
 import { ListingFields, productWording, type ListingValues } from "@/components/catalog/product-universe";
 import type { ShopUniverse } from "@/config/marketplace";
@@ -98,7 +98,8 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
   // Photos, saisie en cours (pour les infos pratiques) et assistant IA.
   const [photoSummary, setPhotoSummary] = useState<PhotoSummary>({ previewUrls: values.photos.map((photo) => photo.previewUrl), uploading: false });
   const [snapshot, setSnapshot] = useState<ProductSnapshot>(() => initialSnapshot(values));
-  const [suggestion, setSuggestion] = useState<AiSuggestion | null>(null);
+  // Nom et description remplis par l'IA : petit message sous le bouton, à relire avant d'enregistrer.
+  const [aiFilled, setAiFilled] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
 
@@ -180,10 +181,12 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
     if (!canAskAi || aiLoading) return;
     setAiLoading(true);
     setAiError("");
+    setAiFilled(false);
     try {
       const result = await requestAiSuggestion({ photos: photoSummary.previewUrls, name: nameRef.current?.value ?? "" });
       if (result.credits) setCredits(result.credits);
-      setSuggestion({ name: result.name, description: result.description });
+      // Le nom et la description vont directement dans leurs champs (le vendeur peut les modifier).
+      applySuggestion({ name: result.name, description: result.description });
     } catch (error) {
       if (error instanceof AiRequestError && error.credits) setCredits(error.credits);
       setAiError(error instanceof Error ? error.message : "L’assistant IA n’a pas pu répondre. Réessayez.");
@@ -196,9 +199,11 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
     if (nameRef.current) nameRef.current.value = applied.name;
     setDescriptionValue(applied.description);
     setDescriptionKey((key) => key + 1);
-    setSuggestion(null);
+    setAiFilled(true);
     setDirty(true);
-    nameRef.current?.focus();
+    // Amène le vendeur sur les champs remplis, sans saut brusque.
+    document.getElementById("product-info")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    nameRef.current?.focus({ preventScroll: true });
   }
 
   useFormPersistence(formRef, values.id ? `produit:${values.id}` : null);
@@ -296,10 +301,14 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
                           : "Commencez par ajouter une photo du produit."}
                   </span>
                   {aiError && <p className="v-field-error" role="alert">{aiError}</p>}
+                  {aiFilled && !aiError && (
+                    <p className="ai-filled" role="status">
+                      Nom et description remplis par l’IA ci-dessous : relisez-les et modifiez-les si besoin avant d’enregistrer.
+                    </p>
+                  )}
                 </div>
               )}
             </PhotoManager>
-            {suggestion && <AiSuggestionPanel key={JSON.stringify(suggestion)} onApply={applySuggestion} onDismiss={() => setSuggestion(null)} suggestion={suggestion} />}
           </section>
 
           <section className="v-card" id="product-info">

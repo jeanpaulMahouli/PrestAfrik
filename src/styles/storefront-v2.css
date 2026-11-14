@@ -2657,3 +2657,45 @@
   font-size: 0.9375rem;
   font-weight: 500;
 }
+
+/* ======================================================================
+   Typographie des boutiques : Poppins uniquement, sans déformation.
+   Aucun espacement ajouté ou retiré entre les lettres, aucun italique ni gras « fabriqué » par le
+   navigateur (Poppins n'a pas de fichier italique : il penchait et étirait les lettres lui-même).
+   ====================================================================== */
+.sf-v2,
+.sf-v2 *,
+.sf-v2 *::before,
+.sf-v2 *::after {
+  font-family: var(--font-body) !important;
+  font-stretch: normal !important;
+  font-synthesis: none;
+  letter-spacing: normal !important;
+}
+
+/* Titres des promotions droits ; l'italique des descriptions utilise le vrai italique de Poppins. */
+.sf-v2 :is(.sf-promo-label, .sf-promo-head h1, .sf-promo-head h2) {
+  font-style: normal;
+}
+
+.sf-v2 :is(em, i) {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.sf-v2 :is(strong, b) :is(em, i),
+.sf-v2 :is(em, i) :is(strong, b) {
+  font-weight: 600;
+}
+
+/* Bannière sur téléphone : l'ancien modèle, arrondie (même arrondi que les cartes produits) et décollée
+   de l'en-tête et des bords. Sur ordinateur, elle reste en pleine largeur. */
+@media (max-width: 767px) {
+  .sf-v2 .sf-banner,
+  .sf-v2 .sf-home > .sf-banner {
+    width: calc(100% - 2 * var(--sf-gutter));
+    margin: 1rem auto 0;
+    overflow: hidden;
+    border-radius: var(--sf-radius);
+  }
+}
