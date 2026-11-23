@@ -36,10 +36,7 @@ export default async function AdminAiCreditsPage({ searchParams }: PageProps<"/a
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Crédits IA</h1>
-          <p className="v-page-subtitle">
-            L’assistant IA propose le nom et la description d’un produit à partir de ses photos. Chaque boutique reçoit {defaultMonthlyAiCredits} crédits par mois
-            (1 crédit par proposition), renouvelés le 1er du mois ; les crédits bonus que vous donnez ne se périment pas.
-          </p>
+          <p className="v-page-subtitle">{defaultMonthlyAiCredits} crédits par boutique et par mois.</p>
         </div>
       </div>
       <AdminFeedback params={params} />

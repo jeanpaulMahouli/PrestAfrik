@@ -51,7 +51,6 @@ export default async function MoneyPage({ searchParams }: PageProps<"/dashboard/
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Argent reçu</h1>
-          <p className="v-page-subtitle">Chaque commande validée est comptée ici automatiquement.</p>
         </div>
         <div className="v-page-actions">
           <PeriodFilter basePath="/dashboard/argent" period={period} />

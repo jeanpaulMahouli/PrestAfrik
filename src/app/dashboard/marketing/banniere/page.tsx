@@ -27,7 +27,7 @@ export default async function StoreBannerPage() {
         <div>
           <h1 className="v-page-title">Bannière</h1>
           <p className="v-page-subtitle">
-            Mettez en vitrine vos nouveautés et vos promotions : jusqu’à 4 images qui défilent sous la recherche de votre boutique, toutes les 5 secondes.
+            Jusqu’à 4 images.
           </p>
         </div>
         <div className="v-page-actions">

@@ -209,7 +209,6 @@ export function PageEditor({ kind, initialTitle, initialBlocks, previewHref }: {
           </button>
         ))}
       </div>
-      <p className="v-small v-muted">Pas de code HTML ni de JavaScript : seuls ces blocs sont acceptés.</p>
     </section>
   );
 }

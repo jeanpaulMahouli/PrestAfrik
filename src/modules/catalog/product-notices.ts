@@ -31,9 +31,9 @@ export function buildProductNotices(snapshot: ProductSnapshot): ProductNotice[] 
   if (!priceText) {
     notices.push({ id: "price-missing", level: "danger", text: "Indiquez le prix du produit en FCFA." });
   } else if (price === null) {
-    notices.push({ id: "price-format", level: "danger", text: "Le prix doit être un nombre entier en FCFA, sans espace ni virgule (ex. 15000)." });
+    notices.push({ id: "price-format", level: "danger", text: "Prix en FCFA, nombre entier (ex. 15000)." });
   } else if (price === 0) {
-    notices.push({ id: "price-zero", level: "danger", text: "Un prix de 0 FCFA n’est pas accepté : indiquez le vrai prix de vente." });
+    notices.push({ id: "price-zero", level: "danger", text: "Le prix ne peut pas être 0." });
   } else if (price < 100) {
     notices.push({ id: "price-low", level: "warning", text: `${price} FCFA, c’est très bas. Vérifiez qu’il ne manque pas de zéros.` });
   }
@@ -42,7 +42,7 @@ export function buildProductNotices(snapshot: ProductSnapshot): ProductNotice[] 
     if (promo === null) {
       notices.push({ id: "promo-format", level: "danger", text: "Le prix promotionnel doit être un nombre entier en FCFA." });
     } else if (promo === 0) {
-      notices.push({ id: "promo-zero", level: "danger", text: "Un prix promotionnel de 0 FCFA n’est pas accepté. Laissez le champ vide s’il n’y a pas de promotion." });
+      notices.push({ id: "promo-zero", level: "danger", text: "Prix promo à 0 refusé : laissez vide." });
     } else if (price !== null && price > 0 && promo >= price) {
       notices.push({ id: "promo-high", level: "danger", text: "Le prix promotionnel doit être inférieur au prix normal." });
     } else if (price !== null && price > 0 && promo < price * 0.2) {
@@ -52,29 +52,29 @@ export function buildProductNotices(snapshot: ProductSnapshot): ProductNotice[] 
     notices.push({
       id: "promo-suggest",
       level: "tip",
-      text: "Astuce : ajoutez un prix promotionnel pour afficher un badge de réduction (ex. −10 %) qui attire l’œil des clients.",
+      text: "Astuce : un prix promo affiche un badge −10 %.",
     });
   }
 
   // Catégorie
   if (!snapshot.categoryChosen) {
-    notices.push({ id: "category", level: "warning", text: "Placez ce produit dans une catégorie : vos clients le trouveront plus facilement dans la boutique." });
+    notices.push({ id: "category", level: "warning", text: "Choisissez une catégorie." });
   }
 
   // Photos
   if (snapshot.photoCount === 0 && !snapshot.uploading) {
-    notices.push({ id: "photos-none", level: "warning", text: "Ajoutez au moins une photo : un produit sans photo se vend très mal." });
+    notices.push({ id: "photos-none", level: "warning", text: "Ajoutez au moins une photo." });
   } else if (snapshot.photoCount === 1 && !snapshot.uploading) {
-    notices.push({ id: "photos-one", level: "tip", text: "Ajoutez 2 ou 3 photos (de face, de près, porté ou en situation) pour rassurer vos clients." });
+    notices.push({ id: "photos-one", level: "tip", text: "Ajoutez 2 ou 3 photos." });
   }
 
   // Nom et description
   const name = snapshot.name.trim();
   if (name && name.length >= 6 && name === name.toUpperCase() && /[A-Z]/.test(name)) {
-    notices.push({ id: "name-caps", level: "tip", text: "Évitez d’écrire le nom tout en majuscules : il est plus lisible en minuscules." });
+    notices.push({ id: "name-caps", level: "tip", text: "Évitez les majuscules partout." });
   }
   if (!snapshot.description.trim()) {
-    notices.push({ id: "description", level: "tip", text: "Ajoutez une description (matière, taille, usage) : elle répond aux questions des clients avant qu’ils les posent." });
+    notices.push({ id: "description", level: "tip", text: "Ajoutez une description (matière, taille…)." });
   }
 
   // Stock

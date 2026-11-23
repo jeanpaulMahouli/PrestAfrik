@@ -17,8 +17,7 @@ export function EmailVerificationGate({ email }: { email: string }) {
       </span>
       <h1 id="email-gate-title">Confirmez votre adresse e-mail</h1>
       <p className="wizard-subtitle">
-        Avant de créer votre boutique, nous devons vérifier que cette adresse est bien la vôtre. C’est elle qui recevra vos nouvelles commandes et vous permettra de récupérer
-        votre compte.
+        Pour recevoir vos commandes et sécuriser votre compte.
       </p>
       <EmailConfirmPanel email={email} />
     </section>

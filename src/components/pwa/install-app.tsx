@@ -199,7 +199,7 @@ export function InstallAppButton({ className = "btn btn-glass", compact = false 
         <Download aria-hidden="true" size={18} />
         {compact ? "Installer l’application" : "Installer PrestAfrik sur mon écran d’accueil"}
       </button>
-      <Dialog centered description="Trois gestes, moins de 30 secondes. Suivez les étapes ci-dessous." onClose={() => setHelp(false)} open={help} size="sm" title="Installer PrestAfrik sur votre écran d’accueil">
+      <Dialog centered onClose={() => setHelp(false)} open={help} size="sm" title="Installer PrestAfrik sur votre écran d’accueil">
         <InstallSteps platform={platform} />
       </Dialog>
     </>
@@ -240,7 +240,7 @@ export function InstallAppSuggestion({ storageKey = "prestafrik:pwa-proposee" }:
   return (
     <Dialog
       centered
-      description="Recommandé, mais facultatif : vous pouvez aussi continuer depuis votre navigateur."
+      description="Facultatif."
       footer={
         <div className="pwa-actions">
           <button className="btn btn-secondary" onClick={close} type="button">
@@ -384,9 +384,7 @@ export function StoreLaunchDialog({ storeName, storeUrl, published }: { storeNam
             </h3>
             <SocialShare text={`Découvrez ma boutique ${storeName}`} title={storeName} url={storeUrl} />
           </section>
-        ) : (
-          <p className="launch-note">Ajoutez un produit pour la mettre en ligne : « Pour bien démarrer » vous guide.</p>
-        )}
+        ) : null}
 
         {ready && !isInstalled && (
           <section aria-labelledby="launch-install-title" className="launch-section launch-install-card">

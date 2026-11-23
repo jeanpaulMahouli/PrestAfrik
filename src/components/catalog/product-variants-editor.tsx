@@ -54,7 +54,7 @@ export function ProductVariantsEditor({ initialOptionName = "", initialVariants 
         </>
       ) : (
         <>
-          <p className="v-muted v-small">Chaque variante peut avoir sa référence, son prix et son stock. Sans prix, celui du produit s’applique.</p>
+          <p className="v-muted v-small">Sans prix, celui du produit s’applique.</p>
           <div className="variants-option">
             <label className="v-field">
               Option

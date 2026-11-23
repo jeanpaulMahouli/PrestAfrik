@@ -61,10 +61,10 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
       {!store.isPublished && !store.suspendedAt && (
         <p className="v-banner v-banner-warning vendor-unpublished-banner" role="status">
           <span>
-            <strong>{store.name} n’est pas encore en ligne :</strong> vos clients ne la voient pas encore, et elle n’apparaît pas sur la marketplace.
+            <strong>{store.name}</strong> n’est pas encore en ligne.
           </span>
           <Link className="btn btn-primary btn-sm" href="/dashboard#publication-title">
-            Voir les étapes pour la publier
+            Terminer
           </Link>
         </p>
       )}
@@ -74,13 +74,13 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
         </p>
       )}
       <div className="vendor-body">
-        <VendorSidebar role={membership.role} />
+        <VendorSidebar role={membership.role} unpublished={!store.isPublished} />
         <main className="vendor-main" id="contenu">
           <PushOptInBanner publicKey={pushPublicKey()} />
           {children}
         </main>
       </div>
-      <VendorMobileNav role={membership.role} storeName={store.name} />
+      <VendorMobileNav role={membership.role} storeName={store.name} unpublished={!store.isPublished} />
       <FeedbackLauncher firstName={session.user.name.trim().split(/\s+/)[0] || session.user.name} />
     </div>
   );

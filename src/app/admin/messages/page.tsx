@@ -35,7 +35,6 @@ export default async function AdminFailedMessagesPage({ searchParams }: PageProp
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Messages échoués</h1>
-          <p className="v-page-subtitle">Repérez les messages WhatsApp qui n’ont pas pu partir, pour aider les vendeurs à les corriger.</p>
         </div>
         <form className="v-page-actions">
           {reason && <input name="raison" type="hidden" value={reason} />}
@@ -49,7 +48,7 @@ export default async function AdminFailedMessagesPage({ searchParams }: PageProp
       </div>
       <AdminFeedback params={params} />
       <p className="v-banner v-banner-info">
-        <strong>Vie privée respectée.</strong> Pour protéger les clients, le contenu des messages et les numéros complets ne sont jamais affichés ici.
+        <strong>Vie privée respectée.</strong> Contenus et numéros masqués.
       </p>
 
       <nav aria-label="Filtrer par raison" className="pill-tabs">

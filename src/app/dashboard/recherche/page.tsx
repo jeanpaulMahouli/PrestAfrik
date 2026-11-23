@@ -27,7 +27,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/dashboard
           <h1 className="v-page-title">Recherche</h1>
           <p className="v-page-subtitle">
             {!query
-              ? "Saisissez au moins 2 caractères : référence de commande, nom ou numéro WhatsApp d’un client, nom de produit."
+              ? "Commande, client ou produit."
               : total
                 ? `${total} résultat${total > 1 ? "s" : ""} pour « ${query.text} »`
                 : `Aucun résultat pour « ${query.text} »`}
@@ -38,7 +38,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/dashboard
       {query && !total && (
         <div className="v-card v-empty">
           <h2>Rien trouvé</h2>
-          <p>Vérifiez l’orthographe, ou cherchez une référence (ex. MB-1041), un numéro WhatsApp ou une partie du nom.</p>
+          <p>Essayez une référence, un numéro ou un nom.</p>
         </div>
       )}
 

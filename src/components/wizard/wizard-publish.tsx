@@ -21,7 +21,6 @@ export function PublishStep({ draftId, recap, missing, hasProduct }: { draftId: 
       backHref={stepHref(8)}
       draftId={draftId}
       step={9}
-      subtitle="Vérifiez ce récapitulatif : votre boutique sera créée en touchant le bouton ci-dessous. Vous pourrez toujours modifier chaque information ensuite."
       submitLabel={hasProduct ? "Créer et publier ma boutique" : "Créer ma boutique"}
       title="Tout est prêt ?"
     >
@@ -54,12 +53,11 @@ export function PublishStep({ draftId, recap, missing, hasProduct }: { draftId: 
           {missing.length === 0 &&
             (hasProduct ? (
               <p className="v-banner v-banner-info">
-                Votre boutique sera créée et mise en ligne tout de suite. Vos commandes arriveront dans « Commandes » : écrivez au client sur WhatsApp, puis touchez « Valider ».
+                Votre boutique sera mise en ligne tout de suite.
               </p>
             ) : (
               <p className="v-banner v-banner-info">
-                Votre boutique sera créée tout de suite. Pour la mettre en ligne, il faudra ajouter au moins un produit : l’écran suivant vous indiquera
-                comment, en quelques secondes.
+                Ajoutez ensuite un produit pour la mettre en ligne.
               </p>
             ))}
         </>
@@ -97,7 +95,7 @@ export function PublishedScreen({ storeName, storeUrl }: { storeName: string; st
       <span aria-hidden="true" className="wizard-published-icon"><CheckIcon size={24} /></span>
       <h1 id="published-title">Félicitations, votre boutique prend vie !</h1>
       <p className="wizard-subtitle">
-        Elle est maintenant visible par vos clients. Partagez-la sans attendre : le premier client est peut-être déjà en train de la chercher.
+        Elle est en ligne. Partagez-la !
       </p>
       <StoreLink showView storeUrl={storeUrl} />
       <SocialShare text={`Découvrez ma boutique ${storeName}`} title={storeName} url={storeUrl} />
@@ -119,7 +117,7 @@ export function CreatedScreen({ storeName, storeUrl, missing }: { storeName: str
       <span aria-hidden="true" className="wizard-published-icon"><CheckIcon size={24} /></span>
       <h1 id="created-title">Votre boutique « {storeName} » est créée !</h1>
       <p className="wizard-subtitle">
-        Elle n’est pas encore visible par vos clients. Il reste {missing.length > 1 ? "quelques étapes" : "une étape"} avant de la mettre en ligne, à faire quand vous voulez :
+        Pas encore en ligne. Il reste :
       </p>
       {missing.length > 0 && (
         <ul className="publish-missing-list">

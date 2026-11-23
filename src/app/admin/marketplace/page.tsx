@@ -9,7 +9,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { formatDateTime, formatFcfa } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/seo";
-import { shopUrl, storePublicUrl } from "@/lib/urls";
+import { storePublicUrl } from "@/lib/urls";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { getShopTickerSeconds } from "@/modules/announcements/queries";
 import { addMarketplacePick, moveMarketplacePick, removeMarketplacePick, setStoreExcluded, setStoreFeatured } from "@/modules/marketplace/picks-actions";
@@ -19,10 +19,10 @@ import { addTicker, removeCategoryImage, removeTicker, setCategoryImage, setTick
 export const metadata = { title: "Marketplace" };
 
 const sections: Record<"DEAL_LEAD" | "FLASH" | "EXCLUSIVE" | "FEATURED_STORE", { title: string; icon: AppIcon; help: string; placeholder: string; product: boolean }> = {
-  DEAL_LEAD: { title: "Bonne affaire vedette", icon: BadgePercent, help: "Le grand produit, à gauche du bloc « Les bonnes affaires ». Un seul produit ; sans choix, la plus forte promotion s’affiche.", placeholder: "https://prestafrik.com/produit/mboa-style/robe-wax", product: true },
-  FLASH: { title: "Offre du jour", icon: Zap, help: "Produits avec compte à rebours ; ils disparaissent seuls à la date de fin.", placeholder: "https://mboa-style.prestafrik.com/robe-wax", product: true },
+  DEAL_LEAD: { title: "Bonne affaire vedette", icon: BadgePercent, help: "Un seul produit. Par défaut : la plus forte promotion.", placeholder: "https://prestafrik.com/produit/mboa-style/robe-wax", product: true },
+  FLASH: { title: "Offre du jour", icon: Zap, help: "Retirés seuls à la date de fin.", placeholder: "https://mboa-style.prestafrik.com/robe-wax", product: true },
   EXCLUSIVE: { title: "Exclusivités PrestAfrik", icon: Crown, help: "Sélection négociée avec les vendeurs, dans un bandeau doré.", placeholder: "https://mboa-style.prestafrik.com/robe-wax", product: true },
-  FEATURED_STORE: { title: "Boutiques à la une", icon: Sparkles, help: "Leurs produits passent devant ceux des autres boutiques. Sans sélection, les mieux notées s’affichent.", placeholder: "https://mboa-style.prestafrik.com", product: false },
+  FEATURED_STORE: { title: "Boutiques à la une", icon: Sparkles, help: "Leurs produits passent en premier.", placeholder: "https://mboa-style.prestafrik.com", product: false },
 };
 
 const tabs = {
@@ -65,9 +65,6 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Marketplace</h1>
-          <p className="v-page-subtitle">
-            Ce que l’équipe met en avant sur <a href={absoluteUrl(shopUrl("/"))} rel="noopener noreferrer" target="_blank">la marketplace</a>. Les bannières se gèrent dans <Link href="/admin/annonces">Annonces</Link>.
-          </p>
         </div>
       </div>
       <AdminFeedback params={params} />
@@ -184,7 +181,7 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
             </span>
             <div>
               <h2 id="boutiques-titre">Boutiques sur la marketplace</h2>
-              <p>Excluez une boutique (elle disparaît de la marketplace et de la recherche, sa vitrine reste en ligne) ou mettez-la en avant : ses produits passent devant les autres.</p>
+              <p>Excluez ou mettez en avant une boutique.</p>
             </div>
           </header>
           <form className="mkt-settings" role="search">
@@ -240,7 +237,7 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
           ) : (
             <p className="v-muted">{search ? `Aucune boutique en ligne ne correspond à « ${search} ».` : "Aucune boutique en ligne."}</p>
           )}
-          {stores.length === 60 && <p className="v-small v-muted">60 premières boutiques affichées : précisez votre recherche.</p>}
+          {stores.length === 60 && <p className="v-small v-muted">60 premières : affinez la recherche.</p>}
         </section>
       )}
 
@@ -300,7 +297,7 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
               ))}
             </ul>
           ) : (
-            <p className="v-muted">Aucun texte : trois messages par défaut s’affichent (paiement à la livraison, WhatsApp, ouvrir sa boutique).</p>
+            <p className="v-muted">Aucun texte : messages par défaut.</p>
           )}
 
           {tickers.length < 8 && (
@@ -365,7 +362,6 @@ export default async function AdminMarketplacePage({ searchParams }: PageProps<"
               );
             })}
           </ul>
-          <p className="v-small v-muted">Choisissez un fichier : il est envoyé aussitôt.</p>
         </section>
       )}
     </>

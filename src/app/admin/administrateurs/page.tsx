@@ -50,14 +50,11 @@ export default async function AdminRolesPage({ searchParams }: PageProps<"/admin
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Administrateurs</h1>
-          <p className="v-page-subtitle">
-            Donnez ou retirez l’accès à l’administration. Un administrateur supervise la plateforme ; un super administrateur gère aussi les administrateurs.
-          </p>
         </div>
         <div className="v-page-actions">
           <ActionDialog
             action={grantAdminRole}
-            description="La personne doit déjà avoir un compte PrestAfrik. Elle sera prévenue par e-mail."
+            description="Compte PrestAfrik requis."
             submitLabel="Donner les droits"
             title="Ajouter un administrateur"
             triggerClassName="btn btn-primary"

@@ -52,7 +52,6 @@ export default async function AdminAuditPage() {
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Journal d’administration</h1>
-          <p className="v-page-subtitle">Chaque action de l’équipe PrestAfrik est enregistrée : qui, quand, quoi et sur quelle cible. Les 100 dernières sont affichées.</p>
         </div>
       </div>
       <section className="v-card v-card-flush">

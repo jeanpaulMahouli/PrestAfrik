@@ -58,30 +58,37 @@
 }
 
 /* ---------- 12. Accueil : boutique pas encore publiée ---------- */
+/* Boutique pas encore en ligne : carte claire, progression, étapes restantes en pastilles, une action. */
 .unpublished-notice {
   display: grid;
   gap: 1rem;
   margin-bottom: 1.25rem;
-  border-color: #ffd699;
-  border-left: 4px solid var(--v3-orange);
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #ffe2b8;
+  background: linear-gradient(135deg, #fff8ec 0%, #fff 60%);
+}
+
+.unpublished-notice.is-ready {
+  border-color: #bfe8c4;
+  background: linear-gradient(135deg, #effaf0 0%, #fff 60%);
 }
 
 .unpublished-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.9rem;
 }
 
 .unpublished-head h2 {
-  margin: 0 0 0.25rem;
-  font-size: 1.1rem;
+  margin: 0 0 0.15rem;
+  font-size: 1.125rem;
   font-weight: 600;
 }
 
 .unpublished-head p {
   margin: 0;
   color: var(--v3-ink-3);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
 .unpublished-icon {
@@ -90,73 +97,76 @@
   height: 2.75rem;
   flex: none;
   place-items: center;
-  border-radius: 50%;
-  color: var(--v3-navy);
-  background: var(--v3-tint);
+  border-radius: 0.875rem;
+  color: #fff;
+  background: var(--v3-orange);
+  box-shadow: 0 6px 16px rgb(255 153 0 / 0.28);
+}
+
+.unpublished-notice.is-ready .unpublished-icon {
+  background: #2db224;
+  box-shadow: 0 6px 16px rgb(45 178 36 / 0.25);
+}
+
+.unpublished-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .unpublished-progress {
-  height: 6px;
+  flex: 1;
+  height: 8px;
   overflow: hidden;
-  border-radius: 2px;
-  background: var(--v3-soft);
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.07);
 }
 
 .unpublished-progress span {
   display: block;
   height: 100%;
+  border-radius: inherit;
   background: var(--v3-orange);
+  transition: width 0.4s ease;
+}
+
+.unpublished-notice.is-ready .unpublished-progress span {
+  background: #2db224;
+}
+
+.unpublished-count {
+  color: var(--v3-ink-3);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .unpublished-steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
-  gap: 0.5rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 0.875rem;
-}
-
-.unpublished-steps li {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-height: 2rem;
-}
-
-.unpublished-steps li.is-done {
-  color: var(--v3-ink-4);
 }
 
 .unpublished-steps a {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--v3-line);
+  border-radius: 999px;
   color: var(--v3-ink);
-  font-weight: 600;
+  background: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
   text-decoration: none;
 }
 
 .unpublished-steps a:hover {
-  color: var(--v3-orange);
-}
-
-.unpublished-check {
-  display: grid;
-  width: 1.25rem;
-  height: 1.25rem;
-  flex: none;
-  place-items: center;
-  border: 1px solid var(--v3-line);
-  border-radius: 50%;
-  background: #fff;
-}
-
-.unpublished-steps li.is-done .unpublished-check {
-  border-color: #2db224;
-  color: #fff;
-  background: #2db224;
+  border-color: var(--v3-orange);
 }
 
 .unpublished-actions {
@@ -185,4 +195,9 @@
   .vendor-unpublished-banner {
     padding: 0.6rem 1rem;
   }
+}
+
+/* L'accueil montre déjà l'encart de publication : pas de bandeau en double. */
+body:has(.unpublished-notice) .vendor-unpublished-banner {
+  display: none;
 }

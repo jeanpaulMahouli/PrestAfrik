@@ -73,7 +73,7 @@ export function ShareStorePanel({ storeName, storeUrl, compact = false }: { stor
             Voir ma boutique
           </a>
         </div>
-        {copyFailed && <span className="v-field-help" role="status">Copie automatique bloquée par le navigateur : le lien est sélectionné, faites un appui long puis « Copier ».</span>}
+        {copyFailed && <span className="v-field-help" role="status">Copie bloquée : appui long puis « Copier ».</span>}
       </div>
       <div className="share-qr">
         {qr ? (

@@ -26,7 +26,7 @@ export default async function NewCustomerPage({
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Ajouter un client</h1>
-          <p className="v-page-subtitle">Ajoutez un client rencontré en dehors de la boutique. Une fiche ajoutée à la main n’autorise aucun envoi de message.</p>
+          <p className="v-page-subtitle">Aucun message ne lui sera envoyé.</p>
         </div>
       </div>
 

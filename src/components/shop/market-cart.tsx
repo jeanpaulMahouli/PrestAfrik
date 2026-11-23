@@ -338,7 +338,7 @@ function CheckoutForm({ store, zones, pickup, cartHref, homeHref, trackingBase }
             </small>
           )}
         </label>
-        <PhoneInput error={fieldError("whatsapp")} help="La boutique vous écrira sur ce numéro. Saisissez-le sans l’indicatif." label="Votre numéro WhatsApp" name="whatsapp" onValidityChange={(isValid) => setPhoneValid(isValid)} />
+        <PhoneInput error={fieldError("whatsapp")} label="Votre numéro WhatsApp" name="whatsapp" onValidityChange={(isValid) => setPhoneValid(isValid)} />
 
         {deliveryAvailable && pickup.enabled && (
           <fieldset className="sx-choice">

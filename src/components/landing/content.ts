@@ -90,26 +90,9 @@ export const demoPage = {
 
 export const partners = {
   title: "Ces boutiques vendent déjà avec PrestAfrik",
-  findCta: "Voir toutes les boutiques",
-  /** Bouton « Voir toutes les boutiques » sous les logos : désactivé pour l'instant (true pour le remettre). */
-  showStoresLink: false,
-  // Logos d'illustration (boutiques fictives) ; les compteurs réels sont lus en base (modules/marketplace/social-proof.ts).
-  logos: [
-    { src: "/landing/logos/mboa-style.svg", alt: "Mboa Style", width: 214, height: 40 },
-    { src: "/landing/logos/mama-pagne.svg", alt: "Mama Pagne", width: 214, height: 40 },
-    { src: "/landing/logos/linda-beauty.svg", alt: "Linda Beauty", width: 190, height: 40 },
-    { src: "/landing/logos/ekane-electro.svg", alt: "Ekane Électro", width: 204, height: 40 },
-    { src: "/landing/logos/kribi-accessoires.svg", alt: "Kribi Accessoires", width: 172, height: 40 },
-    { src: "/landing/logos/saveurs-du-littoral.svg", alt: "Saveurs du Littoral", width: 236, height: 40 },
-    { src: "/landing/logos/ndolo-kids.svg", alt: "Ndolo Kids", width: 156, height: 40 },
-    { src: "/landing/logos/atelier-ndop.svg", alt: "Atelier Ndop", width: 178, height: 40 },
-  ],
-};
-
-/** Bloc sous les logos qui défilent : les meilleures boutiques en ligne (vraies boutiques, lues en base). */
-export const bestStores = {
-  title: "Visitez nos meilleures boutiques",
-  count: 5,
+  findCta: "Visitez notre marketplace",
+  /** Nombre de boutiques qui défilent (les plus visitées). */
+  count: 20,
 };
 
 /** Comparatif de l'accueil : vendre seulement dans les discussions, ou avec une boutique PrestAfrik. */

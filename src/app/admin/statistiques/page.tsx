@@ -62,9 +62,7 @@ export default async function AdminStatisticsPage({ searchParams }: PageProps<"/
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Statistiques</h1>
-          <p className="v-page-subtitle">
-            Les indicateurs de performance de PrestAfrik sur les {label} derniers, comparés aux {label} précédents.
-          </p>
+          <p className="v-page-subtitle">{label} derniers vs précédents.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <nav aria-label="Période" className="segmented">
@@ -134,7 +132,7 @@ export default async function AdminStatisticsPage({ searchParams }: PageProps<"/
       <div className="home-charts">
         <section aria-labelledby="funnel" className="v-card">
           <h3 className="v-card-title" id="funnel">Parcours des vendeurs</h3>
-          <p className="v-small v-muted">Depuis le lancement : part des comptes inscrits arrivés à chaque étape.</p>
+          <p className="v-small v-muted">Depuis le lancement.</p>
           <ol className="stats-funnel">
             {data.funnel.map((step) => (
               <li key={step.label}>
@@ -150,7 +148,6 @@ export default async function AdminStatisticsPage({ searchParams }: PageProps<"/
         </section>
         <section aria-labelledby="order-status" className="v-card">
           <h3 className="v-card-title" id="order-status">Commandes par statut</h3>
-          <p className="v-small v-muted">Commandes reçues sur la période.</p>
           <Bars empty="Aucune commande sur la période." rows={data.statusCounts} />
         </section>
       </div>
@@ -175,7 +172,7 @@ export default async function AdminStatisticsPage({ searchParams }: PageProps<"/
         <section aria-labelledby="app-platforms" className="v-card">
           <h3 className="v-card-title" id="app-platforms">Appareils utilisés</h3>
           <p className="v-small v-muted">
-            Utilisateurs de l’application sur la période. <Link href="/admin/application">Voir qui l’utilise</Link>
+            <Link href="/admin/application">Voir qui l’utilise</Link>
           </p>
           <Bars empty="Aucune ouverture de l’application sur la période." rows={data.appPlatforms} />
         </section>
@@ -206,12 +203,10 @@ export default async function AdminStatisticsPage({ searchParams }: PageProps<"/
         </section>
         <section aria-labelledby="top-cities" className="v-card">
           <h3 className="v-card-title" id="top-cities">Villes de livraison</h3>
-          <p className="v-small v-muted">Commandes reçues sur la période, par ville du client.</p>
           <Bars empty="Aucune commande sur la période." rows={data.topCities} />
         </section>
         <section aria-labelledby="top-activities" className="v-card">
           <h3 className="v-card-title" id="top-activities">Activités des boutiques</h3>
-          <p className="v-small v-muted">Toutes les boutiques, par activité principale.</p>
           <Bars empty="Aucune boutique pour le moment." rows={data.topActivities} />
         </section>
       </div>

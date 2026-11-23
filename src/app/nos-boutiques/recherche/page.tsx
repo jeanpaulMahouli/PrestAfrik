@@ -250,10 +250,6 @@ export default async function ShopSearchPage({ searchParams }: PageProps<"/nos-b
             ) : (
               <span>Aucun filtre : tous les produits de la marketplace.</span>
             )}
-            <p className="sx-active-count">
-              <strong>{count}</strong> produit{count > 1 ? "s" : ""} trouvé{count > 1 ? "s" : ""}
-              {count === 48 ? " (affinez pour en voir d’autres)" : ""}
-            </p>
           </div>
 
           <h1 className="sx-results-title" id="resultats-title">

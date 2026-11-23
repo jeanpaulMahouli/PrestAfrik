@@ -53,7 +53,6 @@ export function ImportWizard() {
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Importer des produits</h1>
-          <p className="v-page-subtitle">Ajoutez plusieurs produits d’un coup à partir d’un fichier CSV. Nous vérifions tout avant d’importer.</p>
         </div>
         <div className="v-page-actions">
           {step === 2 ? (
@@ -100,7 +99,7 @@ export function ImportWizard() {
               <span>ou <span className="v-link-inline">parcourez vos fichiers</span></span>
               <input accept=".csv,text/csv" className="visually-hidden" disabled={pending} onChange={(event) => choose(event.currentTarget.files?.[0])} ref={inputRef} type="file" />
             </label>
-            <p className="v-field-help">Fichier CSV encodé en UTF-8, 5 Mo et 1 000 lignes au maximum. Séparateur « , » ou « ; ».</p>
+            <p className="v-field-help">CSV, 5 Mo et 1 000 lignes max.</p>
           </section>
           <section className="v-card">
             <h2 className="v-card-title">Colonnes attendues</h2>

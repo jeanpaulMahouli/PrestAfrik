@@ -21,8 +21,8 @@ export function RecoverableError({ error, retry, homeHref = "/dashboard" }: { er
       <p>
         {offline
           ? "Vérifiez votre connexion internet (données mobiles ou Wi-Fi), puis réessayez."
-          : "Le serveur n’a pas répondu à temps. Réessayez dans un instant."}{" "}
-        Ce que vous aviez saisi est conservé sur cet appareil.
+          : "Un problème est survenu. Réessayez dans un instant."}{" "}
+        Votre saisie est gardée.
       </p>
       <div className="recoverable-error-actions">
         <button className="btn btn-primary" onClick={() => retry()} type="button">

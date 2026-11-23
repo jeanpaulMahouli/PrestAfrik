@@ -51,7 +51,6 @@ export default async function CustomerDetailPage({ params, searchParams }: PageP
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">{customer.name}</h1>
-          <p className="v-page-subtitle">Toute l’histoire de ce client avec votre boutique : commandes, échanges, notes et rappels.</p>
         </div>
         <div className="v-page-actions">
           {canManage && (
@@ -81,7 +80,7 @@ export default async function CustomerDetailPage({ params, searchParams }: PageP
       {customer.nameConflict && canManage && (
         <section aria-labelledby="conflict-title" className="v-banner">
           <h2 className="v-card-title" id="conflict-title">Vérifiez le nom de ce client</h2>
-          <p className="v-small">Une commande récente utilise un nom très différent pour ce même numéro. Choisissez le nom à conserver ; l’historique des commandes reste inchangé.</p>
+          <p className="v-small">Deux noms pour ce numéro : lequel garder ?</p>
           <div className="v-button-row">
             {nameConflicts.map((order) => (
               <form action={resolveCustomerNameConflict} key={order.id}>
@@ -225,7 +224,7 @@ export default async function CustomerDetailPage({ params, searchParams }: PageP
             {hasMarketing && canManage && (
               <ActionDialog
                 action={revokeCustomerMarketingConsent}
-                description="Le client sera retiré immédiatement de toutes les audiences marketing. Le suivi de ses commandes n’est pas concerné."
+                description="Il ne recevra plus vos offres."
                 hiddenFields={{ customerId: customer.id }}
                 submitClassName="btn btn-danger"
                 submitLabel="Retirer le consentement"

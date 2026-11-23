@@ -54,7 +54,6 @@ export function WhatsappLinkForm(props: Props) {
         <PhoneInput
           defaultCountry={props.country}
           defaultNational={props.national}
-          help="Les clients qui commandent vous écrivent sur ce numéro. +237 par défaut."
           label="Numéro WhatsApp de la boutique"
           name="business"
           onValidityChange={(valid, e164) => setPhone(valid ? e164 : null)}

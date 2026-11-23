@@ -28,7 +28,6 @@ export default async function AdminStoresPage({ searchParams }: PageProps<"/admi
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Boutiques</h1>
-          <p className="v-page-subtitle">Supervisez toutes les boutiques de la plateforme : abonnement, activité et état de publication.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <a

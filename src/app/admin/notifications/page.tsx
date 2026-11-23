@@ -5,7 +5,7 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { requirePlatformAdmin } from "@/modules/admin/context";
-import { listSystemNotifications, slowQueryMs, systemNotificationTypeLabels, type SystemNotificationType } from "@/modules/system/notifications";
+import { listSystemNotifications, systemNotificationTypeLabels, type SystemNotificationType } from "@/modules/system/notifications";
 
 export const metadata = { title: "Notifications techniques" };
 
@@ -26,9 +26,6 @@ export default async function AdminNotificationsPage() {
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Notifications techniques</h1>
-          <p className="v-page-subtitle">
-            Erreurs serveur, requêtes de plus de {formatNumber(slowQueryMs)} ms, e-mails et envois d’images en échec. Une même erreur est regroupée et comptée.
-          </p>
         </div>
         {unread > 0 && (
           <form action={markAllRead} className="v-page-actions">

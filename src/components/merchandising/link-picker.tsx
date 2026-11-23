@@ -57,7 +57,7 @@ export function LinkPicker({ targets, initial, error }: { targets: LinkPickerTar
           {noCategory ? "Vous n’avez pas encore de catégorie. Créez-en une depuis un produit, ou choisissez un autre lien." : "Vous n’avez pas encore de produit en ligne. Ajoutez-en un, ou choisissez un autre lien."}
         </p>
       )}
-      {type === "PROMO" && <p className="v-small v-muted">Ouvre la page de tous vos produits en promotion.</p>}
+      {type === "PROMO" && <p className="v-small v-muted">Page de vos promotions.</p>}
       {error && <p className="v-field-error" role="alert">{error}</p>}
     </div>
   );

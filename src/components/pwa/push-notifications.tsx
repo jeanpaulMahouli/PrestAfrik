@@ -147,10 +147,10 @@ export function PushSettings({ publicKey }: { publicKey: string | null }) {
       <span>Notifications sur cet appareil</span>
       {state === "unsupported" && (
         <p className="dashboard-copy">
-          {publicKey ? "Ce navigateur ne reçoit pas les notifications. Sur iPhone, installez d’abord l’application PrestAfrik sur l’écran d’accueil." : "Les notifications ne sont pas encore disponibles."}
+          {publicKey ? "Non disponible ici. Sur iPhone, installez d’abord l’application." : "Les notifications ne sont pas encore disponibles."}
         </p>
       )}
-      {state === "denied" && <p className="dashboard-copy">Les notifications sont bloquées pour PrestAfrik dans les réglages du navigateur. Autorisez-les puis rechargez la page.</p>}
+      {state === "denied" && <p className="dashboard-copy">Notifications bloquées : autorisez-les dans le navigateur.</p>}
       {state === "on" && (
         <>
           <strong>Activées · nouvelles commandes, messages, nouveautés et rappels</strong>
@@ -161,7 +161,7 @@ export function PushSettings({ publicKey }: { publicKey: string | null }) {
       )}
       {state === "off" && (
         <>
-          <p className="dashboard-copy">Soyez prévenu d’une nouvelle commande, d’un message de l’équipe ou d’une nouveauté, même application fermée.</p>
+          <p className="dashboard-copy">Soyez prévenu de chaque commande.</p>
           <button className="btn btn-primary" disabled={busy} onClick={() => void enable()} type="button">
             <Bell aria-hidden="true" size={16} /> {busy ? "Activation…" : "Activer les notifications"}
           </button>

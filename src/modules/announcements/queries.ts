@@ -36,7 +36,7 @@ export type ShopSlots = {
  * tous les emplacements publicitaires (`slots`). Un emplacement sans image garde le visuel par défaut
  * (config/marketplace-ads.ts).
  */
-export async function getShopAnnouncements(): Promise<{ carousel: DashboardAnnouncement[]; banners: DashboardAnnouncement[]; mobile: DashboardAnnouncement | null; immo: DashboardAnnouncement | null; services: DashboardAnnouncement | null; restauration: DashboardAnnouncement | null; slots: ShopSlots }> {
+export async function getShopAnnouncements(): Promise<{ carousel: DashboardAnnouncement[]; banners: DashboardAnnouncement[]; mobile: DashboardAnnouncement | null; slots: ShopSlots }> {
   const rows = await prisma.platformAnnouncement
     .findMany({
       where: { active: true },
@@ -50,9 +50,6 @@ export async function getShopAnnouncements(): Promise<{ carousel: DashboardAnnou
     carousel: rows.filter((row) => row.placement === "SHOP_CAROUSEL").map(pick),
     banners: rows.filter((row) => row.placement === "SHOP_BANNER").map(pick).slice(0, 2),
     mobile: rows.filter((row) => row.placement === "SHOP_MOBILE").map(pick)[0] ?? null,
-    immo: rows.filter((row) => row.placement === "SHOP_IMMO").map(pick)[0] ?? null,
-    services: rows.filter((row) => row.placement === "SHOP_SERVICES").map(pick)[0] ?? null,
-    restauration: rows.filter((row) => row.placement === "SHOP_RESTAURATION").map(pick)[0] ?? null,
     slots: {
       seller: first("SHOP_SELLER"),
       featuredColumn: first("SHOP_FEATURED_COLUMN"),

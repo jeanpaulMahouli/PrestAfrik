@@ -1,14 +1,6 @@
-// Marketplace : univers (vente, immobilier, services) et grandes villes du Cameroun (choix « Livrer à »).
+// Marketplace : catégories prioritaires et grandes villes du Cameroun (choix « Livrer à »). Une seule
+// marketplace : toutes les boutiques, rangées dans les catalogues (catégories) d'après leur activité.
 // Fichier sans dépendance serveur : utilisé par les pages et par les composants du navigateur.
-
-export const shopUniverses = {
-  vente: { label: "Boutique", short: "Boutique", text: "Mode, beauté, maison, téléphones…" },
-  immobilier: { label: "Immobilier", short: "Immobilier", text: "Logements, meublés, bureaux, salles, véhicules" },
-  services: { label: "Services", short: "Services", text: "Coiffure, réparation, événementiel, transport…" },
-  restauration: { label: "Restauration", short: "Restauration", text: "Restaurants, fast-food, traiteurs, pâtisseries…" },
-} as const;
-
-export type ShopUniverse = keyof typeof shopUniverses;
 
 /**
  * Catégories prioritaires sur la marketplace, dans l'ordre : vêtements et beauté, puis électronique et
@@ -22,19 +14,7 @@ export function categoryRank(slug: string | null | undefined) {
   const index = slug ? (categoryPriority as readonly string[]).indexOf(slug) : -1;
   return index === -1 ? categoryPriority.length : index;
 }
-export const shopUniverseKeys = Object.keys(shopUniverses) as ShopUniverse[];
-export const shopUniverseCookie = "shop_univers";
 export const shopCityCookie = "shop_ville";
-
-/** Univers enregistré sur l'activité (colonne Activity.universe) → univers de la marketplace. */
-export type DbUniverse = "SHOPPING" | "IMMOBILIER" | "SERVICES" | "RESTAURATION";
-
-const fromDb: Record<DbUniverse, ShopUniverse> = { SHOPPING: "vente", IMMOBILIER: "immobilier", SERVICES: "services", RESTAURATION: "restauration" };
-
-/** Univers d'une boutique, d'après l'univers de son activité (Shopping sans activité). */
-export function universeFromDb(value: DbUniverse | null | undefined): ShopUniverse {
-  return value ? fromDb[value] : "vente";
-}
 
 export type ShopCity = { name: string; region: string; lat: number; lng: number };
 

@@ -293,8 +293,7 @@ export function PhotoManager({
       </ol>
       {children}
       <p className="v-field-help">
-        JPG, PNG ou WebP, 5 Mo maximum par photo. La première photo est la photo principale : glissez pour changer l’ordre (ou utilisez les flèches).
-        Quand vous atteignez 5 photos, la zone d’ajout disparaît.
+        5 photos, 5 Mo max. La première est la principale.
       </p>
       {(notice || error) && <p className="v-field-error" role="alert">{error ?? notice}</p>}
     </div>

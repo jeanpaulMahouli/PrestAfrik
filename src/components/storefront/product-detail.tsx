@@ -12,6 +12,8 @@ import { StoreImage } from "@/components/ui/store-image";
 import { buildProductWhatsappOrderMessage, buildWaMeUrl } from "@/modules/whatsapp/wa-me";
 import { useStoreHref } from "@/components/storefront/store-links";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { rememberCartStore, type CartStore } from "@/components/shop/market-cart";
+import { ProductShare } from "@/components/storefront/product-share";
 
 type ProductDetailProps = {
   storeSlug: string;
@@ -25,6 +27,17 @@ type ProductDetailProps = {
   children?: ReactNode;
   /** Immobilier : « À louer / À vendre », période du loyer et caractéristiques du bien. */
   listing?: { label: string | null; suffix: string; facts: { key: string; label: string; value: string }[] } | null;
+  /**
+   * Marketplace : même fiche que la boutique, avec ses propres liens (accueil et commande de la marketplace),
+   * le fil d'Ariane, la boutique retenue pour le panier, le vendeur et le partage.
+   */
+  marketplace?: {
+    homeHref: string;
+    checkoutHref: string;
+    crumbs: { href: string; label: string }[];
+    cartStore: CartStore;
+    seller: { name: string; href: string; logoUrl: string | null; place: string };
+  } | null;
   product: {
     id: string;
     name: string;
@@ -169,7 +182,7 @@ function Gallery({ images, name }: { images: ProductDetailProps["product"]["imag
   );
 }
 
-export function ProductDetail({ product, storeSlug, storeName, productUrl, whatsappNumber, canOrder = true, rating = null, children, listing = null }: ProductDetailProps) {
+export function ProductDetail({ product, storeSlug, storeName, productUrl, whatsappNumber, canOrder = true, rating = null, children, listing = null, marketplace = null }: ProductDetailProps) {
   const isListing = Boolean(listing?.label);
   const router = useRouter();
   const link = useStoreHref(storeSlug);
@@ -203,15 +216,24 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
       return false;
     }
     const added = cart.add({ productId: product.id, variantId: variant?.id ?? null, quantity });
+    if (added && marketplace) rememberCartStore(marketplace.cartStore);
     setMessage(added ? "Ajouté au panier !" : cart.error);
     return added;
   }
 
+  // Sur la marketplace, la fiche est dans le <main> de la marketplace : pas de second <main>.
+  const Root = marketplace ? "div" : "main";
   return (
-    <main className="sf-product-page">
+    <Root className="sf-product-page">
     <div className="sf-product">
       <nav aria-label="Fil d’Ariane" className="sf-breadcrumb">
-        <Link href={link()}>Accueil</Link>
+        <Link href={marketplace?.homeHref ?? link()}>Accueil</Link>
+        {marketplace?.crumbs.map((crumb) => (
+          <span className="sf-breadcrumb-item" key={crumb.href}>
+            <Separator aria-hidden="true" size={14} />
+            <Link href={crumb.href}>{crumb.label}</Link>
+          </span>
+        ))}
         <Separator aria-hidden="true" size={14} />
         <span aria-current="page">{product.name}</span>
       </nav>
@@ -294,7 +316,7 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
                 className="sf-btn sf-btn-primary sf-btn-block"
                 disabled={!cart.ready}
                 onClick={() => {
-                  if (add()) router.push(link("commande"));
+                  if (add()) router.push(marketplace?.checkoutHref ?? link("commande"));
                 }}
                 type="button"
               >
@@ -320,6 +342,20 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
                 <span><small>Suivi sur</small>WhatsApp</span>
               </li>
             </ul>
+            {marketplace && (
+              <a className="sf-seller" href={marketplace.seller.href}>
+                <span aria-hidden="true" className="sf-seller-logo">
+                  {marketplace.seller.logoUrl ? <img alt="" height={48} src={marketplace.seller.logoUrl} width={48} /> : marketplace.seller.name.slice(0, 2).toUpperCase()}
+                </span>
+                <span className="sf-seller-text">
+                  <small>Vendu par</small>
+                  <strong>{marketplace.seller.name}</strong>
+                  {marketplace.seller.place && <small>{marketplace.seller.place}</small>}
+                </span>
+                <span className="sf-seller-cta">Voir la boutique</span>
+              </a>
+            )}
+            {marketplace && <ProductShare name={product.name} url={productUrl} />}
           </div>
         ) : (
           <p className="sf-notice">La commande sera possible après la publication de la boutique.</p>
@@ -335,7 +371,7 @@ export function ProductDetail({ product, storeSlug, storeName, productUrl, whats
       </section>
     )}
     {children}
-    </main>
+    </Root>
   );
 }
 

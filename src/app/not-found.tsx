@@ -24,7 +24,7 @@ export default async function NotFound() {
       hero={{
         kicker: "Erreur 404",
         title: "Oups, cette page est introuvable",
-        subtitle: "Le lien est peut-être incomplet, ou la page a été déplacée. Pas d’inquiétude : voici de quoi reprendre votre chemin.",
+        subtitle: "Le lien est incomplet ou la page a été déplacée.",
         actions: <LandingButton href="/">Revenir à l’accueil</LandingButton>,
       }}
       signedIn={signedIn}

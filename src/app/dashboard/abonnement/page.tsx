@@ -277,7 +277,6 @@ async function FreeLaunchPage() {
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Abonnement</h1>
-          <p className="v-page-subtitle">PrestAfrik est entièrement gratuit pendant son lancement.</p>
         </div>
       </div>
       <p className="v-banner v-banner-success" role="status">

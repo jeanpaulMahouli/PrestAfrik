@@ -18,10 +18,6 @@ export default async function AdminApplicationPage() {
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Application</h1>
-          <p className="v-page-subtitle">
-            Les comptes qui ont installé PrestAfrik sur leur écran d’accueil, et ceux qui l’utilisent. Suivi depuis le 3 novembre 2026 : une installation plus
-            ancienne apparaît dès la première ouverture de l’application.
-          </p>
         </div>
       </div>
 

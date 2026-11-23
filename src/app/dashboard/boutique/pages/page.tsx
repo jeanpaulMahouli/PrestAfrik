@@ -34,14 +34,13 @@ export default async function StorePagesPage({ searchParams }: PageProps<"/dashb
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Pages de la boutique</h1>
-          <p className="v-page-subtitle">Créez les pages de présentation de votre boutique (À propos, Contact, FAQ) avec des blocs simples à assembler.</p>
         </div>
       </div>
       {typeof params.succes === "string" && successMessages[params.succes] && <p className="v-banner v-banner-success" role="status">{successMessages[params.succes]}</p>}
       <p className="v-banner v-banner-info">
         {pages.some((page) => page.status === "PUBLISHED")
-          ? "Vos pages publiées apparaissent dans le menu de votre boutique, juste après « Boutique », dans l’ordre ci-dessous."
-          : "Publiez au moins une page : un menu apparaîtra alors en haut de votre boutique (« Boutique », puis vos pages)."}
+          ? "Affichées dans le menu, dans cet ordre."
+          : "Publiez une page pour afficher le menu."}
       </p>
 
       <div className="pages-layout">
@@ -104,7 +103,6 @@ export default async function StorePagesPage({ searchParams }: PageProps<"/dashb
                   ))}
                 </select>
               </label>
-              <p className="v-small v-muted">La page est créée en brouillon avec quelques blocs d’exemple à adapter.</p>
             </ActionDialog>
           )}
           {selected && (
@@ -132,7 +130,7 @@ export default async function StorePagesPage({ searchParams }: PageProps<"/dashb
         ) : (
           <section className="v-card v-empty">
             <h2>Racontez votre histoire</h2>
-            <p>Ajoutez une page « À propos », « Contact » ou une FAQ : vos clients vous font davantage confiance quand ils vous connaissent.</p>
+            <p>Ajoutez « À propos », « Contact » ou une FAQ.</p>
           </section>
         )}
       </div>

@@ -59,7 +59,6 @@ export default async function AdminAlertsPage({ searchParams }: PageProps<"/admi
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Alertes</h1>
-          <p className="v-page-subtitle">E-mails non vérifiés, suspicions de spam et demandes d’aide : ce qui demande l’attention de l’équipe PrestAfrik.</p>
         </div>
         {tab === "nouvelles" && open.length > 0 && (
           <form action={resolveAllAlerts} className="v-page-actions">

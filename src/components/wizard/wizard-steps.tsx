@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { shopUniverseKeys, shopUniverses, universeFromDb, type DbUniverse, type ShopUniverse } from "@/config/marketplace";
-import { wizardWording } from "./wizard-universe";
+import { wizardWording } from "./wizard-wording";
 import { PhotoManager } from "@/components/catalog/photo-manager";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { colorReadability } from "@/lib/contrast";
@@ -71,7 +70,7 @@ export function NameStep({
   }, [slug, name, city]);
 
   return (
-    <WizardStepForm action={saveNameStep} draftId={draftId} step={1} subtitle="C’est le nom que vos clients verront en premier. Pas d’inquiétude : vous pourrez le modifier plus tard. Votre boutique ne sera créée qu’à la dernière étape." title="Comment s’appelle votre boutique ?">
+    <WizardStepForm action={saveNameStep} draftId={draftId} step={1} subtitle="Modifiable plus tard." title="Comment s’appelle votre boutique ?">
       {(fieldError) => (
         <>
           <label className="v-field">
@@ -126,7 +125,7 @@ export function NameStep({
                 (status.state === "checking"
                   ? "Vérification de la disponibilité…"
                   : status.state === "ok"
-                    ? `Bonne nouvelle : cette adresse est disponible ! Votre boutique sera visible sur ${address.prefix}${slug}${address.suffix}.`
+                    ? `Disponible : ${address.prefix}${slug}${address.suffix}`
                     : status.state === "error"
                       ? status.message
                       : "3 à 40 caractères : lettres minuscules, chiffres et tirets, sans espace.")}
@@ -167,7 +166,7 @@ export function ActivityStep({
   initialDescription,
 }: {
   draftId: string;
-  activities: { id: string; slug: string; label: string; popular: boolean; universe: DbUniverse }[];
+  activities: { id: string; slug: string; label: string; popular: boolean }[];
   initialId: string;
   initialOther: string;
   initialDescription: string;
@@ -177,24 +176,11 @@ export function ActivityStep({
   const [activityId, setActivityId] = useState(initialId);
   const [other, setOther] = useState(initialOther);
   const [freeText, setFreeText] = useState(!initialId && Boolean(initialOther));
-  // Univers (Boutique, Immobilier, Services, Restauration) : il adapte les textes et la liste des activités.
-  const [universe, setUniverse] = useState<ShopUniverse>(universeFromDb(activities.find((activity) => activity.id === initialId)?.universe));
-  const words = wizardWording[universe];
-  const listed = activities.filter((activity) => universeFromDb(activity.universe) === universe);
+  const words = wizardWording;
+  const listed = activities;
   const choose = (id: string) => {
     setActivityId(id);
     update({ activity: activities.find((activity) => activity.id === id)?.label ?? "" });
-  };
-  const chooseUniverse = (next: ShopUniverse) => {
-    setUniverse(next);
-    setFreeText(false);
-    const inUniverse = activities.filter((activity) => universeFromDb(activity.universe) === next);
-    // Une seule activité dans l'univers : choisie d'office.
-    if (inUniverse.length === 1) choose(inUniverse[0].id);
-    else if (!inUniverse.some((activity) => activity.id === activityId)) {
-      setActivityId("");
-      update({ activity: "" });
-    }
   };
 
   return (
@@ -202,19 +188,7 @@ export function ActivityStep({
       {(fieldError) => (
         <>
           {/* Listes déroulantes du navigateur (natives), comme demandé pour toute la création de boutique. */}
-          <label className="v-field">
-            Que proposez-vous ?
-            <select className="wizard-native-select" onChange={(event) => chooseUniverse(event.target.value as ShopUniverse)} value={universe}>
-              {shopUniverseKeys.map((key) => (
-                <option key={key} value={key}>
-                  {shopUniverses[key].label} — {shopUniverses[key].text}
-                </option>
-              ))}
-            </select>
-          </label>
-          {listed.length === 1 ? (
-            <input name="activityId" type="hidden" value={listed[0].id} />
-          ) : !freeText ? (
+          {!freeText ? (
             <label className="v-field">
               Votre activité principale
               <select
@@ -268,7 +242,7 @@ export function ActivityStep({
               value={description}
             />
             <span className={fieldError("description") ? "v-field-error" : "v-field-help"} id="wizard-description-help">
-              {fieldError("description") ?? `${words.descriptionHelp} Elle s’affiche en haut de votre boutique. ${description.length} / 2000`}
+              {fieldError("description") ?? `${description.length} / 2000`}
             </span>
           </label>
         </>
@@ -296,7 +270,7 @@ export function LocationStep({ draftId, countries, geo, initial }: { draftId: st
   }, [city, countryName]);
 
   return (
-    <WizardStepForm action={saveLocationStep} backHref={back(draftId, 2)} draftId={draftId} step={3} subtitle="Choisissez votre ville dans la liste : elle nous permet de proposer les bonnes zones de livraison." title="Où se trouve votre boutique ?">
+    <WizardStepForm action={saveLocationStep} backHref={back(draftId, 2)} draftId={draftId} step={3} title="Où se trouve votre boutique ?">
       {(fieldError) => (
         <>
           {countries.length > 1 ? (
@@ -355,21 +329,21 @@ export function LocationStep({ draftId, countries, geo, initial }: { draftId: st
 export function ContactStep({ draftId, phone, whatsapp, contactEmail }: { draftId: string; phone: { country: string; national: string }; whatsapp: { country: string; national: string } | null; contactEmail: string }) {
   const [same, setSame] = useState(!whatsapp || (whatsapp.country === phone.country && whatsapp.national === phone.national));
   return (
-    <WizardStepForm action={saveContactStep} backHref={back(draftId, 3)} draftId={draftId} step={4} subtitle="Ces coordonnées s’affichent dans votre boutique. L’indicatif du pays est séparé du numéro : saisissez simplement votre numéro, nous ajoutons l’indicatif." title="Comment vos clients peuvent-ils vous joindre ?">
+    <WizardStepForm action={saveContactStep} backHref={back(draftId, 3)} draftId={draftId} step={4} title="Comment vos clients peuvent-ils vous joindre ?">
       {(fieldError) => (
         <>
-          <PhoneInput defaultCountry={phone.country} defaultNational={phone.national} error={fieldError("phone")} help="Saisissez le numéro sans l’indicatif. Le format international est créé automatiquement." label="Téléphone de la boutique" name="phone" />
+          <PhoneInput defaultCountry={phone.country} defaultNational={phone.national} error={fieldError("phone")} label="Téléphone de la boutique" name="phone" />
           <label className="v-check">
             <input checked={same} name="sameWhatsapp" onChange={(event) => setSame(event.target.checked)} type="checkbox" />
             Mon numéro WhatsApp est le même que mon téléphone
           </label>
           {!same && (
-            <PhoneInput defaultCountry={whatsapp?.country ?? phone.country} defaultNational={whatsapp?.national ?? ""} error={fieldError("whatsapp")} help="Vos clients vous écriront sur ce numéro." label="Numéro WhatsApp" name="whatsapp" />
+            <PhoneInput defaultCountry={whatsapp?.country ?? phone.country} defaultNational={whatsapp?.national ?? ""} error={fieldError("whatsapp")} label="Numéro WhatsApp" name="whatsapp" />
           )}
           <label className="v-field">
             Adresse e-mail de contact (facultatif)
             <input defaultValue={contactEmail} maxLength={254} name="contactEmail" placeholder="contact@maboutique.com" type="email" />
-            <span className={fieldError("contactEmail") ? "v-field-error" : "v-field-help"}>{fieldError("contactEmail") ?? "Affichée dans la page Contact de votre boutique."}</span>
+            <span className={fieldError("contactEmail") ? "v-field-error" : "v-field-help"}>{fieldError("contactEmail")}</span>
           </label>
         </>
       )}
@@ -390,7 +364,7 @@ export function ThemeStep({ draftId, initialTheme }: { draftId: string; initialT
   const { update } = useWizardPreview();
   const [theme, setTheme] = useState(initialTheme);
   return (
-    <WizardStepForm action={saveThemeStep} backHref={back(draftId, 5)} draftId={draftId} step={6} subtitle="Les quatre thèmes offrent exactement les mêmes fonctions. Seule la mise en page change. Vous pourrez en changer plus tard sans perdre vos produits ni vos commandes." title="Choisissez le style de votre boutique">
+    <WizardStepForm action={saveThemeStep} backHref={back(draftId, 5)} draftId={draftId} step={6} subtitle="Modifiable plus tard." title="Choisissez le style de votre boutique">
       {() => (
         <div className="wizard-themes" role="radiogroup">
           {themes.map((item) => (
@@ -448,7 +422,7 @@ export function BrandingStep({ draftId, initial }: { draftId: string; initial: {
   };
 
   return (
-    <WizardStepForm action={saveBrandingStep} backHref={back(draftId, 3)} draftId={draftId} step={5} subtitle="Ajoutez votre logo et, si vous le souhaitez, vos couleurs. Nous vérifions que vos textes restent bien lisibles." title="Votre logo et vos couleurs">
+    <WizardStepForm action={saveBrandingStep} backHref={back(draftId, 3)} draftId={draftId} step={5} title="Votre logo et vos couleurs">
       {(fieldError) => (
         <>
           <p className="wizard-label">Logo de votre boutique</p>
@@ -460,12 +434,12 @@ export function BrandingStep({ draftId, initial }: { draftId: string; initial: {
               <input accept="image/png,image/jpeg,image/webp" className="visually-hidden" name="logo" onChange={(event) => chooseLogo(event.currentTarget.files?.[0])} ref={input} type="file" />
             </label>
           </div>
-          <p className="v-field-help">PNG ou JPG, 2 Mo maximum. Sans logo, vos initiales sont affichées.</p>
+          <p className="v-field-help">PNG ou JPG, 2 Mo max.</p>
           {(logoError || fieldError("logo")) && <p className="v-field-error">{logoError || fieldError("logo")}</p>}
           <p className="wizard-label">Couleurs</p>
           {paletteNote && (
             <p className="v-field-help" role="status">
-              Couleurs reprises de votre logo : vous pouvez les ajuster.
+              Couleurs tirées de votre logo.
             </p>
           )}
           <ul className="color-list">
@@ -519,16 +493,14 @@ type DraftProduct = { name: string; priceXaf: number; description: string; photo
 export function ProductStep({
   draftId,
   product,
-  universe = "vente",
   ai = null,
 }: {
   draftId: string;
   product: DraftProduct;
-  universe?: ShopUniverse;
   /** Assistant IA activé (offert pendant la création) : essais restants. */
   ai?: { remaining: number } | null;
 }) {
-  const words = wizardWording[universe];
+  const words = wizardWording;
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [name, setName] = useState(product?.name ?? "");
@@ -579,7 +551,7 @@ export function ProductStep({
           {ai && (
             <p className="wizard-ai-note">
               <Sparkles aria-hidden="true" size={18} />
-              <span>Ajoutez une photo : l’IA peut écrire le nom et la description pour vous.</span>
+              <span>Ajoutez une photo, l’IA écrit le reste.</span>
             </p>
           )}
           <PhotoManager
@@ -600,17 +572,17 @@ export function ProductStep({
                 </button>
                 <span className="v-field-help">
                   {remaining <= 0
-                    ? "Remplissez le nom et la description vous-même : vous pourrez réutiliser l’IA depuis votre tableau de bord."
+                    ? "Essais IA épuisés."
                     : uploading
-                      ? "Patientez pendant l’envoi des photos…"
+                      ? "Envoi des photos…"
                       : photoUrls.length
-                        ? "Vous relisez et modifiez le texte avant de continuer."
-                        : "Commencez par ajouter une photo du produit."}
+                        ? ""
+                        : "Ajoutez d’abord une photo."}
                 </span>
                 {aiError && <p className="v-field-error" role="alert">{aiError}</p>}
                 {aiFilled && !aiError && (
                   <p className="ai-filled" role="status">
-                    Nom et description remplis par l’IA : relisez-les et modifiez-les si besoin.
+                    Rempli par l’IA : relisez.
                   </p>
                 )}
               </div>
@@ -624,7 +596,7 @@ export function ProductStep({
           <label className="v-field">
             {words.priceLabel}
             <input defaultValue={product ? String(product.priceXaf) : ""} inputMode="numeric" name="productPrice" placeholder={words.pricePlaceholder} />
-            <span className={fieldError("productPrice") ? "v-field-error" : "v-field-help"}>{fieldError("productPrice") ?? "Saisissez un nombre entier, sans espace ni virgule."}</span>
+            <span className={fieldError("productPrice") ? "v-field-error" : "v-field-help"}>{fieldError("productPrice")}</span>
           </label>
           <label className="v-field">
             <span>

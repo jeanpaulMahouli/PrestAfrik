@@ -7,7 +7,7 @@ import { photoVariant } from "@/lib/product-photos";
 import { shopUrl, storePublicUrl } from "@/lib/urls";
 import { categoryRank, cityKey } from "@/config/marketplace";
 import { scopeKey, type ShopScope } from "./country";
-import { clearSearchIndex, getTopStores, loadIndex, type SearchableStore } from "./search";
+import { clearSearchIndex, excludedStoreIds, getTopStores, loadIndex, type SearchableStore } from "./search";
 
 // Marketplace PrestAfrik (shop.prestafrik.com) : les boutiques publiées et leurs produits, rangés par
 // rubriques. Ventes flash, offres exclusives et boutiques à la une sont choisies par l'administration
@@ -129,11 +129,11 @@ async function toShopProducts(rows: ProductRow[], stores: Map<string, Searchable
 }
 
 /**
- * Boutiques montrées au visiteur : celles de son univers (vente, immobilier, services), dans sa ville
- * quand elle en a, sinon dans tout le Cameroun et la zone. `local` dit si le filtre par ville s'applique.
+ * Boutiques montrées au visiteur : toutes les boutiques, dans sa ville quand elle en a, sinon dans tout
+ * le Cameroun et la zone. `local` dit si le filtre par ville s'applique.
  */
-export async function scopedStores(scope: Pick<ShopScope, "universe" | "city">): Promise<{ stores: SearchableStore[]; local: boolean }> {
-  const all = (await loadIndex()).filter((store) => store.universe === scope.universe);
+export async function scopedStores(scope: Pick<ShopScope, "city">): Promise<{ stores: SearchableStore[]; local: boolean }> {
+  const all = await loadIndex();
   if (!scope.city) return { stores: all, local: false };
   const key = cityKey(scope.city.name);
   const local = all.filter((store) => store.city && cityKey(store.city) === key);
@@ -194,7 +194,7 @@ async function decorateStores(list: SearchableStore[]): Promise<ShopStore[]> {
 }
 
 /** Rubriques (activités des boutiques) qui ont au moins une boutique en ligne, avec leurs compteurs. */
-export async function getShopCategories(scope: Pick<ShopScope, "universe" | "city">): Promise<ShopCategory[]> {
+export async function getShopCategories(scope: Pick<ShopScope, "city">): Promise<ShopCategory[]> {
   const { stores } = await scopedStores(scope);
   const [activities, products] = await Promise.all([
     prisma.activity.findMany({ orderBy: { position: "asc" }, select: { slug: true, label: true, imageUrl: true } }),
@@ -217,7 +217,7 @@ export type ShopHome = {
   categories: ShopCategory[];
   flash: { products: ShopProduct[]; endsAt: Date | null };
   exclusive: ShopProduct[];
-  /** Les incontournables du moment : produits les mieux notés de l'univers et de la ville. */
+  /** Les incontournables du moment : produits les mieux notés de la ville. */
   topProducts: ShopProduct[];
   /** Une rangée par grande rubrique (vêtements, électronique… jamais mélangés). */
   sections: { category: ShopCategory; products: ShopProduct[] }[];
@@ -230,9 +230,23 @@ export type ShopHome = {
   /** Petits prix (à partir de 100 FCFA : les prix symboliques sont écartés). */
   smallPrices: ShopProduct[];
   featuredStores: ShopStore[];
+  /** « Plus de produits » : grande grille variée (une boutique ne prend pas toute la place). */
+  more: ShopProduct[];
 };
 
-const homeCache = new Map<string, { at: number; value: ShopHome }>();
+/** Mélange les produits boutique par boutique (un de chaque, puis un deuxième…) pour varier la grille. */
+function interleaveByStore(products: ShopProduct[]) {
+  const byStore = new Map<string, ShopProduct[]>();
+  for (const product of products) byStore.set(product.store.slug, [...(byStore.get(product.store.slug) ?? []), product]);
+  const queues = [...byStore.values()];
+  const result: ShopProduct[] = [];
+  for (let round = 0; result.length < products.length; round++) {
+    for (const queue of queues) if (queue[round]) result.push(queue[round]);
+  }
+  return result;
+}
+
+const homeCache = new Map<string, { at: number; hidden: string; value: ShopHome }>();
 const homeTtlMs = 60_000;
 
 /** Après une modification de l'administration : la marketplace est recalculée à la visite suivante. */
@@ -242,47 +256,51 @@ export function clearShopCache() {
   clearSearchIndex();
 }
 
-/** Accueil de la marketplace pour un univers et une ville, gardé une minute en mémoire. */
-export async function getShopHome(scope: Pick<ShopScope, "universe" | "city">): Promise<ShopHome> {
+/** Accueil de la marketplace pour une ville, gardé une minute en mémoire. */
+export async function getShopHome(scope: Pick<ShopScope, "city">): Promise<ShopHome> {
   const key = scopeKey(scope);
+  // Boutiques exclues relues à chaque visite : une exclusion vide aussitôt l'accueil gardé en mémoire.
+  const hidden = [...(await excludedStoreIds())].sort().join(",");
   const cached = homeCache.get(key);
-  if (cached && Date.now() - cached.at < homeTtlMs) return cached.value;
+  if (cached && cached.hidden === hidden && Date.now() - cached.at < homeTtlMs) return cached.value;
   const { stores: list, local } = await scopedStores(scope);
   const stores = toMap(list);
   const now = new Date();
   const ids = [...stores.keys()];
-  const [categories, flash, exclusive, featuredPicks, topStores, topProducts, newestRows, cheapRows, promoRows, dealLead] = await Promise.all([
+  const [categories, flash, exclusive, featuredPicks, topStores, topProducts, newestRows, cheapRows, promoRows, dealLead, moreRows] = await Promise.all([
     getShopCategories(scope),
     picks("FLASH", stores),
     picks("EXCLUSIVE", stores),
     prisma.marketplacePick.findMany({ where: { section: "FEATURED_STORE", OR: [{ endsAt: null }, { endsAt: { gt: now } }] }, orderBy: [{ position: "asc" }, { createdAt: "asc" }], select: { storeId: true } }),
     getTopStores(200),
     topRated(stores, 12),
-    prisma.product.findMany({ where: visible(ids), orderBy: { createdAt: "desc" }, take: 6, select: productSelect }),
-    prisma.product.findMany({ where: { ...visible(ids), priceXaf: { gte: 100 }, OR: [{ promotionalPriceXaf: null }, { promotionalPriceXaf: { gte: 100 } }] }, orderBy: [{ priceXaf: "asc" }, { createdAt: "desc" }], take: 6, select: productSelect }),
+    prisma.product.findMany({ where: visible(ids), orderBy: { createdAt: "desc" }, take: 18, select: productSelect }),
+    prisma.product.findMany({ where: { ...visible(ids), priceXaf: { gte: 100 }, OR: [{ promotionalPriceXaf: null }, { promotionalPriceXaf: { gte: 100 } }] }, orderBy: [{ priceXaf: "asc" }, { createdAt: "desc" }], take: 12, select: productSelect }),
     prisma.product.findMany({ where: { ...visible(ids), promotionalPriceXaf: { not: null } }, orderBy: { createdAt: "desc" }, take: 120, select: productSelect }),
     picks("DEAL_LEAD", stores),
+    prisma.product.findMany({ where: { ...visible(ids), priceXaf: { gte: 100 } }, orderBy: { updatedAt: "desc" }, take: 240, select: productSelect }),
   ]);
-  const [newest, smallPrices, promos] = await Promise.all([toShopProducts(newestRows, stores), toShopProducts(cheapRows, stores), toShopProducts(promoRows, stores)]);
+  const [newest, smallPrices, promos, moreAll] = await Promise.all([toShopProducts(newestRows, stores), toShopProducts(cheapRows, stores), toShopProducts(promoRows, stores), toShopProducts(moreRows, stores)]);
+  const more = interleaveByStore(moreAll.filter((product) => product.imageUrl)).slice(0, 40);
   // Bonnes affaires : boutiques mises en avant et catégories prioritaires d'abord, puis la plus forte réduction.
   const deals = promos
     .filter((product) => product.discount && product.discount > 0)
     .sort((a, b) => byPriority(a, b) || (b.discount ?? 0) - (a.discount ?? 0))
-    .slice(0, 12);
+    .slice(0, 15);
   const sections = (
     await Promise.all(
       categories
         .filter((category) => category.productCount > 0)
         .map(async (category) => {
           const ids = list.filter((store) => store.activitySlug === category.slug).map((store) => store.id);
-          return { category, products: await categoryProducts(stores, ids, 12) };
+          return { category, products: await categoryProducts(stores, ids, 15) };
         }),
     )
   ).filter((section) => section.products.length > 0);
   const featured = featuredPicks.flatMap((pick) => (pick.storeId && stores.get(pick.storeId) ? [stores.get(pick.storeId)!] : []));
   const fallback = topStores.filter((store) => stores.has(store.id)).slice(0, 10);
-  const value: ShopHome = { local, categories, flash, exclusive: exclusive.products, topProducts, sections, deals, dealLead: dealLead.products[0] ?? null, newest, smallPrices, featuredStores: await decorateStores(featured.length ? featured : fallback) };
-  homeCache.set(key, { at: Date.now(), value });
+  const value: ShopHome = { local, categories, flash, exclusive: exclusive.products, topProducts, sections, deals, dealLead: dealLead.products[0] ?? null, newest, smallPrices, more, featuredStores: await decorateStores(featured.length ? featured : fallback) };
+  homeCache.set(key, { at: Date.now(), hidden, value });
   return value;
 }
 
@@ -295,7 +313,7 @@ export type ShopQuery = { q?: string; category?: string; min?: number; max?: num
  * Explorer la marketplace : produits (48 au plus) et boutiques correspondant à une recherche, une rubrique,
  * un budget ou un tri. Le prix pris en compte est le prix payé (prix promotionnel s'il existe).
  */
-export async function exploreShop(query: ShopQuery, scope: Pick<ShopScope, "universe" | "city">): Promise<{ products: ShopProduct[]; stores: ShopStore[]; category: ShopCategory | null }> {
+export async function exploreShop(query: ShopQuery, scope: Pick<ShopScope, "city">): Promise<{ products: ShopProduct[]; stores: ShopStore[]; category: ShopCategory | null }> {
   const { stores: all } = await scopedStores(scope);
   const categories = query.category ? await getShopCategories(scope) : [];
   const category = categories.find((item) => item.slug === query.category) ?? null;
@@ -393,7 +411,7 @@ export async function marketplaceStore(slug: string) {
  * Autour d'une fiche produit : d'autres produits de la même boutique, des produits de la même catégorie
  * (autres boutiques), les bonnes affaires et les nouveautés de la marketplace.
  */
-export async function getProductNeighbours(store: SearchableStore, productId: string, scope: Pick<ShopScope, "universe" | "city">) {
+export async function getProductNeighbours(store: SearchableStore, productId: string, scope: Pick<ShopScope, "city">) {
   const all = await loadIndex();
   const stores = toMap(all);
   const sameCategory = store.activitySlug ? all.filter((item) => item.activitySlug === store.activitySlug && item.id !== store.id).map((item) => item.id) : [];

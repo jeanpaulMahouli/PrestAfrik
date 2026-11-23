@@ -39,7 +39,6 @@ export default async function AdminPushPage({ searchParams }: PageProps<"/admin/
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Notifications push</h1>
-          <p className="v-page-subtitle">Les messages qui s’affichent sur le téléphone ou l’ordinateur des vendeurs, même application fermée.</p>
         </div>
       </div>
       <AdminFeedback params={params} />
@@ -61,7 +60,7 @@ export default async function AdminPushPage({ searchParams }: PageProps<"/admin/
           <Send aria-hidden="true" size={18} /> Envoyer une nouveauté
         </h2>
         <p className="v-small v-muted">
-          À tous les vendeurs qui ont activé les notifications. Variables : <code>{"{prenom}"}</code>, <code>{"{boutique}"}</code>. Utilisez « Essai » pour la recevoir d’abord sur vos propres appareils.
+          Variables : <code>{"{prenom}"}</code>, <code>{"{boutique}"}</code>.
         </p>
         <form action={broadcastPush} className="push-admin-form" encType="multipart/form-data">
           <PushFields body={draft.body} title={draft.title} url={draft.url} />
@@ -77,9 +76,7 @@ export default async function AdminPushPage({ searchParams }: PageProps<"/admin/
               </label>
             )}
             <input accept="image/png,image/jpeg,image/webp" name="image" type="file" />
-            <span className="v-field-help">
-              Grande image sous le texte (recadrée en 1200 × 600 px, 2 Mo au plus). Sans photo, la notification montre le logo PrestAfrik. Elle ne s’affiche pas sur iPhone.
-            </span>
+            <span className="v-field-help">1200 × 600 px, 2 Mo max. Non affichée sur iPhone.</span>
           </div>
           <div className="push-admin-actions">
             <SubmitButton className="btn btn-secondary" name="mode" pendingLabel="Envoi…" value="test">
@@ -189,7 +186,7 @@ function PushFields({ title, body, url }: { title: string; body: string; url: st
       <label className="v-field">
         Page ouverte au clic
         <input defaultValue={url} maxLength={200} name="url" pattern="/.*" required />
-        <span className="v-field-help">Une page de l’espace vendeur, par exemple /dashboard ou /dashboard/commandes.</span>
+        <span className="v-field-help">Ex. /dashboard/commandes</span>
       </label>
     </>
   );

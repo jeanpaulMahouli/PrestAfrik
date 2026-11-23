@@ -1,5 +1,5 @@
 import "@/styles/admin-content.css";
-import { ArrowDown, ArrowUp, Building2, Eye, EyeOff, Handshake, ImagePlus, LayoutDashboard, LayoutTemplate, Link2, Monitor, MousePointerClick, Search, ShoppingBag, Smartphone, Store, Trash2, UtensilsCrossed, type AppIcon } from "@/components/ui/icons";
+import { ArrowDown, ArrowUp, Eye, EyeOff, ImagePlus, LayoutDashboard, LayoutTemplate, Link2, Monitor, MousePointerClick, Search, ShoppingBag, Smartphone, Store, Trash2, type AppIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import type { AnnouncementPlacement, PlatformAnnouncement } from "@prisma/client";
 import { AdminFeedback } from "@/components/admin/admin-feedback";
@@ -13,7 +13,7 @@ export const metadata = { title: "Annonces" };
 type Slot = { placement: AnnouncementPlacement; title: string; device: "ordinateur" | "téléphone" | "tous"; size: string; max: number; help: string };
 type Group = { id: string; title: string; icon: AppIcon; text: string; slots: Slot[] };
 
-/** Emplacements d'images, regroupés comme sur le site (univers de la marketplace, tableau de bord). */
+/** Emplacements d'images, regroupés comme sur le site (marketplace, tableau de bord). */
 const spaces: Record<"marketplace" | "tableau-de-bord", { label: string; icon: AppIcon; groups: Group[] }> = {
   marketplace: {
     label: "Marketplace",
@@ -21,12 +21,12 @@ const spaces: Record<"marketplace" | "tableau-de-bord", { label: string; icon: A
     groups: [
       {
         id: "shopping",
-        title: "Boutique",
+        title: "Haut de l’accueil",
         icon: ShoppingBag,
-        text: "Haut de l’accueil : grand diaporama, et à droite « Devenir vendeur » puis un visuel. Sur téléphone, « Devenir vendeur » passe en premier.",
+        text: "Diaporama et visuels du haut de l’accueil.",
         slots: [
-          { placement: "SHOP_CAROUSEL", title: "Grand diaporama du héros", device: "tous", size: "1744 × 1040 px", max: 6, help: "Une image toutes les 6 secondes. Sans image : le visuel provisoire de la maquette." },
-          { placement: "SHOP_SELLER", title: "Bannière « Devenir vendeur »", device: "tous", size: "848 × 496 px", max: 1, help: "Toujours vers /boutique (destination des publicités). Le lien saisi est ignoré." },
+          { placement: "SHOP_CAROUSEL", title: "Grand diaporama du héros", device: "tous", size: "1744 × 1040 px", max: 6, help: "Une image toutes les 6 s." },
+          { placement: "SHOP_SELLER", title: "Bannière « Devenir vendeur »", device: "tous", size: "848 × 496 px", max: 1, help: "Lien fixe vers /boutique." },
           { placement: "SHOP_BANNER", title: "Visuel sous « Devenir vendeur »", device: "tous", size: "848 × 496 px", max: 1, help: "À droite du diaporama, sous la bannière vendeur." },
         ],
       },
@@ -34,10 +34,10 @@ const spaces: Record<"marketplace" | "tableau-de-bord", { label: string; icon: A
         id: "blocs",
         title: "Blocs publicitaires de l’accueil",
         icon: LayoutTemplate,
-        text: "Les emplacements entre les produits, dans l’ordre de la page. Sans image : le visuel provisoire de la maquette.",
+        text: "Entre les produits, dans l’ordre de la page.",
         slots: [
-          { placement: "SHOP_FEATURED_COLUMN", title: "Colonne à gauche des « Produits phares »", device: "ordinateur", size: "624 × 1432 px", max: 1, help: "Grande colonne verticale. Masquée sur tablette et téléphone." },
-          { placement: "SHOP_DUO", title: "Deux bannières côte à côte", device: "tous", size: "1296 × 672 px", max: 2, help: "Sous les « Produits phares ». L’une sous l’autre sur téléphone." },
+          { placement: "SHOP_FEATURED_COLUMN", title: "Colonne à gauche des « Produits phares »", device: "ordinateur", size: "624 × 1432 px", max: 1, help: "Masquée sur téléphone." },
+          { placement: "SHOP_DUO", title: "Deux bannières côte à côte", device: "tous", size: "1296 × 672 px", max: 2, help: "Sous les « Produits phares »." },
           { placement: "SHOP_COLUMN_TOP", title: "Colonne de droite, visuel du haut", device: "tous", size: "624 × 856 px", max: 1, help: "À droite du second bloc de produits." },
           { placement: "SHOP_COLUMN_BOTTOM", title: "Colonne de droite, visuel du bas", device: "tous", size: "624 × 528 px", max: 1, help: "Sous le visuel du haut." },
           { placement: "SHOP_WIDE", title: "Grande bannière", device: "tous", size: "2876 × 848 px", max: 1, help: "Pleine largeur, avant les mini-listes." },
@@ -47,32 +47,11 @@ const spaces: Record<"marketplace" | "tableau-de-bord", { label: string; icon: A
         id: "pages",
         title: "Recherche et menu",
         icon: Search,
-        text: "Visuels de la page de recherche et du grand menu des catégories.",
+        text: "",
         slots: [
           { placement: "SHOP_SEARCH_SIDE", title: "Colonne des filtres (recherche)", device: "ordinateur", size: "624 × 1150 px", max: 1, help: "Sous les filtres de la page de recherche." },
           { placement: "SHOP_MENU", title: "Grand menu « Toutes les catégories »", device: "ordinateur", size: "624 × 768 px", max: 1, help: "À droite des produits de la catégorie survolée." },
         ],
-      },
-      {
-        id: "immobilier",
-        title: "Immobilier",
-        icon: Building2,
-        text: "Une seule bannière, sur ordinateur et téléphone.",
-        slots: [{ placement: "SHOP_IMMO", title: "Bannière Immobilier", device: "tous", size: "1600 × 600 px", max: 1, help: "Gardez le texte important au centre : l’image est recadrée sur téléphone." }],
-      },
-      {
-        id: "services",
-        title: "Services",
-        icon: Handshake,
-        text: "Une seule bannière, sur ordinateur et téléphone.",
-        slots: [{ placement: "SHOP_SERVICES", title: "Bannière Services", device: "tous", size: "1600 × 600 px", max: 1, help: "Gardez le texte important au centre : l’image est recadrée sur téléphone." }],
-      },
-      {
-        id: "restauration",
-        title: "Restauration",
-        icon: UtensilsCrossed,
-        text: "Une seule bannière, sur ordinateur et téléphone.",
-        slots: [{ placement: "SHOP_RESTAURATION", title: "Bannière Restauration", device: "tous", size: "1600 × 600 px", max: 1, help: "Gardez le texte important au centre : l’image est recadrée sur téléphone." }],
       },
     ],
   },
@@ -220,7 +199,7 @@ function SlotBlock({ slot, rows }: { slot: Slot; rows: PlatformAnnouncement[] })
   );
 }
 
-/** Administration → Annonces : les images de la marketplace (par univers) et du tableau de bord des vendeurs. */
+/** Administration → Annonces : les images de la marketplace et du tableau de bord des vendeurs. */
 export default async function AdminAnnouncementsPage({ searchParams }: PageProps<"/admin/annonces">) {
   await requirePlatformAdmin();
   const params = await searchParams;
@@ -233,7 +212,6 @@ export default async function AdminAnnouncementsPage({ searchParams }: PageProps
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Annonces</h1>
-          <p className="v-page-subtitle">Les images en haut de la marketplace et du tableau de bord des vendeurs.</p>
         </div>
       </div>
       <AdminFeedback params={params} />
@@ -250,7 +228,7 @@ export default async function AdminAnnouncementsPage({ searchParams }: PageProps
       </nav>
 
       {space === "marketplace" && (
-        <nav aria-label="Univers" className="ann-jump">
+        <nav aria-label="Emplacements" className="ann-jump">
           {spaces.marketplace.groups.map((group) => {
             const Icon = group.icon;
             return (
@@ -273,7 +251,7 @@ export default async function AdminAnnouncementsPage({ searchParams }: PageProps
                 </span>
                 <div>
                   <h2 id={`groupe-${group.id}`}>{group.title}</h2>
-                  <p>{group.text}</p>
+                  {group.text && <p>{group.text}</p>}
                 </div>
               </header>
               {group.slots.map((slot) => (

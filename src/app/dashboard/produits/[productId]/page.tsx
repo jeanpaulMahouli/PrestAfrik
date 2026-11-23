@@ -32,7 +32,6 @@ export default async function EditProductPage({ params, searchParams }: PageProp
         aiEnabled={productAiAvailable()}
         categories={categories}
         listingMode={profile.listingMode}
-        universe={profile.universe}
         sidePanel={
           <ProductDangerZone
             archive={archiveProducts}

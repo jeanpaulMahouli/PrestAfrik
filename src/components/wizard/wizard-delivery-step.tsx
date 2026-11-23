@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ShopUniverse } from "@/config/marketplace";
-import { wizardWording } from "./wizard-universe";
+import { wizardWording } from "./wizard-wording";
 import { WizardStepForm } from "@/components/wizard/wizard-step-form";
 import { saveDeliveryStep } from "@/modules/stores/wizard-actions";
 
@@ -20,19 +19,16 @@ export function DeliveryStep({
   draftId,
   city,
   initial,
-  universe = "vente",
 }: {
   draftId: string;
   city: string;
-  /** Univers de la boutique : livraison (Shopping), visites (Immobilier) ou déplacements (Services). */
-  universe?: ShopUniverse;
   initial: { zones: { name: string; feeXaf: number; estimatedDelay: string | null }[]; pickupEnabled: boolean; pickupAddress: string; pickupHours: string };
 }) {
   const [zones, setZones] = useState<Zone[]>(() =>
     initial.zones.length ? initial.zones.map((zone) => ({ key: nextKey++, name: zone.name, fee: String(zone.feeXaf), delay: zone.estimatedDelay ?? "" })) : [emptyZone()],
   );
   const [pickup, setPickup] = useState(initial.pickupEnabled);
-  const words = wizardWording[universe];
+  const words = wizardWording;
   const update = (key: number, field: keyof Omit<Zone, "key">, value: string) => setZones((rows) => rows.map((row) => (row.key === key ? { ...row, [field]: value } : row)));
 
   return (

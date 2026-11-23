@@ -49,7 +49,6 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Ma boutique</h1>
-          <p className="v-page-subtitle">Votre logo, vos informations pratiques, vos réseaux sociaux et le style de vos promotions.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
           {store.isPublished ? (

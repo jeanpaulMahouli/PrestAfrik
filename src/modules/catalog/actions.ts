@@ -149,8 +149,7 @@ export async function saveProduct(_previous: ActionResult, formData: FormData): 
     return fail("Certaines informations sont à corriger. Vos saisies sont conservées.", "VALIDATION", fields);
   }
   const input = parsed.data;
-  // Biens immobiliers : locations et réservations (univers Immobilier) ou vente (Shopping, « Vente
-  // immobilière ») ; chaque bien est une annonce avec ses caractéristiques.
+  // Biens immobiliers (location ou vente, d'après l'activité) : chaque bien a ses caractéristiques.
   const { listingMode } = await storeCatalogProfile(store.activityId);
   let listing: ListingInput | null = null;
   if (listingMode) {

@@ -5,7 +5,7 @@ import { formatXaf } from "@/modules/catalog/format";
 import type { DashboardAnnouncement } from "@/modules/announcements/queries";
 import type { ShopCategory, ShopProduct, ShopStore } from "@/modules/marketplace/shop";
 import { categoryGlyph } from "./category-glyphs";
-import { ProductBadges, ShopProductCard, Stars } from "./product-card";
+import { ShopProductCard } from "./product-card";
 import { SellerBanner } from "./shop-hero";
 import { ShowcaseTabs, SpotlightCarousel } from "./shop-showcase-client";
 import { ScrollRail } from "./shop-widgets";
@@ -111,45 +111,20 @@ export function TrustStrip({ items }: { items: { icon: ReactNode; title: string;
   );
 }
 
-/* ---------- Bonnes affaires : un produit vedette et une grille ---------- */
+/* ---------- Bonnes affaires : grille pleine largeur (3 lignes) ---------- */
 
 export function DealsBoard({ id, title, aside, href, products }: { id: string; title: string; aside?: ReactNode; href: string; products: ShopProduct[] }) {
-  const [lead, ...rest] = products;
-  if (!lead) return null;
+  if (!products.length) return null;
   return (
     <section aria-labelledby={id} className="shop-section sx-section" id="ventes-flash">
       <ShowcaseHead aside={aside} href={href} id={id} title={title} />
-      <div className="sx-deals">
-        <article className="sx-deal-lead">
-          <span className="sx-deal-lead-media">
-            <Photo large product={lead} />
-            <ProductBadges product={lead} />
-          </span>
-          {lead.rating !== null && <Stars count={lead.reviewCount} rating={lead.rating} />}
-          <a className="sx-deal-lead-name" href={lead.href}>
-            {lead.name}
-          </a>
-          <Price product={lead} />
-          <p className="sx-deal-lead-store">Vendu par {lead.store.name}. Commande sur WhatsApp, paiement à la livraison.</p>
-          <a className="sx-btn sx-btn-primary" href={lead.href}>
-            Voir le produit <ArrowRight aria-hidden="true" size={20} />
-          </a>
-        </article>
-        <ul className="sx-deal-grid">
-          {rest.slice(0, 8).map((product) => (
-            <li key={product.id}>
-              <a className="sx-deal" href={product.href}>
-                <span className="sx-deal-media">
-                  <Photo product={product} />
-                  <ProductBadges product={product} />
-                </span>
-                <span className="sx-deal-name">{product.name}</span>
-                <Price product={product} />
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <ul className="sx-more-grid">
+        {products.slice(0, 15).map((product) => (
+          <li key={product.id}>
+            <ShopProductCard product={product} />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -187,14 +162,16 @@ export function CategoryTiles({ categories, hrefFor }: { categories: ShopCategor
 /* ---------- Produits à onglets ---------- */
 
 /**
- * Bloc à onglets (catégories, 4 au plus), grille de 8 produits. Colonne publicitaire à gauche (une grande
- * image) ou à droite (deux images), selon `side`.
+ * Bloc à onglets (catégories, 4 au plus). Avec une colonne publicitaire (à gauche ou à droite) : grille de
+ * 8 produits ; sans colonne : grille pleine largeur de 15 produits (3 lignes).
  */
-export function TabbedShowcase({ id, title, sections, allHref, hrefFor, ads, side }: { id: string; title: string; sections: { category: ShopCategory; products: ShopProduct[] }[]; allHref: string; hrefFor: (slug: string) => string; ads: Pick<AdSlot, "src" | "alt" | "href" | "size">[]; side: "left" | "right" }) {
+export function TabbedShowcase({ id, title, sections, allHref, hrefFor, ads = [], side = "left" }: { id: string; title: string; sections: { category: ShopCategory; products: ShopProduct[] }[]; allHref: string; hrefFor: (slug: string) => string; /** Colonne publicitaire ; sans elle, la grille prend toute la largeur (3 lignes). */ ads?: Pick<AdSlot, "src" | "alt" | "href" | "size">[]; side?: "left" | "right" }) {
   if (!sections.length) return null;
+  const full = ads.length === 0;
+  const size = full ? 15 : 8;
   const grid = (products: ShopProduct[]) => (
-    <ul className="sx-grid">
-      {products.slice(0, 8).map((product) => (
+    <ul className={full ? "sx-more-grid" : "sx-grid"}>
+      {products.slice(0, size).map((product) => (
         <li key={product.id}>
           <ShopProductCard product={product} />
         </li>
@@ -203,18 +180,20 @@ export function TabbedShowcase({ id, title, sections, allHref, hrefFor, ads, sid
   );
   // « Tout » mélange les catégories du bloc à tour de rôle (un produit de chacune, puis le suivant…).
   const mixed: ShopProduct[] = [];
-  for (let round = 0; mixed.length < 8 && round < 8; round++) for (const section of sections) if (section.products[round] && mixed.length < 8) mixed.push(section.products[round]);
+  for (let round = 0; mixed.length < size && round < size; round++) for (const section of sections) if (section.products[round] && mixed.length < size) mixed.push(section.products[round]);
   const tabs = [
     ...(sections.length > 1 ? [{ id: "tout", label: "Tout", href: allHref, panel: grid(mixed) }] : []),
     ...sections.map(({ category, products }) => ({ id: category.slug, label: category.label, href: hrefFor(category.slug), panel: grid(products) })),
   ];
   return (
-    <section aria-labelledby={id} className={`shop-section sx-section sx-tabbed sx-tabbed--${side}`}>
-      <div className="sx-tabbed-side">
-        {ads.map((ad) => (
-          <AdBanner ad={ad} key={ad.src} />
-        ))}
-      </div>
+    <section aria-labelledby={id} className={`shop-section sx-section sx-tabbed ${full ? "sx-tabbed--full" : `sx-tabbed--${side}`}`}>
+      {!full && (
+        <div className="sx-tabbed-side">
+          {ads.map((ad) => (
+            <AdBanner ad={ad} key={ad.src} />
+          ))}
+        </div>
+      )}
       <ShowcaseTabs more={allHref} tabs={tabs} title={title} titleId={id} />
     </section>
   );

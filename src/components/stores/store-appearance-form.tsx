@@ -146,7 +146,6 @@ export function StoreAppearanceForm({
         )}
         <section className="v-card" id="logo">
           <h2 className="v-card-title">Logo de la boutique</h2>
-          <p className="v-small v-muted">Ajoutez votre propre logo. Sans logo, nous affichons les initiales de votre boutique.</p>
           <div className="logo-row">
             <span className="logo-preview">
               {logoPreview ? (
@@ -196,7 +195,7 @@ export function StoreAppearanceForm({
 
         <section className="v-card" id="apparence">
           <h2 className="v-card-title" id="style-promotions">Style des promotions</h2>
-          <p className="v-small v-muted">Toutes les boutiques PrestAfrik ont la même présentation, claire et rapide. Choisissez seulement le style de vos promotions : la rangée « Promotions » de l’accueil et la page « Toutes les promotions ». Elle apparaît dès qu’un produit a un prix promotionnel.</p>
+          <p className="v-small v-muted">Style de la rangée « Promotions ».</p>
           <div aria-labelledby="style-promotions" className="theme-tiles" role="radiogroup">
             {promoStyles.map((style) => (
               <label className={`theme-tile ${values.promoStyle === style.id ? "is-selected" : ""}`} key={style.id}>
@@ -215,7 +214,7 @@ export function StoreAppearanceForm({
 
         <section className="v-card" id="reseaux-sociaux">
           <h2 className="v-card-title">Réseaux sociaux</h2>
-          <p className="v-small v-muted">Vos pages s’affichent en bas de votre boutique : vos clients peuvent vous suivre en un clic. Collez le lien de la page ou votre nom d’utilisateur.</p>
+          <p className="v-small v-muted">Lien ou nom d’utilisateur.</p>
           <div className="v-grid-2 social-fields">
             {socialNetworks.map((network) => {
               const Icon = socialIcons[network.key];
@@ -249,7 +248,7 @@ export function StoreAppearanceForm({
               Nom de la boutique
               <input maxLength={60} name="name" onChange={(event) => set("name", event.target.value)} required value={values.name} />
               {values.name.trim() !== initialValues.name.trim() && (
-                <span className="v-field-help">Le lien de votre boutique suivra ce nouveau nom ; l’ancien lien redirigera vers le nouveau.</span>
+                <span className="v-field-help">L’ancien lien redirigera vers le nouveau.</span>
               )}
             </label>
             <div className="v-field">
@@ -340,11 +339,10 @@ export function StoreAppearanceForm({
       <div className="v-stack store-side">
         <section aria-labelledby="store-preview-title" className="v-card store-preview-card">
           <h2 className="v-card-title" id="store-preview-title">Aperçu avant publication</h2>
-          <p className="v-small v-muted">Votre vraie boutique, telle que vos clients la verront sur leur téléphone. Vos changements s’y affichent avant même d’être enregistrés.</p>
           <StoreLivePreview reloadKey={savedCount} storePath={`/${initialValues.slug}`} values={liveValues} />
           {logoPreview && <p className="v-small store-preview-note">Nouveau logo : il sera publié à l’enregistrement.</p>}
           <p className="v-small">
-            {published ? "Tout est prêt : partagez votre boutique avec un lien ou un QR code." : "Votre boutique est en brouillon : publiez-la quand tout est prêt."}
+            {published ? "Partagez votre boutique." : "Boutique en brouillon."}
           </p>
           {/* En bas de l'aperçu : zone sensible (suppression de la boutique). */}
           {sideFooter}

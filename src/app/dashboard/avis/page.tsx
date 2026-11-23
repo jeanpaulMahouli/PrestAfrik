@@ -37,7 +37,7 @@ export default async function ReviewsPage({ searchParams }: PageProps<"/dashboar
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Avis clients</h1>
-          <p className="v-page-subtitle">Vos clients notent vos produits. Leurs avis sont publiés aussitôt et ne peuvent pas être retirés : de vrais avis rassurent vos futurs acheteurs et valorisent vos produits.</p>
+          <p className="v-page-subtitle">Publiés aussitôt, non supprimables.</p>
         </div>
       </div>
 
@@ -46,8 +46,8 @@ export default async function ReviewsPage({ searchParams }: PageProps<"/dashboar
           <h2 className="v-card-title">Avis sur la boutique</h2>
           <p className="v-muted">
             {store.reviewsEnabled
-              ? "Activés : les étoiles et les avis publiés s’affichent sur vos fiches produit, et vos clients peuvent en laisser."
-              : "Désactivés : aucune étoile ni aucun avis n’est affiché, et vos clients ne peuvent plus en laisser. Les avis existants sont conservés."}
+              ? "Activés."
+              : "Désactivés (avis existants conservés)."}
           </p>
           {count("APPROVED") > 0 && (
             <p className="reviews-average">

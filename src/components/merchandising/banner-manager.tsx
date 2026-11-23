@@ -96,7 +96,7 @@ function BannerCard({
           </button>
           <ActionDialog
             action={deleteBanner}
-            description="L’image disparaîtra de votre boutique. Cette action est définitive."
+            description="Action définitive."
             hiddenFields={{ id: banner.id }}
             submitClassName="btn btn-danger"
             submitLabel="Supprimer l’image"

@@ -44,7 +44,7 @@ export const vendorTexts = {
   },
   search: {
     title: "Recherche",
-    subtitle: "Retrouvez une commande, un client ou un produit de votre boutique.",
+    subtitle: "Commande, client ou produit.",
     resultsFor: "Résultats pour « {q} »",
     orders: "Commandes",
     customers: "Clients",

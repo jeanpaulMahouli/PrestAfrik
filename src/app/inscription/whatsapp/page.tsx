@@ -29,8 +29,8 @@ export default async function WhatsappStepPage() {
       <AuthHeading
         subtitle={
           hasStore
-            ? "Votre compte n’a pas encore de numéro WhatsApp. Il est obligatoire : vos clients vous écriront et vous enverront leurs commandes sur ce numéro."
-            : "Dernière étape, et elle est obligatoire : vos clients vous écriront et vous enverront leurs commandes sur ce numéro."
+            ? "Obligatoire : vos commandes arrivent sur ce numéro."
+            : "Dernière étape : vos commandes arrivent sur ce numéro."
         }
         title={hasStore ? `${firstName}, votre numéro WhatsApp ?` : `Bienvenue ${firstName} ! Votre numéro WhatsApp ?`}
       />

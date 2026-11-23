@@ -38,7 +38,7 @@ export function setupChecklist({ store, activeProducts, activeZones, whatsappNum
     {
       key: "contact",
       label: "Vérifier les informations de contact",
-      hint: "Le téléphone de la boutique et le numéro WhatsApp qui reçoit les commandes.",
+      hint: "Téléphone et WhatsApp.",
       done: hasPhone && whatsappNumber,
       href: whatsappNumber ? "/dashboard/boutique#informations" : "/dashboard/boutique/whatsapp",
     },

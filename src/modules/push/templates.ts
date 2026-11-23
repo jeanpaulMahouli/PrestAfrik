@@ -19,17 +19,17 @@ export const pushKindInfo: Record<PushNotificationKind, { label: string; when: s
   },
   NEW_ORDER: {
     label: "Nouvelle commande",
-    when: "Envoyé à l’équipe de la boutique dès qu’un client passe commande.",
+    when: "À chaque nouvelle commande.",
     variables: ["prenom", "boutique", "reference", "client", "total"],
   },
   NEW_MESSAGE: {
     label: "Nouveau message",
-    when: "Envoyé quand l’équipe PrestAfrik répond à un message du vendeur.",
+    when: "Quand l’équipe répond à un vendeur.",
     variables: ["prenom", "sujet"],
   },
   NEWS: {
     label: "Nouveauté",
-    when: "Envoyé à la main depuis cette page, à tous les vendeurs abonnés (texte proposé par défaut).",
+    when: "Envoi manuel depuis cette page.",
     variables: ["prenom", "boutique"],
   },
 };

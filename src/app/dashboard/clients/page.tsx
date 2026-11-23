@@ -60,7 +60,6 @@ export default async function CustomersPage({ searchParams }: PageProps<"/dashbo
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Mes clients</h1>
-          <p className="v-page-subtitle">Votre fichier clients se remplit automatiquement à chaque commande : historique, segments et consentements.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <a aria-label="Exporter les clients (fichier CSV)" className="icon-button" download href={`/api/dashboard/clients/export?${filters.toString()}`} title="Exporter les clients (CSV)">
@@ -154,7 +153,7 @@ export default async function CustomersPage({ searchParams }: PageProps<"/dashbo
             ) : (
               <>
                 <h2>Votre fichier clients est encore vide</h2>
-                <p>Il se remplira tout seul à chaque commande. Vos prochains clients vous attendent !</p>
+                <p>Il se remplit à chaque commande.</p>
               </>
             )}
           </div>

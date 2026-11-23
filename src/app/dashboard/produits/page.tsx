@@ -21,7 +21,7 @@ function successMessage(params: Record<string, string | string[] | undefined>) {
     case "archive":
       return `${n} produit${n > 1 ? "s" : ""} archivé${n > 1 ? "s" : ""}. Restaurable à tout moment depuis l’onglet Archivés.`;
     case "mis-en-avant":
-      return "Produit mis en avant : il apparaît dans « Nos produits mis en avant » sur l’accueil de votre boutique.";
+      return "Produit mis en avant.";
     case "retire-avant":
       return "Le produit n’est plus mis en avant.";
     case "restaure":
@@ -60,9 +60,6 @@ export default async function ProductsPage({ searchParams }: PageProps<"/dashboa
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Mes produits</h1>
-          <p className="v-page-subtitle">
-            Ajoutez, modifiez ou retirez vos produits en quelques clics. Chaque changement apparaît tout de suite dans votre boutique.
-          </p>
         </div>
         {canManage && (
           <div className="v-page-actions v-page-actions-inline">

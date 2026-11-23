@@ -65,7 +65,7 @@ export function ProductNotices({ notices, completion, credits = null }: { notice
         ))}
       </ul>
       {notices.length === 0 ? (
-        <p className="v-small v-muted">Tout est en ordre. Votre fiche produit est prête à être enregistrée.</p>
+        <p className="v-small v-muted">Tout est prêt.</p>
       ) : (
         <ul className="product-notice-list">
           {notices.map((notice) => {

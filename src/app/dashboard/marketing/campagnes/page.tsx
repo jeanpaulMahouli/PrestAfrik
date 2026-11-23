@@ -50,13 +50,13 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Campagnes</h1>
-          <p className="v-page-subtitle">Préparez des messages ciblés, uniquement pour les clients qui ont accepté de recevoir vos offres.</p>
+          <p className="v-page-subtitle">Seulement aux clients qui acceptent vos offres.</p>
         </div>
         {!subscription.featureRestricted && (
           <div className="v-page-actions">
             <ActionDialog
               action={createMarketingCampaign}
-              description="Une campagne est d’abord enregistrée en brouillon : rien n’est envoyé sans votre confirmation."
+              description="Rien n’est envoyé sans votre confirmation."
               size="md"
               submitLabel="Enregistrer en brouillon"
               title="Nouvelle campagne"
@@ -80,12 +80,11 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
               <label className="v-field">
                 Message
                 <textarea maxLength={1000} minLength={2} name="message" placeholder="Bonjour ! Découvrez nos nouveautés…" required rows={4} />
-                <span className="v-field-help">Chaque message rappellera au client qu’il peut se désinscrire.</span>
               </label>
               <label className="v-field">
                 Limite d’envoi
                 <input defaultValue={Math.max(1, Math.min(subscription.remainingMessages, 1000))} max={10_000} min={1} name="recipientLimit" required type="number" />
-                <span className="v-field-help">Ne peut pas dépasser votre quota restant ({subscription.remainingMessages} messages ce mois-ci).</span>
+                <span className="v-field-help">{subscription.remainingMessages} messages restants ce mois-ci.</span>
               </label>
             </ActionDialog>
           </div>
@@ -100,7 +99,7 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
           <Link className="btn btn-secondary btn-sm" href={whatsappApiSettingsPath}>
             Configurer l’API WhatsApp
           </Link>
-          <p className="v-small">Vous pouvez déjà préparer vos campagnes : elles restent en brouillon jusqu’à ce que l’API soit prête.</p>
+          <p className="v-small">Vos campagnes restent en brouillon pour l’instant.</p>
         </div>
       )}
       {subscription.featureRestricted && (
@@ -208,7 +207,6 @@ export default async function MarketingPage({ searchParams }: PageProps<"/dashbo
             <div className="whatsapp-quota-bar" style={{ width: `${percent}%` }} />
           </div>
           <p className="v-small v-muted">{subscription.usedMessages} messages sur {quota} utilisés</p>
-          <p className="v-small">Seuls les clients qui ont accepté les offres reçoivent une campagne. Chacun peut se désinscrire.</p>
         </section>
       </div>
     </VendorShell>

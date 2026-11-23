@@ -12,21 +12,21 @@ const sections: { href: string; icon: AppIcon; title: string; text: string; perm
     href: "/dashboard/marketing/campagnes",
     icon: Megaphone,
     title: "Campagnes",
-    text: "Envoyez une offre sur WhatsApp aux clients qui ont accepté de la recevoir.",
+    text: "Une offre WhatsApp à vos clients.",
     permission: "marketing.manage",
   },
   {
     href: "/dashboard/marketing/banniere",
     icon: Images,
     title: "Bannière",
-    text: "Jusqu’à 4 images qui défilent en haut de votre boutique : nouveautés, promotions.",
+    text: "4 images en haut de votre boutique.",
     permission: "store.manage",
   },
   {
     href: "/dashboard/marketing/popups",
     icon: MessageSquareText,
     title: "Popups",
-    text: "Une fenêtre qui s’ouvre à l’arrivée sur votre boutique, pour une offre du moment.",
+    text: "Une offre à l’ouverture de la boutique.",
     permission: "marketing.manage",
   },
 ];
@@ -42,7 +42,6 @@ export default async function MarketingPage() {
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Marketing</h1>
-          <p className="v-page-subtitle">Faites revenir vos clients et mettez vos offres en avant. Choisissez un outil.</p>
         </div>
       </div>
       <ul className="hub-cards glass-zone">

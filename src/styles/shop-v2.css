@@ -1,0 +1,1023 @@
+/* =============================================================================
+   Marketplace PrestAfrik — design system des boutiques publiques (storefront-v2.css, maquettes
+   « Maquette boutiques publics ») : page blanche, texte noir, cartes produits gris clair (#f6f6f6) aux
+   coins arrondis (9 px), nom centré, prix en grand, boutons noirs, pied de page noir. Icônes : Phosphor
+   (Regular), comme les boutiques. Le jaune doré (#ffb547) reste réservé aux étoiles et aux promotions.
+   Chargée en dernier par ShopShell (classe .sx-v2 sur le cadre) : elle remplace les couleurs orange et
+   bleu nuit des feuilles shop*.css sans toucher à leur mise en page.
+   ========================================================================== */
+
+.shop.sx-v2 {
+  /* Jetons des feuilles de la marketplace, ramenés à ceux des boutiques publiques. */
+  --sx-orange: #000000;
+  --sx-orange-dark: #000000;
+  --sx-navy: #000000;
+  --sx-ink: #000000;
+  --sx-ink-2: #3d3d3d;
+  --sx-ink-3: #5c5c5c;
+  --sx-ink-4: #8b8b8b;
+  --sx-line: #ebebeb;
+  --sx-soft: #f6f6f6;
+  --sx-yellow: #f6f6f6;
+  --sx-radius: 0.5625rem;
+  --sx-shadow: 0 10px 30px rgb(0 0 0 / 0.08);
+  --color-brand-primary: #000000;
+  --color-brand-secondary: #000000;
+  --color-text-primary: #000000;
+  --color-text-secondary: #5c5c5c;
+  --color-border: #ebebeb;
+  --dt-hover: #f6f6f6;
+  --dt-active: #f6f6f6;
+  --lp-orange: #000000;
+  --lp-peach: #f6f6f6;
+  --lp-cream: #fafafa;
+  --lp-sand: #f6f6f6;
+  --lp-navy: #000000;
+  --lp-line: #ebebeb;
+  --lp-ink-faint: #8b8b8b;
+  --glass-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  --glass-shadow-raised: 0 12px 32px rgb(0 0 0 / 0.1);
+  --sf-surface: #f6f6f6;
+  --sf-gold: #ffb547;
+  --sf-red: #db3022;
+
+  color: #000;
+  background: #fff;
+}
+
+/* ---------- Boutons : noirs, arrondis, sans majuscules (comme « Ajouter au panier » des boutiques) ---------- */
+.shop.sx-v2 .sx-btn {
+  border-radius: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.shop.sx-v2 .sx-btn-primary,
+.shop.sx-v2 .shop-btn-primary,
+.shop.sx-v2 .sx-adbar-cta {
+  border-color: #000;
+  color: #fff;
+  background: #000;
+}
+
+.shop.sx-v2 .sx-btn-primary:hover,
+.shop.sx-v2 .shop-btn-primary:hover {
+  filter: none;
+  background: #2b2b2b;
+}
+
+.shop.sx-v2 .sx-btn-outline {
+  border: 1px solid #000;
+  color: #000;
+  background: #fff;
+}
+
+.shop.sx-v2 .sx-btn-outline:hover {
+  color: #fff;
+  background: #000;
+}
+
+.shop.sx-v2 .sx-link {
+  color: #000;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.shop.sx-v2 .sx-link:hover {
+  color: #5c5c5c;
+}
+
+/* Flèches rondes : blanches, ombre légère (flèche du carrousel des promotions des boutiques). */
+.shop.sx-v2 .sx-round,
+.shop.sx-v2 .shop-rail-arrow {
+  border: 1px solid #ebebeb;
+  color: #000;
+  background: #fff;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.08);
+}
+
+.shop.sx-v2 .sx-round:hover,
+.shop.sx-v2 .sx-round--solid,
+.shop.sx-v2 .shop-rail-arrow:hover {
+  filter: none;
+  color: #fff;
+  background: #000;
+}
+
+.shop.sx-v2 .sx-chip {
+  border-radius: 999px;
+  color: #3d3d3d;
+  background: #f6f6f6;
+  font-size: 0.8125rem;
+}
+
+/* ---------- Bandeau du haut et en-tête ---------- */
+.shop.sx-v2 .sx-adbar {
+  min-height: 2.75rem;
+  color: #fff;
+  background: #000;
+}
+
+.shop.sx-v2 .sx-adbar .shop-ticker-window {
+  height: 2rem;
+}
+
+.shop.sx-v2 .sx-adbar .shop-ticker-item {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.shop.sx-v2 .sx-adbar-cta {
+  min-height: 1.875rem;
+  border: 1px solid #fff;
+  border-radius: 999px;
+  color: #000;
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.shop.sx-v2 .shop-header {
+  border-bottom: 1px solid #ebebeb;
+  background: rgb(255 255 255 / 0.94);
+}
+
+/* Recherche : champ gris arrondi, sans bordure (en-tête des boutiques). */
+.shop.sx-v2 .shop-header .shop-search .vendor-search-bar {
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: #f5f5f5;
+}
+
+.shop.sx-v2 .shop-header .shop-search .vendor-search-bar:focus-within {
+  border-color: #000;
+  background: #fff;
+  box-shadow: none;
+}
+
+.shop.sx-v2 .shop-header .shop-city,
+.shop.sx-v2 .sx-universe-button {
+  border-radius: 0.5rem;
+}
+
+.shop.sx-v2 .shop-header .shop-city > svg:first-child,
+.shop.sx-v2 .sx-universe-button > svg:first-child {
+  color: #000;
+}
+
+.shop.sx-v2 .shop-header-cta {
+  border-radius: 0.5rem;
+}
+
+/* Barre de navigation : liens noirs, soulignés au survol et sur la page en cours. */
+.shop.sx-v2 .shop-rubriques {
+  border-bottom: 1px solid #ebebeb;
+  background: #fff;
+}
+
+.shop.sx-v2 .shop-rubrique,
+.shop.sx-v2 .shop-rubrique svg,
+.shop.sx-v2 .shop-rubrique--flash,
+.shop.sx-v2 .shop-rubrique--flash svg,
+.shop.sx-v2 .shop-rubrique--exclusif svg {
+  color: #000;
+}
+
+.shop.sx-v2 .shop-rubrique:hover,
+.shop.sx-v2 .shop-rubrique[aria-current="page"] {
+  color: #000;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 0.35em;
+}
+
+/* ---------- Titres de blocs (« Promotions » des boutiques : 1,5 rem, poids 500) ---------- */
+.shop.sx-v2 .sx-head h2,
+.shop.sx-v2 .shop-section-titles h1,
+.shop.sx-v2 .shop-section-titles h2 {
+  color: #000;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.shop.sx-v2 .shop-section-icon {
+  color: #000;
+  background: #f6f6f6;
+}
+
+/* ---------- Carte produit : comme les cartes des boutiques ---------- */
+.shop.sx-v2 .shop-card {
+  padding: 0.5rem 0.5rem 1.25rem;
+  border: 0;
+  border-radius: var(--sx-radius);
+  background: #f6f6f6;
+  text-align: center;
+}
+
+.shop.sx-v2 .shop-card:hover {
+  background: #f6f6f6;
+  box-shadow: var(--sx-shadow);
+}
+
+.shop.sx-v2 .shop-card-photo {
+  overflow: hidden;
+  aspect-ratio: 1;
+  border-radius: 0.375rem;
+  background: #fff;
+}
+
+.shop.sx-v2 .shop-card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.shop.sx-v2 .shop-card-body {
+  justify-items: center;
+  gap: 0.5rem;
+  padding: 1rem 0.5rem 0;
+}
+
+.shop.sx-v2 .shop-card-name {
+  min-height: 2.9em;
+  color: #000;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.shop.sx-v2 .shop-card-name:hover {
+  color: #000;
+}
+
+.shop.sx-v2 .shop-card .sx-price {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+}
+
+.shop.sx-v2 .shop-card .sx-price strong {
+  order: -1;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+
+.shop.sx-v2 .shop-card .sx-price s {
+  color: #8b8b8b;
+  font-size: 0.8125rem;
+}
+
+.shop.sx-v2 .shop-card-store {
+  color: #8b8b8b;
+  font-size: 0.75rem;
+}
+
+.shop.sx-v2 .shop-card-actions {
+  background: rgb(0 0 0 / 0.12);
+}
+
+@media (max-width: 639.98px) {
+  .shop.sx-v2 .shop-card {
+    padding: 0.375rem 0.375rem 1rem;
+  }
+
+  .shop.sx-v2 .shop-card-body {
+    padding: 0.75rem 0.25rem 0;
+  }
+
+  .shop.sx-v2 .shop-card-name {
+    font-size: 0.875rem;
+  }
+
+  .shop.sx-v2 .shop-card .sx-price strong {
+    font-size: 1.0625rem;
+  }
+}
+
+/* Prix hors carte (listes, fiche, panier) : noir. */
+.shop.sx-v2 .sx-price strong {
+  color: #000;
+}
+
+/* Étoiles dorées, pastilles noires « −30 % » en haut à gauche (badge des boutiques). */
+.shop.sx-v2 .sx-stars {
+  color: var(--sf-gold);
+}
+
+.shop.sx-v2 .sx-badges {
+  top: 0.5rem;
+  left: 0.5rem;
+}
+
+.shop.sx-v2 .sx-badge {
+  border-radius: 0.3125rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.shop.sx-v2 .sx-badge--deal {
+  color: #fff;
+  background: #000;
+}
+
+.shop.sx-v2 .sx-badge--exclusive {
+  color: #000;
+  background: var(--sf-gold);
+}
+
+/* ---------- Pied de page noir (comme celui des boutiques) ---------- */
+.shop.sx-v2 .shop-footer {
+  color: #fff;
+  background: #000;
+}
+
+.shop.sx-v2 .shop-footer h2 {
+  color: #fff;
+  font-weight: 600;
+}
+
+.shop.sx-v2 .shop-footer a {
+  color: rgb(255 255 255 / 0.78);
+}
+
+.shop.sx-v2 .shop-footer a:hover {
+  color: #fff;
+}
+
+.shop.sx-v2 .shop-footer-copy {
+  border-top: 1px solid rgb(255 255 255 / 0.14);
+  color: rgb(255 255 255 / 0.6);
+}
+
+.shop.sx-v2 .sx-footer-tags a {
+  border-color: rgb(255 255 255 / 0.2);
+  border-radius: 999px;
+  color: rgb(255 255 255 / 0.85);
+  background: transparent;
+}
+
+.shop.sx-v2 .sx-footer-tags a:hover {
+  border-color: #fff;
+  color: #000;
+  background: #fff;
+}
+
+/* ---------- Assistant ---------- */
+.shop.sx-v2 .shop-assistant-launcher,
+.shop.sx-v2 .shop-assistant-head,
+.shop.sx-v2 .shop-bubble--me,
+.shop.sx-v2 .shop-assistant-links .is-primary,
+.shop.sx-v2 .shop-assistant-search button {
+  color: #fff;
+  background: #000;
+}
+
+/* ---------- Grille « Plus de produits » de l'accueil ---------- */
+.sx-more-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 640px) {
+  .sx-more-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .sx-more-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+.sx-more-foot {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.shop.sx-v2 .sx-more-foot .sx-btn {
+  min-width: 15rem;
+}
+
+/* Nom de la boutique sous le prix : une ligne. */
+.shop.sx-v2 .shop-card-store {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Bonnes affaires : cartes grises séparées au lieu du quadrillage ---------- */
+.shop.sx-v2 .sx-deals {
+  gap: 1rem;
+  border: 0;
+}
+
+.shop.sx-v2 .sx-deal-lead,
+.shop.sx-v2 .sx-deal {
+  border: 0;
+  border-radius: var(--sx-radius);
+  background: #f6f6f6;
+}
+
+.shop.sx-v2 .sx-deal-lead {
+  padding: 0.5rem 0.5rem 1.25rem;
+  text-align: center;
+}
+
+.shop.sx-v2 .sx-deal-lead > :not(.sx-deal-lead-media) {
+  margin-inline: 0.75rem;
+}
+
+.shop.sx-v2 .sx-deal-lead .sx-price,
+.shop.sx-v2 .sx-deal .sx-price {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+}
+
+.shop.sx-v2 .sx-deal-lead .sx-price strong {
+  order: -1;
+  font-size: 1.5rem;
+}
+
+.shop.sx-v2 .sx-deal-lead .sx-stars {
+  justify-self: center;
+}
+
+.shop.sx-v2 .sx-deal-lead-media,
+.shop.sx-v2 .sx-deal-media {
+  overflow: hidden;
+  border-radius: 0.375rem;
+}
+
+.shop.sx-v2 .sx-deal-grid {
+  gap: 1rem;
+}
+
+.shop.sx-v2 .sx-deal-grid li {
+  border: 0;
+}
+
+.shop.sx-v2 .sx-deal {
+  justify-items: center;
+  padding: 0.5rem 0.5rem 1rem;
+  text-align: center;
+}
+
+.shop.sx-v2 .sx-deal-name {
+  font-weight: 500;
+}
+
+.shop.sx-v2 .sx-deal .sx-price strong {
+  order: -1;
+  font-size: 1.0625rem;
+}
+
+@media (max-width: 639.98px) {
+  .shop.sx-v2 .sx-deals,
+  .shop.sx-v2 .sx-deal-grid {
+    gap: 0.75rem;
+  }
+}
+
+/* ---------- Catégories : carrés gris, icône noire ---------- */
+.shop.sx-v2 .sx-category {
+  border: 0;
+  border-radius: var(--sx-radius);
+  background: #f6f6f6;
+}
+
+.shop.sx-v2 .sx-category:hover {
+  background: #ececec;
+}
+
+.shop.sx-v2 .sx-category-icon {
+  color: #000;
+  background: #fff;
+}
+
+/* ---------- Onglets « Produits phares » : soulignement noir ---------- */
+.shop.sx-v2 :is(.sx-tabs, .sx-tablist) [aria-selected="true"] {
+  color: #000;
+  border-color: #000;
+}
+
+/* ---------- Mini-listes : vignettes arrondies ---------- */
+.shop.sx-v2 .sx-mini h2,
+.shop.sx-v2 .sx-mini h2 a {
+  color: #000;
+  font-weight: 600;
+}
+
+.shop.sx-v2 .sx-mini a {
+  border-radius: var(--sx-radius);
+}
+
+.shop.sx-v2 .sx-mini-media {
+  overflow: hidden;
+  border-radius: 0.375rem;
+  background: #f6f6f6;
+}
+
+/* Pied de page noir : icônes de contact blanches ; bouton de l'assistant détouré pour rester visible. */
+.shop.sx-v2 .sx-footer-contacts svg,
+.shop.sx-v2 .shop-footer svg {
+  color: #fff;
+}
+
+.shop.sx-v2 .shop-assistant-launcher {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 8px 24px rgb(0 0 0 / 0.18);
+}
+
+/* Téléphone : produit vedette des bonnes affaires, photo à gauche et texte à droite, et 8 produits. */
+@media (max-width: 1023.98px) {
+  .shop.sx-v2 .sx-deal-lead {
+    padding: 0.5rem;
+    text-align: left;
+  }
+
+  .shop.sx-v2 .sx-deal-lead > :not(.sx-deal-lead-media) {
+    margin-inline: 0;
+  }
+
+  .shop.sx-v2 .sx-deal-lead .sx-price {
+    justify-items: start;
+  }
+
+  .shop.sx-v2 .sx-deal-lead-media {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 639.98px) {
+  .shop.sx-v2 .sx-deal-lead {
+    grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+    column-gap: 0.875rem;
+  }
+
+  .shop.sx-v2 .sx-deal-lead .sx-price strong {
+    font-size: 1.25rem;
+  }
+
+  .shop.sx-v2 .sx-deal-grid li:nth-child(n + 5) {
+    display: list-item;
+  }
+}
+
+/* Photos centrées : le cadre garde toute la largeur de la carte. */
+.shop.sx-v2 :is(.sx-deal-media, .sx-deal-lead-media) {
+  width: 100%;
+  justify-self: stretch;
+}
+
+/* Téléphone : « Livrer à » remplit l'espace entre le logo et le panier, la flèche à l'extrémité droite. */
+@media (max-width: 767px) {
+  .shop.sx-v2 .sx-header-row > .sx-universe.sx-city {
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .shop.sx-v2 .sx-header-row > .sx-universe.sx-city .sx-city-button {
+    width: 100%;
+    max-width: none;
+    justify-content: flex-start;
+    padding: 0 0.75rem;
+  }
+
+  .shop.sx-v2 .sx-header-row > .sx-universe.sx-city .sx-city-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .shop.sx-v2 .sx-header-row > .sx-universe.sx-city .sx-caret {
+    flex: none;
+    margin-left: auto;
+  }
+}
+
+/* ---------- Survol des cartes produit : toute la carte s'ouvre au clic ----------
+   Le voile du survol laisse passer le clic (seuls les deux boutons ronds le captent) : un clic n'importe
+   où sur la carte ouvre la fiche produit (lien du nom étendu à toute la carte). */
+.shop.sx-v2 .shop-card {
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+@media (hover: hover) {
+  .shop.sx-v2 .shop-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px rgb(0 0 0 / 0.1);
+  }
+
+  .shop.sx-v2 .shop-card:hover .shop-card-photo img {
+    transform: scale(1.06);
+  }
+
+  .shop.sx-v2 :is(.sx-deal, .sx-deal-lead):hover {
+    box-shadow: 0 14px 32px rgb(0 0 0 / 0.1);
+  }
+
+  .shop.sx-v2 :is(.sx-deal, .sx-deal-lead):hover img {
+    transform: scale(1.06);
+  }
+}
+
+.shop.sx-v2 :is(.shop-card-photo, .sx-deal-media, .sx-deal-lead-media) img {
+  transition: transform 0.45s ease;
+}
+
+.shop.sx-v2 .shop-card-actions {
+  inset: 0.5rem 0.5rem auto auto;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  background: none;
+  pointer-events: none;
+  transform: translateX(0.4rem);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.shop.sx-v2 .shop-card:hover .shop-card-actions,
+.shop.sx-v2 .shop-card:focus-within .shop-card-actions {
+  transform: none;
+}
+
+.shop.sx-v2 .shop-card-actions .sx-round {
+  width: 2.5rem;
+  height: 2.5rem;
+  pointer-events: auto;
+}
+
+/* Écrans tactiles : pas de survol, les boutons restent cachés (le toucher ouvre la fiche). */
+@media (hover: none) {
+  .shop.sx-v2 .shop-card-actions {
+    display: none;
+  }
+}
+
+/* « Encore plus de choix » sans colonne publicitaire : la grille prend toute la largeur. */
+.shop.sx-v2 .sx-tabbed--full {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* ======================================================================
+   Fiche produit de la marketplace : au design de la fiche des boutiques publiques
+   (titre en grand et gras, prix en grand, boutons pleine largeur, blocs gris arrondis).
+   ====================================================================== */
+.shop.sx-v2 .sx-crumbs {
+  background: transparent;
+}
+
+.shop.sx-v2 .sx-crumbs a {
+  color: #8b8b8b;
+}
+
+.shop.sx-v2 .sx-crumbs [aria-current="page"] {
+  color: #000;
+}
+
+.shop.sx-v2 .sx-gallery-main {
+  border: 0;
+  border-radius: var(--sx-radius);
+  background: #f6f6f6;
+}
+
+.shop.sx-v2 .sx-thumbs :is(button, img) {
+  border-radius: 0.375rem;
+}
+
+.shop.sx-v2 .sx-product-title {
+  color: #000;
+  font-size: clamp(1.625rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.shop.sx-v2 .sx-product-price strong {
+  color: #000;
+  font-size: clamp(1.625rem, 2.6vw, 2rem);
+  font-weight: 500;
+}
+
+.shop.sx-v2 .sx-product-price s {
+  color: #8b8b8b;
+  font-size: 1.25rem;
+}
+
+.shop.sx-v2 .sx-product-price .sx-badge--deal {
+  border-radius: 999px;
+  color: #fff;
+  background: var(--sf-red);
+}
+
+/* Quantité sur sa ligne, puis les deux boutons côte à côte, à parts égales. */
+.shop.sx-v2 .sx-buy-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.shop.sx-v2 .sx-buy-actions .sx-qty {
+  grid-column: 1 / -1;
+  justify-self: start;
+  height: 3rem;
+  border: 1px solid #d4d4d4;
+  border-radius: 0.5rem;
+}
+
+.shop.sx-v2 .sx-buy-actions .sx-btn {
+  width: 100%;
+  min-height: 3.5rem;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.shop.sx-v2 .sx-buy-actions .sx-btn-outline {
+  border: 1px solid #000;
+}
+
+@media (max-width: 479.98px) {
+  .shop.sx-v2 .sx-buy-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Vendeur et garanties : bloc gris arrondi, comme les pastilles « Paiement / Livraison » des boutiques. */
+.shop.sx-v2 .sx-product-side {
+  border: 0;
+  border-radius: var(--sx-radius);
+  background: #f6f6f6;
+}
+
+.shop.sx-v2 .sx-seller-logo {
+  border-color: #fff;
+  background: #fff;
+}
+
+.shop.sx-v2 .sx-guarantees {
+  border-top-color: #e6e6e6;
+}
+
+.shop.sx-v2 .sx-guarantees svg,
+.shop.sx-v2 .sx-feature-list svg {
+  color: #000;
+}
+
+/* Détails, avis, livraison : bloc gris arrondi comme « Détails » des boutiques. */
+.shop.sx-v2 .sx-detail {
+  border: 0;
+  border-radius: var(--sx-radius);
+  background: #fafafa;
+}
+
+.shop.sx-v2 .sx-detail-tabs {
+  justify-content: flex-start;
+  padding: 0 1.5rem;
+  border-bottom-color: #ebebeb;
+}
+
+.shop.sx-v2 .sx-detail-tabs button {
+  color: #8b8b8b;
+  font-size: 1.125rem;
+  text-transform: none;
+}
+
+.shop.sx-v2 .sx-detail-tabs button[aria-selected="true"] {
+  color: #000;
+}
+
+.shop.sx-v2 .sx-detail-tabs button[aria-selected="true"]::after {
+  background: #000;
+}
+
+/* ======================================================================
+   Panier et commande de la marketplace : comme ceux des boutiques publiques.
+   ====================================================================== */
+/* Pastille du panier : rouge, chiffre blanc (comme l'en-tête des boutiques). */
+.shop.sx-v2 .sx-cart-count {
+  border-color: #fff;
+  color: #fff;
+  background: var(--sf-red);
+  font-weight: 600;
+}
+
+.shop.sx-v2 :is(.sx-cart-store, .sx-checkout-form, .sx-summary) {
+  border-color: #ebebeb;
+  border-radius: var(--sx-radius);
+}
+
+.shop.sx-v2 .sx-cart-table thead,
+.shop.sx-v2 .sx-cart-table th {
+  background: #f6f6f6;
+}
+
+/* Choix (livraison / retrait) : sélection en noir sur gris clair, coins arrondis. */
+.shop.sx-v2 .sx-choice label {
+  border-color: #d4d4d4;
+  border-radius: 0.5rem;
+}
+
+.shop.sx-v2 .sx-choice label:has(input:checked) {
+  border-color: #000;
+  background: #f6f6f6;
+}
+
+.shop.sx-v2 :is(.sx-choice, .sx-check) input {
+  accent-color: #000;
+}
+
+/* Champs : fond gris très clair et coins arrondis, comme le formulaire de commande des boutiques. */
+.shop.sx-v2 .sx-field :is(input, select, textarea),
+.shop.sx-v2 .sx-checkout .phone-input :is(input, select) {
+  border-color: #d4d4d4;
+  border-radius: 0.5rem;
+  background-color: #fafafa;
+}
+
+.shop.sx-v2 .sx-field :is(input, select, textarea):focus {
+  border-color: #000;
+  background-color: #fff;
+  box-shadow: none;
+}
+
+.shop.sx-v2 .sx-summary .sx-btn,
+.shop.sx-v2 .sx-cart-store .sx-btn {
+  border-radius: 0.5rem;
+}
+
+/* ======================================================================
+   Touche orange de la marque (#ff9900), avec mesure : actions principales, onglet actif, icônes de
+   navigation et de catégories. Texte noir sur l'orange (contraste suffisant), le reste en noir et blanc.
+   ====================================================================== */
+.shop.sx-v2 {
+  --pa-orange: #ff9900;
+  --pa-orange-hover: #f08c00;
+  --pa-orange-soft: #fff4e0;
+}
+
+/* Boutons d'action : « Devenir vendeur », « Commander maintenant », « J'en profite », « Voir tous les produits ». */
+.shop.sx-v2 :is(.shop-header-cta, .sx-buy-actions .sx-btn-primary, .sx-more-foot .sx-btn-primary, .sx-summary .sx-btn-primary, .sx-cart-store .sx-btn-primary),
+.shop.sx-v2 .sx-adbar-cta {
+  border-color: var(--pa-orange);
+  color: #000;
+  background: var(--pa-orange);
+}
+
+.shop.sx-v2 :is(.shop-header-cta, .sx-buy-actions .sx-btn-primary, .sx-more-foot .sx-btn-primary, .sx-summary .sx-btn-primary, .sx-cart-store .sx-btn-primary):hover {
+  background: var(--pa-orange-hover);
+}
+
+/* Icônes de la barre de navigation et de « Livrer à ». */
+.shop.sx-v2 .shop-rubrique svg,
+.shop.sx-v2 .shop-header .shop-city > svg:first-child,
+.shop.sx-v2 .sx-universe-button > svg:first-child {
+  color: var(--pa-orange);
+}
+
+/* Onglet actif et liens « Voir tout » : trait et flèche orange. */
+.shop.sx-v2 .sx-tablist button::after,
+.shop.sx-v2 .sx-detail-tabs button[aria-selected="true"]::after {
+  background: var(--pa-orange);
+}
+
+.shop.sx-v2 .sx-link svg {
+  color: var(--pa-orange);
+}
+
+/* Catégories : cercle orange très clair, icône orange. */
+.shop.sx-v2 .sx-category-icon {
+  color: var(--pa-orange);
+  background: var(--pa-orange-soft);
+}
+
+/* Garanties (paiement à la livraison…) : icônes orange. */
+.shop.sx-v2 .sx-trust svg,
+.shop.sx-v2 .sx-guarantees svg,
+.shop.sx-v2 .sx-feature-list svg {
+  color: var(--pa-orange);
+}
+
+/* ======================================================================
+   Fiche produit : le composant des boutiques publiques dans la marketplace (classe .sx-sf).
+   ====================================================================== */
+.shop .sx-sf {
+  min-height: 0;
+  background: transparent;
+}
+
+.shop .sx-sf .sf-product-page {
+  padding-bottom: 1rem;
+}
+
+.sx-sf .sf-breadcrumb-item {
+  display: contents;
+}
+
+/* Vendeur : carte grise arrondie sous les garanties. */
+.sf-v2 .sf-seller {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-top: 1.25rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--sf-radius);
+  color: #000;
+  background: var(--sf-surface);
+  text-decoration: none;
+}
+
+.sf-v2 .sf-seller-logo {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex: none;
+  overflow: hidden;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  font-weight: 600;
+}
+
+.sf-v2 .sf-seller-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sf-v2 .sf-seller-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+
+.sf-v2 .sf-seller-text small {
+  color: var(--sf-muted);
+  font-size: 0.8125rem;
+}
+
+.sf-v2 .sf-seller-text strong {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sf-v2 .sf-seller-cta {
+  flex: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Partager : logos d'origine dans des ronds blancs. */
+.sf-v2 .sf-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+  color: var(--sf-muted);
+  font-size: 0.875rem;
+}
+
+.sf-v2 .sf-share-btn {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #ebebeb;
+  border-radius: 50%;
+  color: #000;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sf-v2 .sf-share-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgb(0 0 0 / 0.08);
+}

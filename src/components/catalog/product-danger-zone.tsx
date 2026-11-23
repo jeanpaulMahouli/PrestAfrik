@@ -30,8 +30,8 @@ export function ProductDangerZone({
       <h2 className="v-card-title">Zone sensible</h2>
       <p className="v-small v-muted">
         {orderCount > 0
-          ? `Ce produit a déjà été commandé ${orderCount} fois. Pour garder l’historique de vos commandes intact, vous pouvez l’archiver : il disparaît de votre boutique mais reste dans vos commandes.`
-          : "Ce produit n’a jamais été commandé : vous pouvez l’archiver ou le supprimer définitivement."}
+          ? `Commandé ${orderCount} fois : archivez-le pour garder l’historique.`
+          : "Jamais commandé : archivez ou supprimez."}
       </p>
       <div className="v-button-row">
         {!archived && (

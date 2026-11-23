@@ -43,7 +43,6 @@ export default async function WhatsappApiPage({ searchParams }: PageProps<"/dash
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">API WhatsApp Business</h1>
-          <p className="v-page-subtitle">Pour envoyer automatiquement la demande de confirmation. Le lien wa.me reste votre solution de secours.</p>
         </div>
         <div className="v-page-actions">
           {configured && (
@@ -102,7 +101,7 @@ export default async function WhatsappApiPage({ searchParams }: PageProps<"/dash
           <label className="v-field">
             Secret du webhook
             <input autoComplete="off" maxLength={500} name="apiWebhookSecret" placeholder={settings.hasWebhookSecret ? "•••••••••••• enregistré — laissez vide pour le conserver" : ""} type="password" />
-            <span className="v-field-help">Les secrets sont chiffrés et ne sont jamais réaffichés.</span>
+            <span className="v-field-help">Chiffré, jamais réaffiché.</span>
           </label>
           <label className="v-check">
             <input defaultChecked={settings.mode === "CLOUD_API"} name="activate" type="checkbox" />
@@ -113,7 +112,7 @@ export default async function WhatsappApiPage({ searchParams }: PageProps<"/dash
             {configured && (
               <ActionDialog
                 action={removeWhatsappApiAction}
-                description="Les identifiants seront effacés et le lien wa.me redeviendra le mode actif."
+                description="Les identifiants seront effacés."
                 submitClassName="btn btn-danger"
                 submitLabel="Retirer la configuration"
                 title="Retirer la configuration API ?"

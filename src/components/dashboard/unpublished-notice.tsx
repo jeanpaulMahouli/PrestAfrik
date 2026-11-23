@@ -1,53 +1,55 @@
-import { ArrowRight, Check, Eye, Rocket, TriangleAlert } from "lucide-react";
+import { ArrowRight, Eye, ListChecks, Rocket } from "lucide-react";
 import Link from "next/link";
 import { SubmitButton } from "@/components/ui/submit-button";
 import type { PublicationItem } from "@/modules/stores/publication";
 import { publishStore } from "@/modules/stores/settings-actions";
 
 /**
- * Accueil du tableau de bord, boutique pas encore publiée : alerte en tête de page, étapes restantes
- * (chacune mène à la page où la faire), et bouton « Publier ma boutique » dès que tout est prêt.
- * Tant qu'elle n'est pas publiée, la boutique n'est visible ni des clients ni sur la marketplace.
+ * Accueil du tableau de bord, boutique pas encore publiée : ce qui reste à faire (titre court, barre de
+ * progression, étapes restantes seulement) et une seule action principale : l'étape suivante, ou
+ * « Publier ma boutique » dès que tout est prêt.
  */
 export function UnpublishedNotice({ checklist, previewHref, canPublish }: { checklist: PublicationItem[]; previewHref: string; canPublish: boolean }) {
   const missing = checklist.filter((item) => !item.done);
   const done = checklist.length - missing.length;
   const ready = missing.length === 0;
+  const percent = Math.round((done / Math.max(1, checklist.length)) * 100);
+  const title = ready ? "Votre boutique est prête" : missing.length === 1 ? "Plus qu’une étape avant la mise en ligne" : `Encore ${missing.length} étapes avant la mise en ligne`;
+
   return (
-    <section aria-labelledby="publication-title" className="v-card unpublished-notice" role="status">
+    <section aria-labelledby="publication-title" className={`v-card unpublished-notice${ready ? " is-ready" : ""}`} role="status">
       <header className="unpublished-head">
         <span aria-hidden="true" className="unpublished-icon">
-          {ready ? <Rocket size={26} /> : <TriangleAlert size={26} />}
+          {ready ? <Rocket size={24} /> : <ListChecks size={24} />}
         </span>
         <div>
-          <h2 id="publication-title">{ready ? "Votre boutique est prête à être publiée" : "Votre boutique n’est pas encore en ligne"}</h2>
-          <p>
-            {ready
-              ? "Tout est prêt : publiez-la pour que vos clients la voient et qu’elle apparaisse sur la marketplace PrestAfrik."
-              : `Vos clients ne la voient pas encore, et elle n’apparaît pas sur la marketplace. Il reste ${missing.length} étape${missing.length > 1 ? "s" : ""} (${done} sur ${checklist.length} terminées).`}
-          </p>
+          <h2 id="publication-title">{title}</h2>
+          <p>{ready ? "Publiez-la pour recevoir vos premières commandes." : "Vos clients la verront dès sa publication."}</p>
         </div>
       </header>
-      <div aria-hidden="true" className="unpublished-progress">
-        <span style={{ width: `${Math.round((done / Math.max(1, checklist.length)) * 100)}%` }} />
+
+      <div className="unpublished-meter">
+        <div aria-hidden="true" className="unpublished-progress">
+          <span style={{ width: `${percent}%` }} />
+        </div>
+        <span className="unpublished-count">
+          {done}/{checklist.length}
+        </span>
       </div>
-      <ol className="unpublished-steps">
-        {checklist.map((item) => (
-          <li className={item.done ? "is-done" : undefined} key={item.key}>
-            <span aria-hidden="true" className="unpublished-check">
-              {item.done ? <Check size={14} strokeWidth={3} /> : null}
-            </span>
-            {item.done ? (
-              <span>{item.label}</span>
-            ) : (
+
+      {/* Les étapes restantes ; avec une seule, le bouton principal suffit. */}
+      {missing.length > 1 && (
+        <ol className="unpublished-steps">
+          {missing.map((item) => (
+            <li key={item.key}>
               <Link href={item.href}>
                 {item.label} <ArrowRight aria-hidden="true" size={16} />
               </Link>
-            )}
-            <span className="visually-hidden">{item.done ? " : fait" : " : à faire"}</span>
-          </li>
-        ))}
-      </ol>
+            </li>
+          ))}
+        </ol>
+      )}
+
       <div className="unpublished-actions">
         {ready && canPublish ? (
           <form action={publishStore}>
@@ -57,14 +59,14 @@ export function UnpublishedNotice({ checklist, previewHref, canPublish }: { chec
           </form>
         ) : missing[0] ? (
           <Link className="btn btn-primary" href={missing[0].href}>
-            Étape suivante : {missing[0].label.toLowerCase()} <ArrowRight aria-hidden="true" size={18} />
+            {missing[0].label} <ArrowRight aria-hidden="true" size={18} />
           </Link>
         ) : null}
         <Link className="btn btn-secondary" href={previewHref}>
-          <Eye aria-hidden="true" size={18} /> Voir l’aperçu
+          <Eye aria-hidden="true" size={18} /> Aperçu
         </Link>
       </div>
-      {ready && !canPublish && <p className="v-muted">Seul le propriétaire ou un administrateur de la boutique peut la publier.</p>}
+      {ready && !canPublish && <p className="v-muted">Seul le propriétaire peut publier.</p>}
     </section>
   );
 }

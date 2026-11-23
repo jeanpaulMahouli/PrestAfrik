@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BannerCarousel } from "@/components/storefront/banner-carousel";
+import { StoreHero } from "@/components/storefront/store-hero";
+import { storeInitials } from "@/components/storefront/storefront-shell";
+import { getStorefrontWhatsapp } from "@/modules/whatsapp/settings";
 import { Suspense } from "react";
 import { CatalogToolbar } from "@/components/storefront/catalog-toolbar";
 import { PromoHeading } from "@/components/storefront/promo-heading";
@@ -54,11 +57,16 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
   const search = typeof query.q === "string" ? query.q.trim().slice(0, 100) : "";
   const category = typeof query.categorie === "string" ? query.categorie.slice(0, 90) : undefined;
   const filtering = Boolean(search || category);
-  const [products, ratings, merchandising] = await Promise.all([
+  const [products, ratings, merchandising, whatsapp] = await Promise.all([
     getPublishedProducts(store.id, { category, query: search }),
     store.reviewsEnabled ? getRatingSummaries(store.id) : null,
     getStorefrontMerchandising(store.id),
+    getStorefrontWhatsapp(store.id),
   ]);
+  // Note de la boutique : moyenne des avis publiés de tous ses produits.
+  const summaries = Object.values(ratings ?? {});
+  const reviewCount = summaries.reduce((sum, item) => sum + item.count, 0);
+  const storeRating = store.reviewsEnabled && reviewCount > 0 ? { count: reviewCount, average: summaries.reduce((sum, item) => sum + item.average * item.count, 0) / reviewCount } : null;
   const base = await storeBasePath(store.slug);
   const home = storeHref(base);
   // Tri choisi dans la barre du catalogue (maquette « Products Page »).
@@ -115,13 +123,33 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
     paymentAccepted: "Paiement à la livraison",
   };
 
+  // Filtres et tri : sur la même ligne que « Tous les produits » (ou le titre des résultats).
+  const toolbar = (
+    <Suspense fallback={null}>
+      <CatalogToolbar categories={store.categories.map((item) => ({ slug: item.slug, name: item.name }))} />
+    </Suspense>
+  );
+
   return (
     <main className="sf-home">
       {!store.isPreview && <script dangerouslySetInnerHTML={jsonLd(structuredData)} type="application/ld+json" />}
-      <h1 className="visually-hidden" data-store-name="">{store.name}</h1>
-
-      {/* Bannière du vendeur (Marketing → Bannière) : image pleine largeur, rien quand elle n'est pas active. */}
-      {!filtering && slides.length > 0 && <BannerCarousel slides={slides} />}
+      {/* En-tête : couverture (bannière du vendeur, Marketing → Bannière) et carte d'identité de la boutique. */}
+      {filtering ? (
+        <h1 className="visually-hidden" data-store-name="">{store.name}</h1>
+      ) : (
+        <StoreHero
+          city={store.city}
+          cover={slides.length > 0 ? <BannerCarousel slides={slides} /> : null}
+          coverUrl={store.bannerUrl}
+          initials={storeInitials(store.name)}
+          logoUrl={store.logoUrl}
+          name={store.name}
+          productCount={store._count.products}
+          rating={storeRating}
+          shareUrl={storeUrl}
+          whatsappNumber={store.isPreview ? null : whatsapp.number}
+        />
+      )}
 
       {!listing && promotions.length > 0 && (
         <section aria-labelledby="sf-promo-title" className="sf-home-section sf-promo-section">
@@ -144,30 +172,27 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
         </section>
       )}
 
-      <div className="sf-catalog-head" id="produits">
-        <Suspense fallback={null}>
-          <CatalogToolbar categories={store.categories.map((item) => ({ slug: item.slug, name: item.name }))} />
-        </Suspense>
-      </div>
-
       {listing ? (
         products.length ? (
-          <section aria-labelledby="sf-all-title" className="sf-home-section">
-            <header className="sf-home-section-head">
+          <section aria-labelledby="sf-all-title" className="sf-home-section sf-catalog-section" id="produits">
+            <header className="sf-catalog-row">
               <h2 id="sf-all-title">{search ? `Résultats pour « ${search} »` : category ? (store.categories.find((item) => item.slug === category)?.name ?? "Catégorie") : "Tous les produits"}</h2>
+              {toolbar}
             </header>
             <StorefrontProductGrid base={base} eager={firstGrid} products={sorted} ratings={ratings} />
           </section>
         ) : (
-          <section className="sf-empty">
+          <section className="sf-empty" id="produits">
+            <div className="sf-catalog-row sf-catalog-row--solo">{toolbar}</div>
             <h2>Aucun produit trouvé</h2>
             <p>{search ? "Essayez un autre mot." : "Essayez une autre catégorie."}</p>
             <Link className="sf-btn sf-btn-secondary" href={home}>Voir tous les produits</Link>
           </section>
         )
       ) : products.length ? (
-        <section aria-labelledby="sf-tabs-title" className="sf-home-section sf-tabs-section">
+        <section aria-labelledby="sf-tabs-title" className="sf-home-section sf-tabs-section sf-catalog-section" id="produits">
           <h2 className="visually-hidden" id="sf-tabs-title">Nos produits</h2>
+          <div className="sf-catalog-row">
           {tabs.length > 1 ? (
             <nav aria-label="Choisir une sélection" className="sf-tabs">
               {tabs.map((tab) => (
@@ -181,6 +206,8 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
               <span aria-current="page">Tous les produits</span>
             </p>
           )}
+          {toolbar}
+          </div>
           {view === "vedette" ? (
             <>
               <StorefrontProductGrid base={base} eager={firstGrid} products={pageSlice(merchandising.featured, featuredPage)} ratings={ratings} />

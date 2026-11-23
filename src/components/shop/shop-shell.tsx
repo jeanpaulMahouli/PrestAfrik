@@ -3,14 +3,14 @@ import "@/styles/shop-universes.css";
 import "@/styles/shop-layout.css";
 import "@/styles/shop-showcase.css";
 import "@/styles/shop-motion.css";
-import { Crown, Envelope, House, Lightning, Percent, Phone, RocketLaunch, Star, Storefront, Tag, Handshake, ForkKnife } from "@phosphor-icons/react/ssr";
+import "@/styles/shop-v2.css";
+import { Crown, Envelope, Lightning, Percent, Phone, RocketLaunch, Star, Storefront, Tag } from "@phosphor-icons/react/ssr";
 import type { Icon } from "@phosphor-icons/react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { VendorSearch } from "@/components/marketplace/vendor-search";
 import { site } from "@/config/site";
 import { sellerLandingPath, shopUrl } from "@/lib/urls";
-import { shopUniverses, type ShopUniverse } from "@/config/marketplace";
 import { marketplaceAds, slotAd } from "@/config/marketplace-ads";
 import { getShopAnnouncements } from "@/modules/announcements/queries";
 import type { ShopScope } from "@/modules/marketplace/country";
@@ -20,10 +20,6 @@ import { CartLink } from "./market-cart";
 import { ShopAssistant } from "./shop-assistant";
 import { MegaMenu, type MegaCategory } from "./shop-mega-menu";
 import { ShopTicker, type TickerItem } from "./shop-ticker";
-import { UniverseMenu, UniverseWelcome } from "./universe-switch";
-
-/** Fenêtre d’accueil « Que recherchez-vous ? » à la première visite (désactivée pour le moment). */
-const SHOW_UNIVERSE_WELCOME = false;
 
 export const shopBudgets = [
   { label: "Moins de 5 000 FCFA", max: 5000 },
@@ -42,52 +38,21 @@ const signupHref = () => sellerLandingPath;
 
 type Rubrique = { id: string; href: string; label: string; icon: Icon };
 
-/** Raccourcis de chaque univers, en vocabulaire courant. */
-function rubriquesFor(universe: ShopUniverse): Rubrique[] {
-  if (universe === "immobilier") {
-    return [
-      { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouvelles annonces", icon: RocketLaunch },
-      { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Bonnes affaires", icon: Tag },
-      { id: "notes", href: shopUrl("/recherche?tri=mieux-notes"), label: "Annonceurs les mieux notés", icon: Star },
-    ];
-  }
-  if (universe === "restauration") {
-    return [
-      { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouvelles adresses", icon: RocketLaunch },
-      { id: "notes", href: shopUrl("/recherche?tri=mieux-notes"), label: "Les mieux notés", icon: Star },
-      { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Menus en promo", icon: Percent },
-      { id: "petits-prix", href: shopUrl("/recherche?max=3000"), label: "Petits prix", icon: Tag },
-    ];
-  }
-  if (universe === "services") {
-    return [
-      { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouveaux prestataires", icon: RocketLaunch },
-      { id: "notes", href: shopUrl("/recherche?tri=mieux-notes"), label: "Les mieux notés", icon: Star },
-      { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Offres du moment", icon: Percent },
-    ];
-  }
-  return [
-    { id: "flash", href: shopUrl("/#ventes-flash"), label: "Offre du jour", icon: Lightning },
-    { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Promotions", icon: Percent },
-    { id: "notes", href: shopUrl("/recherche?tri=mieux-notes"), label: "Meilleures ventes", icon: Star },
-    { id: "petits-prix", href: shopUrl("/recherche?max=5000"), label: "Petits prix", icon: Tag },
-    { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouveautés", icon: RocketLaunch },
-    { id: "exclusif", href: shopUrl("/#offres-exclusives"), label: "Exclusivités", icon: Crown },
-  ];
-}
-
-const ctaFor: Record<ShopUniverse, { label: string; icon: Icon }> = {
-  vente: { label: "Devenir vendeur", icon: Storefront },
-  immobilier: { label: "Publier une annonce", icon: House },
-  services: { label: "Proposer mes services", icon: Handshake },
-  restauration: { label: "Ouvrir mon restaurant", icon: ForkKnife },
-};
+/** Raccourcis de la barre de navigation, en vocabulaire courant. */
+const rubriques: Rubrique[] = [
+  { id: "flash", href: shopUrl("/#ventes-flash"), label: "Offre du jour", icon: Lightning },
+  { id: "promo", href: shopUrl("/recherche?tri=promo&promo=1"), label: "Promotions", icon: Percent },
+  { id: "notes", href: shopUrl("/recherche?tri=mieux-notes"), label: "Meilleures ventes", icon: Star },
+  { id: "petits-prix", href: shopUrl("/recherche?max=5000"), label: "Petits prix", icon: Tag },
+  { id: "nouveautes", href: shopUrl("/recherche?tri=nouveautes"), label: "Nouveautés", icon: RocketLaunch },
+  { id: "exclusif", href: shopUrl("/#offres-exclusives"), label: "Exclusivités", icon: Crown },
+];
 
 /**
- * Cadre de la marketplace : bandeau publicitaire (textes qui défilent), en-tête blanc en verre (logo,
- * « Livrer à », recherche, univers, « Devenir vendeur »), barre de navigation (grand menu des catégories
- * et raccourcis), puis pied de page et assistant. En-tête et barre de navigation forment un seul bloc
- * collant en haut de l'écran. Première visite : fenêtre « Que recherchez-vous ? ».
+ * Cadre de la marketplace, au design des boutiques publiques (blanc, noir, cartes gris clair) : bandeau
+ * publicitaire (textes qui défilent), en-tête (logo, « Livrer à », recherche, panier, « Devenir vendeur »),
+ * barre de navigation (grand menu des catégories et raccourcis), puis pied de page noir et assistant.
+ * En-tête et barre de navigation forment un seul bloc collant en haut de l'écran.
  */
 export async function ShopShell({
   categories,
@@ -115,9 +80,7 @@ export async function ShopShell({
 }) {
   const whatsappDigits = site.whatsapp?.replace(/\D/g, "");
   const whatsapp = whatsappDigits ? `https://wa.me/${whatsappDigits}?text=${encodeURIComponent("Bonjour PrestAfrik, j’ai une question sur la marketplace.")}` : null;
-  const rubriques = rubriquesFor(scope.universe);
   const megaCategories: MegaCategory[] = categories.map((category) => ({ slug: category.slug, label: category.label, href: categoryHref(category.slug), count: category.productCount, products: menu?.get(category.slug)?.slice(0, 6) ?? [] }));
-  const Cta = ctaFor[scope.universe].icon;
   const menuAd = slotAd((await getShopAnnouncements()).slots.menu, marketplaceAds.menu);
   // Bandeau publicitaire : textes de l'administration, sinon nos engagements.
   const tickerItems: TickerItem[] = ticker.length
@@ -129,7 +92,7 @@ export async function ShopShell({
       ];
 
   return (
-    <div className="shop">
+    <div className="shop sx-v2">
       <a className="shop-skip" href="#shop-contenu">
         Aller au contenu
       </a>
@@ -144,13 +107,12 @@ export async function ShopShell({
             <a aria-label="PrestAfrik, accueil de la marketplace" className="shop-logo" href={shopUrl("/")}>
               <Image alt="" height={40} priority src="/brand/logo-prestafrik.png" width={73} />
             </a>
-            <CityPicker current={scope.city?.name ?? null} label={scope.universe === "vente" ? "Livrer à" : "Votre ville"} />
-            <VendorSearch bare className="shop-search" defaultValue={query ?? ""} withProducts placeholder={scope.universe === "immobilier" ? "Appartement, studio meublé, bureau…" : scope.universe === "services" ? "Coiffure, réparation, transport…" : scope.universe === "restauration" ? "Restaurant, pizza, poulet DG, gâteau…" : "Rechercher un produit, une boutique…"} resultsPath={shopUrl("/recherche")} />
-            <UniverseMenu current={scope.universe} home={shopUrl("/")} />
+            <CityPicker current={scope.city?.name ?? null} label="Livrer à" />
+            <VendorSearch bare className="shop-search" defaultValue={query ?? ""} withProducts placeholder="Rechercher un produit, une boutique…" resultsPath={shopUrl("/recherche")} />
             <CartLink href={shopUrl("/panier")} />
             <a className="sx-btn sx-btn-primary shop-header-cta" data-emplacement="en-tete" href={signupHref()}>
-              <Cta aria-hidden="true" size={20} />
-              <span>{ctaFor[scope.universe].label}</span>
+              <Storefront aria-hidden="true" size={20} />
+              <span>Devenir vendeur</span>
             </a>
           </div>
         </header>
@@ -170,8 +132,6 @@ export async function ShopShell({
           </div>
         </nav>
       </div>
-      {/* Fenêtre d’accueil « Que recherchez-vous ? » désactivée pour le moment : réactiver avec SHOW_UNIVERSE_WELCOME. */}
-      {SHOW_UNIVERSE_WELCOME && !scope.chosen && <UniverseWelcome city={scope.city?.name ?? null} home={shopUrl("/")} />}
 
       <main className="shop-main" id="shop-contenu">
         {children}
@@ -208,7 +168,7 @@ export async function ShopShell({
             </ul>
           </nav>
           <nav aria-label="Acheter">
-            <h2>{shopUniverses[scope.universe].short}</h2>
+            <h2>Acheter</h2>
             <ul>
               {rubriques.map((item) => (
                 <li key={item.id}>

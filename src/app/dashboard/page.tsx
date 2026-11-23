@@ -97,7 +97,6 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <h1 className="v-page-title greeting">
             <LiveGreeting firstName={firstName} initial={moment} />
           </h1>
-          <p className="v-page-subtitle">L’essentiel de {store.name} en un coup d’œil, sur les {dashboardPeriodLabels[period.key]} derniers.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <nav aria-label="Période" className="segmented">
@@ -158,7 +157,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       {noOrdersYet ? (
         <section aria-labelledby="first-orders" className="v-card v-empty home-empty">
           <h2 id="first-orders">Aucune commande pour l’instant</h2>
-          <p>Partagez votre boutique sur WhatsApp pour recevoir vos premières commandes ! Vos courbes et vos chiffres apparaîtront ici dès la première vente.</p>
+          <p>Vos chiffres s’afficheront dès la première vente.</p>
           <ShareStoreButton published={store.isPublished} storeName={store.name} storeUrl={publicUrl} />
         </section>
       ) : (
@@ -199,7 +198,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
                 </ol>
               ) : (
                 <p className="v-muted">
-                  Pas encore d’avis publié. Après une livraison, invitez vos clients à noter leur achat : les avis rassurent les nouveaux acheteurs.{" "}
+                  Pas encore d’avis.{" "}
                   <Link href="/dashboard/avis">Voir les avis</Link>
                 </p>
               )}
@@ -230,11 +229,11 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           </>
         )}
 
-        {doneSteps < checklist.length && (
+        {!publication && doneSteps < checklist.length && (
           <section aria-labelledby="onboarding-title" className="v-card">
             <h2 className="v-card-title" id="onboarding-title">Pour bien démarrer</h2>
             <p className="v-muted v-small onboarding-progress">
-              {doneSteps} étape{doneSteps > 1 ? "s" : ""} sur {checklist.length} terminée{doneSteps > 1 ? "s" : ""}. Vos prochains clients vous attendent !
+              {doneSteps} étape{doneSteps > 1 ? "s" : ""} sur {checklist.length} terminée{doneSteps > 1 ? "s" : ""}.
             </p>
             <ul className="onboarding-list">
               {checklist.map((step) => (

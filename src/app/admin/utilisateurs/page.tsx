@@ -61,7 +61,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Utilisateurs</h1>
-          <p className="v-page-subtitle">Retrouvez les comptes de la plateforme, leurs boutiques et leurs rôles, et confirmez leur adresse e-mail.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <a
@@ -77,7 +76,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
       </div>
       <AdminFeedback params={params} />
       <p className="v-banner v-banner-info">
-        Pour une adresse e-mail <strong>à confirmer</strong>, cliquez sur <strong>Confirmer l’adresse</strong> : le compte est confirmé sans le code. Une confirmation faite ici peut être annulée ; une adresse confirmée par la personne elle-même reste confirmée. Ouvrez <strong>Gérer le compte</strong> pour modifier, déconnecter, suspendre ou supprimer un compte. Les mots de passe ne sont jamais visibles.
+        <strong>Confirmer l’adresse</strong> valide l’e-mail sans code.
       </p>
 
       <nav aria-label="Filtrer les utilisateurs" className="pill-tabs">

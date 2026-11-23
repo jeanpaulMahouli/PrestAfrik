@@ -15,9 +15,9 @@ import { getWhatsappSettings } from "@/modules/whatsapp/settings";
 export const metadata = { title: "Commandes" };
 
 const emptyMessages: Record<string, { title: string; text: string }> = {
-  toutes: { title: "Pas encore de commande", text: "Vos prochains clients vous attendent ! Partagez votre boutique sur WhatsApp pour recevoir vos premières commandes." },
+  toutes: { title: "Pas encore de commande", text: "Partagez votre boutique pour recevoir vos premières commandes." },
   nouvelles: { title: "Aucune nouvelle commande", text: "Tout est à jour. Les prochaines commandes apparaîtront ici." },
-  validees: { title: "Aucune commande validée", text: "Touchez « Valider » sur une commande payée : son montant sera compté dans l’argent reçu." },
+  validees: { title: "Aucune commande validée", text: "Validez une commande une fois payée." },
   annulees: { title: "Aucune commande annulée", text: "Tant mieux !" },
 };
 
@@ -42,7 +42,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/dashboard
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Commandes</h1>
-          <p className="v-page-subtitle">Écrivez au client sur WhatsApp, puis touchez « Valider » quand la commande est payée.</p>
+          <p className="v-page-subtitle">Validez la commande une fois payée.</p>
         </div>
         {hasPermission(membership.role, "orders.export") && (
           <div className="v-page-actions v-page-actions-inline">

@@ -3,7 +3,7 @@ import { getShopScope } from "@/modules/marketplace/country";
 import { exploreShop } from "@/modules/marketplace/shop";
 
 // Suggestions de produits de la barre de recherche de la marketplace, pendant la saisie (recherche
-// tolérante, dans l'univers et la ville du visiteur). 60 requêtes par minute et par adresse IP.
+// tolérante, dans la ville du visiteur). 60 requêtes par minute et par adresse IP.
 const limiter = createRateLimiter({ limit: 60, windowMs: 60_000 });
 
 export async function GET(request: Request) {

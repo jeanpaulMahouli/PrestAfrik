@@ -148,7 +148,6 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
 
             <PhoneInput
               error={fieldError("whatsapp")}
-              help="La boutique vous écrira sur ce numéro. Saisissez-le sans l’indicatif."
               label="Votre numéro WhatsApp"
               name="whatsapp"
               onValidityChange={(isValid) => setPhoneValid(isValid)}
@@ -296,7 +295,7 @@ export function StoreCheckout({ storeSlug, zones, pickup, whatsappOrderEnabled }
             <p aria-live="polite" className="sf-muted sf-actions-hint">
               {valid
                 ? whatsappOrderEnabled
-                  ? "Avec WhatsApp, votre commande est enregistrée puis WhatsApp s’ouvre avec votre message prêt à envoyer."
+                  ? "WhatsApp s’ouvre avec votre message prêt."
                   : "Votre commande sera envoyée à la boutique, qui vous contactera sur WhatsApp."
                 : `Il reste : ${missing.join(", ")}.`}
             </p>

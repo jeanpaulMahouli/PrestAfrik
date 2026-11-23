@@ -151,19 +151,18 @@ export async function setStoreExcluded(formData: FormData) {
   const storeId = idSchema.safeParse(formData.get("storeId"));
   if (!storeId.success) back("Boutique introuvable.", "erreur", "boutiques");
   const exclude = formData.get("exclude") === "1";
-  const store = await prisma.store.findUnique({ where: { id: storeId.data }, select: { id: true, name: true } });
+  // Une seule transaction (quelques requêtes envoyées ensemble) : l'action reste rapide même quand la base
+  // répond lentement. Exclure : on retire d'abord une éventuelle exclusion en double et la mise « à la une ».
+  const [store] = await prisma.$transaction([
+    prisma.store.findUnique({ where: { id: storeId.data }, select: { name: true } }),
+    prisma.marketplacePick.deleteMany({ where: { section: { in: exclude ? ["EXCLUDED_STORE", "FEATURED_STORE"] : ["EXCLUDED_STORE"] }, storeId: storeId.data } }),
+    ...(exclude ? [prisma.marketplacePick.create({ data: { section: "EXCLUDED_STORE", storeId: storeId.data } })] : []),
+  ]).catch(() => back("Boutique introuvable.", "erreur", "boutiques"));
   if (!store) back("Boutique introuvable.", "erreur", "boutiques");
-  if (exclude) {
-    const already = await prisma.marketplacePick.findFirst({ where: { section: "EXCLUDED_STORE", storeId: store.id }, select: { id: true } });
-    if (!already) await prisma.marketplacePick.create({ data: { section: "EXCLUDED_STORE", storeId: store.id } });
-    // Une boutique exclue ne reste pas « à la une ».
-    await prisma.marketplacePick.deleteMany({ where: { section: "FEATURED_STORE", storeId: store.id } });
-  } else {
-    await prisma.marketplacePick.deleteMany({ where: { section: "EXCLUDED_STORE", storeId: store.id } });
-  }
-  await logAdminAction(admin.id, { action: exclude ? "marketplace.store.exclude" : "marketplace.store.include", targetType: "marketplace", targetId: store.id, storeId: store.id });
+  // Journal et caches : sans attendre la base pour répondre.
+  void logAdminAction(admin.id, { action: exclude ? "marketplace.store.exclude" : "marketplace.store.include", targetType: "marketplace", targetId: storeId.data, storeId: storeId.data }).catch(() => undefined);
   refresh();
-  back(exclude ? `« ${store.name} » est retirée de la marketplace (sa boutique reste en ligne).` : `« ${store.name} » est de nouveau sur la marketplace.`, "succes", "boutiques");
+  back(exclude ? `« ${store.name} » est retirée de la marketplace.` : `« ${store.name} » est de nouveau sur la marketplace.`, "succes", "boutiques");
 }
 
 /** Boutique mise en avant (« Boutiques à la une ») : ses produits passent devant ceux des autres boutiques. */

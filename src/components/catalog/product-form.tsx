@@ -6,8 +6,7 @@ import { startTransition, useActionState, useCallback, useEffect, useMemo, useRe
 import { PhotoManager, type ExistingPhoto, type PhotoSummary } from "@/components/catalog/photo-manager";
 import { AiRequestError, ProductNotices, requestAiSuggestion, type AiCreditsInfo, type AiSuggestion } from "@/components/catalog/product-assistant";
 import { ProductVariantsEditor, type VariantDraft } from "@/components/catalog/product-variants-editor";
-import { ListingFields, productWording, type ListingValues } from "@/components/catalog/product-universe";
-import type { ShopUniverse } from "@/config/marketplace";
+import { ListingFields, productWording, type ListingValues } from "@/components/catalog/product-wording";
 import type { ListingMode } from "@/modules/catalog/listing";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { useFormPersistence } from "@/components/ui/use-form-persistence";
@@ -46,8 +45,6 @@ type ProductFormProps = {
   aiEnabled?: boolean;
   /** Crédits IA restants de la boutique (null si l'assistant n'est pas disponible). */
   aiCredits?: AiCreditsInfo | null;
-  /** Univers de la boutique : Shopping, Immobilier (locations), Services ou Restauration. */
-  universe?: ShopUniverse;
   /** Biens immobiliers : « rent » (locations et réservations) ou « sale » (vente, dans le Shopping). */
   listingMode?: ListingMode | null;
 };
@@ -78,9 +75,9 @@ const initialSnapshot = (values: ProductFormValues): ProductSnapshot => ({
   uploading: false,
 });
 
-export function ProductForm({ values, categories, sidePanel, aiEnabled = false, aiCredits = null, universe = "vente", listingMode = null }: ProductFormProps) {
+export function ProductForm({ values, categories, sidePanel, aiEnabled = false, aiCredits = null, listingMode = null }: ProductFormProps) {
   const [credits, setCredits] = useState(aiCredits);
-  const words = productWording[universe];
+  const words = productWording;
   const [state, action, pending] = useActionState<ActionResult, FormData>(saveProduct, null);
   const [dirty, setDirty] = useState(false);
   const [creatingCategory, setCreatingCategory] = useState(false);
@@ -262,7 +259,6 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">{isEdit ? `Modifier : ${values.name}` : words.newTitle}</h1>
-          <p className="v-page-subtitle">{isEdit ? words.editSubtitle : words.newSubtitle}</p>
         </div>
         <div className="v-page-actions product-form-top-actions">
           <Link className="btn btn-secondary" href="/dashboard/produits">Annuler</Link>
@@ -316,12 +312,12 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
                   {credits && <AiCreditsLine credits={credits} />}
                   <span className="v-field-help">
                     {outOfCredits
-                      ? "Vous pouvez remplir le nom et la description vous-même, ou demander des crédits à l’équipe PrestAfrik."
+                      ? "Crédits IA épuisés."
                       : canAskAi
-                        ? "L’IA regarde vos photos et vous propose un nom et une description. Vous les relisez et les validez avant d’enregistrer. Chaque proposition utilise 1 crédit."
+                        ? "1 crédit par proposition."
                         : photoSummary.uploading
-                          ? "Patientez pendant l’envoi des photos…"
-                          : "Commencez par ajouter une photo du produit."}
+                          ? "Envoi des photos…"
+                          : "Ajoutez d’abord une photo."}
                   </span>
                   {aiError && <p className="v-field-error" role="alert">{aiError}</p>}
                   {aiFilled && !aiError && (
@@ -360,7 +356,6 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
                   </span>
                 )}
               </span>
-              <span className="v-field-help">{words.nameHelp}</span>
               <FieldError id="name-error" message={errors.name} />
             </label>
             <RichTextEditor
@@ -376,7 +371,6 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
               }
               describedBy={errors.description ? "description-error" : undefined}
               onUserEdit={() => aiMarks.description && setAiMarks((marks) => ({ ...marks, description: false }))}
-              help="Gras, italique, sous-titres et listes. Texte simple, sans HTML."
               invalid={Boolean(errors.description)}
               label={words.descriptionLabel}
               name="description"
@@ -423,9 +417,8 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
             <h2 className="v-card-title">Prix</h2>
             <div className="field-row-3">
               <label className="v-field">
-                {listingMode === "rent" ? "Loyer ou prix de la nuit (FCFA)" : listingMode === "sale" ? "Prix de vente (FCFA)" : universe === "services" ? "Prix de départ (FCFA)" : "Prix (FCFA)"}
+                {listingMode === "rent" ? "Loyer ou prix de la nuit (FCFA)" : listingMode === "sale" ? "Prix de vente (FCFA)" : "Prix (FCFA)"}
                 <input defaultValue={values.priceXaf} id="product-price" inputMode="numeric" name="priceXaf" onInput={cleanAmount} placeholder="Ex. 15000" required {...invalid("priceXaf")} />
-                <span className="v-field-help">Chiffres uniquement : les espaces sont retirés automatiquement.</span>
                 <FieldError id="priceXaf-error" message={errors.priceXaf} />
               </label>
               <label className="v-field">
@@ -490,7 +483,7 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
                 <label className="v-field stock-field">
                   Quantité en stock
                   <input defaultValue={values.stockQuantity} form={formId} inputMode="numeric" name="stockQuantity" placeholder="0" {...invalid("stockQuantity")} />
-                  <span className="v-field-help">À 0, le produit passe automatiquement en « Épuisé ».</span>
+                  <span className="v-field-help">À 0 : « Épuisé ».</span>
                   <FieldError id="stockQuantity-error" message={errors.stockQuantity} />
                 </label>
               )}
@@ -500,7 +493,7 @@ export function ProductForm({ values, categories, sidePanel, aiEnabled = false, 
           <section className="v-card">
             <h2 className="v-card-title">Publication</h2>
             {values.status === "ARCHIVED" ? (
-              <p className="v-small v-muted">Ce produit est archivé : il n’apparaît pas dans la boutique. Restaurez-le depuis la liste des produits.</p>
+              <p className="v-small v-muted">Produit archivé, masqué dans la boutique.</p>
             ) : (
               <label className="v-field">
                 État

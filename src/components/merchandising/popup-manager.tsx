@@ -120,7 +120,7 @@ export function PopupManager({ popups, targets, flash }: { popups: ManagedPopup[
       {popups.length === 0 ? (
         <section className="v-card v-empty">
           <h2>Accueillez vos visiteurs avec une offre</h2>
-          <p>Un popup s’affiche à l’ouverture de votre boutique, une fois par visite : idéal pour annoncer des soldes, une nouveauté ou la livraison gratuite.</p>
+          <p>Idéal pour des soldes ou une nouveauté.</p>
           <button className="btn btn-primary" onClick={() => setEditing("new")} type="button">Créer mon popup</button>
         </section>
       ) : (
@@ -162,7 +162,7 @@ export function PopupManager({ popups, targets, flash }: { popups: ManagedPopup[
                 </form>
                 <ActionDialog
                   action={deletePopup}
-                  description="Le popup et son image seront supprimés définitivement."
+                  description="Action définitive."
                   hiddenFields={{ id: popup.id }}
                   submitClassName="btn btn-danger"
                   submitLabel="Supprimer"
@@ -191,7 +191,6 @@ export function PopupManager({ popups, targets, flash }: { popups: ManagedPopup[
         )}
       </Dialog>
       <Dialog
-        description="Le popup apparaît environ 1 seconde après l’ouverture de la boutique, une fois par visite."
         onClose={() => setPreviewing(null)}
         open={previewing !== null}
         size="lg"

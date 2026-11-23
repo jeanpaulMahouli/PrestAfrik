@@ -18,17 +18,14 @@ export function WizardPauseDialog({ draftId, storeName, exitHref }: { draftId: s
         Abandonner
       </button>
       <Dialog
-        description="Rien n’est encore publié : votre boutique n’existe pas tant que vous n’avez pas terminé la dernière étape."
         onClose={() => setOpen(false)}
         open={open}
         size="sm"
         title={storeName ? `Suspendre la création de « ${storeName} » ?` : "Suspendre la création de votre boutique ?"}
       >
         <p className="v-small">
-          La création de votre boutique sera <strong>suspendue</strong>. Tout ce que vous avez saisi est gardé : vous pourrez la reprendre plus tard, là où vous
-          vous êtes arrêté, depuis votre tableau de bord (« Reprendre la création ») ou en revenant sur « Créer ma boutique ».
+          Votre saisie est gardée : reprenez quand vous voulez.
         </p>
-        <p className="v-small v-muted">Vous ne souhaitez plus créer cette boutique ? Vous pouvez aussi l’abandonner définitivement : les informations saisies seront supprimées.</p>
         <div className="action-dialog-buttons wizard-pause-buttons">
           <form action={discardDraft}>
             <input name="draftId" type="hidden" value={draftId} />

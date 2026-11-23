@@ -18,9 +18,7 @@ test("la marketplace propose des vendeurs pendant la saisie, avec le texte mis e
   await expect(box).toHaveAttribute("aria-expanded", "true");
 });
 
-test("la recherche se pilote au clavier : flèches, Échap, Entrée", async ({ page, context, baseURL }) => {
-  // Univers déjà choisi : sinon Échap ferme la fenêtre d'accueil « Que recherchez-vous ? » (et recharge la page).
-  await context.addCookies([{ name: "shop_univers", value: "vente", url: baseURL ?? "http://localhost:3000" }]);
+test("la recherche se pilote au clavier : flèches, Échap, Entrée", async ({ page }) => {
   await page.route("**/api/recherche?**", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ suggestions }) }));
   await page.goto("/");
   const box = page.getByRole("combobox", { name: "Rechercher un vendeur, une boutique ou une ville" });
@@ -75,8 +73,6 @@ for (const device of [
 ]) {
   test(`la bannière principale mène à « Devenir vendeur » avec les paramètres de la publicité (${device.name})`, async ({ browser, baseURL }) => {
     const context = await browser.newContext({ baseURL, viewport: device.viewport, isMobile: device.name === "téléphone", hasTouch: device.name === "téléphone" });
-    // Univers déjà choisi : la fenêtre d'accueil ne cache pas la bannière.
-    await context.addCookies([{ name: "shop_univers", value: "vente", url: baseURL ?? "http://localhost:3000" }]);
     const page = await context.newPage();
     await page.goto("/?utm_source=facebook&utm_campaign=lancement&fbclid=abc");
     const banner = page.locator(device.banner);
@@ -124,8 +120,7 @@ test("la marketplace propose la recherche sans bouton « Rechercher »", async (
   await expect(page.getByRole("combobox", { name: /Rechercher un vendeur/ })).toBeVisible();
 });
 
-test("« Toutes les catégories » ouvre le grand menu, qui se ferme avec Échap", async ({ page, context, baseURL }) => {
-  await context.addCookies([{ name: "shop_univers", value: "vente", url: baseURL ?? "http://localhost:3000" }]);
+test("« Toutes les catégories » ouvre le grand menu, qui se ferme avec Échap", async ({ page }) => {
   await page.goto("/");
   const button = page.getByRole("button", { name: "Toutes les catégories" });
   await button.click();
@@ -141,8 +136,7 @@ test("« Toutes les catégories » ouvre le grand menu, qui se ferme avec Échap
   await expect(page.locator("#sx-mega-panel")).toBeHidden();
 });
 
-test("un produit s'ouvre sur la marketplace, s'ajoute au panier et se commande sans quitter la marketplace", async ({ page, context, baseURL }) => {
-  await context.addCookies([{ name: "shop_univers", value: "vente", url: baseURL ?? "http://localhost:3000" }]);
+test("un produit s'ouvre sur la marketplace, s'ajoute au panier et se commande sans quitter la marketplace", async ({ page }) => {
   await page.goto("/");
   const hrefs = await page.locator(".shop-card-name").evaluateAll((links) => links.slice(0, 8).map((link) => link.getAttribute("href") ?? ""));
   test.skip(hrefs.length === 0, "Aucun produit en ligne dans la base de test.");

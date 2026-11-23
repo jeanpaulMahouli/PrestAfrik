@@ -16,7 +16,6 @@ export default async function AdminDashboardPage() {
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Tableau de bord</h1>
-          <p className="v-page-subtitle">La plateforme en un coup d’œil : boutiques, utilisateurs, activité et visites des 30 derniers jours.</p>
         </div>
       </div>
 
@@ -30,19 +29,17 @@ export default async function AdminDashboardPage() {
       <div className="home-charts">
         <CityBars
           empty="Aucun utilisateur pour le moment."
-          help="Ville croisée avec les boutiques de chaque utilisateur : celle des boutiques dont il est propriétaire, sinon celle des boutiques où il travaille."
           id="users-by-city"
           rows={data.cities}
           title="Utilisateurs par ville"
         />
         <CityBars
           empty="Aucune réponse pour le moment."
-          help={`Réponses à « Comment avez-vous connu PrestAfrik ? », posée à l’inscription (${formatNumber(data.acquisition.answered)} réponse${data.acquisition.answered > 1 ? "s" : ""}).`}
           id="acquisition"
           rows={data.acquisition.answered ? data.acquisition.rows : []}
-          title="Comment ils ont connu PrestAfrik"
+          title={`Comment ils ont connu PrestAfrik (${formatNumber(data.acquisition.answered)})`}
         />
-        <CityBars empty="Aucune boutique pour le moment." help="Ville renseignée dans chaque boutique (même écriture que ci-contre)." id="stores-by-city" rows={data.storeCities} title="Boutiques par ville" />
+        <CityBars empty="Aucune boutique pour le moment." id="stores-by-city" rows={data.storeCities} title="Boutiques par ville" />
 
         <section aria-labelledby="top-stores" className="v-card">
           <h2 className="v-card-title" id="top-stores">Top 10 des boutiques les plus visitées (30 jours)</h2>
@@ -105,12 +102,11 @@ export default async function AdminDashboardPage() {
 }
 
 /** Barres horizontales « par ville » (villes déjà normalisées par le module geo). */
-function CityBars({ id, title, help, empty, rows }: { id: string; title: string; help: string; empty: string; rows: { city: string; count: number }[] }) {
+function CityBars({ id, title, empty, rows }: { id: string; title: string; empty: string; rows: { city: string; count: number }[] }) {
   const max = Math.max(1, ...rows.map((row) => row.count));
   return (
     <section aria-labelledby={id} className="v-card">
       <h2 className="v-card-title" id={id}>{title}</h2>
-      <p className="v-small v-muted">{help}</p>
       {rows.length ? (
         <ul className="city-bars">
           {rows.map((row) => (

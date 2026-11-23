@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { universeFromDb } from "@/config/marketplace";
 import { redirect } from "next/navigation";
 import { CreatedScreen, PublishedScreen, PublishStep } from "@/components/wizard/wizard-publish";
 import { DeliveryStep } from "@/components/wizard/wizard-delivery-step";
@@ -75,14 +74,10 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
   const draftId = draft?.id ?? null;
 
   let content: React.ReactNode = null;
-  // Univers de la boutique (Shopping, Immobilier, Services), d'après l'activité choisie à l'étape 2 :
-  // il adapte les textes des étapes suivantes (premier produit, livraison).
-  const activityUniverse = data.activityId ? (await prisma.activity.findUnique({ where: { id: data.activityId }, select: { universe: true } }))?.universe : null;
-  const universe = universeFromDb(activityUniverse);
   if (!draft || step === 1) {
     content = <NameStep address={storeAddressFormat()} city={data.city ?? null} draftId={draftId} initialName={data.name ?? ""} initialSlug={data.slug ?? ""} />;
   } else if (step === 2) {
-    const activities = await prisma.activity.findMany({ orderBy: { position: "asc" }, select: { id: true, slug: true, label: true, popular: true, universe: true } });
+    const activities = await prisma.activity.findMany({ orderBy: { position: "asc" }, select: { id: true, slug: true, label: true, popular: true } });
     content = <ActivityStep activities={activities} draftId={draft.id} initialDescription={data.description ?? ""} initialId={data.activityId ?? ""} initialOther={data.activityOther ?? ""} />;
   } else if (step === 3) {
     // Seuls les pays dont la liste des régions et des villes existe : rien ne se saisit à la main.
@@ -117,11 +112,10 @@ export default async function NewStorePage({ searchParams }: PageProps<"/boutiqu
       : null;
     // Assistant IA offert pendant la création (3 essais au plus, sans toucher aux crédits du mois).
     const ai = productAiAvailable() ? { remaining: Math.max(0, 3 - (data.aiUses ?? 0)) } : null;
-    content = <ProductStep ai={ai} draftId={draft.id} product={product} universe={universe} />;
+    content = <ProductStep ai={ai} draftId={draft.id} product={product} />;
   } else if (step === 8) {
     content = (
       <DeliveryStep
-        universe={universe}
         city={data.city ?? ""}
         draftId={draft.id}
         initial={{

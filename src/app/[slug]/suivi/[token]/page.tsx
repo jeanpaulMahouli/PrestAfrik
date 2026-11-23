@@ -84,7 +84,7 @@ export default async function OrderTrackingPage({ params, searchParams }: PagePr
           <p className="sf-order-ref">{formatReference(order.reference)}</p>
           {wantsWhatsapp ? (
             <>
-              <p>Dernière étape : envoyez votre commande à la boutique sur WhatsApp. Le message est prêt, il suffit d’appuyer sur Envoyer.</p>
+              <p>Dernière étape : envoyez votre commande sur WhatsApp.</p>
               <WhatsappAutoOpen href={whatsappUrl} />
             </>
           ) : (

@@ -36,7 +36,11 @@ const isActive = (pathname: string, href: string) => (href === "/dashboard" ? pa
 /** Compte sans boutique : seul l'Accueil est ouvert, les autres rubriques attendent la création de la boutique. */
 const lockedTitle = "Disponible après la création de votre boutique";
 
-function NavLinks({ role, onNavigate, exclude = [], locked = false }: { role: StoreRole; onNavigate?: () => void; exclude?: string[]; locked?: boolean }) {
+/** Boutique pas encore publiée : ces rubriques n'ont rien à montrer avant la mise en ligne. */
+const afterPublication = ["/dashboard/commandes", "/dashboard/clients", "/dashboard/argent", "/dashboard/avis"];
+const unpublishedTitle = "Disponible après la publication de votre boutique";
+
+function NavLinks({ role, onNavigate, exclude = [], locked = false, unpublished = false }: { role: StoreRole; onNavigate?: () => void; exclude?: string[]; locked?: boolean; unpublished?: boolean }) {
   const pathname = usePathname();
   return (
     <>
@@ -44,9 +48,9 @@ function NavLinks({ role, onNavigate, exclude = [], locked = false }: { role: St
         .filter((link) => !exclude.includes(link.href))
         .map((link) => {
           const Icon = link.icon;
-          if (locked && link.href !== "/dashboard") {
+          if ((locked && link.href !== "/dashboard") || (unpublished && afterPublication.includes(link.href))) {
             return (
-              <span aria-disabled="true" className="nav-link-disabled" key={link.href} title={lockedTitle}>
+              <span aria-disabled="true" className="nav-link-disabled" key={link.href} title={locked ? lockedTitle : unpublishedTitle}>
                 <span className="nav-link-label">
                   <Icon aria-hidden="true" className="nav-link-icon" size={19} />
                   {link.title}
@@ -78,10 +82,10 @@ function NavLinks({ role, onNavigate, exclude = [], locked = false }: { role: St
 }
 
 /** Menu latéral fixe à partir de 1024 px. */
-export function VendorSidebar({ role, locked = false }: { role: StoreRole; locked?: boolean }) {
+export function VendorSidebar({ role, locked = false, unpublished = false }: { role: StoreRole; locked?: boolean; unpublished?: boolean }) {
   return (
     <nav aria-label={texts.vendor.shell.mainNavigation} className="vendor-sidebar">
-      <NavLinks locked={locked} role={role} />
+      <NavLinks locked={locked} role={role} unpublished={unpublished} />
     </nav>
   );
 }
@@ -90,7 +94,7 @@ export function VendorSidebar({ role, locked = false }: { role: StoreRole; locke
  * Navigation sous 1024 px : barre du bas, comme une application mobile (Accueil, Commandes, Produits,
  * Ma boutique), et « Menu » qui ouvre les autres rubriques dans un tiroir.
  */
-export function VendorMobileNav({ role, storeName, locked = false }: { role: StoreRole; storeName: string; locked?: boolean }) {
+export function VendorMobileNav({ role, storeName, locked = false, unpublished = false }: { role: StoreRole; storeName: string; locked?: boolean; unpublished?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -134,9 +138,9 @@ export function VendorMobileNav({ role, storeName, locked = false }: { role: Sto
       <nav aria-label={texts.vendor.shell.mainNavigation} className="vendor-tabbar">
         {tabs.map((link) => {
           const Icon = link.icon;
-          if (locked && link.href !== "/dashboard") {
+          if ((locked && link.href !== "/dashboard") || (unpublished && afterPublication.includes(link.href))) {
             return (
-              <span aria-disabled="true" className="is-disabled" key={link.href} title={lockedTitle}>
+              <span aria-disabled="true" className="is-disabled" key={link.href} title={locked ? lockedTitle : unpublishedTitle}>
                 <Icon aria-hidden="true" size={22} />
                 <span>{link.title}</span>
               </span>
@@ -174,7 +178,7 @@ export function VendorMobileNav({ role, storeName, locked = false }: { role: Sto
               </button>
             </div>
             <nav className="vendor-drawer-nav">
-              <NavLinks exclude={tabHrefs} onNavigate={() => setOpen(false)} role={role} />
+              <NavLinks exclude={tabHrefs} onNavigate={() => setOpen(false)} role={role} unpublished={unpublished} />
             </nav>
           </div>
         </div>

@@ -32,7 +32,6 @@ export default async function WhatsappPage({ searchParams }: PageProps<"/dashboa
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Messages WhatsApp</h1>
-          <p className="v-page-subtitle">Réglez votre numéro WhatsApp et les messages prêts à envoyer, pour vous et pour vos clients.</p>
         </div>
         <div className="v-page-actions">
           <a className="btn btn-secondary" href="#comment-ca-marche">Aide</a>
@@ -51,7 +50,7 @@ export default async function WhatsappPage({ searchParams }: PageProps<"/dashboa
         <article className={`mode-card ${apiActive ? "" : "is-active"}`}>
           <span className="mode-card-badge">{apiActive ? "Par défaut" : "Par défaut · actif"}</span>
           <h2>Lien WhatsApp (wa.me)</h2>
-          <p>Votre client ouvre WhatsApp avec un message prêt à envoyer. Aucun compte technique, gratuit, prêt tout de suite.</p>
+          <p>Message prêt à envoyer. Gratuit.</p>
           <ul>
             <li>Pas d’envoi automatique : le client appuie sur Envoyer</li>
             <li>Pas de statut « livré » ou « lu »</li>
@@ -86,15 +85,8 @@ export default async function WhatsappPage({ searchParams }: PageProps<"/dashboa
                 <li>Une fois payée, vous touchez « Valider » : l’argent est compté</li>
               </ol>
             </section>
-            <section aria-labelledby="bon-a-savoir" className="v-card">
-              <h2 className="v-card-title" id="bon-a-savoir">Bon à savoir</h2>
-              <p className="v-small">
-                Le lien ouvre WhatsApp avec le message déjà écrit : il suffit d’appuyer sur Envoyer.
-              </p>
-            </section>
             <section aria-labelledby="api-plus-tard" className="v-card">
               <h2 className="v-card-title" id="api-plus-tard">Passer à l’API plus tard</h2>
-              <p className="v-small">Votre configuration wa.me reste en place : vous pouvez revenir au lien à tout moment.</p>
               <ol className="api-steps">
                 <li className={settings.businessNumber ? "is-done" : ""}>wa.me configuré{settings.businessNumber ? <> <CheckIcon size={12} /></> : null}</li>
                 <li className={settings.apiPhoneNumberId && settings.hasAccessToken ? "is-done" : ""}>Identifiants API</li>

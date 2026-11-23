@@ -33,7 +33,6 @@ export default async function AdminSubscriptionsPage({ searchParams }: PageProps
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Abonnements</h1>
-          <p className="v-page-subtitle">Suivez les essais et les abonnements de toutes les boutiques, et repérez ceux qui arrivent à échéance.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <a

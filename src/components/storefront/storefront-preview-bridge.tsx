@@ -23,6 +23,8 @@ export function StorefrontPreviewBridge({ initials }: { initials: string }) {
     const root = document.querySelector<HTMLElement>(".sf");
     if (!embedded || !root) return;
     root.classList.add("sf-embedded");
+    // Aperçu dans le cadre du téléphone : la page défile sans barre de défilement visible.
+    document.documentElement.classList.add("sf-embedded-page");
 
     const apply = (values: PreviewValues) => {
       last.current = values;

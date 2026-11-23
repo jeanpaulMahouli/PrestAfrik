@@ -44,7 +44,6 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Prospection</h1>
-          <p className="v-page-subtitle">Tous les utilisateurs, du plus récent au plus ancien. Filtrez, puis contactez-les en un geste sur WhatsApp.</p>
         </div>
         <div className="v-page-actions v-page-actions-inline">
           <a aria-label="Exporter la liste filtrée (fichier CSV)" className="icon-button" download href={`/api/admin/export?type=prospection&${listQuery()}`} title="Exporter la liste filtrée (CSV)">
@@ -65,8 +64,7 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
         </summary>
         <form action={saveProspectionMessages} className="prospection-messages-form">
           <p className="v-small v-muted">
-            Écrivez le message qui s’ouvrira dans WhatsApp. <code>[prenom]</code> est remplacé par le prénom de la personne et <code>[boutique]</code> par le nom
-            de sa boutique. Vous pourrez encore le modifier dans WhatsApp avant de l’envoyer.
+            Variables : <code>[prenom]</code>, <code>[boutique]</code>.
           </p>
           {prospectionMessageKeys.map((key) => (
             <label className="v-field" key={key}>

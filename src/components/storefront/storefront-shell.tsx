@@ -95,7 +95,10 @@ export function StorefrontShell({ children, base, store, pages, chat, popup = nu
         </header>
         {isPreview && (
           <p className="sf-notice sf-notice-preview" role="status">
-            Aperçu privé : votre boutique n’est pas encore publiée. Vous seul la voyez.
+            <span>Aperçu privé : boutique pas encore publiée, vous seul la voyez.</span>
+            <a className="sf-notice-preview-link" href={`${platform}/dashboard`}>
+              Retour au tableau de bord
+            </a>
           </p>
         )}
         <div className="sf-main" id="contenu">

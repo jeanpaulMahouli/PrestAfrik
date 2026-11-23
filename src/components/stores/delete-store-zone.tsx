@@ -17,8 +17,7 @@ export function DeleteStoreZone({ storeName, orderCount, productCount, before }:
     <section aria-labelledby="supprimer-titre" className="store-danger" id="supprimer">
       <h3 className="store-danger-title" id="supprimer-titre">Zone sensible</h3>
       <p className="v-small v-muted">
-        Supprimer la boutique efface définitivement ses produits, ses commandes, ses clients et ses réglages. Son adresse web pourra être reprise par quelqu’un
-        d’autre. Cette action est irréversible.
+        Efface tout (produits, commandes, clients). Irréversible.
       </p>
       <div className="v-button-row">
         {before}

@@ -27,7 +27,6 @@ export function ChatAssistantEditor({ initial, storeName, storeSlug }: { initial
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Assistant WhatsApp de la boutique</h1>
-          <p className="v-page-subtitle">Aidez vos visiteurs à vous joindre en un geste : ils posent une question et poursuivent avec vous sur WhatsApp.</p>
         </div>
         <div className="v-page-actions">
           <Link className="btn btn-secondary" href={`/${storeSlug}`} target="_blank">Voir sur ma boutique</Link>
@@ -55,10 +54,6 @@ export function ChatAssistantEditor({ initial, storeName, storeSlug }: { initial
               <span>Afficher l’assistant WhatsApp sur ma boutique</span>
               <input checked={config.enabled} onChange={(event) => set("enabled", event.target.checked)} type="checkbox" />
             </label>
-            <p className="v-small v-muted">
-              Un bouton de discussion (aux couleurs de votre boutique) apparaît sur votre boutique. Vos visiteurs choisissent une question, puis continuent la discussion avec vous sur
-              WhatsApp. Aucune intelligence artificielle : les réponses sont celles que vous rédigez.
-            </p>
           </section>
 
           <section className="v-card">
@@ -110,12 +105,8 @@ export function ChatAssistantEditor({ initial, storeName, storeSlug }: { initial
             <label className="v-field">
               Message prérempli envoyé au vendeur
               <input maxLength={300} onChange={(event) => set("transferTemplate", event.target.value)} value={config.transferTemplate} />
-              <span className="v-field-help">Variables : {"{boutique}"}, {"{question}"}, {"{produit}"} (nom du produit consulté), {"{page}"}.</span>
+              <span className="v-field-help">Variables : {"{boutique}"}, {"{question}"}, {"{produit}"}, {"{page}"}.</span>
             </label>
-            <p className="v-small v-muted">
-              Le visiteur voit toujours le message avant l’envoi et appuie lui-même sur « Envoyer » dans WhatsApp. Le numéro utilisé est celui de votre boutique
-              (page « Messages WhatsApp »).
-            </p>
           </section>
 
           <section className="v-card">
@@ -136,7 +127,7 @@ export function ChatAssistantEditor({ initial, storeName, storeSlug }: { initial
             <label className="v-field off-hours-field">
               Message hors des heures d’ouverture (facultatif)
               <textarea maxLength={300} onChange={(event) => set("offHoursMessage", event.target.value)} rows={2} value={config.offHoursMessage} />
-              <span className="v-field-help">Affiché en dehors de vos horaires, s’ils sont renseignés dans votre boutique.</span>
+              <span className="v-field-help">Hors de vos horaires.</span>
             </label>
           </section>
         </form>
@@ -153,7 +144,6 @@ export function ChatAssistantEditor({ initial, storeName, storeSlug }: { initial
                 ))}
               </div>
             </div>
-            <p className="v-small v-muted">L’aperçu se met à jour pendant que vous écrivez.</p>
           </section>
           <section className="v-card">
             <h2 className="v-card-title">Bon à savoir</h2>

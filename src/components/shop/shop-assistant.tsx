@@ -77,7 +77,7 @@ export function ShopAssistant({ categories, budgets, searchHref, signupHref, wha
                 <p className="shop-bubble shop-bubble--me">{label}</p>
                 {topic === "produit" && (
                   <>
-                    <p className="shop-bubble">Dites-moi ce que vous cherchez, ou choisissez un univers :</p>
+                    <p className="shop-bubble">Dites-moi ce que vous cherchez, ou choisissez une catégorie :</p>
                     <form
                       className="shop-assistant-search"
                       onSubmit={(event) => {

@@ -49,7 +49,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
       hero={{
         title: !result ? "Trouvez un vendeur près de chez vous" : result.total === 0 ? `Pas encore de boutique pour « ${query} »` : `${result.total} boutique${result.total > 1 ? "s" : ""} pour « ${query} »`,
         subtitle: result?.total
-          ? "Touchez une boutique pour voir ses produits et commander : la commande se confirme sur WhatsApp, vous payez à la livraison."
+          ? "Commande sur WhatsApp, paiement à la livraison."
           : "Cherchez par nom de boutique, par ville ou par activité (pagne, beauté, électronique…).",
         actions: <VendorSearch className="vendor-search--hero" defaultValue={query ?? ""} />,
       }}

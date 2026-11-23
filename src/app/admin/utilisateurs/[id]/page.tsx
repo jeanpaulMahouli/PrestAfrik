@@ -123,7 +123,7 @@ export default async function AdminUserPage({ params, searchParams }: PageProps<
                 name="phone"
                 placeholder="+237 6 99 00 00 00"
               />
-              <span className="v-field-help">Avec l’indicatif du pays. Vide : la personne devra le saisir à sa prochaine connexion. Un nouveau numéro repasse « à valider ».</span>
+              <span className="v-field-help">Avec l’indicatif.</span>
             </label>
             {!protectedAdmin && (
               <SubmitButton className="btn btn-primary" pendingLabel="Enregistrement…">

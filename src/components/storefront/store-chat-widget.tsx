@@ -107,7 +107,7 @@ export function StoreChatWidget({ config, storeName, storeSlug, storeInitials, l
     setMessages((current) => [
       ...current,
       ...(echo ? [{ from: "client" as const, text: echo }] : []),
-      { from: "bot" as const, text: "Avec plaisir ! Je prépare votre message pour le vendeur. Il suffira d’appuyer sur Envoyer dans WhatsApp." },
+      { from: "bot" as const, text: "Avec plaisir ! Votre message est prêt sur WhatsApp." },
       { from: "ready" as const, text, url: buildWaMeUrl(config.whatsappNumber, text) },
     ]);
   }

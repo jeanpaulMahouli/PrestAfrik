@@ -27,7 +27,6 @@ export default async function DeliveriesPage({ searchParams }: PageProps<"/dashb
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Livraisons</h1>
-          <p className="v-page-subtitle">Indiquez où vous livrez et à quel prix. Vos clients voient les frais avant de commander.</p>
         </div>
         <div className="v-page-actions">
           <ActionDialog action={createDeliveryZone} submitLabel="Ajouter la zone" title="Ajouter une zone de livraison" triggerClassName="btn btn-primary" triggerLabel="+ Ajouter une zone">
@@ -64,7 +63,7 @@ export default async function DeliveriesPage({ searchParams }: PageProps<"/dashb
             ))}
           </ul>
         ) : (
-          <p className="v-small">Aucune zone pour l’instant. Ajoutez au moins une zone (ou activez le retrait en boutique) pour recevoir des commandes.</p>
+          <p className="v-small">Aucune zone. Ajoutez-en une, ou activez le retrait.</p>
         )}
       </section>
     </VendorShell>

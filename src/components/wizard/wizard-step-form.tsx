@@ -15,7 +15,7 @@ type WizardStepFormProps = {
   /** Numéro de l'étape : sert à garder la saisie non enregistrée (actualisation, retour en arrière). */
   step: number;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   backHref?: string;
   submitLabel?: string;
   /** Bouton secondaire. */
@@ -47,7 +47,7 @@ export function WizardStepForm({ action, draftId, step, title, subtitle, backHre
     >
       {draftId && <input name="draftId" type="hidden" value={draftId} />}
       <h1>{title}</h1>
-      <p className="wizard-subtitle">{subtitle}</p>
+      {subtitle && <p className="wizard-subtitle">{subtitle}</p>}
       {state && !state.ok && (
         <p className="v-banner v-banner-danger" role="alert">
           <strong>À corriger : </strong>

@@ -21,7 +21,6 @@ export default async function NewProductPage() {
         aiEnabled={productAiAvailable()}
         categories={categories}
         listingMode={profile.listingMode}
-        universe={profile.universe}
         values={{
           name: "",
           description: "",

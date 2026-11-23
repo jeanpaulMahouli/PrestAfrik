@@ -57,7 +57,6 @@ export default async function AdminFeedbackPage({ searchParams }: PageProps<"/ad
       <div className="v-page-header">
         <div>
           <h1 className="v-page-title">Messages et avis</h1>
-          <p className="v-page-subtitle">Ce que les vendeurs pensent de PrestAfrik, leurs idées et leurs questions. Votre réponse leur est envoyée par e-mail.</p>
         </div>
       </div>
       <AdminFeedback params={params} />
@@ -160,7 +159,7 @@ export default async function AdminFeedbackPage({ searchParams }: PageProps<"/ad
       ) : (
         <div className="v-card v-empty">
           <h2>Aucun message pour le moment</h2>
-          <p>Les avis, suggestions et questions envoyés depuis le bloc « Communauté » du tableau de bord des vendeurs arrivent ici.</p>
+          <p>Les messages des vendeurs arrivent ici.</p>
         </div>
       )}
     </>
