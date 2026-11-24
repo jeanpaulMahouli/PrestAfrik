@@ -66,23 +66,46 @@ export async function notifyStoreTeam(storeId: string, input: VendorNotification
   );
 }
 
+/**
+ * Lecture tolérante : la cloche ne fait jamais tomber le tableau de bord (base indisponible, ou client Prisma
+ * pas encore régénéré après une migration : l'erreur est alors levée avant même la requête).
+ */
 export async function countUnreadNotifications(userId: string) {
-  return prisma.vendorNotification.count({ where: { userId, readAt: null } }).catch(() => 0);
+  try {
+    return await prisma.vendorNotification.count({ where: { userId, readAt: null } });
+  } catch {
+    return 0;
+  }
 }
 
 export async function listNotifications(userId: string, { kind, take = 50 }: { kind?: VendorNotificationKind; take?: number } = {}) {
-  return prisma.vendorNotification
-    .findMany({ where: { userId, ...(kind ? { kind } : {}) }, orderBy: { createdAt: "desc" }, take, select: { id: true, kind: true, title: true, body: true, url: true, imageUrl: true, readAt: true, createdAt: true } })
-    .catch(() => []);
+  try {
+    return await prisma.vendorNotification.findMany({
+      where: { userId, ...(kind ? { kind } : {}) },
+      orderBy: { createdAt: "desc" },
+      take,
+      select: { id: true, kind: true, title: true, body: true, url: true, imageUrl: true, readAt: true, createdAt: true },
+    });
+  } catch {
+    return [];
+  }
 }
 
 /** Marque une notification (ou toutes) comme lue. */
 export async function markNotificationsRead(userId: string, id?: string) {
-  await prisma.vendorNotification.updateMany({ where: { userId, readAt: null, ...(id ? { id } : {}) }, data: { readAt: new Date() } }).catch(() => undefined);
+  try {
+    await prisma.vendorNotification.updateMany({ where: { userId, readAt: null, ...(id ? { id } : {}) }, data: { readAt: new Date() } });
+  } catch {
+    // Silencieux : voir countUnreadNotifications.
+  }
   return countUnreadNotifications(userId);
 }
 
 /** Nettoyage : notifications de plus de 90 jours. */
 export async function purgeOldNotifications(now = new Date()) {
-  return prisma.vendorNotification.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - retentionDays * 86_400_000) } } }).catch(() => ({ count: 0 }));
+  try {
+    return await prisma.vendorNotification.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - retentionDays * 86_400_000) } } });
+  } catch {
+    return { count: 0 };
+  }
 }

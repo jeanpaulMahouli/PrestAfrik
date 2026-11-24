@@ -47,13 +47,3 @@ export async function resetProspectionMessages() {
   back("Messages par défaut rétablis.");
 }
 
-/** « Marquer comme contacté » : prise de contact hors du bouton WhatsApp (appel, rencontre…). */
-export async function markProspectContacted(formData: FormData) {
-  const admin = await requirePlatformAdmin();
-  const userId = String(formData.get("userId") ?? "");
-  const returnTo = String(formData.get("retour") ?? listPath);
-  const user = /^[A-Za-z0-9_-]{10,64}$/.test(userId) ? await prisma.user.findUnique({ where: { id: userId }, select: { id: true } }) : null;
-  if (user) await prisma.prospectContact.create({ data: { userId: user.id, adminId: admin.id, channel: "autre" } });
-  revalidatePath(listPath);
-  redirect(returnTo.startsWith(listPath) ? returnTo : listPath);
-}

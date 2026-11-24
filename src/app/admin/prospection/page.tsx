@@ -1,15 +1,15 @@
 import { Download } from "@/components/ui/icons";
-import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";
+import { AdminFeedback, searchValue } from "@/components/admin/admin-feedback";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { prospectionMessageKeys, prospectionMessageLabels, prospectionMessages } from "@/config/prospection";
-import { markProspectContacted, resetProspectionMessages, saveProspectionMessages } from "@/modules/admin/prospection-actions";
+import { resetProspectionMessages, saveProspectionMessages } from "@/modules/admin/prospection-actions";
 import { Badge } from "@/components/ui/badge";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Pagination } from "@/components/ui/pagination";
 import { formatDate, formatNumber, plural } from "@/lib/format";
-import { CircleCheck } from "@/components/ui/icons";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { ProspectWhatsappLink } from "@/components/admin/prospect-whatsapp-link";
 import {
   getProspectionMessages,
   listProspects,
@@ -32,7 +32,6 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
   const [{ rows, total }, messages] = await Promise.all([listProspects({ filters, query }), getProspectionMessages()]);
   const customized = prospectionMessageKeys.some((key) => messages[key] !== prospectionMessages[key]);
   const visible = rows.slice((page - 1) * prospectionPageSize, page * prospectionPageSize);
-  const retour = currentPath("/admin/prospection", params);
   // Lien WhatsApp suivi : la prise de contact est enregistrée avant d'ouvrir WhatsApp.
   const contactHref = (userId: string) => {
     const next = new URLSearchParams({ u: userId });
@@ -167,21 +166,12 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
                     <td className="admin-row-actions">
                       <span className="icon-actions">
                         {whatsapp ? (
-                          <a aria-label={`Écrire à ${row.name} sur WhatsApp`} className="icon-button icon-button-sm icon-button-whatsapp" href={contactHref(row.id)} rel="noreferrer" target="_blank" title="Écrire sur WhatsApp (contact enregistré)">
-                            <WhatsAppIcon size={16} />
-                          </a>
+                          <ProspectWhatsappLink href={contactHref(row.id)} name={row.name} />
                         ) : (
                           <button aria-label={`WhatsApp indisponible : aucun numéro pour ${row.name}`} className="icon-button icon-button-sm" disabled title="Aucun numéro renseigné" type="button">
                             <WhatsAppIcon size={16} />
                           </button>
                         )}
-                        <form action={markProspectContacted}>
-                          <input name="userId" type="hidden" value={row.id} />
-                          <input name="retour" type="hidden" value={retour} />
-                          <SubmitButton aria-label={`Marquer ${row.name} comme contacté`} className="icon-button icon-button-sm" pendingLabel="" title="Marquer comme contacté (appel, rencontre…)">
-                            <CircleCheck aria-hidden="true" size={16} />
-                          </SubmitButton>
-                        </form>
                         {row.phone && <CopyButton className="icon-button icon-button-sm" copiedLabel="Numéro copié" iconOnly label={`Copier le numéro de ${row.name}`} value={`+${row.phoneDigits}`} />}
                       </span>
                     </td>

@@ -1,16 +1,14 @@
 import type { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";
-import { Badge } from "@/components/ui/badge";
+import { ProductsModeration } from "@/components/admin/products-moderation";
 import { Pagination } from "@/components/ui/pagination";
-import { SubmitButton } from "@/components/ui/submit-button";
 import type { Tone } from "@/config/statuses";
 import { formatDate, formatNumber } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { storePublicUrl } from "@/lib/urls";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { formatXaf } from "@/modules/catalog/format";
-import { hideProducts, showProducts } from "@/modules/marketplace/product-moderation-actions";
 import { excludedStoreIds } from "@/modules/marketplace/search";
 import { marketplaceProductPath, minMarketplacePriceXaf } from "@/modules/marketplace/shop";
 
@@ -187,91 +185,30 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
         </form>
 
         {rows.length ? (
-          <form className="admin-products">
-            <input name="retour" type="hidden" value={retour} />
-            <div className="admin-products-bulk">
-              <label className="visually-hidden" htmlFor="products-motif">
-                Motif
-              </label>
-              <input id="products-motif" maxLength={200} name="motif" placeholder="Motif (facultatif, envoyé au vendeur)" />
-              <SubmitButton className="btn btn-danger-outline" formAction={hideProducts} pendingLabel="…">
-                Masquer la sélection
-              </SubmitButton>
-              <SubmitButton className="btn btn-secondary" formAction={showProducts} pendingLabel="…">
-                Réafficher la sélection
-              </SubmitButton>
-            </div>
-            <table className="v-table admin-table admin-products-table">
-              <thead>
-                <tr>
-                  <th scope="col">
-                    <span className="visually-hidden">Sélection</span>
-                  </th>
-                  <th scope="col">Produit</th>
-                  <th scope="col">Boutique</th>
-                  <th scope="col">Prix</th>
-                  <th scope="col">Ajouté le</th>
-                  <th scope="col">Marketplace</th>
-                  <th scope="col">
-                    <span className="visually-hidden">Action</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => {
-                  const state = marketplaceState(row, excludedSet);
-                  const price = row.promotionalPriceXaf !== null && row.promotionalPriceXaf < row.priceXaf ? row.promotionalPriceXaf : row.priceXaf;
-                  const href = state.label === "Visible" ? marketplaceProductPath(row.store.slug, row.slug) : `${storePublicUrl(row.store.slug)}/${row.slug}`;
-                  return (
-                    <tr className={row.marketplaceHiddenAt ? "is-off" : undefined} key={row.id}>
-                      <td>
-                        <input aria-label={`Sélectionner ${row.name}`} name="productId" type="checkbox" value={row.id} />
-                      </td>
-                      <td className="v-cell-primary">
-                        <span className="admin-product">
-                          {/* Miniature déjà optimisée (WebP). */}
-                          {row.images[0] ? <img alt="" height={44} loading="lazy" src={row.images[0].url} width={44} /> : <span aria-hidden="true" className="admin-product-empty" />}
-                          <span>
-                            <a href={href} rel="noopener noreferrer" target="_blank">
-                              {row.name}
-                            </a>
-                            <span className="v-cell-sub">{row.sku}</span>
-                          </span>
-                        </span>
-                      </td>
-                      <td data-label="Boutique">
-                        <Link href={listQuery({ boutique: row.store.id, page: undefined })}>{row.store.name}</Link>
-                        {row.store.activity && <span className="v-cell-sub">{row.store.activity.label}</span>}
-                      </td>
-                      <td data-label="Prix">{formatXaf(price)}</td>
-                      <td data-label="Ajouté le">{formatDate(row.createdAt)}</td>
-                      <td className="v-cell-badges" data-label="Marketplace">
-                        <Badge tone={state.tone}>{state.label}</Badge>
-                        {state.reason && <span className="v-cell-sub">{state.reason}</span>}
-                        {row.marketplaceHiddenAt && (
-                          <span className="v-cell-sub">
-                            {row.marketplaceHiddenBy ? `Par ${row.marketplaceHiddenBy}` : ""} le {formatDate(row.marketplaceHiddenAt)}
-                            {row.marketplaceHiddenReason ? ` · ${row.marketplaceHiddenReason}` : ""}
-                          </span>
-                        )}
-                      </td>
-                      <td className="admin-row-actions">
-                        {row.marketplaceHiddenAt ? (
-                          <SubmitButton className="btn btn-secondary btn-sm" formAction={showProducts} name="single" pendingLabel="…" value={row.id}>
-                            Réafficher
-                          </SubmitButton>
-                        ) : (
-                          <SubmitButton className="btn btn-danger-outline btn-sm" formAction={hideProducts} name="single" pendingLabel="…" value={row.id}>
-                            Masquer
-                          </SubmitButton>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </form>
+          <ProductsModeration
+            retour={retour}
+            rows={rows.map((row) => {
+              const state = marketplaceState(row, excludedSet);
+              const price = row.promotionalPriceXaf !== null && row.promotionalPriceXaf < row.priceXaf ? row.promotionalPriceXaf : row.priceXaf;
+              return {
+                id: row.id,
+                name: row.name,
+                sku: row.sku,
+                imageUrl: row.images[0]?.url ?? null,
+                href: state.label === "Visible" ? marketplaceProductPath(row.store.slug, row.slug) : `${storePublicUrl(row.store.slug)}/${row.slug}`,
+                storeName: row.store.name,
+                storeHref: listQuery({ boutique: row.store.id, page: undefined }),
+                category: row.store.activity?.label ?? null,
+                price: formatXaf(price),
+                createdAt: formatDate(row.createdAt),
+                hidden: Boolean(row.marketplaceHiddenAt),
+                state,
+                hiddenNote: row.marketplaceHiddenAt
+                  ? `${row.marketplaceHiddenBy ? `Par ${row.marketplaceHiddenBy} ` : ""}le ${formatDate(row.marketplaceHiddenAt)}${row.marketplaceHiddenReason ? ` · ${row.marketplaceHiddenReason}` : ""}`
+                  : null,
+              };
+            })}
+          />
         ) : (
           <div className="v-empty">
             <h2>Aucun produit</h2>

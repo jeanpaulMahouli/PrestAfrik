@@ -1976,10 +1976,34 @@
 }
 
 /* ---------- « Ces boutiques vendent déjà » : mini-bannières des boutiques qui défilent ---------- */
+/* Défilement automatique en JavaScript (stores-marquee.tsx) : la bande reste aussi défilable à la main. */
 .lp-stores {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   margin-top: clamp(24px, 3vw, 40px);
+  cursor: grab;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
   mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+
+.lp-stores::-webkit-scrollbar {
+  display: none;
+}
+
+.lp-stores.is-dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.lp-stores.is-dragging a {
+  pointer-events: none;
+}
+
+.lp-stores:focus-visible {
+  outline: 2px solid var(--color-brand-primary, #ff9900);
+  outline-offset: 4px;
 }
 
 .lp-stores__track {
@@ -1989,12 +2013,10 @@
   margin: 0;
   padding: 8px 10px 18px;
   list-style: none;
-  animation: lp-marquee 80s linear infinite;
 }
 
-.lp-stores:hover .lp-stores__track,
-.lp-stores:focus-within .lp-stores__track {
-  animation-play-state: paused;
+.lp-stores img {
+  -webkit-user-drag: none;
 }
 
 .lp-stores__track li {
@@ -2103,3 +2125,4 @@
 .lp-store__name {
   max-width: 100%;
 }
+

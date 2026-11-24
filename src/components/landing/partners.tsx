@@ -5,6 +5,7 @@ import { shopUrl, storePublicUrl } from "@/lib/urls";
 import { getMostVisitedStores } from "@/modules/marketplace/search";
 import { LandingButton } from "./buttons";
 import { partners } from "./content";
+import { StoresMarquee } from "./stores-marquee";
 
 type ShowcaseStore = { id: string; name: string; slug: string; city: string | null; logoUrl: string | null; cover: string; products: number };
 
@@ -72,7 +73,7 @@ function StoreMiniBanner({ store, hidden }: { store: ShowcaseStore; hidden: bool
 
 /**
  * « Ces boutiques vendent déjà avec PrestAfrik » : les 20 boutiques les plus visitées défilent sur une ligne
- * (pause au survol), puis le bouton vers la marketplace. Rien n'est affiché sans boutique.
+ * toutes seules et au doigt, à la molette ou à la souris (pause au survol), puis le bouton vers la marketplace. Rien n'est affiché sans boutique.
  */
 export async function Partners() {
   const stores = await loadShowcaseStores().catch(() => []);
@@ -83,7 +84,7 @@ export async function Partners() {
       <h2 className="lp-partners__title" id="partners-title">
         {partners.title}
       </h2>
-      <div className="lp-stores">
+      <StoresMarquee>
         {/* La liste est doublée pour que le défilement boucle sans saut ; la copie est ignorée des lecteurs d'écran. */}
         <ul className="lp-stores__track">
           {[...stores, ...stores].map((store, index) => (
@@ -92,7 +93,7 @@ export async function Partners() {
             </li>
           ))}
         </ul>
-      </div>
+      </StoresMarquee>
       <div className="lp-find-stores">
         <LandingButton href={shopUrl("/")}>
           {partners.findCta}

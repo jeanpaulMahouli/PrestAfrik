@@ -648,3 +648,16 @@
 .admin-products-table tr.is-off td {
   background: #fdf6f6;
 }
+
+/* Barre de sélection : visible seulement avec des produits cochés, collée en haut pendant le défilement. */
+.admin-products .admin-products-bulk {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  border-bottom: 1px solid #ffd699;
+  background: #fff8ec;
+}
+
+.admin-products-table tr.is-selected td {
+  background: #fff8ec;
+}
