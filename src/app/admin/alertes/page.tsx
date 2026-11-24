@@ -1,5 +1,6 @@
 import { MailCheck, MessageCircle } from "@/components/ui/icons";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";
 import { ReasonDialog } from "@/components/admin/reason-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -10,24 +11,22 @@ import { prisma } from "@/lib/prisma";
 import { reopenAlert, resendVerificationEmail, resolveAllAlerts, suspendStore, updateAlert } from "@/modules/admin/actions";
 import { alertKindLabels, listOpenAlerts, type AlertKind } from "@/modules/admin/alerts";
 import { requirePlatformAdmin } from "@/modules/admin/context";
-import { replyToTicket, updateTicket } from "@/modules/support/actions";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
 export const metadata = { title: "Alertes" };
 
-const tabs = { nouvelles: "Nouvelles", traitees: "Traitées", tickets: "Tickets de support" } as const;
+const tabs = { nouvelles: "Nouvelles", traitees: "Traitées" } as const;
 type Tab = keyof typeof tabs;
-const kindTones: Record<AlertKind, Tone> = { spam: "danger", email: "warning" };
-const ticketStatusLabels = { OPEN: "Ouvert", IN_PROGRESS: "En cours", RESOLVED: "Résolu" } as const;
-const ticketStatusTones: Record<keyof typeof ticketStatusLabels, Tone> = { OPEN: "warning", IN_PROGRESS: "info", RESOLVED: "success" };
-const asKind = (value: string): AlertKind => (value === "spam" ? "spam" : "email");
+const kindTones: Record<AlertKind, Tone> = { spam: "danger", orders: "warning", email: "neutral" };
+const asKind = (value: string): AlertKind => (value === "spam" || value === "orders" ? value : "email");
 
 export default async function AdminAlertsPage({ searchParams }: PageProps<"/admin/alertes">) {
   await requirePlatformAdmin();
   const params = await searchParams;
+  // Les demandes d'aide sont désormais dans la Messagerie (ancien onglet « Tickets de support »).
+  if (searchValue(params, "onglet") === "tickets") redirect("/admin/avis?type=CONTACT");
   const tab: Tab = Object.hasOwn(tabs, searchValue(params, "onglet")) ? (searchValue(params, "onglet") as Tab) : "nouvelles";
-  const ticketFilter = searchValue(params, "statut");
-  const [open, closed, tickets, openTickets, admins] = await Promise.all([
+  const [open, closed] = await Promise.all([
     listOpenAlerts(),
     tab === "traitees"
       ? prisma.adminAlertState.findMany({
@@ -36,23 +35,8 @@ export default async function AdminAlertsPage({ searchParams }: PageProps<"/admi
           select: { key: true, status: true, level: true, title: true, body: true, updatedAt: true, updatedBy: { select: { name: true } } },
         })
       : Promise.resolve([]),
-    tab === "tickets"
-      ? prisma.supportTicket.findMany({
-          // Demandes du formulaire de contact ; les messages des vendeurs sont dans « Messages et avis ».
-          where: { kind: "CONTACT", ...(ticketFilter === "OPEN" || ticketFilter === "IN_PROGRESS" || ticketFilter === "RESOLVED" ? { status: ticketFilter } : {}) },
-          orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-          take: 100,
-          include: {
-            assignedTo: { select: { id: true, name: true } },
-            replies: { orderBy: { createdAt: "asc" }, include: { author: { select: { name: true } } } },
-          },
-        })
-      : Promise.resolve([]),
-    prisma.supportTicket.count({ where: { status: "OPEN", kind: "CONTACT" } }),
-    prisma.user.findMany({ where: { platformRole: { in: ["ADMIN", "SUPER_ADMIN"] }, suspendedAt: null }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
   const retour = currentPath("/admin/alertes", params);
-  const selectedTicket = searchValue(params, "ticket");
 
   return (
     <>
@@ -73,7 +57,7 @@ export default async function AdminAlertsPage({ searchParams }: PageProps<"/admi
         {(Object.keys(tabs) as Tab[]).map((key) => (
           <Link aria-current={tab === key ? "page" : undefined} href={key === "nouvelles" ? "/admin/alertes" : `/admin/alertes?onglet=${key}`} key={key}>
             {tabs[key]}
-            {key === "nouvelles" ? ` (${open.length})` : key === "tickets" && openTickets ? ` (${openTickets} ouvert${openTickets > 1 ? "s" : ""})` : ""}
+            {key === "nouvelles" ? ` (${open.length})` : ""}
           </Link>
         ))}
       </nav>
@@ -103,6 +87,21 @@ export default async function AdminAlertsPage({ searchParams }: PageProps<"/admi
                         <MailCheck aria-hidden="true" size={16} /> Renvoyer l’e-mail de vérification
                       </SubmitButton>
                     </form>
+                  )}
+                  {alert.kind === "orders" && alert.store && (
+                    <>
+                      {alert.store.contactUrl && (
+                        <a className="btn btn-secondary" href={alert.store.contactUrl} rel="noreferrer" target="_blank">
+                          <WhatsAppIcon size={16} variant="logo" /> Contacter
+                        </a>
+                      )}
+                      <form action={updateAlert}>
+                        <input name="key" type="hidden" value={alert.key} />
+                        <input name="status" type="hidden" value="RESOLVED" />
+                        <input name="retour" type="hidden" value={retour} />
+                        <SubmitButton className="btn btn-secondary" pendingLabel="…">Traitée</SubmitButton>
+                      </form>
+                    </>
                   )}
                   {alert.kind === "spam" && alert.store && (
                     <>
@@ -139,7 +138,7 @@ export default async function AdminAlertsPage({ searchParams }: PageProps<"/admi
         ) : (
           <div className="v-card v-empty">
             <h2>Aucune nouvelle alerte</h2>
-            <p>Toutes les adresses e-mail sont confirmées et aucune activité suspecte n’a été repérée.</p>
+            <p>Aucune activité suspecte, aucun client sans réponse.</p>
           </div>
         ))}
 
@@ -174,83 +173,6 @@ export default async function AdminAlertsPage({ searchParams }: PageProps<"/admi
           </div>
         ))}
 
-      {tab === "tickets" && (
-        <>
-          <nav aria-label="Statut des demandes" className="pill-tabs pill-tabs-sm">
-            {[["", "Toutes"], ["OPEN", "Ouvertes"], ["IN_PROGRESS", "En cours"], ["RESOLVED", "Résolues"]].map(([value, label]) => (
-              <Link aria-current={ticketFilter === value ? "page" : undefined} href={`/admin/alertes?onglet=tickets${value ? `&statut=${value}` : ""}`} key={label}>
-                {label}
-              </Link>
-            ))}
-          </nav>
-          {tickets.length ? (
-            <ul className="admin-alerts">
-              {tickets.map((ticket) => (
-                <li className="v-card ticket" key={ticket.id}>
-                  <details open={selectedTicket === ticket.id || tickets.length === 1}>
-                    <summary className="ticket-summary">
-                      <Badge tone={ticketStatusTones[ticket.status]}>{ticketStatusLabels[ticket.status]}</Badge>
-                      <strong>{ticket.subject}</strong>
-                      <span className="v-muted v-small">
-                        {ticket.requesterName} · {formatDateTime(ticket.createdAt)}
-                        {ticket.assignedTo ? ` · suivi par ${ticket.assignedTo.name}` : " · non assigné"}
-                      </span>
-                    </summary>
-                    <div className="ticket-body">
-                      <p className="v-small v-muted">
-                        De {ticket.requesterName} (<a href={`mailto:${ticket.requesterEmail}`}>{ticket.requesterEmail}</a>)
-                      </p>
-                      <blockquote className="ticket-message">{ticket.message}</blockquote>
-                      {ticket.replies.map((reply) => (
-                        <div className="ticket-reply" key={reply.id}>
-                          <small>
-                            Réponse de {reply.author?.name ?? "l’équipe"} le {formatDateTime(reply.createdAt)}
-                          </small>
-                          <p>{reply.body}</p>
-                        </div>
-                      ))}
-                      <form action={replyToTicket} className="ticket-form">
-                        <input name="ticketId" type="hidden" value={ticket.id} />
-                        <label className="v-field">
-                          Répondre par e-mail à {ticket.requesterName}
-                          <textarea maxLength={4000} minLength={5} name="body" placeholder="Bonjour, merci pour votre message…" required rows={4} />
-                        </label>
-                        <SubmitButton className="btn btn-primary" pendingLabel="Envoi…">Envoyer la réponse</SubmitButton>
-                      </form>
-                      <form action={updateTicket} className="ticket-settings">
-                        <input name="ticketId" type="hidden" value={ticket.id} />
-                        <label className="v-field">
-                          Statut
-                          <select defaultValue={ticket.status} name="status">
-                            {(Object.keys(ticketStatusLabels) as (keyof typeof ticketStatusLabels)[]).map((status) => (
-                              <option key={status} value={status}>{ticketStatusLabels[status]}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className="v-field">
-                          Suivi par
-                          <select defaultValue={ticket.assignedTo?.id ?? ""} name="assignedToId">
-                            <option value="">Personne</option>
-                            {admins.map((admin) => (
-                              <option key={admin.id} value={admin.id}>{admin.name}</option>
-                            ))}
-                          </select>
-                        </label>
-                        <SubmitButton className="btn btn-secondary" pendingLabel="Enregistrement…">Enregistrer</SubmitButton>
-                      </form>
-                    </div>
-                  </details>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="v-card v-empty">
-              <h2>Aucune demande d’aide</h2>
-              <p>Les messages envoyés depuis la page Contact du site arrivent ici, prêts à être suivis.</p>
-            </div>
-          )}
-        </>
-      )}
     </>
   );
 }

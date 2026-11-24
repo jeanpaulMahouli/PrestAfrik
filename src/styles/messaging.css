@@ -1,0 +1,650 @@
+/* =============================================================================
+   Notifications et messagerie : cloche et centre de notifications du vendeur, discussions avec l'équipe,
+   boîte de réception de l'administration, envoi de notifications (aperçu).
+   ========================================================================== */
+
+/* ---------- Cloche du vendeur ---------- */
+.vnotif-panel {
+  width: min(24rem, calc(100vw - 1.5rem));
+  padding: 0;
+  overflow: hidden;
+}
+
+.vnotif-head,
+.vnotif-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.vnotif-head {
+  border-bottom: 1px solid var(--color-divider, #eee);
+}
+
+.vnotif-head .v-link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8125rem;
+}
+
+.vnotif-foot {
+  border-top: 1px solid var(--color-divider, #eee);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.vnotif-empty {
+  margin: 0;
+  padding: 1.25rem 1rem;
+}
+
+.vnotif-list {
+  display: grid;
+  max-height: 24rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vnotif-list--page {
+  max-height: none;
+}
+
+.vnotif-item {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--color-divider, #f0f0f0);
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.vnotif-item:hover {
+  background: #fafafa;
+}
+
+.vnotif-item.is-unread {
+  background: #fff8ec;
+}
+
+.vnotif-item.is-unread .vnotif-text strong::after {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: 0.4rem;
+  border-radius: 50%;
+  background: #ff9900;
+  content: "";
+  vertical-align: middle;
+}
+
+.vnotif-text {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  gap: 0.15rem;
+  font-size: 0.875rem;
+}
+
+.vnotif-text strong {
+  font-weight: 600;
+}
+
+.vnotif-text span {
+  color: #4b4b4b;
+  line-height: 1.4;
+}
+
+.vnotif-text small {
+  color: #8b8b8b;
+  font-size: 0.75rem;
+}
+
+.vnotif-icon {
+  display: grid;
+  width: 2.1rem;
+  height: 2.1rem;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+}
+
+.vnotif-icon--order {
+  color: #0b8a4c;
+  background: #e8f7ef;
+}
+
+.vnotif-icon--message {
+  color: #1d5fd1;
+  background: #e8f0fd;
+}
+
+.vnotif-icon--news {
+  color: #b35f00;
+  background: #fff1dc;
+}
+
+.vnotif-icon--tip {
+  color: #8a6d00;
+  background: #fff7cc;
+}
+
+.vnotif-icon--alert {
+  color: #c2261a;
+  background: #fdecec;
+}
+
+.vnotif-page {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .vnotif-page {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+}
+
+.vnotif-prefs {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* ---------- Discussions (vendeur et administration) ---------- */
+.conv-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.conv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--color-divider, #f0f0f0);
+  color: inherit;
+  text-decoration: none;
+}
+
+.conv-row:hover {
+  background: #fafafa;
+}
+
+.conv-row.is-unread {
+  background: #f2fbf5;
+}
+
+.conv-row-main {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.conv-row-main strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conv-row-main small {
+  color: #8b8b8b;
+}
+
+.conv-card {
+  display: grid;
+  gap: 1rem;
+}
+
+.conv-thread {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.conv-bubble {
+  max-width: min(36rem, 88%);
+  padding: 0.7rem 0.95rem;
+  border-radius: 1rem 1rem 1rem 0.3rem;
+  background: #f3f4f6;
+}
+
+.conv-bubble.is-mine {
+  justify-self: end;
+  border-radius: 1rem 1rem 0.3rem 1rem;
+  background: #fff1dc;
+}
+
+.conv-bubble p {
+  margin: 0.2rem 0 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.conv-meta {
+  color: #7a7a7a;
+  font-size: 0.75rem;
+}
+
+.conv-reply {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.conv-reply textarea {
+  resize: vertical;
+}
+
+.conv-reply > p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.conv-send {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* ---------- Messagerie de l'administration ---------- */
+.inbox {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (min-width: 1100px) {
+  .inbox {
+    grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+  }
+
+  .inbox-back {
+    display: none;
+  }
+}
+
+/* Téléphone et tablette : la liste, puis la conversation choisie à la place de la liste. */
+@media (max-width: 1099.98px) {
+  .inbox.has-selection .inbox-list,
+  .inbox:not(.has-selection) .inbox-detail {
+    display: none;
+  }
+}
+
+.inbox-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-divider, #eee);
+}
+
+.inbox-filters :is(input, select) {
+  min-width: 0;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.inbox-items {
+  max-height: 70vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inbox-item {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--color-divider, #f2f2f2);
+  border-left: 3px solid transparent;
+  color: inherit;
+  text-decoration: none;
+}
+
+.inbox-item:hover {
+  background: #fafafa;
+}
+
+.inbox-item.is-open {
+  border-left-color: #ff9900;
+}
+
+.inbox-item[aria-current="true"] {
+  background: #fff6e6;
+}
+
+.inbox-item-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.inbox-item-top strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inbox-item-top small,
+.inbox-item-owner {
+  flex: none;
+  color: #8b8b8b;
+  font-size: 0.75rem;
+}
+
+.inbox-item-subject {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.inbox-item-subject > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inbox-item-snippet {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #6b6b6b;
+  font-size: 0.8125rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.inbox-detail {
+  display: grid;
+  gap: 1rem;
+}
+
+.inbox-detail-head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.inbox-detail-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.inbox-detail-title h2 {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.inbox-placeholder {
+  min-height: 16rem;
+  place-content: center;
+}
+
+.inbox-reply {
+  display: grid;
+  gap: 0.6rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-divider, #eee);
+}
+
+.inbox-reply textarea {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #ddd;
+  border-radius: 0.6rem;
+  font: inherit;
+  resize: vertical;
+}
+
+.inbox-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.inbox-chip {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  padding: 0 0.75rem;
+  border: 1px solid #e2e2e2;
+  border-radius: 999px;
+  color: #333;
+  background: #fff;
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.inbox-chip:hover,
+.inbox-chip.is-active {
+  border-color: #ff9900;
+  background: #fff6e6;
+}
+
+.inbox-reply-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.inbox-reply-actions small {
+  margin-right: auto;
+}
+
+.inbox-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--color-divider, #eee);
+}
+
+.inbox-settings .v-field {
+  min-width: 10rem;
+  margin: 0;
+}
+
+/* ---------- Envoi de notifications (administration) ---------- */
+.push-composer {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .push-composer {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    align-items: start;
+  }
+}
+
+.push-kind {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.push-kind legend {
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+.push-repeat {
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  background: #fff6e6;
+}
+
+.push-preview {
+  position: sticky;
+  top: 5rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.push-preview-card {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: 1.1rem;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.12);
+}
+
+.push-preview-card strong {
+  font-size: 0.9rem;
+}
+
+.push-preview-card p {
+  margin: 0.15rem 0 0.3rem;
+  color: #444;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.push-preview-card small {
+  color: #8b8b8b;
+  font-size: 0.7rem;
+}
+
+.push-preview-icon {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  place-items: center;
+  border-radius: 0.6rem;
+  color: #000;
+  background: #ff9900;
+  font-weight: 700;
+}
+
+.push-auto-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.push-auto summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.push-auto summary::-webkit-details-marker {
+  display: none;
+}
+
+.push-auto summary > span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.push-auto[open] summary {
+  margin-bottom: 1rem;
+}
+
+/* ---------- Administration → Produits ---------- */
+.admin-products-filters {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(10rem, 14rem) minmax(10rem, 14rem) auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-divider, #eee);
+}
+
+.admin-products-filters :is(input, select),
+.admin-products-bulk input {
+  min-width: 0;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 899.98px) {
+  .admin-products-filters {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .admin-products-filters input[type="search"] {
+    grid-column: 1 / -1;
+  }
+}
+
+.admin-products-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-divider, #eee);
+  background: #fafafa;
+}
+
+.admin-products-bulk input {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.admin-product {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin-product img,
+.admin-product-empty {
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  border-radius: 0.4rem;
+  object-fit: cover;
+  background: #f2f2f2;
+}
+
+.admin-product > span {
+  display: grid;
+  min-width: 0;
+}
+
+.admin-products-table tr.is-off td {
+  background: #fdf6f6;
+}

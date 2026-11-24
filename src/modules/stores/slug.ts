@@ -17,6 +17,8 @@ export const reservedSlugs = new Set([
   "a-propos", "demo", "equipe", "recherche", "panier", "nouvelle", "parametres", "messages", "marketing",
   "livraisons", "produits", "clients", "argent", "mentions-legales", "conditions-generales",
   "politique-de-confidentialite", "conditions-de-vente", "apercu-boutique", "apercu", "confirmer-adresse", "pays", "aide", "tarifs", "nos-boutiques", "produit",
+  // Fichiers et services pour les agents IA (llms.txt, serveur MCP, .well-known).
+  "llms", "mcp", "well-known", "agents",
 ]);
 
 export function slugify(value: string) {

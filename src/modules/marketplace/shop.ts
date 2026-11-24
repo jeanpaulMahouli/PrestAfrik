@@ -60,7 +60,6 @@ const productSelect = {
 
 type ProductRow = Prisma.ProductGetPayload<{ select: typeof productSelect }>;
 
-/** Produits visibles sur la marketplace : en ligne, disponibles, d'une boutique publiée, et avec au moins une photo. */
 /** Prix minimal d'un produit sur la marketplace : 0 FCFA ou un prix dérisoire (erreur de saisie) n'y apparaît pas. */
 export const minMarketplacePriceXaf = 50;
 
@@ -68,10 +67,15 @@ export const minMarketplacePriceXaf = 50;
 export const hasMarketplacePrice = (product: { priceXaf: number; promotionalPriceXaf: number | null }) =>
   (product.promotionalPriceXaf !== null && product.promotionalPriceXaf < product.priceXaf ? product.promotionalPriceXaf : product.priceXaf) >= minMarketplacePriceXaf;
 
+/**
+ * Produits visibles sur la marketplace : en ligne, disponibles, d'une boutique publiée, avec au moins une
+ * photo, un vrai prix, et non masqués par l'administration (Administration → Produits).
+ */
 const visible = (storeIds: string[]): Prisma.ProductWhereInput => ({
   storeId: { in: storeIds },
   status: "ACTIVE",
   archivedAt: null,
+  marketplaceHiddenAt: null,
   availability: "AVAILABLE",
   images: { some: {} },
   // Ni produit à 0 FCFA, ni prix (ou prix promotionnel) sous 50 FCFA.

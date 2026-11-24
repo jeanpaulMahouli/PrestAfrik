@@ -12,6 +12,7 @@ export type LivePreviewValues = {
   secondaryColor: string;
   accentColor: string;
   logoUrl: string | null;
+  bannerUrl?: string | null;
   /** Assistant de création : description et ville saisies, appliquées sans attendre l'enregistrement. */
   description?: string;
   city?: string;

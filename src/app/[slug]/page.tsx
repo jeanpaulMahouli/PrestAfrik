@@ -139,7 +139,7 @@ export default async function PublicStorePage({ params, searchParams }: PageProp
       ) : (
         <StoreHero
           city={store.city}
-          cover={slides.length > 0 ? <BannerCarousel slides={slides} /> : null}
+          cover={!store.bannerUrl && slides.length > 0 ? <BannerCarousel slides={slides} /> : null}
           coverUrl={store.bannerUrl}
           initials={storeInitials(store.name)}
           logoUrl={store.logoUrl}

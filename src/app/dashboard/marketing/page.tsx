@@ -1,4 +1,4 @@
-import { Images, Megaphone, MessageSquareText, type AppIcon } from "@/components/ui/icons";
+import { Megaphone, MessageSquareText, type AppIcon } from "@/components/ui/icons";
 import Link from "next/link";
 import { VendorShell } from "@/components/layout/vendor-shell";
 import { hasPermission, type Permission } from "@/modules/auth/permissions";
@@ -16,13 +16,6 @@ const sections: { href: string; icon: AppIcon; title: string; text: string; perm
     permission: "marketing.manage",
   },
   {
-    href: "/dashboard/marketing/banniere",
-    icon: Images,
-    title: "Bannière",
-    text: "4 images en haut de votre boutique.",
-    permission: "store.manage",
-  },
-  {
     href: "/dashboard/marketing/popups",
     icon: MessageSquareText,
     title: "Popups",
@@ -31,7 +24,7 @@ const sections: { href: string; icon: AppIcon; title: string; text: string; perm
   },
 ];
 
-/** Marketing : une carte par outil (campagnes, bannière, popups) ; un clic ouvre l'outil. */
+/** Marketing : une carte par outil (campagnes, popups) ; un clic ouvre l'outil. */
 export default async function MarketingPage() {
   const { membership } = await getStoreContext();
   const visible = sections.filter((section) => hasPermission(membership.role, section.permission));

@@ -56,7 +56,7 @@ function revalidateStore(store: { id: string; slug: string }) {
 
 export type StoreSettingsState =
   | null
-  | { ok: true; message: string; logoUrl: string | null; slug: string; slugNotice: string | null }
+  | { ok: true; message: string; logoUrl: string | null; bannerUrl: string | null; slug: string; slugNotice: string | null }
   | { ok: false; message: string; field?: string };
 
 /** Enregistre « Ma boutique » sans rechargement : en cas d'erreur, la saisie (logo compris) est conservée. */
@@ -113,6 +113,15 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
     throw error;
   }
   const previousLogo = logoUrl ? store.logoUrl : null;
+  // Couverture de la boutique (en haut de la vitrine, comme sur Facebook) : recadrée au format 1920 × 600.
+  let bannerUrl: string | undefined;
+  try {
+    bannerUrl = (await saveStoreImage(formData.get("banner"), store.id, { frame: { width: 1920, height: 600 } }))?.url;
+  } catch (error) {
+    if (error instanceof ImageUploadError) return { ok: false, field: "banner", message: error.message.replace("La photo", "La couverture") };
+    throw error;
+  }
+  const previousBanner = bannerUrl ? store.bannerUrl : null;
 
   // Nouveau nom → nouvelle adresse. Une adresse prise (par une autre boutique ou une ancienne adresse
   // conservée en redirection) reçoit « -» et un identifiant court ; le nom, lui, reste tel quel.
@@ -139,6 +148,7 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
       ...social,
       ...(phone?.ok ? { phoneCountry: phone.country, phoneNational: phone.national, phoneE164: phone.e164, contactPhone: phone.e164 } : {}),
       ...(logoUrl ? { logoUrl } : {}),
+      ...(bannerUrl ? { bannerUrl } : {}),
   };
   for (let attempt = 0; ; attempt++) {
     try {
@@ -159,6 +169,7 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
     }
   }
   if (previousLogo) await deleteStoreImage(previousLogo);
+  if (previousBanner) await deleteStoreImage(previousBanner);
   revalidateStore(store);
 
   let slugNotice: string | null = null;
@@ -173,6 +184,7 @@ export async function updateStoreSettings(_previous: StoreSettingsState, formDat
     ok: true,
     message: "Modifications enregistrées. Votre boutique est à jour.",
     logoUrl: logoUrl ?? store.logoUrl,
+    bannerUrl: bannerUrl ?? store.bannerUrl,
     slug: proposal?.slug ?? store.slug,
     slugNotice,
   };

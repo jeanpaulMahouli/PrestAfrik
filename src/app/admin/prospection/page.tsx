@@ -1,12 +1,13 @@
 import { Download } from "@/components/ui/icons";
-import { AdminFeedback, searchValue } from "@/components/admin/admin-feedback";
+import { AdminFeedback, currentPath, searchValue } from "@/components/admin/admin-feedback";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { prospectionMessageKeys, prospectionMessageLabels, prospectionMessages } from "@/config/prospection";
-import { resetProspectionMessages, saveProspectionMessages } from "@/modules/admin/prospection-actions";
+import { markProspectContacted, resetProspectionMessages, saveProspectionMessages } from "@/modules/admin/prospection-actions";
 import { Badge } from "@/components/ui/badge";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Pagination } from "@/components/ui/pagination";
 import { formatDate, formatNumber, plural } from "@/lib/format";
+import { CircleCheck } from "@/components/ui/icons";
 import { requirePlatformAdmin } from "@/modules/admin/context";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import {
@@ -31,6 +32,17 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
   const [{ rows, total }, messages] = await Promise.all([listProspects({ filters, query }), getProspectionMessages()]);
   const customized = prospectionMessageKeys.some((key) => messages[key] !== prospectionMessages[key]);
   const visible = rows.slice((page - 1) * prospectionPageSize, page * prospectionPageSize);
+  const retour = currentPath("/admin/prospection", params);
+  // Lien WhatsApp suivi : la prise de contact est enregistrée avant d'ouvrir WhatsApp.
+  const contactHref = (userId: string) => {
+    const next = new URLSearchParams({ u: userId });
+    for (const filter of filters) next.append("filtre", filter);
+    return `/admin/prospection/contacter?${next.toString()}`;
+  };
+  const daysAgo = (date: Date) => {
+    const days = Math.floor((Date.now() - date.getTime()) / 86_400_000);
+    return days === 0 ? "aujourd’hui" : days === 1 ? "hier" : `il y a ${days} j`;
+  };
   const listQuery = (extra: Record<string, string> = {}) => {
     const next = new URLSearchParams();
     if (query) next.set("q", query);
@@ -116,6 +128,7 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
                 <th scope="col">Statut</th>
                 <th scope="col">Inscription</th>
                 <th scope="col">Dernière activité</th>
+                <th scope="col">Contacté</th>
                 <th scope="col">Actions</th>
               </tr>
             </thead>
@@ -141,10 +154,20 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
                     <td className="v-cell-badges" data-label="Statut"><Badge tone={status.tone}>{status.label}</Badge></td>
                     <td data-label="Inscription">{formatDate(row.createdAt)}</td>
                     <td data-label="Dernière activité">{row.lastActivity ? formatDate(row.lastActivity) : "Jamais"}</td>
+                    <td data-label="Contacté">
+                      {row.lastContact ? (
+                        <span title={row.lastContact.by ? `Par ${row.lastContact.by}` : undefined}>
+                          {daysAgo(row.lastContact.at)}
+                          {row.lastContact.by && <span className="v-cell-sub">{row.lastContact.by}</span>}
+                        </span>
+                      ) : (
+                        <span className="v-muted">Jamais</span>
+                      )}
+                    </td>
                     <td className="admin-row-actions">
                       <span className="icon-actions">
                         {whatsapp ? (
-                          <a aria-label={`Écrire à ${row.name} sur WhatsApp`} className="icon-button icon-button-sm icon-button-whatsapp" href={whatsapp} rel="noreferrer" target="_blank" title="Écrire sur WhatsApp">
+                          <a aria-label={`Écrire à ${row.name} sur WhatsApp`} className="icon-button icon-button-sm icon-button-whatsapp" href={contactHref(row.id)} rel="noreferrer" target="_blank" title="Écrire sur WhatsApp (contact enregistré)">
                             <WhatsAppIcon size={16} />
                           </a>
                         ) : (
@@ -152,6 +175,13 @@ export default async function AdminProspectionPage({ searchParams }: PageProps<"
                             <WhatsAppIcon size={16} />
                           </button>
                         )}
+                        <form action={markProspectContacted}>
+                          <input name="userId" type="hidden" value={row.id} />
+                          <input name="retour" type="hidden" value={retour} />
+                          <SubmitButton aria-label={`Marquer ${row.name} comme contacté`} className="icon-button icon-button-sm" pendingLabel="" title="Marquer comme contacté (appel, rencontre…)">
+                            <CircleCheck aria-hidden="true" size={16} />
+                          </SubmitButton>
+                        </form>
                         {row.phone && <CopyButton className="icon-button icon-button-sm" copiedLabel="Numéro copié" iconOnly label={`Copier le numéro de ${row.name}`} value={`+${row.phoneDigits}`} />}
                       </span>
                     </td>

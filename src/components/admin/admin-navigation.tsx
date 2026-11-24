@@ -8,13 +8,14 @@ const links = [
   { title: "Statistiques", href: "/admin/statistiques" },
   { title: "Application", href: "/admin/application" },
   { title: "Boutiques", href: "/admin/boutiques" },
+  { title: "Produits", href: "/admin/produits" },
   { title: "Prospection", href: "/admin/prospection" },
   { title: "Abonnements", href: "/admin/abonnements" },
   { title: "Crédits IA", href: "/admin/ia" },
-  { title: "Messages et avis", href: "/admin/avis" },
+  { title: "Messagerie", href: "/admin/avis" },
   { title: "Marketplace", href: "/admin/marketplace" },
   { title: "Annonces", href: "/admin/annonces" },
-  { title: "Notifications push", href: "/admin/notifications-push" },
+  { title: "Notifications", href: "/admin/notifications-push" },
   { title: "Messages échoués", href: "/admin/messages" },
   { title: "Alertes", href: "/admin/alertes" },
   { title: "Utilisateurs", href: "/admin/utilisateurs" },
@@ -23,7 +24,7 @@ const links = [
 ] as const;
 
 /** Menu de l'administration : latéral dès 1024 px, onglets défilants en dessous. */
-export function AdminNavigation({ openAlerts, openMessages = 0, superAdmin, variant }: { openAlerts: number; /** Messages des vendeurs encore ouverts. */ openMessages?: number; superAdmin: boolean; variant: "sidebar" | "tabs" }) {
+export function AdminNavigation({ openAlerts, openMessages = 0, superAdmin, variant }: { openAlerts: number; /** Conversations à traiter (messagerie). */ openMessages?: number; superAdmin: boolean; variant: "sidebar" | "tabs" }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Administration" className={variant === "sidebar" ? "vendor-sidebar admin-sidebar" : "admin-tabs"}>

@@ -38,6 +38,19 @@ export function proxy(request: NextRequest) {
   const subdomains = process.env.FEATURE_SUBDOMAINS === "true";
   const root = process.env.STORE_ROOT_DOMAIN;
   const pathname = request.nextUrl.pathname;
+
+  // Agents IA (« Accept: text/markdown ») : l'accueil du site et celui de la marketplace en Markdown.
+  // Jamais pour une boutique en sous-domaine ni pour l'espace connecté.
+  if (wantsMarkdown(request) && (pathname === "/" || pathname === marketplaceBasePath)) {
+    const host = requestedHost(request);
+    const onStoreOrApp = subdomains && root ? Boolean(storeSlugFromHost(host, root)) || isAppHost(host, root) : false;
+    if (!onStoreOrApp) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/api/markdown";
+      url.search = "";
+      return NextResponse.rewrite(url);
+    }
+  }
   if (subdomains && root && !isPassthroughPath(pathname)) {
     const url = request.nextUrl.clone();
     // Protocole du site (derrière Cloudflare, la requête reçue peut être en http).
@@ -81,6 +94,11 @@ export function proxy(request: NextRequest) {
   // Boutiques publiques non indexées (en plus de la balise robots des pages) : seuls prestafrik.com et la
   // marketplace apparaissent dans Google. Les liens restent suivis (vers PrestAfrik).
   return withNoIndex(NextResponse.rewrite(url, { request: { headers } }));
+}
+
+/** L'agent demande du Markdown (en-tête Accept), sans exiger qu'il soit en premier choix. */
+function wantsMarkdown(request: NextRequest) {
+  return (request.headers.get("accept") ?? "").toLowerCase().includes("text/markdown");
 }
 
 function withNoIndex(response: NextResponse) {

@@ -40,7 +40,7 @@ export function StoreHero({
   return (
     <section aria-label={`Boutique ${name}`} className={`sf-store-hero${cover ? " has-slides" : " has-cover"}`}>
       {cover ?? (
-        <div aria-hidden="true" className="sf-store-cover">
+        <div aria-hidden="true" className="sf-store-cover" data-store-cover="">
           <StoreImage alt="" fill priority sizes="(max-width: 1152px) 100vw, 1152px" src={coverUrl ?? defaultStoreCover} />
         </div>
       )}

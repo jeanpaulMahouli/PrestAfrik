@@ -9,15 +9,22 @@ import { buildWaMeUrl, formatWhatsappNumber } from "@/modules/whatsapp/wa-me";
 // recherche, et contact WhatsApp. Le téléphone est le numéro WhatsApp du compte (demandé à l'inscription),
 // sinon celui de sa première boutique ; la ville est croisée avec ses boutiques (userCityFromStores).
 
-export const prospectionFilters = ["actifs", "non-publiee", "assistance", "sans-whatsapp"] as const;
+export const prospectionFilters = ["jamais-contacte", "a-relancer", "actifs", "non-publiee", "assistance", "sans-whatsapp"] as const;
 export type ProspectionFilter = (typeof prospectionFilters)[number];
 export const prospectionFilterLabels: Record<ProspectionFilter, string> = {
+  "jamais-contacte": "Jamais contactés",
+  "a-relancer": "À relancer",
   actifs: "Utilisateurs actifs (30 jours)",
   "non-publiee": "Boutique non publiée",
   assistance: "Besoin d’assistance",
   "sans-whatsapp": "Sans numéro WhatsApp",
 };
 export const prospectionPageSize = 25;
+/**
+ * Règle de relance : contacté il y a plus de 7 jours, et toujours une boutique non publiée ou rien à aider
+ * résolu (pas de boutique, boutique incomplète). Un contact de moins de 7 jours n'est pas relancé (pas de harcèlement).
+ */
+export const followUpDays = 7;
 
 const day = 86_400_000;
 const countryNames = new Intl.DisplayNames(["fr"], { type: "region" });
@@ -31,7 +38,7 @@ export type Prospect = Awaited<ReturnType<typeof listProspects>>["rows"][number]
 
 export async function listProspects({ filters = [], query = "", now = new Date() }: { filters?: ProspectionFilter[]; query?: string; now?: Date }) {
   const since = new Date(now.getTime() - activeUserDays * day);
-  const [users, sessions] = await Promise.all([
+  const [users, sessions, contacts] = await Promise.all([
     prisma.user.findMany({
       orderBy: { createdAt: "desc" },
       select: {
@@ -67,7 +74,11 @@ export async function listProspects({ filters = [], query = "", now = new Date()
       },
     }),
     prisma.session.groupBy({ by: ["userId"], _max: { updatedAt: true } }),
+    prisma.prospectContact
+      .findMany({ orderBy: { createdAt: "desc" }, distinct: ["userId"], select: { userId: true, createdAt: true, admin: { select: { name: true } } } })
+      .catch(() => []),
   ]);
+  const lastContact = new Map(contacts.map((row) => [row.userId, { at: row.createdAt, by: row.admin?.name ?? null }]));
   const lastSession = new Map(sessions.map((row) => [row.userId, row._max.updatedAt]));
 
   const rows = users.map((user) => {
@@ -109,12 +120,19 @@ export async function listProspects({ filters = [], query = "", now = new Date()
       phoneDigits: phone ? phone.replace(/\D/g, "") : null,
       unpublished: unpublished.length > 0,
       missing,
+      lastContact: lastContact.get(user.id) ?? null,
     };
   });
 
   const search = query.trim().toLocaleLowerCase("fr-FR");
   const searchDigits = search.replace(/\D/g, "");
   const filtered = rows.filter((row) => {
+    if (filters.includes("jamais-contacte") && row.lastContact) return false;
+    if (filters.includes("a-relancer")) {
+      const stale = row.lastContact && now.getTime() - row.lastContact.at.getTime() > followUpDays * day;
+      const stillToHelp = row.unpublished || row.missing.length > 0 || row.storeCount === 0;
+      if (!stale || !stillToHelp || row.suspended) return false;
+    }
     if (filters.includes("actifs") && !row.active) return false;
     if (filters.includes("non-publiee") && !row.unpublished) return false;
     if (filters.includes("assistance") && row.missing.length === 0) return false;
@@ -149,7 +167,7 @@ export async function getProspectionMessages(): Promise<ProspectionMessageSet> {
 /** Lien wa.me avec un message adapté au filtre actif (le plus spécifique). */
 export function prospectWhatsappUrl(row: Pick<Prospect, "phoneDigits" | "firstName" | "storeName">, filters: ProspectionFilter[], messages: ProspectionMessageSet = prospectionMessages) {
   if (!row.phoneDigits) return null;
-  const key = filters.includes("assistance") ? "assistance" : filters.includes("non-publiee") ? "non-publiee" : filters.includes("actifs") ? "actifs" : "default";
+  const key = filters.includes("a-relancer") ? "a-relancer" : filters.includes("assistance") ? "assistance" : filters.includes("non-publiee") ? "non-publiee" : filters.includes("actifs") ? "actifs" : "default";
   const message = messages[key].replaceAll("[prenom]", row.firstName).replaceAll("[boutique]", row.storeName ? `« ${row.storeName} »` : "");
   return buildWaMeUrl(row.phoneDigits, message.replace(/\s{2,}/g, " "));
 }

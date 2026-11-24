@@ -100,6 +100,7 @@ export default async function StoreSettingsPage({ searchParams }: PageProps<"/da
           pickupAddress: store.pickupAddress ?? "",
           pickupHours: store.pickupHours ?? "",
           logoUrl: store.logoUrl,
+          bannerUrl: store.bannerUrl,
           theme: store.theme,
           promoStyle: store.promoStyle,
           primaryColor: store.primaryColor,

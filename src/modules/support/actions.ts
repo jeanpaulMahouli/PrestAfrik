@@ -9,17 +9,21 @@ import { isAdminRole, logAdminAction, requirePlatformAdmin } from "@/modules/adm
 import { sendEmailQuietly } from "@/modules/email/server";
 import { pushSupportReply } from "@/modules/push/triggers";
 
-// Demandes d'aide (Alertes → Tickets) : réponse par e-mail, statut, administrateur assigné.
+// Messagerie de l'administration : réponse (dans l'app du vendeur et par e-mail), statut, administrateur assigné.
 
-const ticketsPath = "/admin/alertes?onglet=tickets";
+const ticketsPath = "/admin/avis?type=CONTACT";
 /** Pages qui affichent les messages reçus (retour après une action) : liste fermée, aucune adresse libre. */
 const returnPaths = { tickets: ticketsPath, avis: "/admin/avis?" } as const;
+/** Boîte de réception : on revient sur la conversation, avec le filtre et la recherche en cours. */
+const inboxPath = "/admin/avis";
 const idSchema = z.string().min(10).max(64).regex(/^[A-Za-z0-9_-]+$/);
 type Back = (message: string, kind?: "succes" | "erreur", ticketId?: string) => never;
 
 /** Retour vers la page d'origine (champ « retour » du formulaire), avec le message et le ticket ouvert. */
 function backTo(formData: FormData): Back {
-  const returnTo: string = formData.get("retour") === "avis" ? returnPaths.avis : returnPaths.tickets;
+  const view = formData.get("vue");
+  const returnTo: string =
+    formData.get("retour") === "avis" ? `${inboxPath}?${typeof view === "string" && /^[a-z-]{1,20}$/.test(view) ? `vue=${view}` : ""}` : returnPaths.tickets;
   return (message: string, kind: "succes" | "erreur" = "succes", ticketId?: string): never => {
     const separator = returnTo.endsWith("?") ? "" : "&";
     redirect(`${returnTo}${ticketId ? `${separator}ticket=${ticketId}&` : separator}${kind}=${encodeURIComponent(message)}`);
@@ -36,12 +40,14 @@ export async function replyToTicket(formData: FormData) {
   const ticket = await prisma.supportTicket.findUnique({ where: { id: ticketId.data }, select: { id: true, subject: true, requesterName: true, requesterEmail: true, status: true, assignedToId: true } });
   if (!ticket) back("Demande introuvable.", "erreur");
 
+  // « Répondre et clore » : la conversation est traitée ; sinon elle attend la réponse du vendeur.
+  const close = formData.get("close") === "1";
   await prisma.$transaction(async (tx) => {
     await tx.supportTicketMessage.create({ data: { ticketId: ticket.id, authorId: admin.id, body: body.data } });
-    // Première réponse : la demande passe « en cours » et revient à l'administrateur qui répond.
+    // La demande revient à l'administrateur qui répond s'il n'y avait personne.
     await tx.supportTicket.update({
       where: { id: ticket.id },
-      data: { ...(ticket.status === "OPEN" ? { status: "IN_PROGRESS" } : {}), ...(ticket.assignedToId ? {} : { assignedToId: admin.id }) },
+      data: { status: close ? "RESOLVED" : "IN_PROGRESS", lastMessageAt: new Date(), ...(ticket.assignedToId ? {} : { assignedToId: admin.id }) },
     });
     await logAdminAction(admin.id, { action: "ticket.reply", targetType: "ticket", targetId: ticket.id }, tx);
   });

@@ -8,7 +8,9 @@ import { prisma } from "@/lib/prisma";
 import { ImageUploadError, saveStoreImage } from "@/lib/uploads";
 import { logAdminAction, requirePlatformAdmin } from "@/modules/admin/context";
 import { isPushConfigured, sendTemplatedPush } from "@/modules/push/sender";
-import { defaultPushTemplates, pushKinds, safePushUrl } from "@/modules/push/templates";
+import { audienceKeys, audienceWhere, type Audience } from "@/modules/notifications/audiences";
+import { notifyUsers } from "@/modules/notifications/vendor";
+import { defaultPushTemplates, pushKinds, renderPushText, safePushUrl } from "@/modules/push/templates";
 
 // Administration → Notifications push : textes des notifications automatiques et envoi d'une nouveauté.
 
@@ -19,13 +21,13 @@ const pushImageFrame = { width: 1200, height: 600 };
 
 /** Dernier envoi manuel (essai compris) : repris dans le formulaire pour le prochain envoi. */
 export async function lastManualPush() {
-  return prisma.pushNotificationLog.findFirst({ where: { kind: "NEWS", url: { not: null } }, orderBy: { createdAt: "desc" }, select: { title: true, body: true, url: true, imageUrl: true } });
+  return prisma.pushNotificationLog.findFirst({ where: { kind: { in: ["NEWS", "TIP"] }, url: { not: null } }, orderBy: { createdAt: "desc" }, select: { title: true, body: true, url: true, imageUrl: true } });
 }
 
 const pagePath = "/admin/notifications-push";
 
-function back(message: string, kind: "succes" | "erreur" = "succes"): never {
-  redirect(`${pagePath}?${kind}=${encodeURIComponent(message)}`);
+function back(message: string, kind: "succes" | "erreur" = "succes", tab?: "automatiques"): never {
+  redirect(`${pagePath}?${tab ? `onglet=${tab}&` : ""}${kind}=${encodeURIComponent(message)}`);
 }
 
 const textSchema = z.object({
@@ -48,7 +50,7 @@ export async function updatePushTemplate(formData: FormData) {
     await logAdminAction(admin.id, { action: "push.template", targetType: "push", targetId: kind, details: { title, body, url, enabled } }, tx);
   });
   revalidatePath(pagePath);
-  back("Message enregistré.");
+  back("Message enregistré.", "succes", "automatiques");
 }
 
 /** Retour au texte proposé par PrestAfrik. */
@@ -59,23 +61,32 @@ export async function resetPushTemplate(formData: FormData) {
   await prisma.pushNotificationTemplate.deleteMany({ where: { kind: kind.data } });
   await logAdminAction(admin.id, { action: "push.template", targetType: "push", targetId: kind.data, details: { reset: true, ...defaultPushTemplates[kind.data] } });
   revalidatePath(pagePath);
-  back("Texte par défaut rétabli.");
+  back("Texte par défaut rétabli.", "succes", "automatiques");
 }
 
 /**
- * Envoi manuel (nouveauté, information) : à tous les vendeurs abonnés, ou seulement à l'administrateur
- * connecté pour un essai. Les variables {prenom} et {boutique} sont remplacées pour chaque vendeur.
+ * Envoi manuel d'une nouveauté ou d'une astuce : dans le centre de notifications des vendeurs visés
+ * (préférences respectées) et, si coché, en notification push sur leurs appareils. « Essai » : seulement
+ * à l'administrateur connecté.
+ * Règle : un second envoi au même public dans les 24 heures demande une confirmation explicite (fatigue).
  */
 export async function broadcastPush(formData: FormData) {
   const admin = await requirePlatformAdmin();
-  if (!isPushConfigured()) back("Les notifications push ne sont pas configurées (clés VAPID manquantes).", "erreur");
-  const parsed = textSchema.safeParse({ kind: "NEWS", title: formData.get("title"), body: formData.get("body"), url: formData.get("url") });
+  const kindParsed = z.enum(["NEWS", "TIP"]).safeParse(formData.get("kind") ?? "NEWS");
+  const kind: PushNotificationKind = kindParsed.success ? kindParsed.data : "NEWS";
+  const parsed = textSchema.safeParse({ kind, title: formData.get("title"), body: formData.get("body"), url: formData.get("url") });
   if (!parsed.success) back(parsed.error.issues[0]?.message ?? "Message invalide.", "erreur");
   const testOnly = formData.get("mode") === "test";
-  const kind: PushNotificationKind = "NEWS";
+  const audienceParsed = z.enum(audienceKeys as [Audience, ...Audience[]]).safeParse(formData.get("audience") ?? "tous");
+  const audience: Audience = audienceParsed.success ? audienceParsed.data : "tous";
+  const withPush = formData.get("push") === "on" && isPushConfigured();
 
-  // Photo facultative : nouvelle photo choisie, sinon celle du dernier envoi si elle est gardée, sinon aucune
-  // (la notification montre alors seulement le logo PrestAfrik).
+  if (!testOnly && formData.get("confirmRepeat") !== "on") {
+    const recent = await prisma.pushNotificationLog.findFirst({ where: { kind: { in: ["NEWS", "TIP"] }, audience, sentById: { not: null }, createdAt: { gte: new Date(Date.now() - 86_400_000) } }, select: { id: true } });
+    if (recent) back("Ce public a déjà reçu un envoi ces dernières 24 heures. Cochez « Je confirme un nouvel envoi » pour continuer.", "erreur");
+  }
+
+  // Photo facultative : nouvelle photo choisie, sinon celle du dernier envoi si elle est gardée, sinon aucune.
   let image: string | null = null;
   try {
     const saved = await saveStoreImage(formData.get("image"), pushMediaId, { frame: pushImageFrame });
@@ -87,26 +98,37 @@ export async function broadcastPush(formData: FormData) {
   if (!image && formData.get("keepImage") === "on") image = (await lastManualPush())?.imageUrl ?? null;
 
   const users = await prisma.user.findMany({
-    where: { suspendedAt: null, pushSubscriptions: { some: {} }, ...(testOnly ? { id: admin.id } : { memberships: { some: {} } }) },
+    where: testOnly ? { id: admin.id } : audienceWhere(audience),
     select: { id: true, name: true, lastActiveStore: { select: { name: true } }, memberships: { orderBy: { createdAt: "asc" }, take: 1, select: { store: { select: { name: true } } } } },
   });
-  if (!users.length) back(testOnly ? "Activez d’abord les notifications sur cet appareil (Mon profil, dans l’espace vendeur)." : "Aucun vendeur n’a encore activé les notifications.", "erreur");
+  if (!users.length) back(testOnly ? "Compte introuvable." : "Personne ne correspond à ce public pour le moment.", "erreur");
 
-  const result = await sendTemplatedPush(
-    kind,
-    users.map((user) => ({ userId: user.id, vars: { prenom: user.name.trim().split(/\s+/)[0], boutique: user.lastActiveStore?.name ?? user.memberships[0]?.store.name ?? "votre boutique" } })),
-    { template: { kind, enabled: true, title: parsed.data.title, body: parsed.data.body, url: safePushUrl(parsed.data.url) }, sentById: admin.id, tag: testOnly ? "essai" : "nouveaute", image, logManual: true },
-  );
+  const recipients = users.map((user) => ({ userId: user.id, vars: { prenom: user.name.trim().split(/\s+/)[0], boutique: user.lastActiveStore?.name ?? user.memberships[0]?.store.name ?? "votre boutique" } }));
+  // Centre de notifications : texte personnalisé pour chacun (prénom, boutique).
+  let inApp = 0;
+  for (const recipient of recipients) {
+    inApp += await notifyUsers([recipient.userId], {
+      kind: kind === "TIP" ? "TIP" : "NEWS",
+      title: renderPushText(parsed.data.title, recipient.vars),
+      body: renderPushText(parsed.data.body, recipient.vars),
+      url: safePushUrl(parsed.data.url),
+      imageUrl: image,
+    });
+  }
+  const push = withPush
+    ? await sendTemplatedPush(kind, recipients, { template: { kind, enabled: true, title: parsed.data.title, body: parsed.data.body, url: safePushUrl(parsed.data.url) }, sentById: admin.id, tag: testOnly ? "essai" : kind === "TIP" ? "astuce" : "nouveaute", image, logManual: true, audience: testOnly ? "essai" : audience })
+    : { recipients: 0, delivered: 0 };
+  if (!withPush) {
+    // Historique même sans push : l'envoi dans l'application est inscrit.
+    await prisma.pushNotificationLog.create({ data: { kind, title: parsed.data.title, body: parsed.data.body, url: safePushUrl(parsed.data.url), imageUrl: image, recipients: inApp, delivered: 0, sentById: admin.id, audience: testOnly ? "essai" : audience } });
+  }
   if (!testOnly) {
-    await logAdminAction(admin.id, { action: "push.broadcast", targetType: "push", targetId: kind, details: { title: parsed.data.title, image, recipients: result.recipients, delivered: result.delivered } });
+    await logAdminAction(admin.id, { action: "push.broadcast", targetType: "push", targetId: kind, details: { title: parsed.data.title, audience, image, inApp, pushRecipients: push.recipients, delivered: push.delivered } });
   }
   revalidatePath(pagePath);
   back(
     testOnly
-      ? result.delivered
-        ? "Notification d’essai envoyée sur vos appareils."
-        : "La notification d’essai n’a pas pu partir : réactivez les notifications sur cet appareil."
-      : `Notification envoyée à ${result.recipients} vendeur${result.recipients > 1 ? "s" : ""} (${result.delivered} appareil${result.delivered > 1 ? "s" : ""}).`,
-    result.delivered ? "succes" : "erreur",
+      ? "Essai envoyé : regardez votre cloche (et votre téléphone si les push sont activés)."
+      : `Envoyé à ${inApp} vendeur${inApp > 1 ? "s" : ""} dans l’application${withPush ? `, ${push.delivered} appareil${push.delivered > 1 ? "s" : ""} en push` : ""}.`,
   );
 }

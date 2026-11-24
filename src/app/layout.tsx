@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { fontVariables } from "@/lib/fonts";
 import { AttributionTracker, GoogleAnalytics } from "@/components/analytics/analytics";
+import { WebMcpTools } from "@/components/agents/webmcp-tools";
 import { KeyboardWatcher } from "@/components/ui/keyboard-watcher";
 import { NavigationLoadingIndicator } from "@/components/ui/navigation-loading-indicator";
 import { sharePreviewImage } from "@/lib/seo";
@@ -70,6 +71,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <KeyboardWatcher />
         {/* Publicités : paramètres de campagne gardés jusqu'à l'inscription, clics « Devenir vendeur » mesurés. */}
         <AttributionTracker />
+        {/* Agents IA du navigateur (WebMCP) : recherche de produits et de boutiques. */}
+        <WebMcpTools />
         {process.env.NEXT_PUBLIC_GA_ID ? <GoogleAnalytics id={process.env.NEXT_PUBLIC_GA_ID} /> : null}
       </body>
     </html>

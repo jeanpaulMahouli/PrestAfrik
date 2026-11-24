@@ -191,6 +191,16 @@ model User {
   appPlatform                String?                @db.VarChar(12)
   /// Dernier rappel push « Vous nous manquez » (vendeur absent depuis 2 jours) : un seul par absence.
   lastInactivityPushAt       DateTime?
+  /// Préférences du centre de notifications : astuces et nouveautés (commandes et messages : toujours).
+  notifyTips                 Boolean                @default(true)
+  notifyNews                 Boolean                @default(true)
+  /// Astuces hebdomadaires : dernière envoyée et rang de la suivante (aucune astuce répétée).
+  lastTipAt                  DateTime?
+  tipIndex                   Int                    @default(0)
+  notifications              VendorNotification[]
+  /// Prospection : contacts reçus de l'équipe (qui, quand).
+  prospectContacts           ProspectContact[]      @relation("ProspectContactTarget")
+  prospectContactsMade       ProspectContact[]      @relation("ProspectContactAuthor")
   /// Comment la personne a connu PrestAfrik (question posée une fois, à l'inscription).
   acquisitionSource          AcquisitionSource?
   acquisitionAnsweredAt      DateTime?
@@ -454,44 +464,49 @@ model ProductCategory {
 }
 
 model Product {
-  id                  String              @id @default(cuid())
-  storeId             String
-  categoryId          String?
-  name                String              @db.VarChar(140)
-  slug                String              @db.VarChar(160)
-  sku                 String              @db.VarChar(48)
-  description         String?             @db.VarChar(4000)
-  priceXaf            Int
-  promotionalPriceXaf Int?
-  availability        ProductAvailability @default(AVAILABLE)
-  trackInventory      Boolean             @default(false)
-  stockQuantity       Int?
-  reservedQuantity    Int                 @default(0)
-  isFeatured          Boolean             @default(false)
-  status              ProductStatus       @default(ACTIVE)
+  id                      String              @id @default(cuid())
+  storeId                 String
+  categoryId              String?
+  name                    String              @db.VarChar(140)
+  slug                    String              @db.VarChar(160)
+  sku                     String              @db.VarChar(48)
+  description             String?             @db.VarChar(4000)
+  priceXaf                Int
+  promotionalPriceXaf     Int?
+  availability            ProductAvailability @default(AVAILABLE)
+  trackInventory          Boolean             @default(false)
+  stockQuantity           Int?
+  reservedQuantity        Int                 @default(0)
+  isFeatured              Boolean             @default(false)
+  status                  ProductStatus       @default(ACTIVE)
   /// Univers Immobilier : vente ou location du bien, période du loyer et caractéristiques (type, surface…).
-  listingType         ListingType?
-  pricePeriod         PricePeriod?
-  propertyDetails     Json?
-  archivedAt          DateTime?
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  store               Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  category            ProductCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  images              ProductImage[]
-  variants            ProductVariant[]
-  orderItems          OrderItem[]
-  reservations        StockReservation[]
-  reviews             ProductReview[]
-  likes               ProductLike[]
-  banners             StoreBanner[]
-  popups              StorePopup[]
-  marketplacePicks    MarketplacePick[]
+  listingType             ListingType?
+  pricePeriod             PricePeriod?
+  propertyDetails         Json?
+  archivedAt              DateTime?
+  /// Masqué de la marketplace par l'administration (le produit reste dans la boutique du vendeur).
+  marketplaceHiddenAt     DateTime?
+  marketplaceHiddenBy     String?             @db.VarChar(120)
+  marketplaceHiddenReason String?             @db.VarChar(200)
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  store                   Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category                ProductCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  images                  ProductImage[]
+  variants                ProductVariant[]
+  orderItems              OrderItem[]
+  reservations            StockReservation[]
+  reviews                 ProductReview[]
+  likes                   ProductLike[]
+  banners                 StoreBanner[]
+  popups                  StorePopup[]
+  marketplacePicks        MarketplacePick[]
 
   @@unique([storeId, sku])
   @@unique([storeId, slug])
   @@index([storeId, status, availability, createdAt])
   @@index([storeId, categoryId])
+  @@index([createdAt])
 }
 
 model ProductImage {
@@ -981,11 +996,11 @@ enum StorePageStatus {
 }
 
 model Activity {
-  id       String  @id @default(cuid())
-  slug     String  @unique @db.VarChar(60)
-  label    String  @db.VarChar(80)
-  position Int     @default(0)
-  popular  Boolean @default(false)
+  id       String   @id @default(cuid())
+  slug     String   @unique @db.VarChar(60)
+  label    String   @db.VarChar(80)
+  position Int      @default(0)
+  popular  Boolean  @default(false)
   /// Image ronde de la catégorie sur la marketplace (Administration → Marketplace).
   imageUrl String?
   /// Univers de la marketplace : décide du formulaire produit, de l'assistant de création et du rayon.
@@ -1321,6 +1336,8 @@ model SupportTicket {
   requesterEmail String                 @db.VarChar(254)
   requesterId    String?
   status         SupportTicketStatus    @default(OPEN)
+  /// Dernier message de la conversation (demande, réponse de l'équipe ou du vendeur) : tri de la boîte de réception.
+  lastMessageAt  DateTime               @default(now())
   kind           SupportTicketKind      @default(CONTACT)
   /// Avis sur PrestAfrik : note de 1 à 5 (contrainte en base), seulement pour kind = REVIEW.
   rating         Int?                   @db.SmallInt
@@ -1336,6 +1353,7 @@ model SupportTicket {
 
   @@index([status, createdAt])
   @@index([kind, createdAt])
+  @@index([lastMessageAt])
 }
 
 /// Réponse de l'équipe à une demande d'aide (envoyée par e-mail au demandeur).
@@ -1420,6 +1438,50 @@ enum PushNotificationKind {
   NEW_MESSAGE
   /// Nouveauté de PrestAfrik, envoyée à la main depuis l'administration.
   NEWS
+  /// Astuce pour mieux vendre (envoi manuel ou astuce de la semaine).
+  TIP
+}
+
+enum VendorNotificationKind {
+  ORDER
+  MESSAGE
+  NEWS
+  TIP
+  ALERT
+}
+
+/// Centre de notifications du vendeur (cloche du tableau de bord) : commandes, réponses de l'équipe,
+/// nouveautés, astuces et alertes. Une ligne par personne ; supprimées après 90 jours.
+model VendorNotification {
+  id        String                 @id @default(cuid())
+  userId    String
+  kind      VendorNotificationKind
+  title     String                 @db.VarChar(120)
+  body      String                 @db.VarChar(400)
+  /// Page ouverte au clic (chemin de l'espace PrestAfrik).
+  url       String?                @db.VarChar(200)
+  imageUrl  String?                @db.VarChar(500)
+  readAt    DateTime?
+  createdAt DateTime               @default(now())
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@index([createdAt])
+}
+
+/// Prospection : chaque prise de contact de l'équipe avec un utilisateur (bouton WhatsApp ou saisie manuelle).
+model ProspectContact {
+  id        String   @id @default(cuid())
+  userId    String
+  adminId   String?
+  channel   String   @default("whatsapp") @db.VarChar(20)
+  note      String?  @db.VarChar(300)
+  createdAt DateTime @default(now())
+  user      User     @relation("ProspectContactTarget", fields: [userId], references: [id], onDelete: Cascade)
+  admin     User?    @relation("ProspectContactAuthor", fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
 }
 
 /// Appareil d'un vendeur abonné aux notifications push (navigateur ou application installée).
@@ -1461,6 +1523,8 @@ model PushNotificationLog {
   imageUrl   String?              @db.VarChar(500)
   recipients Int                  @default(0)
   delivered  Int                  @default(0)
+  /// Envois manuels : public visé (tous, inactifs, boutiques non publiées…).
+  audience   String?              @db.VarChar(30)
   sentById   String?
   createdAt  DateTime             @default(now())
 

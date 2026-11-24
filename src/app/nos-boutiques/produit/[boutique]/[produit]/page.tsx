@@ -13,6 +13,7 @@ import { ProductDetail } from "@/components/storefront/product-detail";
 import { ProductReviews } from "@/components/storefront/product-reviews";
 import { StoreCartProvider } from "@/components/storefront/store-cart-provider";
 import { absoluteUrl, jsonLd } from "@/lib/seo";
+import { prisma } from "@/lib/prisma";
 import { shopUrl, storePublicUrl } from "@/lib/urls";
 import { getShopTicker, getShopTickerSeconds } from "@/modules/announcements/queries";
 import { formatXaf } from "@/modules/catalog/format";
@@ -36,8 +37,10 @@ async function load(params: Params) {
   const store = await getStorefrontStore(boutique);
   if (!store || store.isPreview) return null;
   const product = await getPublishedProduct(store.id, produit);
-  // Produit à 0 FCFA ou sous 50 FCFA : absent de la marketplace (sa fiche reste sur la boutique).
-  return product && hasMarketplacePrice(product) ? { listed, store, product } : null;
+  if (!product || !hasMarketplacePrice(product)) return null;
+  // Produit à 0 FCFA ou sous 50 FCFA, ou masqué par l'administration : absent de la marketplace (sa fiche reste sur la boutique).
+  const hidden = await prisma.product.findUnique({ where: { id: product.id }, select: { marketplaceHiddenAt: true } });
+  return hidden?.marketplaceHiddenAt ? null : { listed, store, product };
 }
 
 const summary = (product: { name: string; description: string | null; priceXaf: number; promotionalPriceXaf: number | null }, storeName: string) => {

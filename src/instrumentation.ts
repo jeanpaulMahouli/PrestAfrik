@@ -11,7 +11,7 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs" && !process.env.__NEXT_PRIVATE_ORIGIN && process.env.PORT && /^\d+$/.test(process.env.PORT)) {
     process.env.__NEXT_PRIVATE_ORIGIN = `http://127.0.0.1:${process.env.PORT}`;
   }
-  // Rappels push « Vous nous manquez » : vérification toutes les heures (serveur Node de production).
+  // Tâches horaires (rappels, astuces, conversations, nettoyage) : serveur Node de production.
   if (process.env.NEXT_RUNTIME === "nodejs" && process.env.NODE_ENV === "production") {
     void import("@/modules/push/triggers").then(({ startPushScheduler }) => startPushScheduler()).catch(() => undefined);
   }

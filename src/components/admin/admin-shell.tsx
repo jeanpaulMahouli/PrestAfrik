@@ -16,8 +16,8 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
   const [openAlerts, unreadNotifications, openMessages] = await Promise.all([
     countOpenAlerts().catch(() => 0),
     countUnreadSystemNotifications().catch(() => 0),
-    // Questions, suggestions et avis des vendeurs encore ouverts (« Messages et avis »).
-    prisma.supportTicket.count({ where: { status: "OPEN", kind: { not: "CONTACT" } } }).catch(() => 0),
+    // Conversations « À traiter » de la messagerie (vendeurs et formulaire de contact).
+    prisma.supportTicket.count({ where: { status: "OPEN" } }).catch(() => 0),
   ]);
   const superAdmin = admin.platformRole === "SUPER_ADMIN";
 

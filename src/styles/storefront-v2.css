@@ -3260,3 +3260,12 @@ html.sf-embedded-page body::-webkit-scrollbar {
     height: 6.5rem;
   }
 }
+
+/* Couverture remplacée en direct dans l'aperçu (image simple) : elle remplit le cadre. */
+.sf-store-cover > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

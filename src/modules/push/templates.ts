@@ -6,7 +6,7 @@ import type { PushNotificationKind } from "@prisma/client";
 
 export type PushTemplate = { kind: PushNotificationKind; enabled: boolean; title: string; body: string; url: string };
 
-export const pushKinds = ["INACTIVITY", "NEW_ORDER", "NEW_MESSAGE", "NEWS"] as const satisfies readonly PushNotificationKind[];
+export const pushKinds = ["INACTIVITY", "NEW_ORDER", "NEW_MESSAGE", "NEWS", "TIP"] as const satisfies readonly PushNotificationKind[];
 
 /** Nombre de jours sans connexion avant le rappel « Vous nous manquez ». */
 export const inactivityDays = 2;
@@ -14,7 +14,7 @@ export const inactivityDays = 2;
 export const pushKindInfo: Record<PushNotificationKind, { label: string; when: string; variables: string[] }> = {
   INACTIVITY: {
     label: "Rappel d’absence",
-    when: `Envoyé une fois quand le vendeur ne s’est pas connecté depuis ${inactivityDays} jours (puis à nouveau après sa prochaine visite).`,
+    when: `Après ${inactivityDays} jours sans connexion, une fois par absence, entre 9 h et 20 h.`,
     variables: ["prenom", "boutique", "activite"],
   },
   NEW_ORDER: {
@@ -29,6 +29,11 @@ export const pushKindInfo: Record<PushNotificationKind, { label: string; when: s
   },
   NEWS: {
     label: "Nouveauté",
+    when: "Envoi manuel depuis cette page.",
+    variables: ["prenom", "boutique"],
+  },
+  TIP: {
+    label: "Astuce",
     when: "Envoi manuel depuis cette page.",
     variables: ["prenom", "boutique"],
   },
@@ -53,14 +58,21 @@ export const defaultPushTemplates: Record<PushNotificationKind, PushTemplate> = 
     kind: "NEW_MESSAGE",
     enabled: true,
     title: "Nouveau message de PrestAfrik",
-    body: "L’équipe a répondu à « {sujet} ». Consultez vos e-mails pour lire la réponse.",
-    url: "/dashboard",
+    body: "L’équipe a répondu à « {sujet} ». Touchez pour lire la réponse.",
+    url: "/dashboard/discussions",
   },
   NEWS: {
     kind: "NEWS",
     enabled: true,
     title: "Du nouveau sur PrestAfrik",
     body: "Découvrez la nouveauté qui vous aide à vendre plus avec {boutique}.",
+    url: "/dashboard",
+  },
+  TIP: {
+    kind: "TIP",
+    enabled: true,
+    title: "Astuce pour {boutique}",
+    body: "Une idée simple pour vendre plus cette semaine.",
     url: "/dashboard",
   },
 };

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { notifyStoreTeam } from "@/modules/notifications/vendor";
 import { prisma } from "@/lib/prisma";
 import { computeAlerts, listOpenAlerts } from "@/modules/admin/alerts";
 import { isAdminRole, logAdminAction, requirePlatformAdmin } from "@/modules/admin/context";
@@ -107,6 +108,13 @@ export async function notifyFailedMessages(formData: FormData) {
   for (const owner of store.memberships) {
     await sendEmailQuietly("E22", owner.user.email, { nombre: String(count.data), raison: label.data.toLocaleLowerCase("fr-FR") }, appUrl("/dashboard/messages"));
   }
+  // Aussi dans l'application (cloche) : toute l'équipe de la boutique voit l'alerte.
+  await notifyStoreTeam(storeId.data, {
+    kind: "ALERT",
+    title: count.data > 1 ? `${count.data} messages WhatsApp n’ont pas pu partir` : "Un message WhatsApp n’a pas pu partir",
+    body: `Raison : ${label.data.toLocaleLowerCase("fr-FR")}. Vérifiez votre numéro et vos réglages WhatsApp.`,
+    url: "/dashboard/boutique/whatsapp",
+  });
   await logAdminAction(admin.id, { action: "messages.notify-owner", targetType: "store", targetId: storeId.data, storeId: storeId.data, details: { count: count.data, reason: label.data } });
   back(formData, "/admin/messages", `Le propriétaire de ${store.name} a été prévenu par e-mail.`);
 }

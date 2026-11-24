@@ -8,7 +8,7 @@ import { partners } from "./content";
 
 type ShowcaseStore = { id: string; name: string; slug: string; city: string | null; logoUrl: string | null; cover: string; products: number };
 
-/** Les 20 boutiques les plus visitées qui ont un logo, avec leur couverture (bannière, photo de couverture ou image par défaut). */
+/** Les 20 boutiques les plus visitées qui ont un logo, avec leur couverture (photo de couverture, ancienne bannière ou image par défaut). */
 async function loadShowcaseStores(): Promise<ShowcaseStore[]> {
   // Seulement les boutiques qui ont un logo : on en lit plus, puis on garde les 20 premières avec logo.
   const stores = (await getMostVisitedStores(partners.count * 4)).filter((store) => store.logoUrl).slice(0, partners.count);
@@ -29,7 +29,7 @@ async function loadShowcaseStores(): Promise<ShowcaseStore[]> {
     slug: store.slug,
     city: store.city,
     logoUrl: store.logoUrl,
-    cover: firstBanner.get(store.id) ?? coverUrl.get(store.id) ?? defaultStoreCover,
+    cover: coverUrl.get(store.id) ?? firstBanner.get(store.id) ?? defaultStoreCover,
     products: productCount.get(store.id) ?? 0,
   }));
 }

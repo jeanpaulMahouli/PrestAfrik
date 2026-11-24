@@ -40,9 +40,12 @@ export async function sendVendorFeedback(_previous: FeedbackState, formData: For
   if (recent >= dailyLimit) return { ok: false, message: "Vous avez déjà envoyé beaucoup de messages aujourd’hui. Réessayez demain, ou écrivez-nous sur WhatsApp." };
 
   const { kind, rating, message } = parsed.data;
+  // Règle : une bonne note (4 ou 5) sans commentaire n'appelle pas de réponse ; elle est classée « Traitée ».
+  const nothingToAnswer = kind === "REVIEW" && (rating ?? 0) >= 4 && !message;
   await prisma.supportTicket.create({
     data: {
       kind,
+      ...(nothingToAnswer ? { status: "RESOLVED" as const } : {}),
       rating: kind === "REVIEW" ? rating : null,
       subject: kind === "REVIEW" ? `${kinds.REVIEW} : ${rating}/5` : `${kinds[kind]} de ${store.name}`.slice(0, 120),
       message: message || "(note sans commentaire)",
@@ -60,6 +63,6 @@ export async function sendVendorFeedback(_previous: FeedbackState, formData: For
         ? "Merci pour votre avis ! Il aide toute l’équipe à améliorer PrestAfrik."
         : kind === "SUGGESTION"
           ? "Merci pour votre idée ! L’équipe la lit avec attention."
-          : `Question bien reçue. L’équipe vous répond par e-mail à ${session.user.email}.`,
+          : "Question bien reçue. La réponse arrivera dans Mes discussions (cloche en haut).",
   };
 }

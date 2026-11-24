@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-type PreviewValues = { name: string; theme: string; promoStyle: string; primaryColor: string; secondaryColor: string; accentColor: string; logoUrl: string | null; description?: string; city?: string };
+type PreviewValues = { name: string; theme: string; promoStyle: string; primaryColor: string; secondaryColor: string; accentColor: string; logoUrl: string | null; bannerUrl?: string | null; description?: string; city?: string };
 
 const promoClass = (style: string) => `sf-promo-${style.toLowerCase().replaceAll("_", "-")}`;
 
@@ -40,6 +40,15 @@ export function StorefrontPreviewBridge({ initials }: { initials: string }) {
       }
       const name = values.name.trim() || "Ma boutique";
       root.querySelectorAll<HTMLElement>("[data-store-name]").forEach((element) => (element.textContent = name));
+      // Couverture choisie dans « Ma boutique » : visible tout de suite dans l'aperçu.
+      if (values.bannerUrl) {
+        root.querySelectorAll<HTMLElement>("[data-store-cover]").forEach((element) => {
+          const image = document.createElement("img");
+          image.alt = "";
+          image.src = values.bannerUrl ?? "";
+          element.replaceChildren(image);
+        });
+      }
       root.querySelectorAll<HTMLElement>("[data-store-logo]").forEach((element) => {
         element.replaceChildren();
         if (values.logoUrl) {

@@ -5,6 +5,8 @@ import { FreshOnNavigate } from "@/components/ui/fresh-on-navigate";
 import { Search } from "@/components/ui/icons";
 import { texts } from "@/config/texts";
 import { FeedbackLauncher } from "@/components/dashboard/community";
+import { VendorBell } from "@/components/dashboard/vendor-bell";
+import { countUnreadNotifications } from "@/modules/notifications/vendor";
 import { EmailVerificationBanner } from "@/components/layout/email-verification-banner";
 import { PwaRegistration } from "@/components/pwa/install-app";
 import { PushOptInBanner } from "@/components/pwa/push-notifications";
@@ -25,7 +27,7 @@ const t = texts.vendor.shell;
  */
 export async function VendorShell({ children, searchQuery }: { children: React.ReactNode; searchQuery?: string }) {
   const { session, store, memberships, membership } = await getStoreContext();
-  const showAdminLink = await isPlatformAdmin(session.user.id);
+  const [showAdminLink, unreadNotifications] = await Promise.all([isPlatformAdmin(session.user.id), countUnreadNotifications(session.user.id)]);
 
   return (
     <div className="vendor-shell">
@@ -54,6 +56,7 @@ export async function VendorShell({ children, searchQuery }: { children: React.R
           storeLogoUrl={store.logoUrl}
           storeName={store.name}
         />
+        <VendorBell initialUnread={unreadNotifications} />
         <UserMenu adminLink={showAdminLink} userEmail={accountContact(session.user)} userImage={session.user.image ?? null} userName={session.user.name} />
       </header>
       {!isAccountVerified(session.user) && <EmailVerificationBanner />}

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronLeft, Lightbulb, MessageCircleQuestion, MessagesSquare, SendHorizontal, Star, X } from "@/components/ui/icons";
-import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState, type ReactNode } from "react";
 import { sendVendorFeedback, type FeedbackState } from "@/modules/support/feedback";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 
@@ -10,7 +10,7 @@ type Kind = "REVIEW" | "SUGGESTION" | "QUESTION";
 const choices: { kind: Kind; icon: typeof Star; label: string; prompt: string }[] = [
   { kind: "REVIEW", icon: Star, label: "Noter PrestAfrik", prompt: "Quelle note donnez-vous à PrestAfrik ? Vous pouvez ajouter un mot si vous le souhaitez." },
   { kind: "SUGGESTION", icon: Lightbulb, label: "Proposer une idée", prompt: "Super ! Quelle amélioration ou nouvelle fonctionnalité aimeriez-vous ?" },
-  { kind: "QUESTION", icon: MessageCircleQuestion, label: "Poser une question", prompt: "Posez votre question : l’équipe vous répond par e-mail." },
+  { kind: "QUESTION", icon: MessageCircleQuestion, label: "Poser une question", prompt: "Posez votre question : la réponse arrive dans Mes discussions." },
 ];
 
 /** Événement qui ouvre la fenêtre de discussion (carte « Partagez vos suggestions » → bouton flottant). */
@@ -70,7 +70,7 @@ export function CommunityBlock({ whatsappChannel, youtube }: { whatsappChannel: 
 
 /**
  * Bouton de discussion flottant (en bas à droite de l'espace vendeur) et sa fenêtre : noter PrestAfrik,
- * proposer une idée ou poser une question. Le message arrive dans Administration → Messages et avis.
+ * proposer une idée ou poser une question. Le message arrive dans la Messagerie de l'administration ; la réponse, dans Mes discussions.
  */
 export function FeedbackLauncher({ firstName }: { firstName: string }) {
   const [open, setOpen] = useState(false);
@@ -237,5 +237,14 @@ function FeedbackChat({ firstName, onDone }: { firstName: string; onDone: () => 
         </form>
       )}
     </div>
+  );
+}
+
+/** Bouton qui ouvre la fenêtre « Parlons-en ! » (nouvelle question, idée ou avis). */
+export function NewDiscussionButton({ className = "btn btn-primary", children }: { className?: string; children: ReactNode }) {
+  return (
+    <button className={className} onClick={openFeedbackChat} type="button">
+      {children}
+    </button>
   );
 }

@@ -78,7 +78,7 @@ export async function sendPushToUsers(userIds: string[], message: PushMessage) {
 export async function sendTemplatedPush(
   kind: PushNotificationKind,
   recipients: { userId: string; vars: Record<string, string | null | undefined> }[],
-  options: { url?: string; tag?: string; template?: PushTemplate; sentById?: string; image?: string | null; logManual?: boolean } = {},
+  options: { url?: string; tag?: string; template?: PushTemplate; sentById?: string; image?: string | null; logManual?: boolean; /** Public visé (envois manuels). */ audience?: string } = {},
 ) {
   const total = { recipients: 0, delivered: 0 };
   if (!recipients.length || !isPushConfigured()) return total;
@@ -107,6 +107,7 @@ export async function sendTemplatedPush(
           recipients: total.recipients,
           delivered: total.delivered,
           sentById: options.sentById ?? null,
+          audience: options.audience ?? null,
         },
       })
       .catch(() => undefined);

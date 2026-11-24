@@ -34,6 +34,8 @@ export function brandStructuredData() {
         email: site.email,
         telephone: site.phones[0],
         areaServed: { "@type": "Country", name: "Cameroun", identifier: "CM" },
+        address: { "@type": "PostalAddress", addressCountry: "CM" },
+        foundingDate: launchDate,
         knowsLanguage: "fr",
         // Comptes officiels : TikTok, Facebook, chaîne WhatsApp et YouTube.
         sameAs: [...footer.socials.map((social) => social.href), site.youtube].filter((url) => /^https?:\/\//.test(url)),

@@ -30,6 +30,7 @@ export const prospectionMessages = {
   actifs: "Bonjour [prenom], c’est l’équipe PrestAfrik ! Merci d’utiliser PrestAfrik pour [boutique]. Avez-vous des idées ou des besoins pour aller plus loin ?",
   "non-publiee": "Bonjour [prenom], c’est l’équipe PrestAfrik ! Votre boutique [boutique] n’est pas encore en ligne. Voulez-vous que nous vous aidions à la publier ?",
   assistance: "Bonjour [prenom], c’est l’équipe PrestAfrik ! Nous avons vu que votre boutique [boutique] est presque prête. Pouvons-nous vous aider à la finaliser ?",
+  "a-relancer": "Bonjour [prenom], c’est à nouveau l’équipe PrestAfrik ! Avez-vous pu avancer sur [boutique] ? Si quelque chose vous bloque, répondez simplement ici : on s’en occupe ensemble.",
 } as const;
 
 export type ProspectionMessageKey = keyof typeof prospectionMessages;
@@ -41,4 +42,5 @@ export const prospectionMessageLabels: Record<ProspectionMessageKey, string> = {
   actifs: "Filtre « Utilisateurs actifs »",
   "non-publiee": "Filtre « Boutique non publiée »",
   assistance: "Filtre « Besoin d’assistance »",
+  "a-relancer": "Filtre « À relancer »",
 };

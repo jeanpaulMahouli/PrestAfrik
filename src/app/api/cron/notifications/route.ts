@@ -1,6 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
-import { runInactivityReminders } from "@/modules/push/triggers";
+import { autoResolveTickets, isQuietHour, runInactivityReminders, runPendingOrderReminders, runWeeklyTips } from "@/modules/push/triggers";
+import { purgeOldNotifications } from "@/modules/notifications/vendor";
 
 /**
  * Rappels push « Vous nous manquez », pour une tâche planifiée externe (cron de l'hébergeur, toutes les heures) :
@@ -14,6 +15,9 @@ export async function GET(request: Request) {
   if (!secret || given.length !== secret.length || !timingSafeEqual(Buffer.from(given), Buffer.from(secret))) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
-  const result = await runInactivityReminders();
-  return NextResponse.json({ ok: true, ...result });
+  // Mêmes tâches que le planificateur interne (heures calmes respectées pour les rappels et les astuces).
+  const now = new Date();
+  const reminders = isQuietHour(now) ? { recipients: 0, delivered: 0 } : await runInactivityReminders(now);
+  const [tips, orderReminders, resolved, purged] = await Promise.all([runWeeklyTips(now), runPendingOrderReminders(now), autoResolveTickets(now), purgeOldNotifications(now)]);
+  return NextResponse.json({ ok: true, ...reminders, tips, orderReminders, resolvedTickets: resolved.count, purgedNotifications: purged.count });
 }
